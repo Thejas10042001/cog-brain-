@@ -1,0 +1,8 @@
+{
+  "name": "cog think",
+  "description": "An enterprise-grade sales strategy assistant that analyzes buyer documents to infer psychology, predict objections, and coach on exact conversation wording.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
