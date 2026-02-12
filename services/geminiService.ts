@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType } from "../types";
+import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, AvatarReportV2 } from "../types";
 
 // Upgraded thinking budget map for gemini-3-pro-preview capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
@@ -67,7 +67,147 @@ function safeJsonParse(str: string) {
   throw new Error("Failed to parse cognitive intelligence response as valid JSON.");
 }
 
-// Avatar Evaluation helper
+// Avatar 2.0 Evaluation
+export async function evaluateAvatarSessionV2(
+  history: GPTMessage[], 
+  context: MeetingContext
+): Promise<AvatarReportV2> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-pro-preview';
+  
+  const historyStr = history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
+  
+  const prompt = `Act as an Elite Enterprise Evaluator.
+  The conversation session has ended. Based on the transcript below, generate the structured JSON performance report for the 2.0 simulation.
+  
+  TRANSCRIPT:
+  ${historyStr}
+  
+  REQUIRED JSON FORMAT:
+  {
+    "persona_used": "CIO | CFO | IT_DIRECTOR",
+    "conversation_summary": "Concise summary of the interaction",
+    "primary_concerns": ["Concern 1", "Concern 2"],
+    "value_alignment_score": 1-10,
+    "risk_assessment_score": 1-10,
+    "credibility_score": 1-10,
+    "deal_readiness_score": 1-10,
+    "next_step_likelihood": "low / medium / high",
+    "critical_gaps": ["Gap 1", "Gap 2"],
+    "coaching_recommendations": ["Recommendation 1", "Recommendation 2"]
+  }
+
+  Be strict. Penalize vagueness. Reward quantified impact and strategic alignment.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 16000 }
+      }
+    });
+    return safeJsonParse(response.text || "{}") as AvatarReportV2;
+  } catch (error) {
+    console.error("V2 Evaluation failed:", error);
+    throw error;
+  }
+}
+
+// Avatar Simulation 2.0 Streaming
+export async function* streamAvatarSimulationV2(
+  prompt: string, 
+  history: GPTMessage[], 
+  context: MeetingContext
+): AsyncGenerator<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-pro-preview';
+  
+  const formattedHistory = history.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.content }]
+  }));
+
+  const systemInstruction = `You are operating in Multi-Persona Enterprise Evaluation Mode.
+The user will specify which persona to activate by typing:
+PERSONA: CIO
+PERSONA: CFO
+PERSONA: IT_DIRECTOR
+
+You must switch behavior instantly and remain fully in that persona until changed.
+You are evaluating an enterprise AI platform called Kore.ai – AI for Work.
+You are conducting a serious enterprise buying evaluation.
+
+===========================================================
+PERSONA DEFINITIONS
+===========================================================
+
+PERSONA: CIO
+Role: Chief Information Officer of a Fortune 50 retail enterprise operating at massive scale.
+Primary Focus: Strategic alignment, Enterprise scalability, Security & governance, Vendor credibility, Change management.
+Behavior: Strategic, analytical, risk-sensitive, skeptical of vague claims. Demands proof at scale.
+Escalation: Claims generic -> demand metrics; security weak -> escalate governance concern; ROI claimed -> probe sustainability.
+Ask one sharp executive-level question at a time.
+
+PERSONA: CFO
+Role: Chief Financial Officer responsible for capital allocation and shareholder accountability.
+Primary Focus: ROI clarity, Cost structure transparency, Budget predictability, Payback period, Downside exposure.
+Behavior: Financially strict, demands quantified impact, skeptical of soft benefits. Pushes on TCO.
+Escalation: ROI qualitative -> demand numbers; pricing vague -> demand breakdown; savings projected -> ask for validated proof.
+Ask concise, financially rigorous questions.
+
+PERSONA: IT_DIRECTOR
+Role: Enterprise IT Director responsible for implementation and system reliability.
+Primary Focus: Architecture compatibility, Integration complexity, API readiness, Infrastructure impact, Security detail, Support model.
+Behavior: Technically detailed, probes system architecture deeply, challenges scalability and feasibility.
+Escalation: Architecture high-level -> request diagrams/flow; timeline short -> question assumptions; security mentioned -> ask for controls.
+Ask technically precise questions.
+
+===========================================================
+GLOBAL RULES
+===========================================================
+1. Never assist the seller.
+2. Never accept vague responses.
+3. If metrics are missing, demand them.
+4. Maintain executive tone.
+5. Ask one focused question at a time.
+6. Behave like a decision-maker.
+
+===========================================================
+END SESSION MODE
+===========================================================
+If user types: END SESSION
+Return ONLY the word "STOP".
+
+MEETING CONTEXT:
+Client: ${context.clientCompany}
+Seller: ${context.sellerNames} (${context.sellerCompany})
+Meeting Objective: ${context.meetingFocus}`;
+
+  try {
+    const result = await ai.models.generateContentStream({
+      model: modelName,
+      contents: [
+        ...formattedHistory,
+        { role: 'user', parts: [{ text: prompt }] }
+      ],
+      config: {
+        systemInstruction,
+        thinkingConfig: { thinkingBudget: 16000 }
+      }
+    });
+
+    for await (const chunk of result) {
+      yield chunk.text || "";
+    }
+  } catch (error) {
+    console.error("V2 stream failed:", error);
+    yield "Error: Presence engine connection lost.";
+  }
+}
+
+// Avatar Evaluation helper (Legacy 1.0)
 export async function evaluateAvatarSession(
   history: GPTMessage[], 
   context: MeetingContext
@@ -120,7 +260,7 @@ export async function evaluateAvatarSession(
   }
 }
 
-// Avatar Simulation: Specialized dual-mode interaction
+// Avatar Simulation: Specialized dual-mode interaction (Legacy 1.0)
 export async function* streamAvatarSimulation(
   prompt: string, 
   history: GPTMessage[], 

@@ -229,3 +229,19 @@ export interface GroomingEvaluation {
   idealWording: string;
   correctionExplanation: string;
 }
+
+// Avatar Simulation 2.0 Types
+export type SimPersonaV2 = 'CIO' | 'CFO' | 'IT_DIRECTOR';
+
+export interface AvatarReportV2 {
+  persona_used: string;
+  conversation_summary: string;
+  primary_concerns: string[];
+  value_alignment_score: number;
+  risk_assessment_score: number;
+  credibility_score: number;
+  deal_readiness_score: number;
+  next_step_likelihood: 'low' | 'medium' | 'high';
+  critical_gaps: string[];
+  coaching_recommendations: string[];
+}
