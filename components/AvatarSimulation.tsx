@@ -42,7 +42,6 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   const [sessionActive, setSessionActive] = useState(false);
   const [report, setReport] = useState<AvatarReport | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  // Fix: Added missing 'status' and 'setStatus' state variables
   const [status, setStatus] = useState("");
 
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -78,7 +77,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     setIsAISpeaking(true);
     try {
       if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
-      const bytes = await generatePitchAudio(text, 'Charon'); // Use authoritative voice
+      const bytes = await generatePitchAudio(text, 'Charon');
       if (bytes) {
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
         const source = audioContextRef.current.createBufferSource();
@@ -168,10 +167,8 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   const handleEndSession = async () => {
     stopListening();
     setIsProcessing(true);
-    // Fix: 'setStatus' is now defined in component state
-    setStatus("Generating Comprehensive Performance Audit...");
+    setStatus("Generating Performance Audit...");
 
-    // Send final user answer if exists
     let finalHistory = [...messages];
     if (currentCaption.trim()) {
       finalHistory.push({ id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' });
@@ -206,17 +203,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
         y += split.length * (size/2) + 5;
       };
 
-      // Header
       doc.setFillColor(30, 27, 75);
       doc.rect(0, 0, 210, 40, 'F');
       doc.setTextColor(255);
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
-      doc.text("CIO PERFORMANCE AUDIT", 20, 25);
+      doc.text("AI HUMAN PERFORMANCE AUDIT", 20, 25);
       y = 50;
 
-      addLine(`Client: ${meetingContext.clientCompany}`, 12, "bold", [79, 70, 229]);
-      addLine(`Persona: Fahim Sidiqi (Fortune 50 CIO)`, 10, "italic", [100, 100, 100]);
+      addLine(`Project: Strategic Simulation for ${meetingContext.clientCompany}`, 12, "bold", [79, 70, 229]);
       y += 10;
 
       addLine("EXECUTIVE SUMMARY", 14, "bold");
@@ -224,7 +219,6 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       y += 5;
 
       addLine(`READINESS SCORE: ${report.deal_readiness_score}/10`, 16, "bold", [5, 150, 105]);
-      addLine(`Next Step Likelihood: ${report.next_step_likelihood.toUpperCase()}`, 10, "bold");
       y += 10;
 
       addLine("OBJECTION DEFENSE MAPPING", 14, "bold");
@@ -234,14 +228,10 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       });
       y += 10;
 
-      addLine("CRITICAL GAPS & OPPORTUNITIES", 14, "bold");
-      report.missed_opportunities.forEach(opp => addLine(`• ${opp}`, 10));
-      y += 5;
-
       addLine("COACHING RECOMMENDATIONS", 14, "bold");
       report.coaching_recommendations.forEach(rec => addLine(`• ${rec}`, 10));
 
-      doc.save(`CIO-Audit-${meetingContext.clientCompany}.pdf`);
+      doc.save(`Performance-Audit-${meetingContext.clientCompany}.pdf`);
     } catch (e) {
       console.error(e);
     } finally {
@@ -249,25 +239,45 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     }
   };
 
+  const AIHumanAvatar = () => (
+    <svg viewBox="0 0 200 200" className="w-64 h-64 drop-shadow-2xl">
+      {/* Head */}
+      <path d="M100 30 C 60 30, 40 60, 40 100 C 40 140, 60 170, 100 170 C 140 170, 160 140, 160 100 C 160 60, 140 30, 100 30" fill="#1e1b4b" stroke="#4f46e5" strokeWidth="2" />
+      {/* Eyes */}
+      <circle cx="75" cy="85" r="4" fill="#4f46e5" className={isAISpeaking ? "animate-pulse" : ""} />
+      <circle cx="125" cy="85" r="4" fill="#4f46e5" className={isAISpeaking ? "animate-pulse" : ""} />
+      {/* Animated Mouth (Lip Sync) */}
+      <path 
+        d={isAISpeaking ? "M80 120 Q 100 140, 120 120" : "M85 125 Q 100 125, 115 125"} 
+        stroke="#4f46e5" 
+        strokeWidth="4" 
+        fill="none" 
+        strokeLinecap="round"
+        className={isAISpeaking ? "animate-mouth" : ""}
+      />
+      {/* Neck & Shoulders */}
+      <path d="M70 170 C 70 190, 30 190, 10 200 L 190 200 C 170 190, 130 190, 130 170" fill="#1e1b4b" stroke="#4f46e5" strokeWidth="2" />
+    </svg>
+  );
+
   if (report) {
     return (
       <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24">
-        {/* Report Header */}
         <div className="bg-slate-900 rounded-[4rem] p-16 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
           <div className="relative z-10 space-y-8 flex-1 text-left">
             <div>
-              <h2 className="text-4xl font-black tracking-tight">CIO Performance Audit</h2>
+              <h2 className="text-4xl font-black tracking-tight">Performance Synthesis Audit</h2>
               <p className="text-indigo-200/70 font-medium text-lg max-w-2xl mt-6 italic">
                 "{report.conversation_summary}"
               </p>
             </div>
             <div className="flex gap-4">
               <button onClick={exportPDF} disabled={isExporting} className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-2">
-                {isExporting ? "Synthesizing PDF..." : <><ICONS.Document className="w-4 h-4" /> Export Branded PDF</>}
+                {isExporting ? "Compiling Logic..." : <><ICONS.Document className="w-4 h-4" /> Export Performance PDF</>}
               </button>
               <button onClick={() => { setReport(null); handleInitiate(); }} className="px-8 py-3.5 bg-white/10 text-white border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all">
-                Restart Simulation
+                Reset Simulation
               </button>
             </div>
           </div>
@@ -292,39 +302,33 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
-           <div className="w-32 h-32 bg-indigo-600 rounded-[3rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20 rotate-3">
-              <ICONS.Brain className="w-16 h-16" />
+           <div className="w-40 h-40 bg-indigo-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/20 border-4 border-white/10">
+              <AIHumanAvatar />
            </div>
            <div className="max-w-2xl space-y-6">
-              <h2 className="text-5xl font-black tracking-tight">Activate Neural CIO</h2>
+              <h2 className="text-5xl font-black tracking-tight">Initiate Presence Hub</h2>
               <p className="text-slate-400 text-lg font-medium leading-relaxed">
-                Face Fahim Sidiqi, Fortune 50 CIO. This is a high-stakes, voice-led simulation with internal performance tracking.
+                Connect with the AI Human for a high-stakes verbal scenario. Performance metrics are tracked internally.
               </p>
            </div>
            <button 
              onClick={handleInitiate}
-             className="px-16 py-7 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all"
+             className="px-16 py-7 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all"
            >
-             Establish Presence Link
+             Connect Neural Interface
            </button>
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-10">
-          {/* Top: Avatar Presence */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1">
              <div className="lg:col-span-8 relative">
-                <div className="aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group">
-                   {/* Simulated Animated Human Viewport */}
+                <div className="aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10"></div>
-                   <div className="relative z-20 flex flex-col items-center">
-                      <div className={`w-48 h-48 bg-indigo-600 rounded-full flex items-center justify-center border-4 border-white/10 shadow-[0_0_80px_rgba(79,70,229,0.4)] mb-8 transition-transform duration-1000 ${isAISpeaking ? 'scale-110 animate-pulse' : 'scale-100'}`}>
-                         <ICONS.Brain className="w-20 h-20" />
-                      </div>
-                      <h4 className="text-2xl font-black tracking-widest uppercase text-white/90">Fahim Sidiqi</h4>
-                      <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.4em] mt-2">Neural Link Active</p>
+                   
+                   <div className={`relative z-20 transition-all duration-1000 ${isAISpeaking ? 'scale-105' : 'scale-100'}`}>
+                      <AIHumanAvatar />
                    </div>
                    
-                   {/* Waveform Visualization Overlay */}
                    {isAISpeaking && (
                      <div className="absolute bottom-12 left-0 right-0 h-16 flex items-end justify-center gap-1 z-20">
                         {[...Array(30)].map((_, i) => (
@@ -335,18 +339,16 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
 
                    <div className="absolute top-10 left-10 z-20 flex items-center gap-3 px-5 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                       <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest">CIO Input Feed</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Active Presence Link</span>
                    </div>
                 </div>
              </div>
 
              <div className="lg:col-span-4 flex flex-col gap-6">
                 <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4">
-                   <h5 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
-                     <ICONS.Shield className="w-3 h-3" /> Current Strategic Probe
-                   </h5>
+                   <h5 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Current Intelligence Probe</h5>
                    <p className="text-xl font-bold italic leading-relaxed text-indigo-50">
-                     {messages[messages.length - 1]?.content || "Initializing..."}
+                     {messages[messages.length - 1]?.content || "Syncing logic..."}
                    </p>
                 </div>
                 
@@ -355,13 +357,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                       <ICONS.Speaker className="w-8 h-8" />
                    </div>
                    <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">
-                     {isUserListening ? "Listening to Strategic Logic..." : "Neural Capturing Ready"}
+                     {isUserListening ? "Capturing Strategic Logic..." : "Neural Capturing Primed"}
                    </p>
                 </div>
              </div>
           </div>
 
-          {/* Bottom: Transcription & Controls */}
           <div className="space-y-6">
              <div className="relative group">
                 <label className="absolute -top-3 left-10 px-4 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full z-10 shadow-lg">
@@ -389,13 +390,13 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                      className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center gap-3"
                    >
                      {isProcessing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <ICONS.Play className="w-4 h-4" />}
-                     Commit Answer & Next Node
+                     Commit Answer & Next Question
                    </button>
                    <button 
                      onClick={() => setCurrentCaption("")}
                      className="px-8 py-5 bg-white/5 border border-white/10 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-white/10"
                    >
-                     Reset Caption
+                     Clear Logic
                    </button>
                 </div>
 
@@ -417,6 +418,14 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       )}
 
       <style>{`
+        @keyframes mouth {
+          0%, 100% { transform: scaleY(0.4); }
+          50% { transform: scaleY(1.2); }
+        }
+        .animate-mouth {
+          animation: mouth 0.2s ease-in-out infinite;
+          transform-origin: 100px 125px;
+        }
         @keyframes waveform-sm {
           0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
           50% { transform: scaleY(1); opacity: 1; }
