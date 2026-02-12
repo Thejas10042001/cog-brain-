@@ -10,6 +10,7 @@ import { MeetingContextConfig } from './components/MeetingContextConfig';
 import { DocumentGallery } from './components/DocumentGallery';
 import { VideoGenerator } from './components/VideoGenerator';
 import { AssessmentLab } from './components/AssessmentLab';
+import { AvatarSimulation } from './components/AvatarSimulation';
 import { analyzeSalesContext } from './services/geminiService';
 import { fetchDocumentsFromFirebase, isFirebaseActive, getFirebasePermissionError, subscribeToAuth } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
@@ -26,7 +27,7 @@ const App: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
-  const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'video' | 'qa'>('context');
+  const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'video' | 'qa' | 'avatar'>('context');
 
   const lastAnalyzedHash = useRef<string | null>(null);
 
@@ -89,7 +90,6 @@ const App: React.FC = () => {
   const readyFilesCount = useMemo(() => files.filter(f => f.status === 'ready').length, [files]);
   const readyLibraryCount = useMemo(() => selectedLibraryDocIds.length, [selectedLibraryDocIds]);
 
-  // Combined list of all documents that are "active" (session uploads + selected library docs)
   const activeDocuments = useMemo(() => {
     const sessionDocs = files.filter(f => f.status === 'ready').map(f => ({ name: f.name, content: f.content }));
     const libDocs = history.filter(d => selectedLibraryDocIds.includes(d.id)).map(d => ({ name: d.name, content: d.content }));
@@ -174,6 +174,7 @@ const App: React.FC = () => {
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>
                 <div className="flex flex-col gap-1">
+                  <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label="Avatar Simulation" />
                   <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Trophy />} label="Assignment" />
                   <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label="Simulation" />
                   <SidebarBtn active={activeTab === 'video'} onClick={() => setActiveTab('video')} icon={<ICONS.Play />} label="Video Synthesis" />
@@ -325,6 +326,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 )}
+                {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
                 {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
                 {activeTab === 'video' && <VideoGenerator context={meetingContext} />}
                 {activeTab === 'audio' && <AudioGenerator analysis={analysis!} />}
