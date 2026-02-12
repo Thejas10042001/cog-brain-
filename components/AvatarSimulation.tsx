@@ -63,6 +63,8 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
           transcript += event.results[i][0].transcript;
         }
         setCurrentCaption(transcript);
+        // While getting results, user is actively talking
+        setIsUserListening(true);
       };
 
       recognition.onend = () => {
@@ -240,22 +242,70 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   };
 
   const AIHumanAvatar = () => (
-    <svg viewBox="0 0 200 200" className="w-64 h-64 drop-shadow-2xl">
-      {/* Head */}
-      <path d="M100 30 C 60 30, 40 60, 40 100 C 40 140, 60 170, 100 170 C 140 170, 160 140, 160 100 C 160 60, 140 30, 100 30" fill="#1e1b4b" stroke="#4f46e5" strokeWidth="2" />
-      {/* Eyes */}
-      <circle cx="75" cy="85" r="4" fill="#4f46e5" className={isAISpeaking ? "animate-pulse" : ""} />
-      <circle cx="125" cy="85" r="4" fill="#4f46e5" className={isAISpeaking ? "animate-pulse" : ""} />
-      {/* Animated Mouth (Lip Sync) */}
-      <path 
-        d={isAISpeaking ? "M80 120 Q 100 140, 120 120" : "M85 125 Q 100 125, 115 125"} 
-        stroke="#4f46e5" 
-        strokeWidth="4" 
-        fill="none" 
-        strokeLinecap="round"
-        className={isAISpeaking ? "animate-mouth" : ""}
-      />
-      {/* Neck & Shoulders */}
+    <svg viewBox="0 0 200 200" className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'drop-shadow-[0_0_25px_rgba(79,70,229,0.5)] scale-105' : 'drop-shadow-2xl'}`}>
+      <defs>
+        <linearGradient id="avatarGradV1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={isAISpeaking ? "#4f46e5" : "#1e1b4b"} />
+          <stop offset="100%" stopColor="#0f172a" />
+        </linearGradient>
+        <filter id="burlEffectV1">
+           <feGaussianBlur in="SourceGraphic" stdDeviation={isAISpeaking ? "1.2" : "0"} />
+        </filter>
+      </defs>
+
+      {/* Tilt group for listening mode */}
+      <g className={isUserListening ? "animate-hearing-tilt" : ""}>
+        {/* Head Shape with Burl effect */}
+        <path 
+          d="M100 30 C 60 30, 40 60, 40 100 C 40 140, 60 170, 100 170 C 140 170, 160 140, 160 100 C 160 60, 140 30, 100 30" 
+          fill="url(#avatarGradV1)" 
+          stroke={isAISpeaking ? "#818cf8" : "#4f46e5"} 
+          strokeWidth="2" 
+          filter="url(#burlEffectV1)"
+        />
+
+        {/* Eyes */}
+        <g className={isAISpeaking ? "animate-vocal-eyes" : isUserListening ? "animate-focused-eyes" : ""}>
+          <circle cx="75" cy="85" r="4" fill={isAISpeaking ? "#818cf8" : "#4f46e5"} className={isAISpeaking ? "animate-pulse" : ""} />
+          <circle cx="125" cy="85" r="4" fill={isAISpeaking ? "#818cf8" : "#4f46e5"} className={isAISpeaking ? "animate-pulse" : ""} />
+        </g>
+
+        {/* Dynamic Lip Sync Mouth */}
+        <g transform="translate(100, 130)">
+          {isAISpeaking ? (
+            <path 
+              d="M-20 -10 Q 0 15, 20 -10" 
+              stroke="#818cf8" 
+              strokeWidth="6" 
+              fill="none" 
+              strokeLinecap="round"
+              className="animate-lip-sync"
+            />
+          ) : isUserListening ? (
+            <path 
+              d="M-15 0 Q 0 5, 15 0" 
+              stroke="#4f46e5" 
+              strokeWidth="3" 
+              fill="none" 
+              strokeLinecap="round"
+              className="animate-hearing-mouth"
+            />
+          ) : (
+            <path 
+              d="M-15 0 L 15 0" 
+              stroke="#4f46e5" 
+              strokeWidth="2" 
+              fill="none" 
+              strokeLinecap="round"
+            />
+          )}
+        </g>
+
+        {/* Subtle Brain Glow when thinking/active */}
+        <circle cx="100" cy="100" r="40" fill="indigo" opacity={isAISpeaking ? "0.15" : "0"} className="animate-pulse" />
+      </g>
+
+      {/* Neck & Shoulders (Static) */}
       <path d="M70 170 C 70 190, 30 190, 10 200 L 190 200 C 170 190, 130 190, 130 170" fill="#1e1b4b" stroke="#4f46e5" strokeWidth="2" />
     </svg>
   );
@@ -302,7 +352,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
-           <div className="w-40 h-40 bg-indigo-600 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/20 border-4 border-white/10">
+           <div className="w-48 h-48 bg-indigo-600 rounded-[3rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20 border-4 border-white/10 group">
               <AIHumanAvatar />
            </div>
            <div className="max-w-2xl space-y-6">
@@ -325,38 +375,45 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                 <div className="aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10"></div>
                    
-                   <div className={`relative z-20 transition-all duration-1000 ${isAISpeaking ? 'scale-105' : 'scale-100'}`}>
+                   <div className="relative z-20">
                       <AIHumanAvatar />
                    </div>
                    
-                   {isAISpeaking && (
-                     <div className="absolute bottom-12 left-0 right-0 h-16 flex items-end justify-center gap-1 z-20">
-                        {[...Array(30)].map((_, i) => (
-                           <div key={i} className="w-1.5 bg-indigo-500 rounded-full animate-waveform-sm" style={{ height: `${20 + Math.random() * 80}%`, animationDelay: `${i * 0.05}s` }}></div>
+                   {(isAISpeaking || isUserListening) && (
+                     <div className="absolute bottom-16 left-0 right-0 h-16 flex items-end justify-center gap-1 z-20">
+                        {[...Array(40)].map((_, i) => (
+                           <div 
+                             key={i} 
+                             className={`w-1.5 rounded-full transition-all duration-300 ${isAISpeaking ? 'bg-indigo-500 animate-waveform-v1' : 'bg-emerald-500 animate-listening-pulse-v1'}`} 
+                             style={{ 
+                               height: isAISpeaking ? `${20 + Math.random() * 80}%` : `${10 + Math.random() * 30}%`, 
+                               animationDelay: `${i * 0.03}s` 
+                             }}
+                           ></div>
                         ))}
                      </div>
                    )}
 
                    <div className="absolute top-10 left-10 z-20 flex items-center gap-3 px-5 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                      <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest">Active Presence Link</span>
+                      <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : isUserListening ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? 'Agent Speaking' : isUserListening ? 'Agent Listening' : 'Presence Online'}</span>
                    </div>
                 </div>
              </div>
 
              <div className="lg:col-span-4 flex flex-col gap-6">
-                <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4">
+                <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4 min-h-[150px]">
                    <h5 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Current Intelligence Probe</h5>
                    <p className="text-xl font-bold italic leading-relaxed text-indigo-50">
                      {messages[messages.length - 1]?.content || "Syncing logic..."}
                    </p>
                 </div>
                 
-                <div className="flex-1 bg-slate-900 border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6">
-                   <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-rose-600 shadow-[0_0_40px_rgba(225,29,72,0.4)] animate-ping' : 'bg-slate-800'}`}>
-                      <ICONS.Speaker className="w-8 h-8" />
+                <div className={`flex-1 border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
+                   <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}>
+                      <ICONS.Speaker className={`w-8 h-8 ${isUserListening ? 'text-white' : 'text-slate-500'}`} />
                    </div>
-                   <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">
+                   <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}>
                      {isUserListening ? "Capturing Strategic Logic..." : "Neural Capturing Primed"}
                    </p>
                 </div>
@@ -365,7 +422,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
 
           <div className="space-y-6">
              <div className="relative group">
-                <label className="absolute -top-3 left-10 px-4 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full z-10 shadow-lg">
+                <label className="absolute -top-3 left-10 px-4 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full z-10 shadow-lg border border-indigo-500">
                   Neural Auto-Captioning (Editable)
                 </label>
                 <textarea 
@@ -376,9 +433,9 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                 />
                 <button 
                   onClick={() => startListening()}
-                  className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all"
+                  className={`absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}
                 >
-                  <ICONS.Speaker className="text-indigo-400" />
+                  <ICONS.Speaker className="w-5 h-5" />
                 </button>
              </div>
 
@@ -387,7 +444,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                    <button 
                      onClick={handleNextNode}
                      disabled={isProcessing || !currentCaption.trim()}
-                     className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center gap-3"
+                     className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center gap-3 active:scale-95"
                    >
                      {isProcessing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <ICONS.Play className="w-4 h-4" />}
                      Commit Answer & Next Question
@@ -418,20 +475,60 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       )}
 
       <style>{`
-        @keyframes mouth {
-          0%, 100% { transform: scaleY(0.4); }
-          50% { transform: scaleY(1.2); }
+        @keyframes lip-sync-v1 {
+          0%, 100% { transform: scaleY(0.6); }
+          25% { transform: scaleY(1.3) scaleX(1.05); }
+          50% { transform: scaleY(0.8) scaleX(0.95); }
+          75% { transform: scaleY(1.5) scaleX(1.1); }
         }
-        .animate-mouth {
-          animation: mouth 0.2s ease-in-out infinite;
-          transform-origin: 100px 125px;
+        .animate-lip-sync {
+          animation: lip-sync-v1 0.18s ease-in-out infinite;
+          transform-origin: center;
         }
-        @keyframes waveform-sm {
-          0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+        @keyframes hearing-mouth-v1 {
+          0%, 100% { transform: scaleY(1); opacity: 0.8; }
+          50% { transform: scaleY(1.4) scaleX(1.03); opacity: 1; }
+        }
+        .animate-hearing-mouth {
+          animation: hearing-mouth-v1 0.45s ease-in-out infinite;
+          transform-origin: center;
+        }
+        @keyframes hearing-tilt-v1 {
+          0%, 100% { transform: rotate(0deg) translateY(0px); }
+          25% { transform: rotate(1deg) translateY(-1px); }
+          75% { transform: rotate(-1deg) translateY(1px); }
+        }
+        .animate-hearing-tilt {
+          animation: hearing-tilt-v1 3.5s ease-in-out infinite;
+          transform-origin: 100px 100px;
+        }
+        @keyframes vocal-eyes-v1 {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.2); filter: brightness(1.2); }
+        }
+        .animate-vocal-eyes {
+          animation: vocal-eyes-v1 0.12s ease-in-out infinite;
+        }
+        @keyframes focused-eyes-v1 {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(0.92); opacity: 0.8; }
+        }
+        .animate-focused-eyes {
+          animation: focused-eyes-v1 4.5s ease-in-out infinite;
+        }
+        @keyframes waveform-v1 {
+          0%, 100% { transform: scaleY(0.4); opacity: 0.3; }
           50% { transform: scaleY(1); opacity: 1; }
         }
-        .animate-waveform-sm {
-          animation: waveform-sm 0.5s ease-in-out infinite;
+        .animate-waveform-v1 {
+          animation: waveform-v1 0.4s ease-in-out infinite;
+        }
+        @keyframes listening-pulse-v1 {
+          0%, 100% { transform: scaleY(0.5); opacity: 0.4; }
+          50% { transform: scaleY(1.2); opacity: 0.8; }
+        }
+        .animate-listening-pulse-v1 {
+          animation: listening-pulse-v1 0.9s ease-in-out infinite;
         }
       `}</style>
     </div>
