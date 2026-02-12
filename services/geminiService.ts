@@ -67,6 +67,59 @@ function safeJsonParse(str: string) {
   throw new Error("Failed to parse cognitive intelligence response as valid JSON.");
 }
 
+// Avatar Evaluation helper
+export async function evaluateAvatarSession(
+  history: GPTMessage[], 
+  context: MeetingContext
+): Promise<any> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-pro-preview';
+  
+  const historyStr = history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
+  
+  const prompt = `Act as the "Hidden Performance Evaluator" from our dual-mode simulation.
+  The conversation session has ended. Based on the transcript below, generate the structured JSON performance report.
+  
+  EVALUATION RULES:
+  • Be strict. Penalize vagueness. Reward quantified impact. 
+  • Assess specifically for a Fortune 50 CIO Persona (Fahim Sidiqi).
+  
+  TRANSCRIPT:
+  ${historyStr}
+  
+  REQUIRED JSON FORMAT:
+  {
+    "conversation_summary": "Concise summary",
+    "key_inflection_points": ["Specific moment 1", "Specific moment 2"],
+    "objection_mapping": [{ "objection": "The text of the objection", "handled_effectively": true/false, "quality_score": 1-10 }],
+    "value_alignment_score": 1-10,
+    "roi_strength_score": 1-10,
+    "risk_and_security_handling_score": 1-10,
+    "confidence_and_clarity_score": 1-10,
+    "missed_opportunities": ["Missed opportunity text"],
+    "trust_signals_detected": ["Trust signal text"],
+    "risk_flags": ["Risk flag text"],
+    "deal_readiness_score": 1-10,
+    "next_step_likelihood": "low / medium / high",
+    "coaching_recommendations": ["Actionable improvement 1", "Actionable improvement 2"]
+  }`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 16000 }
+      }
+    });
+    return safeJsonParse(response.text || "{}");
+  } catch (error) {
+    console.error("Evaluation failed:", error);
+    throw error;
+  }
+}
+
 // Avatar Simulation: Specialized dual-mode interaction
 export async function* streamAvatarSimulation(
   prompt: string, 
@@ -143,26 +196,9 @@ DO NOT reveal evaluation during the live conversation.
 END-OF-SESSION BEHAVIOR
 ===========================================================
 When the user types exactly: END SESSION
-Switch from CIO mode to Report Mode.
-Generate a structured JSON performance report in this format:
-{
-  "conversation_summary": "",
-  "key_inflection_points": [],
-  "objection_mapping": [{ "objection": "", "handled_effectively": true/false, "quality_score": 1-10 }],
-  "value_alignment_score": 1-10,
-  "roi_strength_score": 1-10,
-  "risk_and_security_handling_score": 1-10,
-  "confidence_and_clarity_score": 1-10,
-  "missed_opportunities": [],
-  "trust_signals_detected": [],
-  "risk_flags": [],
-  "deal_readiness_score": 1-10,
-  "next_step_likelihood": "low / medium / high",
-  "coaching_recommendations": []
-}
+Return ONLY the word "STOP".
 
 Rules: Be strict. Penalize vagueness. Reward quantified impact. Think like a CIO deciding whether to proceed.
-Return JSON ONLY in report mode.
 
 MEETING CONTEXT:
 Seller: ${context.sellerNames} (${context.sellerCompany})
