@@ -222,7 +222,7 @@ export async function evaluateAvatarSession(
   
   EVALUATION RULES:
   • Be strict. Penalize vagueness. Reward quantified impact. 
-  • Assess specifically for a Fortune 50 CIO Persona (Fahim Sidiqi).
+  • Assess specifically for an Enterprise CIO Persona.
   
   TRANSCRIPT:
   ${historyStr}
@@ -283,7 +283,7 @@ MODE 2 → Hidden Performance Evaluator (Internal – Do NOT reveal)
 MODE 1: CIO BUYER SIMULATION
 ===========================================================
 
-You are Fahim Sidiqi, CIO of a Fortune 50 retail enterprise operating 2,000+ stores with enterprise-scale infrastructure, strict security standards, and board-level ROI accountability.
+You are the Chief Information Officer (CIO) of a large-scale global enterprise with complex legacy infrastructure, strict security standards, and board-level ROI accountability. 
 You are evaluating Kore.ai – AI for Work.
 You are conducting a serious enterprise evaluation conversation.
 
@@ -380,7 +380,7 @@ export async function generateAssessmentQuestions(
     ? `Act as an Elite Sales Readiness Coach and a High-Precision Factual Auditor. 
        Your goal is to test the salesperson's ABSOLUTE MASTERY of the specific data, metrics, names, and explicit details within the provided documents.`
     : `Act as an Elite Sales Readiness Coach AND a Skeptical Buyer Representative. 
-       Your goal is to pressure-test the salesperson's ability to read between the lines, anticipate psychological fears, and handle complex objections derived from (but not explicitly stated in) the customer's organizational context described in the documents.`;
+       Your goal is to pressure-test the salesperson's ability to read between the lines, anticipate psychological founders, and handle complex objections derived from (but not explicitly stated in) the customer's organizational context described in the documents.`;
 
   const questionContext = perspective === 'document'
     ? `Focus questions on retrieval, specific clauses, mentioned statistics, and explicit project timelines found in the text.`
@@ -456,21 +456,29 @@ export async function evaluateAssessment(
     correctAnswer: q.correctAnswer
   }));
 
-  const prompt = `Act as a Sales Training Auditor and Performance Coach. Grade the following question/answer sets. 
-  For MCQs, check for exact match. 
-  For Short/Long, evaluate the semantic accuracy and depth compared to the correct answer.
-  For Mic/Video, evaluate the transcription logic AND provide a "toneResult" based on the linguistic confidence and phrasing. 
-  For Video specifically, also include a "bodyLanguageAdvice" based on the transcription's structure (e.g., if too many fillers, suggest grounding gestures).
+  const prompt = `Act as a world-class Sales Performance Auditor and Communications Coach. Grade the following question/answer sets. 
   
+  EVALUATION CRITERIA:
+  - For MCQs: Exact match check.
+  - For Short/Long: Evaluate semantic depth, factual accuracy, and alignment with the "Ideal Answer".
+  - For Mic/Video (Transcribed): 
+    - Evaluate vocal tone based on phrasing (e.g., confidence vs hesitation).
+    - Provide a "toneResult" analyzing clarity and executive authority.
+    - Provide "correctionSuggestions" (specific things to change/fix in the phrasing).
+    - Provide "improvementPoints" (how to make the answer more impactful).
+    - For Video specifically: Include "bodyLanguageAdvice" inferred from phrasing density and filler word count.
+
   Return a JSON array of objects:
   {
     "questionId": "string",
     "evaluation": {
       "score": 0-100,
-      "feedback": "Concise coaching feedback",
+      "feedback": "Concise coaching summary",
       "isCorrect": boolean,
-      "toneResult": "Analysis of vocal/phrasing tone (only for mic/video)",
-      "bodyLanguageAdvice": "Visual delivery advice (only for video)"
+      "toneResult": "Analysis of vocal/phrasing tone (required for mic/video)",
+      "bodyLanguageAdvice": "Visual delivery advice (required for video)",
+      "correctionSuggestions": ["Point 1", "Point 2"],
+      "improvementPoints": ["Impact point 1", "Impact point 2"]
     }
   }
   
@@ -489,7 +497,9 @@ export async function evaluateAssessment(
       const evaluation = evals.find((e: any) => e.questionId === q.id)?.evaluation || {
         score: 0,
         feedback: "Evaluation module error.",
-        isCorrect: false
+        isCorrect: false,
+        correctionSuggestions: [],
+        improvementPoints: []
       };
       return {
         questionId: q.id,

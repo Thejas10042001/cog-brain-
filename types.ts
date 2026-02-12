@@ -197,6 +197,8 @@ export interface AssessmentEvaluation {
   isCorrect: boolean;
   toneResult?: string; // Specific for mic/video
   bodyLanguageAdvice?: string; // Specific for video
+  correctionSuggestions: string[]; // Specific points to fix
+  improvementPoints: string[]; // How to improve further
 }
 
 export interface AssessmentResult {

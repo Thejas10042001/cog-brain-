@@ -457,110 +457,102 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                   </div>
                 )}
 
-                {currentQ.type === 'mic' && (
+                {(currentQ.type === 'mic' || currentQ.type === 'video') && (
                   <div className="flex flex-col items-center justify-center gap-10 py-12">
-                     <div className="relative">
-                        <div className={`absolute inset-0 rounded-full border-4 border-rose-500/20 transition-transform duration-1000 ${isRecording ? 'scale-[1.6] animate-ping' : 'scale-100'}`}></div>
-                        <div className={`absolute inset-0 rounded-full border-4 border-rose-500/10 transition-transform duration-1000 ${isRecording ? 'scale-[2.2] animate-ping [animation-delay:0.5s]' : 'scale-100'}`}></div>
-                        
-                        <button 
-                          onClick={toggleRecording}
-                          className={`relative z-10 w-40 h-40 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-rose-600 shadow-[0_0_60px_rgba(225,29,72,0.6)]' : 'bg-indigo-600 hover:bg-indigo-700 shadow-xl'}`}
-                        >
-                          {isRecording ? <ICONS.X className="w-16 h-16 text-white" /> : <ICONS.Speaker className="w-16 h-16 text-white" />}
-                        </button>
-                     </div>
-
-                     <div className="text-center space-y-4">
-                        <h4 className="text-2xl font-black text-slate-800">{isRecording ? "Neural Transcription Active..." : "Initiate Verbal Answer"}</h4>
-                        <div className="flex items-center justify-center gap-1 h-8">
-                           {isRecording ? (
-                              [...Array(12)].map((_, i) => (
-                                 <div 
-                                    key={i} 
-                                    className="w-1 bg-rose-500 rounded-full animate-waveform-sm"
-                                    style={{ 
-                                       height: `${20 + Math.random() * 80}%`,
-                                       animationDelay: `${i * 0.1}s`
-                                    }}
-                                 ></div>
-                              ))
-                           ) : (
-                              <p className="text-slate-400 font-medium italic">Speak your strategy clearly. Performance will be audited for logic.</p>
-                           )}
-                        </div>
-                     </div>
-
-                     {answers[currentQ.id] && (
-                       <div className="max-w-3xl w-full p-10 bg-indigo-50 rounded-[3rem] border-2 border-indigo-100 text-indigo-900 font-bold italic animate-in fade-in slide-in-from-bottom-4 shadow-inner relative overflow-hidden">
-                          <div className="absolute top-0 right-0 p-4 opacity-10"><ICONS.Speaker className="w-12 h-12" /></div>
-                          “{answers[currentQ.id]}”
-                       </div>
-                     )}
-                  </div>
-                )}
-
-                {currentQ.type === 'video' && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 py-6">
-                    <div className="relative rounded-[3rem] overflow-hidden bg-slate-900 shadow-2xl border-8 border-slate-800 aspect-video flex items-center justify-center">
-                       <video 
-                         ref={videoRef} 
-                         autoPlay 
-                         muted 
-                         playsInline 
-                         className="w-full h-full object-cover scale-x-[-1]"
-                       />
-                       <div className="absolute top-6 left-6 flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10">
-                          <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`}></div>
-                          <span className="text-[10px] font-black text-white uppercase tracking-widest">{isRecording ? 'Active Performance Trace' : 'Neural Feed Primed'}</span>
-                       </div>
-                       
-                       {!streamRef.current && (
-                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm space-y-6">
-                            <ICONS.Efficiency className="w-16 h-16 text-indigo-400 animate-pulse" />
-                            <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Requesting Neural Camera Access...</p>
-                         </div>
-                       )}
-                    </div>
-
-                    <div className="flex flex-col justify-center space-y-8">
-                       <div className="p-10 bg-slate-50 border border-slate-100 rounded-[3rem] space-y-6">
-                          <h4 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.3em]">Delivery Instructions</h4>
-                          <ul className="space-y-4">
-                             <li className="flex gap-4">
-                                <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-[10px] shrink-0">1</div>
-                                <p className="text-xs font-medium text-slate-600 leading-relaxed">Turn on your camera and face the lens directly to simulate eye contact.</p>
-                             </li>
-                             <li className="flex gap-4">
-                                <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-[10px] shrink-0">2</div>
-                                <p className="text-xs font-medium text-slate-600 leading-relaxed">Initiate recording and deliver your strategic response with high confidence.</p>
-                             </li>
-                             <li className="flex gap-4">
-                                <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-[10px] shrink-0">3</div>
-                                <p className="text-xs font-medium text-slate-600 leading-relaxed">AI will evaluate your <strong>Transcription Logic</strong>, <strong>Voice Tone</strong>, and <strong>Visual Impact</strong>.</p>
-                             </li>
-                          </ul>
-                       </div>
-
-                       <div className="flex flex-col items-center gap-6">
-                          <button 
-                            onClick={toggleRecording}
-                            className={`group relative overflow-hidden px-16 py-6 rounded-full font-black text-lg transition-all shadow-2xl ${isRecording ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105 active:scale-95'}`}
-                          >
-                             <div className="relative z-10 flex items-center gap-3">
-                                {isRecording ? <><ICONS.X /> Terminate & Parse</> : <><ICONS.Play /> Start Performance</>}
-                             </div>
-                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                          </button>
-                          
-                          {answers[currentQ.id] && (
-                            <div className="w-full p-6 bg-emerald-50 border border-emerald-100 rounded-2xl animate-in fade-in">
-                               <p className="text-[10px] font-black uppercase text-emerald-600 mb-2">Partial Transcription Trace</p>
-                               <p className="text-sm font-medium text-emerald-900 italic leading-relaxed line-clamp-3">“{answers[currentQ.id]}”</p>
+                     {currentQ.type === 'video' ? (
+                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
+                         <div className="relative rounded-[3rem] overflow-hidden bg-slate-900 shadow-2xl border-8 border-slate-800 aspect-video flex items-center justify-center">
+                            <video 
+                              ref={videoRef} 
+                              autoPlay 
+                              muted 
+                              playsInline 
+                              className="w-full h-full object-cover scale-x-[-1]"
+                            />
+                            <div className="absolute top-6 left-6 flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10">
+                               <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`}></div>
+                               <span className="text-[10px] font-black text-white uppercase tracking-widest">{isRecording ? 'Active Performance Trace' : 'Neural Feed Primed'}</span>
                             </div>
-                          )}
+                            
+                            {!streamRef.current && (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm space-y-6">
+                                 <ICONS.Efficiency className="w-16 h-16 text-indigo-400 animate-pulse" />
+                                 <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Requesting Neural Camera Access...</p>
+                              </div>
+                            )}
+                         </div>
+
+                         <div className="space-y-6 flex flex-col justify-center">
+                            <h4 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.3em]">Visual Delivery Hub</h4>
+                            <div className="relative group">
+                              <label className="absolute -top-3 left-10 px-4 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full z-10 shadow-lg">
+                                Editable Performance Transcription
+                              </label>
+                              <textarea 
+                                value={answers[currentQ.id] || ""}
+                                onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
+                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-10 text-lg font-medium focus:border-indigo-500 outline-none transition-all h-60 resize-none shadow-inner italic"
+                                placeholder="Transcription will appear here. You can manually correct it for audit precision..."
+                              />
+                            </div>
+                            <button 
+                              onClick={toggleRecording}
+                              className={`group relative overflow-hidden px-16 py-5 rounded-full font-black text-lg transition-all shadow-2xl ${isRecording ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white hover:scale-105 active:scale-95'}`}
+                            >
+                               <div className="relative z-10 flex items-center justify-center gap-3">
+                                  {isRecording ? <><ICONS.X /> Terminate & Parse</> : <><ICONS.Play /> Start Performance</>}
+                               </div>
+                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                            </button>
+                         </div>
                        </div>
-                    </div>
+                     ) : (
+                       <>
+                        <div className="relative">
+                           <div className={`absolute inset-0 rounded-full border-4 border-rose-500/20 transition-transform duration-1000 ${isRecording ? 'scale-[1.6] animate-ping' : 'scale-100'}`}></div>
+                           <div className={`absolute inset-0 rounded-full border-4 border-rose-500/10 transition-transform duration-1000 ${isRecording ? 'scale-[2.2] animate-ping [animation-delay:0.5s]' : 'scale-100'}`}></div>
+                           
+                           <button 
+                             onClick={toggleRecording}
+                             className={`relative z-10 w-40 h-40 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-rose-600 shadow-[0_0_60px_rgba(225,29,72,0.6)]' : 'bg-indigo-600 hover:bg-indigo-700 shadow-xl'}`}
+                           >
+                             {isRecording ? <ICONS.X className="w-16 h-16 text-white" /> : <ICONS.Speaker className="w-16 h-16 text-white" />}
+                           </button>
+                        </div>
+
+                        <div className="text-center space-y-4">
+                           <h4 className="text-2xl font-black text-slate-800">{isRecording ? "Neural Transcription Active..." : "Initiate Verbal Answer"}</h4>
+                           <div className="flex items-center justify-center gap-1 h-8">
+                              {isRecording ? (
+                                 [...Array(12)].map((_, i) => (
+                                    <div 
+                                       key={i} 
+                                       className="w-1 bg-rose-500 rounded-full animate-waveform-sm"
+                                       style={{ 
+                                          height: `${20 + Math.random() * 80}%`,
+                                          animationDelay: `${i * 0.1}s`
+                                       }}
+                                    ></div>
+                                 ))
+                              ) : (
+                                 <p className="text-slate-400 font-medium italic">Speak your strategy clearly. Performance will be audited for logic.</p>
+                              )}
+                           </div>
+                        </div>
+
+                        <div className="max-w-3xl w-full relative group">
+                           <label className="absolute -top-3 left-10 px-4 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full z-10 shadow-lg">
+                             Editable Transcription Trace
+                           </label>
+                           <textarea 
+                             value={answers[currentQ.id] || ""}
+                             onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
+                             className="w-full p-10 bg-indigo-50/50 rounded-[3rem] border-2 border-indigo-100 text-indigo-900 font-bold italic shadow-inner h-48 focus:border-indigo-500 outline-none transition-all resize-none"
+                             placeholder="The engine will capture your verbal output. Correct transcription errors here for maximum audit accuracy..."
+                           />
+                        </div>
+                       </>
+                     )}
                   </div>
                 )}
               </div>
@@ -615,7 +607,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
     const timeUsedPercent = Math.round((timeUsed / totalSessionTime) * 100);
 
     return (
-      <div className="space-y-12 animate-in slide-in-from-bottom-8 duration-700">
+      <div className="space-y-12 animate-in slide-in-from-bottom-8 duration-700 pb-20">
         <div className="bg-slate-900 rounded-[4rem] p-16 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12 text-left">
            <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
            <div className="relative z-10 space-y-8 flex-1">
@@ -657,95 +649,113 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
               </div>
            </div>
            <div className="relative z-10 w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.5)]">
-              <span className="text-[12px] font-black uppercase tracking-widest text-indigo-200 mb-2">Readiness Score</span>
+              <span className="text-[12px] font-black uppercase tracking-widest text-indigo-200 mb-2">Total Score</span>
               <span className="text-7xl font-black">{totalScore}%</span>
            </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-10">
            {questions.map((q, idx) => {
              const res = results.find(r => r.questionId === q.id);
              return (
-               <div key={q.id} className="bg-white rounded-[3rem] p-12 border border-slate-200 shadow-xl group hover:border-indigo-300 transition-all text-left">
-                  <div className="flex items-start justify-between mb-10">
-                     <div className="space-y-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Node {idx + 1} • {q.type} • {res?.timeSpent}s Analysis</span>
-                        <h4 className="text-2xl font-black text-slate-900 tracking-tight">{q.text}</h4>
+               <div key={q.id} className="bg-white rounded-[4rem] p-12 border border-slate-200 shadow-xl group hover:border-indigo-300 transition-all text-left relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.02] -rotate-12"><ICONS.Brain className="w-64 h-64" /></div>
+                  
+                  <div className="flex items-start justify-between mb-12 relative z-10">
+                     <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                           <span className="px-4 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg">Node {idx + 1}</span>
+                           <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{q.type} Mode • {res?.timeSpent}s Logic Scan</span>
+                        </div>
+                        <h4 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{q.text}</h4>
                      </div>
-                     <div className={`px-6 py-3 rounded-2xl flex items-center gap-3 border ${res?.evaluation.isCorrect ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
-                        <span className="text-xl font-black">{res?.evaluation.score}%</span>
-                        <div className="w-px h-6 bg-current opacity-20"></div>
-                        <span className="text-[10px] font-black uppercase tracking-widest">{res?.evaluation.isCorrect ? 'Validated' : 'Weak Point'}</span>
+                     <div className={`px-10 py-6 rounded-[2.5rem] flex flex-col items-center justify-center border-4 ${res?.evaluation.isCorrect ? 'bg-emerald-50 border-emerald-100 text-emerald-600 shadow-emerald-50' : 'bg-rose-50 border-rose-100 text-rose-600 shadow-rose-50'} shadow-xl`}>
+                        <span className="text-5xl font-black">{res?.evaluation.score}%</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-60">{res?.evaluation.isCorrect ? 'Logic Validated' : 'Strategic Misstep'}</span>
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                     <div className="space-y-6">
-                        <div className="space-y-3">
-                           <h5 className={`text-[10px] font-black uppercase tracking-widest ${q.type === 'mic' || q.type === 'video' ? 'text-rose-500' : q.type === 'long' ? 'text-amber-500' : 'text-indigo-500'}`}>
-                             Your {q.type === 'mic' || q.type === 'video' ? 'Verbal' : q.type === 'long' ? 'Strategic' : 'Tactical'} Response
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10">
+                     <div className="lg:col-span-7 space-y-10">
+                        <div className="space-y-4">
+                           <h5 className="text-[11px] font-black uppercase text-indigo-500 tracking-[0.3em] flex items-center gap-3">
+                              <div className="w-1 h-1 bg-indigo-500 rounded-full"></div> Captured Performance Trace
                            </h5>
-                           <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 italic text-slate-600 font-medium shadow-inner">
-                              “{res?.userAnswer || "No input provided."}”
+                           <div className="p-10 bg-slate-50 rounded-[3rem] border border-slate-100 italic text-slate-700 text-lg leading-relaxed shadow-inner">
+                              “{res?.userAnswer || "No verbal or text input detected."}”
                            </div>
                         </div>
 
-                        {(q.type === 'mic' || q.type === 'video') && res?.evaluation.toneResult && (
-                          <div className="p-8 bg-indigo-50/50 border border-indigo-100 rounded-[2rem] space-y-3 shadow-sm">
-                             <h5 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-2">
-                                <ICONS.Speaker className="w-3 h-3" /> Vocal Resonance & Phrasing Tone
+                        {res?.evaluation.correctionSuggestions && res.evaluation.correctionSuggestions.length > 0 && (
+                          <div className="space-y-4">
+                             <h5 className="text-[11px] font-black uppercase text-rose-500 tracking-[0.3em] flex items-center gap-3">
+                                <div className="w-1 h-1 bg-rose-500 rounded-full"></div> Correction Suggestions
                              </h5>
-                             <p className="text-sm font-bold text-slate-700 italic">“{res.evaluation.toneResult}”</p>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {res.evaluation.correctionSuggestions.map((s, i) => (
+                                  <div key={i} className="p-6 bg-rose-50/50 border border-rose-100 rounded-2xl flex gap-4 animate-in slide-in-from-left-2">
+                                     <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center font-black text-[9px] shrink-0 mt-0.5">!</div>
+                                     <p className="text-xs font-bold text-rose-800 leading-relaxed italic">{s}</p>
+                                  </div>
+                                ))}
+                             </div>
                           </div>
                         )}
 
-                        {q.type === 'video' && res?.evaluation.bodyLanguageAdvice && (
-                          <div className="p-8 bg-amber-50/50 border border-amber-100 rounded-[2rem] space-y-3 shadow-sm">
-                             <h5 className="text-[10px] font-black uppercase text-amber-600 tracking-widest flex items-center gap-2">
-                                <ICONS.Efficiency className="w-3 h-3" /> Delivery & Body Language Audit
+                        {res?.evaluation.improvementPoints && res.evaluation.improvementPoints.length > 0 && (
+                          <div className="space-y-4">
+                             <h5 className="text-[11px] font-black uppercase text-emerald-600 tracking-[0.3em] flex items-center gap-3">
+                                <div className="w-1 h-1 bg-emerald-600 rounded-full"></div> Strategic Improvement Points
                              </h5>
-                             <p className="text-sm font-bold text-slate-700 italic">“{res.evaluation.bodyLanguageAdvice}”</p>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {res.evaluation.improvementPoints.map((p, i) => (
+                                  <div key={i} className="p-6 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex gap-4 animate-in slide-in-from-left-2">
+                                     <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-[9px] shrink-0 mt-0.5">+</div>
+                                     <p className="text-xs font-bold text-emerald-800 leading-relaxed italic">{p}</p>
+                                  </div>
+                                ))}
+                             </div>
                           </div>
                         )}
-
-                        <div className="space-y-3">
-                           <h5 className="text-[10px] font-black uppercase text-emerald-500 tracking-widest">Ideal Documented Logic</h5>
-                           <div className="p-8 bg-emerald-50/30 rounded-[2rem] border border-emerald-100 text-slate-900 font-bold">
-                              {q.correctAnswer}
-                           </div>
-                        </div>
                      </div>
-                     <div className="space-y-6">
-                        <div className="p-10 bg-indigo-950 text-white rounded-[3rem] shadow-2xl relative overflow-hidden h-full flex flex-col">
-                           <div className="absolute top-0 right-0 p-8 opacity-10"><ICONS.Brain className="w-32 h-32" /></div>
-                           <div className="flex-1">
-                              <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-[0.4em] mb-6">Neural Auditor Feedback</h5>
-                              <p className="text-lg font-medium leading-relaxed italic text-indigo-100">
+
+                     <div className="lg:col-span-5 space-y-8">
+                        <div className="p-10 bg-indigo-950 text-white rounded-[3.5rem] shadow-2xl relative overflow-hidden flex-1 group">
+                           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform"><ICONS.Speaker className="w-20 h-20" /></div>
+                           <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-[0.4em] mb-8">Neural Auditor Briefing</h5>
+                           
+                           <div className="space-y-8">
+                              <p className="text-xl font-medium leading-relaxed italic text-indigo-50 border-l-4 border-indigo-500/30 pl-8">
                                 {res?.evaluation.feedback}
                               </p>
-                              <div className="mt-8 pt-8 border-t border-white/10 flex items-center justify-between">
-                                 <div>
-                                    <h6 className="text-[9px] font-black uppercase text-indigo-500 mb-1">{q.type === 'mic' || q.type === 'video' ? 'Performance Mastery' : q.type === 'long' ? 'Strategic' : 'Tactical'} Tip</h6>
-                                    <p className="text-sm font-bold text-white/80">{q.explanation}</p>
-                                 </div>
-                                 <div className="text-right">
-                                    <h6 className="text-[9px] font-black uppercase text-indigo-400 mb-1">Time Analysis</h6>
-                                    <p className="text-xl font-black text-indigo-300">{res?.timeSpent}s</p>
-                                 </div>
-                              </div>
+
+                              {(q.type === 'mic' || q.type === 'video') && res?.evaluation.toneResult && (
+                                <div className="space-y-3 pt-6 border-t border-white/10">
+                                   <h6 className="text-[9px] font-black uppercase text-indigo-400 tracking-widest flex items-center gap-2">
+                                      <ICONS.Speaker className="w-3 h-3" /> Voice Tone & Delivery Audit
+                                   </h6>
+                                   <p className="text-xs font-bold text-white/80 leading-relaxed italic">{res.evaluation.toneResult}</p>
+                                </div>
+                              )}
+
+                              {q.type === 'video' && res?.evaluation.bodyLanguageAdvice && (
+                                <div className="space-y-3 pt-6 border-t border-white/10">
+                                   <h6 className="text-[9px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-2">
+                                      <ICONS.Efficiency className="w-3 h-3" /> Visual Impact Audit
+                                   </h6>
+                                   <p className="text-xs font-bold text-white/80 leading-relaxed italic">{res.evaluation.bodyLanguageAdvice}</p>
+                                </div>
+                              )}
                            </div>
-                           
-                           {q.citation && (
-                             <div className="mt-8 pt-6 border-t border-white/10">
-                                <h6 className="text-[9px] font-black uppercase text-emerald-400 mb-3 flex items-center gap-2">
-                                   <ICONS.Shield className="w-3 h-3" /> Grounded Evidence Link
-                                </h6>
-                                <p className="text-xs font-serif italic text-white/60 leading-relaxed">
-                                   “{q.citation.snippet}”
-                                </p>
-                                <p className="mt-2 text-[8px] font-black uppercase text-indigo-400 tracking-widest">Source: {q.citation.sourceFile}</p>
-                             </div>
-                           )}
+                        </div>
+
+                        <div className="p-8 bg-slate-900 rounded-[3rem] border border-white/5 space-y-4">
+                           <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Ideal Strategy Logic</h5>
+                           <p className="text-sm font-bold text-slate-100 leading-relaxed">{q.correctAnswer}</p>
+                           <div className="pt-4 border-t border-white/5">
+                              <p className="text-[9px] font-black uppercase text-slate-500 mb-1">Coaching Principle</p>
+                              <p className="text-xs font-medium text-slate-400 italic">“{q.explanation}”</p>
+                           </div>
                         </div>
                      </div>
                   </div>
