@@ -40,8 +40,8 @@ export interface CompetitorInsight {
   threatProfile: 'Direct' | 'Indirect' | 'Niche';
   strengths: string[];
   weaknesses: string[];
-  opportunities: string[]; // Where we can displace them
-  threats: string[]; // How they might win
+  opportunities: string[]; 
+  threats: string[]; 
   ourWedge: string;
   citation: Citation;
 }
@@ -181,21 +181,29 @@ export interface MeetingContext {
 // Comprehensive Simulation Report Structure
 export interface ComprehensiveAvatarReport {
   persona_used: string;
-  conversation_summary: string;
-  sentiment_trends: string; // Narrative of sentiment shifts
+  conversation_summary: {
+    main_themes: string[];
+    decisions_reached: string[];
+    inflection_points: string[];
+  };
+  sentiment_analysis: {
+    trend: 'positive' | 'neutral' | 'skeptical';
+    narrative: string;
+    emotional_shifts: Array<{ point: string; shift: string }>;
+  };
   objection_mapping: Array<{
     objection: string;
     handled_effectively: boolean;
     quality_score: number;
     coaching_note: string;
+    suggested_alternative: string;
   }>;
   value_alignment_score: number;
+  confidence_clarity_score: number;
   roi_strength_score: number;
-  risk_and_security_handling_score: number;
-  confidence_and_clarity_score: number;
-  missed_opportunities: string[];
-  trust_signals_detected: string[];
   risk_flags: string[];
+  trust_signals: string[];
+  missed_opportunities: string[];
   deal_readiness_score: number;
   next_step_likelihood: 'low' | 'medium' | 'high';
   coaching_recommendations: string[];

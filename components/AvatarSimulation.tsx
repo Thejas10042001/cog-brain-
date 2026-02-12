@@ -91,6 +91,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     setIsProcessing(true);
     setMessages([]);
     setCurrentCaption("");
+    setReport(null);
     setStatus("");
     try {
       const stream = streamAvatarSimulation("START SIMULATION", [], meetingContext);
@@ -123,7 +124,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   const handleEndSession = async () => {
     stopListening();
     setIsProcessing(true);
-    setStatus("Analyzing Conversation Architecture...");
+    setStatus("Synthesizing Strategic Audit...");
     let finalHistory = [...messages];
     if (currentCaption.trim()) {
       finalHistory.push({ id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' });
@@ -132,6 +133,65 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       const reportJson = await evaluateAvatarSession(finalHistory, meetingContext);
       setReport(reportJson);
     } catch (e) { console.error(e); } finally { setIsProcessing(false); setStatus(""); }
+  };
+
+  const exportPDF = async () => {
+    if (!report) return;
+    setIsExporting(true);
+    try {
+      const { jsPDF } = (window as any).jspdf;
+      const doc = new jsPDF();
+      let y = 20;
+      const margin = 20;
+
+      const addH = (t: string, size = 16) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(size);
+        doc.text(t, margin, y);
+        y += size / 2 + 2;
+      };
+
+      const addP = (t: string, size = 10) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(size);
+        const split = doc.splitTextToSize(t, 170);
+        doc.text(split, margin, y);
+        y += (split.length * (size / 2)) + 4;
+        if (y > 270) { doc.addPage(); y = 20; }
+      };
+
+      addH("Avatar Performance Audit Report");
+      addP(`Target Client: ${meetingContext.clientCompany}`);
+      addP(`Persona Audited: ${report.persona_used}`);
+      addP(`Overall Readiness Score: ${report.deal_readiness_score}/10`);
+      
+      addH("Conversation Summary", 12);
+      addP("Themes: " + report.conversation_summary.main_themes.join(", "));
+      addP("Decisions: " + report.conversation_summary.decisions_reached.join(", "));
+      
+      addH("Inflection Points", 12);
+      report.conversation_summary.inflection_points.forEach(p => addP(`• ${p}`));
+
+      addH("Sentiment Evolution", 12);
+      addP(`Trend: ${report.sentiment_analysis.trend.toUpperCase()}`);
+      addP(report.sentiment_analysis.narrative);
+
+      addH("Objection Mapping", 12);
+      report.objection_mapping.forEach(o => {
+        addP(`- Objection: ${o.objection}`);
+        addP(`  Score: ${o.quality_score}/10 | ${o.coaching_note}`);
+        addP(`  Better approach: "${o.suggested_alternative}"`);
+      });
+
+      addH("Coaching Recommendations", 12);
+      report.coaching_recommendations.forEach(r => addP(`• ${r}`));
+
+      doc.save(`Performance-Audit-${meetingContext.clientCompany}.pdf`);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const AIAnimatedBotCIO = () => (
@@ -150,91 +210,38 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
       </defs>
-
-      {/* Shoulders & Suit */}
       <g className="animate-breathe">
         <path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill="url(#suitGrad)" />
-        <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.8" /> {/* Shirt Collar */}
-        <path d="M96 170 L 100 210 L 104 170" fill="#4f46e5" opacity="0.6" /> {/* Tie */}
+        <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.8" />
+        <path d="M96 170 L 100 210 L 104 170" fill="#4f46e5" opacity="0.6" />
       </g>
-
-      {/* Head Container */}
       <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
-        <rect x="88" y="150" width="24" height="25" rx="12" fill="#e2e8f0" /> {/* Neck */}
-
-        {/* Face Shape */}
-        <path 
-          d="M100 15 C 55 15, 50 55, 50 95 C 50 145, 70 165, 100 165 C 130 165, 150 145, 150 95 C 150 55, 145 15, 100 15" 
-          fill="url(#faceGrad)" 
-          stroke="#1e1b4b" 
-          strokeWidth="0.5" 
-        />
-
-        {/* Brain Circuitry Glow (Temples) */}
-        <path d="M55 80 Q 60 85, 55 90" stroke="#4f46e5" strokeWidth="0.5" fill="none" opacity={isAISpeaking ? "0.8" : "0.1"} className={isAISpeaking ? "animate-pulse" : ""} />
-        <path d="M145 80 Q 140 85, 145 90" stroke="#4f46e5" strokeWidth="0.5" fill="none" opacity={isAISpeaking ? "0.8" : "0.1"} className={isAISpeaking ? "animate-pulse" : ""} />
-
-        {/* Eyes + Blinking */}
+        <rect x="88" y="150" width="24" height="25" rx="12" fill="#e2e8f0" />
+        <path d="M100 15 C 55 15, 50 55, 50 95 C 50 145, 70 165, 100 165 C 130 165, 150 145, 150 95 C 150 55, 145 15, 100 15" fill="url(#faceGrad)" stroke="#1e1b4b" strokeWidth="0.5" />
         <g className="animate-blink">
           <circle cx="78" cy="82" r="4.5" fill="#0f172a" />
           <circle cx="122" cy="82" r="4.5" fill="#0f172a" />
-          {/* Neural Pupil */}
           <circle cx="78" cy="82" r="1.5" fill="#4f46e5" filter="url(#eyeGlow)" />
           <circle cx="122" cy="82" r="1.5" fill="#4f46e5" filter="url(#eyeGlow)" />
         </g>
-
-        {/* Mouth - Professional Lip Sync Morphing */}
         <g transform="translate(100, 132)">
           {isAISpeaking ? (
-            <path 
-              d="M-12 0 Q 0 12, 12 0 Q 0 -2, -12 0" 
-              fill="#0f172a" 
-              className="animate-lip-morph"
-            />
+            <path d="M-12 0 Q 0 12, 12 0 Q 0 -2, -12 0" fill="#0f172a" className="animate-lip-morph" />
           ) : (
-            <path 
-              d="M-10 0 Q 0 2, 10 0" 
-              stroke="#0f172a" 
-              strokeWidth="2.5" 
-              fill="none" 
-              strokeLinecap="round"
-              className={isUserListening ? "animate-listen-mouth" : ""}
-            />
+            <path d="M-10 0 Q 0 2, 10 0" stroke="#0f172a" strokeWidth="2.5" fill="none" strokeLinecap="round" className={isUserListening ? "animate-listen-mouth" : ""} />
           )}
         </g>
       </g>
-
       <style>{`
-        @keyframes breathe {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-2px); }
-        }
+        @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
         .animate-breathe { animation: breathe 4s ease-in-out infinite; }
-        
-        @keyframes blink {
-          0%, 92%, 100% { transform: scaleY(1); }
-          96% { transform: scaleY(0.05); }
-        }
+        @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.05); } }
         .animate-blink { transform-origin: center 82px; animation: blink 5s infinite; }
-
-        @keyframes lip-morph {
-          0%, 100% { d: path("M-12 0 Q 0 12, 12 0 Q 0 -2, -12 0"); }
-          25% { d: path("M-8 0 Q 0 16, 8 0 Q 0 -4, -8 0"); }
-          50% { d: path("M-14 0 Q 0 8, 14 0 Q 0 -1, -14 0"); }
-          75% { d: path("M-10 0 Q 0 14, 10 0 Q 0 -3, -10 0"); }
-        }
+        @keyframes lip-morph { 0%, 100% { d: path("M-12 0 Q 0 12, 12 0 Q 0 -2, -12 0"); } 25% { d: path("M-8 0 Q 0 16, 8 0 Q 0 -4, -8 0"); } 50% { d: path("M-14 0 Q 0 8, 14 0 Q 0 -1, -14 0"); } 75% { d: path("M-10 0 Q 0 14, 10 0 Q 0 -3, -10 0"); } }
         .animate-lip-morph { animation: lip-morph 0.15s linear infinite; }
-
-        @keyframes listen-tilt {
-          0%, 100% { transform: rotate(0deg) translateX(0px); }
-          50% { transform: rotate(1.5deg) translateX(1px); }
-        }
+        @keyframes listen-tilt { 0%, 100% { transform: rotate(0deg) translateX(0px); } 50% { transform: rotate(1.5deg) translateX(1px); } }
         .animate-listen-tilt { animation: listen-tilt 3s ease-in-out infinite; transform-origin: center bottom; }
-
-        @keyframes listen-mouth {
-          0%, 100% { transform: scaleX(1); }
-          50% { transform: scaleX(1.1); }
-        }
+        @keyframes listen-mouth { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.1); } }
         .animate-listen-mouth { animation: listen-mouth 0.5s ease-in-out infinite; transform-origin: center; }
       `}</style>
     </svg>
@@ -242,25 +249,90 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
 
   if (report) {
     return (
-      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24">
-        <div className="bg-slate-900 rounded-[4rem] p-16 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12">
+      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24 text-white">
+        <div className="bg-slate-900 rounded-[4rem] p-16 shadow-2xl relative overflow-hidden flex flex-col items-start gap-12">
           <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
-          <div className="relative z-10 space-y-8 flex-1 text-left">
-            <div>
-              <h2 className="text-4xl font-black tracking-tight">Cognitive Performance Synthesis</h2>
-              <div className="flex gap-2 mt-4">
-                 <span className="px-3 py-1 bg-white/10 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/5">Likelihood: {report.next_step_likelihood}</span>
-                 <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-500/10">Readiness: {report.deal_readiness_score}/10</span>
-              </div>
-              <p className="text-indigo-200/70 font-medium text-lg max-w-2xl mt-6 italic leading-relaxed">"{report.conversation_summary}"</p>
-            </div>
-            <div className="flex gap-4">
-              <button onClick={() => { setReport(null); handleInitiate(); }} className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all">Reset Simulation</button>
-            </div>
+          
+          <div className="w-full flex justify-between items-center relative z-10">
+             <div className="space-y-2">
+                <h2 className="text-4xl font-black tracking-tight">Cognitive Performance Synthesis</h2>
+                <p className="text-indigo-400 font-bold uppercase tracking-widest text-xs">Role: {report.persona_used}</p>
+             </div>
+             <div className="flex gap-4">
+                <button onClick={exportPDF} disabled={isExporting} className="px-6 py-3 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50">
+                  {isExporting ? 'Synthesizing...' : <><ICONS.Document className="w-4 h-4" /> Export Strategic PDF</>}
+                </button>
+                <button onClick={handleInitiate} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">Restart Hub</button>
+             </div>
           </div>
-          <div className="relative z-10 w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.5)]">
-            <span className="text-[12px] font-black uppercase tracking-widest text-indigo-200 mb-2">Readiness Score</span>
-            <span className="text-7xl font-black">{report.deal_readiness_score}</span>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full relative z-10">
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
+                <span className="text-6xl font-black text-white">{report.deal_readiness_score}<span className="text-xl text-slate-500">/10</span></span>
+                <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mt-2">Readiness Score</span>
+             </div>
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
+                <span className="text-4xl font-black text-emerald-400 uppercase">{report.next_step_likelihood}</span>
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Next Step Likelihood</span>
+             </div>
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
+                <span className="text-4xl font-black text-indigo-300">{report.value_alignment_score * 10}%</span>
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Value Alignment</span>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full relative z-10">
+             <div className="space-y-8">
+                <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Sentiment Mapping & Trends</h4>
+                   <p className="text-lg font-medium italic text-indigo-50 leading-relaxed">"{report.sentiment_analysis.narrative}"</p>
+                   <div className="mt-6 space-y-3">
+                      {report.sentiment_analysis.emotional_shifts.map((s, i) => (
+                        <div key={i} className="flex items-center gap-3 text-xs font-bold text-slate-400">
+                           <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                           <span>{s.point}:</span> <span className="text-indigo-200">{s.shift}</span>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase text-rose-400 tracking-widest">Risk & Trust Signals</h4>
+                   <div className="grid grid-cols-2 gap-4">
+                      {report.risk_flags.map((f, i) => (
+                        <div key={i} className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-[11px] font-bold text-rose-200">⚠️ {f}</div>
+                      ))}
+                      {report.trust_signals.map((s, i) => (
+                        <div key={i} className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-[11px] font-bold text-emerald-200">🛡️ {s}</div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+
+             <div className="space-y-8">
+                <div className="p-10 bg-slate-800/40 border border-white/5 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Critical Inflection Points</h4>
+                   <ul className="space-y-4">
+                      {report.conversation_summary.inflection_points.map((p, i) => (
+                        <li key={i} className="flex gap-4 text-sm font-medium text-slate-300 leading-relaxed">
+                           <span className="text-indigo-500 font-black">0{i+1}</span>
+                           {p}
+                        </li>
+                      ))}
+                   </ul>
+                </div>
+
+                <div className="p-10 bg-indigo-950 border border-indigo-500/30 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Executive Coaching Directives</h4>
+                   <ul className="space-y-3">
+                      {report.coaching_recommendations.map((r, i) => (
+                        <li key={i} className="flex items-center gap-3 text-sm font-bold text-white">
+                           <ICONS.Sparkles className="w-4 h-4 text-indigo-400" /> {r}
+                        </li>
+                      ))}
+                   </ul>
+                </div>
+             </div>
           </div>
         </div>
       </div>

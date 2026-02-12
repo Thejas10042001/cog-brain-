@@ -78,8 +78,8 @@ async function performHighDepthEvaluation(
   
   const historyStr = history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
   
-  const prompt = `Act as an Elite Enterprise Sales Performance Auditor.
-  The conversation session has ended. Based on the transcript below, generate an EXHAUSTIVE strategic audit in JSON.
+  const prompt = `Act as an Elite Enterprise Sales Performance Auditor and Psychologist.
+  The avatar simulation has ended. Analyze the transcript below and generate an EXHAUSTIVE strategic report.
   
   TRANSCRIPT:
   ${historyStr}
@@ -87,33 +87,44 @@ async function performHighDepthEvaluation(
   STRATEGIC CONTEXT:
   Persona: ${personaUsed}
   Objective: ${context.meetingFocus}
+  Target: ${context.clientCompany}
   
-  REQUIRED JSON FORMAT:
+  REQUIRED JSON STRUCTURE:
   {
     "persona_used": "string",
-    "conversation_summary": "High-level summary of themes and decisions",
-    "sentiment_trends": "Narrative describing how the buyer's sentiment shifted (e.g., initial skepticism -> interest -> validation)",
+    "conversation_summary": {
+      "main_themes": ["theme 1", "theme 2"],
+      "decisions_reached": ["decision 1", "decision 2"],
+      "inflection_points": ["Critical moment X where seller did Y"]
+    },
+    "sentiment_analysis": {
+      "trend": "positive | neutral | skeptical",
+      "narrative": "Detailed narrative of sentiment evolution",
+      "emotional_shifts": [
+        { "point": "Objection about pricing", "shift": "Initial skepticism -> High resistance" }
+      ]
+    },
     "objection_mapping": [
       {
-        "objection": "The specific objection raised",
+        "objection": "The exact objection",
         "handled_effectively": boolean,
         "quality_score": 1-10,
-        "coaching_note": "How it could have been handled better"
+        "coaching_note": "Why it was effective or weak",
+        "suggested_alternative": "Exact wording for a better response"
       }
     ],
     "value_alignment_score": 1-10,
+    "confidence_clarity_score": 1-10,
     "roi_strength_score": 1-10,
-    "risk_and_security_handling_score": 1-10,
-    "confidence_and_clarity_score": 1-10,
-    "missed_opportunities": ["Opportunity 1", "Opportunity 2"],
-    "trust_signals_detected": ["Signal 1", "Signal 2"],
-    "risk_flags": ["Flag 1", "Flag 2"],
+    "risk_flags": ["Security concern X", "Scale worry Y"],
+    "trust_signals": ["Trusted signals detected"],
+    "missed_opportunities": ["Unasked question about Z"],
     "deal_readiness_score": 1-10,
     "next_step_likelihood": "low | medium | high",
     "coaching_recommendations": ["Recommendation 1", "Recommendation 2"]
   }
 
-  Be hyper-critical. Penalize fluff and vague claims. Reward grounded logic and ROI-based reasoning.`;
+  Be hyper-critical. Penalize fluff. Reward grounded logic and ROI-based reasoning.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -136,7 +147,6 @@ export async function evaluateAvatarSessionV2(
   history: GPTMessage[], 
   context: MeetingContext
 ): Promise<ComprehensiveAvatarReport> {
-  // Extract persona from history if possible or default to context
   const personaHeader = history.find(m => m.content.startsWith('PERSONA:'))?.content || 'CIO';
   const persona = personaHeader.replace('PERSONA:', '').trim();
   return performHighDepthEvaluation(history, context, persona);
@@ -239,7 +249,7 @@ export async function evaluateAvatarSession(
   history: GPTMessage[], 
   context: MeetingContext
 ): Promise<ComprehensiveAvatarReport> {
-  return performHighDepthEvaluation(history, context, "CIO (Generic)");
+  return performHighDepthEvaluation(history, context, "CIO (Dual-Mode Hub)");
 }
 
 // Avatar Simulation: Specialized dual-mode interaction (Legacy 1.0)

@@ -85,6 +85,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     setIsProcessing(true);
     setMessages([]);
     setCurrentCaption("");
+    setReport(null);
     try {
       const stream = streamAvatarSimulationV2(`PERSONA: ${selected}`, [], meetingContext);
       let firstQuestion = "";
@@ -127,6 +128,55 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     } catch (e) { console.error(e); } finally { setIsProcessing(false); setStatus(""); }
   };
 
+  const exportPDF = async () => {
+    if (!report) return;
+    setIsExporting(true);
+    try {
+      const { jsPDF } = (window as any).jspdf;
+      const doc = new jsPDF();
+      let y = 20;
+      const margin = 20;
+
+      const addH = (t: string, size = 16) => {
+        doc.setFont("helvetica", "bold"); doc.setFontSize(size);
+        doc.text(t, margin, y); y += size / 2 + 2;
+      };
+
+      const addP = (t: string, size = 10) => {
+        doc.setFont("helvetica", "normal"); doc.setFontSize(size);
+        const split = doc.splitTextToSize(t, 170);
+        doc.text(split, margin, y);
+        y += (split.length * (size / 2)) + 4;
+        if (y > 270) { doc.addPage(); y = 20; }
+      };
+
+      addH(`Avatar V2 performance Audit: ${persona}`);
+      addP(`Target Client: ${meetingContext.clientCompany}`);
+      addP(`Deal Readiness Score: ${report.deal_readiness_score}/10`);
+      
+      addH("Conversation Summary", 12);
+      addP("Main Themes: " + report.conversation_summary.main_themes.join(", "));
+      addH("Critical Inflection Points", 11);
+      report.conversation_summary.inflection_points.forEach(p => addP(`• ${p}`));
+
+      addH("Sentiment Trends & Emotional Shifts", 12);
+      addP(`General Trend: ${report.sentiment_analysis.trend.toUpperCase()}`);
+      addP(report.sentiment_analysis.narrative);
+      report.sentiment_analysis.emotional_shifts.forEach(s => addP(`- ${s.point}: ${s.shift}`));
+
+      addH("Objection Mapping", 12);
+      report.objection_mapping.forEach(o => {
+        addP(`Obj: ${o.objection}`);
+        addP(`Quality: ${o.quality_score}/10 | ${o.coaching_note}`);
+      });
+
+      addH("Strategic Recommendations", 12);
+      report.coaching_recommendations.forEach(r => addP(`• ${r}`));
+
+      doc.save(`V2-Simulation-Audit-${persona}.pdf`);
+    } catch (e) { console.error(e); } finally { setIsExporting(false); }
+  };
+
   const AnimatedBotV2 = ({ type }: { type: SimPersonaV2 }) => {
     const config = PERSONA_CONFIG[type];
     return (
@@ -141,76 +191,39 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
             <stop offset="100%" stopColor="#020617" />
           </linearGradient>
         </defs>
-
-        {/* Shoulders */}
         <g className="animate-breathe">
           <path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill={`url(#suitGrad-${type})`} />
-          <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.9" /> {/* Collar */}
-          <path d="M97 170 L 100 220 L 103 170" fill={config.color} opacity="0.7" /> {/* Tie/Accent */}
+          <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.9" />
+          <path d="M97 170 L 100 220 L 103 170" fill={config.color} opacity="0.7" />
         </g>
-
-        {/* Head */}
         <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
-          <rect x="90" y="155" width="20" height="20" rx="10" fill="#f1f5f9" /> {/* Neck */}
-
-          {/* Synthetic Skin */}
-          <path 
-            d="M100 20 C 60 20, 50 60, 50 100 C 50 150, 70 170, 100 170 C 130 170, 150 150, 150 100 C 150 60, 140 20, 100 20" 
-            fill={`url(#faceGrad-${type})`} 
-            stroke="#1e293b" 
-            strokeWidth="0.5" 
-          />
-
-          {/* Logic Circuits */}
+          <rect x="90" y="155" width="20" height="20" rx="10" fill="#f1f5f9" />
+          <path d="M100 20 C 60 20, 50 60, 50 100 C 50 150, 70 170, 100 170 C 130 170, 150 150, 150 100 C 150 60, 140 20, 100 20" fill={`url(#faceGrad-${type})`} stroke="#1e293b" strokeWidth="0.5" />
           <circle cx="55" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} />
           <circle cx="145" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} />
-
-          {/* Eyes */}
           <g className="animate-blink">
             <circle cx="78" cy="85" r="5" fill="#0f172a" />
             <circle cx="122" cy="85" r="5" fill="#0f172a" />
             <circle cx="78" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
             <circle cx="122" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
           </g>
-
-          {/* Lip Sync Morph */}
           <g transform="translate(100, 135)">
             {isAISpeaking ? (
-              <path 
-                d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" 
-                fill="#0f172a" 
-                className="animate-lip-morph-v2"
-              />
+              <path d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" fill="#0f172a" className="animate-lip-morph-v2" />
             ) : (
-              <path 
-                d="M-12 0 Q 0 3, 12 0" 
-                stroke="#0f172a" 
-                strokeWidth="3" 
-                fill="none" 
-                strokeLinecap="round"
-                className={isUserListening ? "animate-listen-mouth" : ""}
-              />
+              <path d="M-12 0 Q 0 3, 12 0" stroke="#0f172a" strokeWidth="3" fill="none" strokeLinecap="round" className={isUserListening ? "animate-listen-mouth" : ""} />
             )}
           </g>
         </g>
-
         <style>{`
           @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
           .animate-breathe { animation: breathe 5s ease-in-out infinite; }
-          
           @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
           .animate-blink { transform-origin: center 85px; animation: blink 6s infinite; }
-
-          @keyframes lip-morph-v2 {
-            0%, 100% { d: path("M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0"); }
-            33% { d: path("M-10 0 Q 0 18, 10 0 Q 0 -5, -10 0"); }
-            66% { d: path("M-16 0 Q 0 8, 16 0 Q 0 -2, -16 0"); }
-          }
+          @keyframes lip-morph-v2 { 0%, 100% { d: path("M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0"); } 33% { d: path("M-10 0 Q 0 18, 10 0 Q 0 -5, -10 0"); } 66% { d: path("M-16 0 Q 0 8, 16 0 Q 0 -2, -16 0"); } }
           .animate-lip-morph-v2 { animation: lip-morph-v2 0.12s linear infinite; }
-
           @keyframes listen-tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(2deg); } }
           .animate-listen-tilt { animation: listen-tilt 4s ease-in-out infinite; transform-origin: center bottom; }
-          
           @keyframes listen-mouth { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.15); } }
           .animate-listen-mouth { animation: listen-mouth 0.6s ease-in-out infinite; transform-origin: center; }
         `}</style>
@@ -220,21 +233,94 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
   if (report) {
     return (
-      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24">
-        <div className="bg-slate-900 rounded-[4rem] p-16 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12 text-left">
+      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24 text-white">
+        <div className="bg-slate-900 rounded-[4rem] p-16 shadow-2xl relative overflow-hidden flex flex-col items-start gap-12 text-left">
           <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
-          <div className="relative z-10 space-y-8 flex-1">
-            <div>
-              <h2 className="text-4xl font-black tracking-tight">Strategic Performance Audit</h2>
-              <div className="flex gap-3 mt-4">
-                 <span className="px-4 py-1.5 bg-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">Persona: {report.persona_used}</span>
-              </div>
-              <p className="text-indigo-200/70 font-medium text-lg max-w-2xl mt-6 italic leading-relaxed">"{report.conversation_summary}"</p>
-            </div>
-            <button onClick={() => { setReport(null); setSessionActive(false); setPersona(null); }} className="px-8 py-4 bg-white/10 text-white border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all">Restart Session</button>
+          
+          <div className="w-full flex justify-between items-center relative z-10">
+             <div className="space-y-2">
+                <h2 className="text-4xl font-black tracking-tight">V2 Strategic Audit Core</h2>
+                <p className="text-indigo-400 font-bold uppercase tracking-widest text-xs">Targeting Persona: {report.persona_used}</p>
+             </div>
+             <div className="flex gap-4">
+                <button onClick={exportPDF} disabled={isExporting} className="px-6 py-3 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 shadow-xl">
+                  {isExporting ? 'Synthesizing...' : <><ICONS.Document className="w-4 h-4" /> Download Performance PDF</>}
+                </button>
+                <button onClick={() => { setReport(null); setSessionActive(false); setPersona(null); }} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">Restart Session</button>
+             </div>
           </div>
-          <div className="relative z-10 w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.5)]">
-            <span className="text-7xl font-black">{report.deal_readiness_score}</span>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full relative z-10">
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
+                <span className="text-6xl font-black text-white">{report.deal_readiness_score}</span>
+                <span className="block text-[10px] font-black uppercase text-indigo-400 tracking-widest mt-2">Readiness Score</span>
+             </div>
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
+                <span className="text-4xl font-black text-emerald-400 uppercase">{report.next_step_likelihood}</span>
+                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Likelihood</span>
+             </div>
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
+                <span className="text-4xl font-black text-indigo-300">{report.value_alignment_score}/10</span>
+                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Value Align</span>
+             </div>
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
+                <span className="text-4xl font-black text-rose-300">{report.confidence_clarity_score}/10</span>
+                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Confidence</span>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full relative z-10">
+             <div className="space-y-8">
+                <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Emotional Trends & Shifts</h4>
+                   <p className="text-lg font-medium italic text-indigo-50 leading-relaxed mb-6">"{report.sentiment_analysis.narrative}"</p>
+                   <div className="space-y-3">
+                      {report.sentiment_analysis.emotional_shifts.map((s, i) => (
+                        <div key={i} className="flex items-center gap-3 text-xs font-bold text-slate-400">
+                           <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                           <span>{s.point}:</span> <span className="text-indigo-200">{s.shift}</span>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+
+                <div className="p-10 bg-rose-500/5 border border-rose-500/20 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-rose-400 tracking-widest mb-4">Missed Strategic Opportunities</h4>
+                   <ul className="space-y-3">
+                      {report.missed_opportunities.map((o, i) => (
+                        <li key={i} className="flex items-center gap-3 text-xs font-bold text-rose-100">
+                           <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div> {o}
+                        </li>
+                      ))}
+                   </ul>
+                </div>
+             </div>
+
+             <div className="space-y-8">
+                <div className="p-10 bg-slate-800/40 border border-white/5 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Themes & Inflection Points</h4>
+                   <p className="text-xs text-slate-500 mb-4 font-black uppercase">Core Themes: {report.conversation_summary.main_themes.join(' • ')}</p>
+                   <ul className="space-y-4">
+                      {report.conversation_summary.inflection_points.map((p, i) => (
+                        <li key={i} className="flex gap-4 text-sm font-medium text-slate-300 leading-relaxed">
+                           <span className="text-indigo-500 font-black">NODE 0{i+1}</span>
+                           {p}
+                        </li>
+                      ))}
+                   </ul>
+                </div>
+
+                <div className="p-10 bg-indigo-950 border border-indigo-500/30 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Tactical Improvement Roadmap</h4>
+                   <ul className="space-y-3">
+                      {report.coaching_recommendations.map((r, i) => (
+                        <li key={i} className="flex items-center gap-3 text-sm font-bold text-white">
+                           <ICONS.Sparkles className="w-4 h-4 text-indigo-400" /> {r}
+                        </li>
+                      ))}
+                   </ul>
+                </div>
+             </div>
           </div>
         </div>
       </div>
@@ -250,8 +336,8 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
               <p className="text-slate-400 text-xl font-medium leading-relaxed">Select a target persona to connect with a high-fidelity animated AI Human Bot.</p>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
-              {Object.keys(PERSONA_CONFIG).map((p) => (
-                <PersonaCardV2 key={p} type={p as SimPersonaV2} onClick={() => handleInitiate(p as SimPersonaV2)} />
+              {(Object.keys(PERSONA_CONFIG) as SimPersonaV2[]).map((p) => (
+                <PersonaCardV2 key={p} type={p} onClick={() => handleInitiate(p)} />
               ))}
            </div>
         </div>
@@ -302,7 +388,6 @@ const PersonaCardV2 = ({ type, onClick }: { type: SimPersonaV2; onClick: () => v
   return (
     <button onClick={onClick} className="group p-1 bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] hover:border-indigo-500 transition-all text-left flex flex-col h-full shadow-xl active:scale-95 duration-300">
       <div className="aspect-[4/3] w-full rounded-[2.5rem] overflow-hidden mb-6 relative bg-slate-800 flex items-center justify-center">
-         {/* Static placeholder representing the bot style in selection */}
          <div className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform">
             <ICONS.Brain className="w-12 h-12 text-slate-500 group-hover:text-white transition-colors" />
          </div>
