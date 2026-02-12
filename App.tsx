@@ -8,7 +8,6 @@ import { PracticeSession } from './components/PracticeSession';
 import { SalesGPT } from './components/SalesGPT';
 import { MeetingContextConfig } from './components/MeetingContextConfig';
 import { DocumentGallery } from './components/DocumentGallery';
-import { VideoGenerator } from './components/VideoGenerator';
 import { AssessmentLab } from './components/AssessmentLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
@@ -28,7 +27,7 @@ const App: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
-  const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'video' | 'qa' | 'avatar' | 'avatar2'>('context');
+  const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2'>('context');
 
   const lastAnalyzedHash = useRef<string | null>(null);
 
@@ -179,7 +178,6 @@ const App: React.FC = () => {
                   <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label="Avatar Simulation 1.0" />
                   <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Trophy />} label="Assignment" />
                   <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label="Simulation" />
-                  <SidebarBtn active={activeTab === 'video'} onClick={() => setActiveTab('video')} icon={<ICONS.Play />} label="Video Synthesis" />
                   <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label="Audio" />
                   <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.Sparkles />} label="Fast Answering" />
                   <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label="Config" />
@@ -331,7 +329,6 @@ const App: React.FC = () => {
                 {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                 {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
                 {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                {activeTab === 'video' && <VideoGenerator context={meetingContext} />}
                 {activeTab === 'audio' && <AudioGenerator analysis={analysis!} />}
                 {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
                 {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
