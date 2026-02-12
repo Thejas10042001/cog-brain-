@@ -145,25 +145,29 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       const margin = 20;
 
       const addH = (t: string, size = 16) => {
+        if (y > 260) { doc.addPage(); y = 20; }
         doc.setFont("helvetica", "bold");
         doc.setFontSize(size);
         doc.text(t, margin, y);
         y += size / 2 + 2;
       };
 
-      const addP = (t: string, size = 10) => {
+      const addP = (t: string, size = 10, color = [60, 60, 60]) => {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(size);
+        doc.setTextColor(color[0], color[1], color[2]);
         const split = doc.splitTextToSize(t, 170);
+        if (y + (split.length * (size / 2)) > 275) { doc.addPage(); y = 20; }
         doc.text(split, margin, y);
         y += (split.length * (size / 2)) + 4;
-        if (y > 270) { doc.addPage(); y = 20; }
+        doc.setTextColor(0, 0, 0);
       };
 
       addH("Avatar Performance Audit Report");
       addP(`Target Client: ${meetingContext.clientCompany}`);
       addP(`Persona Audited: ${report.persona_used}`);
       addP(`Overall Readiness Score: ${report.deal_readiness_score}/10`);
+      addP(`Next Step Likelihood: ${report.next_step_likelihood.toUpperCase()}`);
       
       addH("Conversation Summary", 12);
       addP("Themes: " + report.conversation_summary.main_themes.join(", "));
@@ -173,18 +177,32 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       report.conversation_summary.inflection_points.forEach(p => addP(`• ${p}`));
 
       addH("Sentiment Evolution", 12);
-      addP(`Trend: ${report.sentiment_analysis.trend.toUpperCase()}`);
+      addP(`General Trend: ${report.sentiment_analysis.trend.toUpperCase()}`);
       addP(report.sentiment_analysis.narrative);
+      addP("Emotional Shifts:");
+      report.sentiment_analysis.emotional_shifts.forEach(s => addP(`- ${s.point}: ${s.shift}`, 9));
+
+      addH("Confidence & Clarity Analysis", 12);
+      addP(`Score: ${report.confidence_clarity_analysis.score}/10`);
+      addP(report.confidence_clarity_analysis.narrative);
 
       addH("Objection Mapping", 12);
       report.objection_mapping.forEach(o => {
-        addP(`- Objection: ${o.objection}`);
-        addP(`  Score: ${o.quality_score}/10 | ${o.coaching_note}`);
-        addP(`  Better approach: "${o.suggested_alternative}"`);
+        addP(`- Objection: "${o.objection}"`);
+        addP(`  Effectiveness: ${o.handled_effectively ? 'YES' : 'NO'} | Score: ${o.quality_score}/10`);
+        addP(`  Note: ${o.coaching_note}`, 9);
+        addP(`  Recommended Alternative: "${o.suggested_alternative}"`, 9, [79, 70, 229]);
       });
 
+      addH("Risk & Trust Signals", 12);
+      addP("Risk Signals: " + report.risk_signals.join(", "), 10, [225, 29, 72]);
+      addP("Trust Signals: " + report.trust_signals.join(", "), 10, [16, 185, 129]);
+
+      addH("Missed Opportunities", 12);
+      report.missed_opportunities.forEach(o => addP(`• ${o}`));
+
       addH("Coaching Recommendations", 12);
-      report.coaching_recommendations.forEach(r => addP(`• ${r}`));
+      report.coaching_recommendations.forEach(r => addP(`• ${r}`, 10, [79, 70, 229]));
 
       doc.save(`Performance-Audit-${meetingContext.clientCompany}.pdf`);
     } catch (e) {
@@ -250,43 +268,47 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   if (report) {
     return (
       <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24 text-white">
-        <div className="bg-slate-900 rounded-[4rem] p-16 shadow-2xl relative overflow-hidden flex flex-col items-start gap-12">
+        <div className="bg-slate-900 rounded-[4rem] p-16 shadow-2xl relative overflow-hidden flex flex-col items-start gap-12 text-left">
           <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
           
           <div className="w-full flex justify-between items-center relative z-10">
              <div className="space-y-2">
                 <h2 className="text-4xl font-black tracking-tight">Cognitive Performance Synthesis</h2>
-                <p className="text-indigo-400 font-bold uppercase tracking-widest text-xs">Role: {report.persona_used}</p>
+                <p className="text-indigo-400 font-bold uppercase tracking-widest text-xs">Audited Persona: {report.persona_used}</p>
              </div>
              <div className="flex gap-4">
-                <button onClick={exportPDF} disabled={isExporting} className="px-6 py-3 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50">
-                  {isExporting ? 'Synthesizing...' : <><ICONS.Document className="w-4 h-4" /> Export Strategic PDF</>}
+                <button onClick={exportPDF} disabled={isExporting} className="px-6 py-3 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 shadow-xl">
+                  {isExporting ? 'Synthesizing...' : <><ICONS.Document className="w-4 h-4" /> Download Branded Audit PDF</>}
                 </button>
-                <button onClick={handleInitiate} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">Restart Hub</button>
+                <button onClick={handleInitiate} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">Restart Simulation</button>
              </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full relative z-10">
-             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full relative z-10">
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
                 <span className="text-6xl font-black text-white">{report.deal_readiness_score}<span className="text-xl text-slate-500">/10</span></span>
-                <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mt-2">Readiness Score</span>
+                <span className="block text-[10px] font-black uppercase text-indigo-400 tracking-widest mt-2">Deal Readiness</span>
              </div>
-             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
                 <span className="text-4xl font-black text-emerald-400 uppercase">{report.next_step_likelihood}</span>
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Next Step Likelihood</span>
+                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Next Step Odds</span>
              </div>
-             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-center">
-                <span className="text-4xl font-black text-indigo-300">{report.value_alignment_score * 10}%</span>
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Value Alignment</span>
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
+                <span className="text-4xl font-black text-indigo-300">{report.value_alignment_score}/10</span>
+                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Value Align</span>
+             </div>
+             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
+                <span className="text-4xl font-black text-rose-300">{report.confidence_clarity_analysis.score}/10</span>
+                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Confidence</span>
              </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full relative z-10">
              <div className="space-y-8">
                 <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem]">
-                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Sentiment Mapping & Trends</h4>
-                   <p className="text-lg font-medium italic text-indigo-50 leading-relaxed">"{report.sentiment_analysis.narrative}"</p>
-                   <div className="mt-6 space-y-3">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Sentiment Mapping & Emotional Shifts</h4>
+                   <p className="text-lg font-medium italic text-indigo-50 leading-relaxed mb-6">"{report.sentiment_analysis.narrative}"</p>
+                   <div className="space-y-3">
                       {report.sentiment_analysis.emotional_shifts.map((s, i) => (
                         <div key={i} className="flex items-center gap-3 text-xs font-bold text-slate-400">
                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
@@ -296,10 +318,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                    </div>
                 </div>
 
+                <div className="p-10 bg-slate-800/40 border border-white/5 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Confidence & Clarity Analysis</h4>
+                   <p className="text-sm font-medium text-slate-300 leading-relaxed">{report.confidence_clarity_analysis.narrative}</p>
+                </div>
+
                 <div className="space-y-4">
-                   <h4 className="text-[10px] font-black uppercase text-rose-400 tracking-widest">Risk & Trust Signals</h4>
+                   <h4 className="text-[10px] font-black uppercase text-rose-400 tracking-widest">Risk & Trust Indicators</h4>
                    <div className="grid grid-cols-2 gap-4">
-                      {report.risk_flags.map((f, i) => (
+                      {report.risk_signals.map((f, i) => (
                         <div key={i} className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-[11px] font-bold text-rose-200">⚠️ {f}</div>
                       ))}
                       {report.trust_signals.map((s, i) => (
@@ -310,20 +337,31 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
              </div>
 
              <div className="space-y-8">
-                <div className="p-10 bg-slate-800/40 border border-white/5 rounded-[3rem]">
-                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Critical Inflection Points</h4>
+                <div className="p-10 bg-indigo-950 border border-indigo-500/30 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Themes & Inflection Points</h4>
                    <ul className="space-y-4">
                       {report.conversation_summary.inflection_points.map((p, i) => (
                         <li key={i} className="flex gap-4 text-sm font-medium text-slate-300 leading-relaxed">
-                           <span className="text-indigo-500 font-black">0{i+1}</span>
+                           <span className="text-indigo-500 font-black">NODE 0{i+1}</span>
                            {p}
                         </li>
                       ))}
                    </ul>
                 </div>
 
+                <div className="p-10 bg-rose-950/20 border border-rose-500/20 rounded-[3rem]">
+                   <h4 className="text-[10px] font-black uppercase text-rose-400 tracking-widest mb-4">Missed Strategic Opportunities</h4>
+                   <ul className="space-y-3">
+                      {report.missed_opportunities.map((o, i) => (
+                        <li key={i} className="flex items-center gap-3 text-xs font-bold text-rose-200">
+                           <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div> {o}
+                        </li>
+                      ))}
+                   </ul>
+                </div>
+
                 <div className="p-10 bg-indigo-950 border border-indigo-500/30 rounded-[3rem]">
-                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Executive Coaching Directives</h4>
+                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Tactical Performance Directives</h4>
                    <ul className="space-y-3">
                       {report.coaching_recommendations.map((r, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm font-bold text-white">

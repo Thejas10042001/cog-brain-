@@ -199,9 +199,12 @@ export interface ComprehensiveAvatarReport {
     suggested_alternative: string;
   }>;
   value_alignment_score: number;
-  confidence_clarity_score: number;
+  confidence_clarity_analysis: {
+    score: number;
+    narrative: string;
+  };
   roi_strength_score: number;
-  risk_flags: string[];
+  risk_signals: string[];
   trust_signals: string[];
   missed_opportunities: string[];
   deal_readiness_score: number;

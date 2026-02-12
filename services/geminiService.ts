@@ -114,17 +114,20 @@ async function performHighDepthEvaluation(
       }
     ],
     "value_alignment_score": 1-10,
-    "confidence_clarity_score": 1-10,
+    "confidence_clarity_analysis": {
+       "score": 1-10,
+       "narrative": "Analyze seller's confidence, coherence, and decisiveness."
+    },
     "roi_strength_score": 1-10,
-    "risk_flags": ["Security concern X", "Scale worry Y"],
-    "trust_signals": ["Trusted signals detected"],
-    "missed_opportunities": ["Unasked question about Z"],
+    "risk_signals": ["Security concern X", "Scale worry Y", "Credibility gaps"],
+    "trust_signals": ["Evidence of trust established", "Scalability proof accepted"],
+    "missed_opportunities": ["Unanswered question about Z", "Weak response to buyer fear Y"],
     "deal_readiness_score": 1-10,
     "next_step_likelihood": "low | medium | high",
-    "coaching_recommendations": ["Recommendation 1", "Recommendation 2"]
+    "coaching_recommendations": ["Actionable advice 1", "Tactical change 2"]
   }
 
-  Be hyper-critical. Penalize fluff. Reward grounded logic and ROI-based reasoning.`;
+  Be hyper-critical. Penalize fluff. Reward grounded logic and ROI-based reasoning. Analyze signals of risk and trust deeply based on the conversation dynamics.`;
 
   try {
     const response = await ai.models.generateContent({
