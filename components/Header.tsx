@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { ICONS } from '../constants';
-import { logoutUser } from '../services/firebaseService';
-import { User } from 'firebase/auth';
+import { logoutUser, User } from '../services/firebaseService';
 
 interface HeaderProps {
   user?: User | null;

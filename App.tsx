@@ -12,10 +12,9 @@ import { AssessmentLab } from './components/AssessmentLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { analyzeSalesContext } from './services/geminiService';
-import { fetchDocumentsFromFirebase, isFirebaseActive, getFirebasePermissionError, subscribeToAuth } from './services/firebaseService';
+import { fetchDocumentsFromFirebase, isFirebaseActive, getFirebasePermissionError, subscribeToAuth, User } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
-import { User } from 'firebase/auth';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);

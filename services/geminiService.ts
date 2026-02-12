@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, AvatarReportV2 } from "../types";
+import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport } from "../types";
 
 // Upgraded thinking budget map for gemini-3-pro-preview capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
@@ -67,37 +67,53 @@ function safeJsonParse(str: string) {
   throw new Error("Failed to parse cognitive intelligence response as valid JSON.");
 }
 
-// Avatar 2.0 Evaluation
-export async function evaluateAvatarSessionV2(
+// Unified High-Depth Avatar Evaluation
+async function performHighDepthEvaluation(
   history: GPTMessage[], 
-  context: MeetingContext
-): Promise<AvatarReportV2> {
+  context: MeetingContext,
+  personaUsed: string
+): Promise<ComprehensiveAvatarReport> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-pro-preview';
   
   const historyStr = history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
   
-  const prompt = `Act as an Elite Enterprise Evaluator.
-  The conversation session has ended. Based on the transcript below, generate the structured JSON performance report for the 2.0 simulation.
+  const prompt = `Act as an Elite Enterprise Sales Performance Auditor.
+  The conversation session has ended. Based on the transcript below, generate an EXHAUSTIVE strategic audit in JSON.
   
   TRANSCRIPT:
   ${historyStr}
+
+  STRATEGIC CONTEXT:
+  Persona: ${personaUsed}
+  Objective: ${context.meetingFocus}
   
   REQUIRED JSON FORMAT:
   {
-    "persona_used": "CIO | CFO | IT_DIRECTOR",
-    "conversation_summary": "Concise summary of the interaction",
-    "primary_concerns": ["Concern 1", "Concern 2"],
+    "persona_used": "string",
+    "conversation_summary": "High-level summary of themes and decisions",
+    "sentiment_trends": "Narrative describing how the buyer's sentiment shifted (e.g., initial skepticism -> interest -> validation)",
+    "objection_mapping": [
+      {
+        "objection": "The specific objection raised",
+        "handled_effectively": boolean,
+        "quality_score": 1-10,
+        "coaching_note": "How it could have been handled better"
+      }
+    ],
     "value_alignment_score": 1-10,
-    "risk_assessment_score": 1-10,
-    "credibility_score": 1-10,
+    "roi_strength_score": 1-10,
+    "risk_and_security_handling_score": 1-10,
+    "confidence_and_clarity_score": 1-10,
+    "missed_opportunities": ["Opportunity 1", "Opportunity 2"],
+    "trust_signals_detected": ["Signal 1", "Signal 2"],
+    "risk_flags": ["Flag 1", "Flag 2"],
     "deal_readiness_score": 1-10,
-    "next_step_likelihood": "low / medium / high",
-    "critical_gaps": ["Gap 1", "Gap 2"],
+    "next_step_likelihood": "low | medium | high",
     "coaching_recommendations": ["Recommendation 1", "Recommendation 2"]
   }
 
-  Be strict. Penalize vagueness. Reward quantified impact and strategic alignment.`;
+  Be hyper-critical. Penalize fluff and vague claims. Reward grounded logic and ROI-based reasoning.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -108,11 +124,22 @@ export async function evaluateAvatarSessionV2(
         thinkingConfig: { thinkingBudget: 16000 }
       }
     });
-    return safeJsonParse(response.text || "{}") as AvatarReportV2;
+    return safeJsonParse(response.text || "{}") as ComprehensiveAvatarReport;
   } catch (error) {
-    console.error("V2 Evaluation failed:", error);
+    console.error("Audit synthesis failed:", error);
     throw error;
   }
+}
+
+// Avatar 2.0 Evaluation
+export async function evaluateAvatarSessionV2(
+  history: GPTMessage[], 
+  context: MeetingContext
+): Promise<ComprehensiveAvatarReport> {
+  // Extract persona from history if possible or default to context
+  const personaHeader = history.find(m => m.content.startsWith('PERSONA:'))?.content || 'CIO';
+  const persona = personaHeader.replace('PERSONA:', '').trim();
+  return performHighDepthEvaluation(history, context, persona);
 }
 
 // Avatar Simulation 2.0 Streaming
@@ -211,53 +238,8 @@ Meeting Objective: ${context.meetingFocus}`;
 export async function evaluateAvatarSession(
   history: GPTMessage[], 
   context: MeetingContext
-): Promise<any> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-preview';
-  
-  const historyStr = history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
-  
-  const prompt = `Act as the "Hidden Performance Evaluator" from our dual-mode simulation.
-  The conversation session has ended. Based on the transcript below, generate the structured JSON performance report.
-  
-  EVALUATION RULES:
-  • Be strict. Penalize vagueness. Reward quantified impact. 
-  • Assess specifically for an Enterprise CIO Persona.
-  
-  TRANSCRIPT:
-  ${historyStr}
-  
-  REQUIRED JSON FORMAT:
-  {
-    "conversation_summary": "Concise summary",
-    "key_inflection_points": ["Specific moment 1", "Specific moment 2"],
-    "objection_mapping": [{ "objection": "The text of the objection", "handled_effectively": true/false, "quality_score": 1-10 }],
-    "value_alignment_score": 1-10,
-    "roi_strength_score": 1-10,
-    "risk_and_security_handling_score": 1-10,
-    "confidence_and_clarity_score": 1-10,
-    "missed_opportunities": ["Missed opportunity text"],
-    "trust_signals_detected": ["Trust signal text"],
-    "risk_flags": ["Risk flag text"],
-    "deal_readiness_score": 1-10,
-    "next_step_likelihood": "low / medium / high",
-    "coaching_recommendations": ["Actionable improvement 1", "Actionable improvement 2"]
-  }`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 16000 }
-      }
-    });
-    return safeJsonParse(response.text || "{}");
-  } catch (error) {
-    console.error("Evaluation failed:", error);
-    throw error;
-  }
+): Promise<ComprehensiveAvatarReport> {
+  return performHighDepthEvaluation(history, context, "CIO (Generic)");
 }
 
 // Avatar Simulation: Specialized dual-mode interaction (Legacy 1.0)

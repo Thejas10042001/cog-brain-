@@ -178,6 +178,29 @@ export interface MeetingContext {
   temperature: number;
 }
 
+// Comprehensive Simulation Report Structure
+export interface ComprehensiveAvatarReport {
+  persona_used: string;
+  conversation_summary: string;
+  sentiment_trends: string; // Narrative of sentiment shifts
+  objection_mapping: Array<{
+    objection: string;
+    handled_effectively: boolean;
+    quality_score: number;
+    coaching_note: string;
+  }>;
+  value_alignment_score: number;
+  roi_strength_score: number;
+  risk_and_security_handling_score: number;
+  confidence_and_clarity_score: number;
+  missed_opportunities: string[];
+  trust_signals_detected: string[];
+  risk_flags: string[];
+  deal_readiness_score: number;
+  next_step_likelihood: 'low' | 'medium' | 'high';
+  coaching_recommendations: string[];
+}
+
 // Assessment Lab Types
 export type QuestionType = 'mcq' | 'short' | 'long' | 'mic' | 'video';
 
@@ -234,16 +257,3 @@ export interface GroomingEvaluation {
 
 // Avatar Simulation 2.0 Types
 export type SimPersonaV2 = 'CIO' | 'CFO' | 'IT_DIRECTOR';
-
-export interface AvatarReportV2 {
-  persona_used: string;
-  conversation_summary: string;
-  primary_concerns: string[];
-  value_alignment_score: number;
-  risk_assessment_score: number;
-  credibility_score: number;
-  deal_readiness_score: number;
-  next_step_likelihood: 'low' | 'medium' | 'high';
-  critical_gaps: string[];
-  coaching_recommendations: string[];
-}

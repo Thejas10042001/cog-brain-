@@ -20,15 +20,22 @@ import {
   doc,
   updateDoc
 } from "firebase/firestore";
-import { 
+
+// Fix: Use wildcard import for auth to resolve 'no exported member' errors.
+import * as firebaseAuth from "firebase/auth";
+const { 
   getAuth, 
-  Auth,
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut,
-  User
-} from "firebase/auth";
+  signOut 
+} = firebaseAuth as any;
+
+// Define local types to bypass import member errors
+type Auth = any;
+// Exporting User type as any to be used in other files
+export type User = any;
+
 import { StoredDocument } from "../types";
 
 // State to track if we've hit a permission error

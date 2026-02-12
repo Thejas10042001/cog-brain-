@@ -7,30 +7,10 @@ import {
   decodeAudioData,
   evaluateAvatarSession 
 } from '../services/geminiService';
-import { GPTMessage, MeetingContext } from '../types';
+import { GPTMessage, MeetingContext, ComprehensiveAvatarReport } from '../types';
 
 interface AvatarSimulationProps {
   meetingContext: MeetingContext;
-}
-
-interface AvatarReport {
-  conversation_summary: string;
-  key_inflection_points: string[];
-  objection_mapping: Array<{
-    objection: string;
-    handled_effectively: boolean;
-    quality_score: number;
-  }>;
-  value_alignment_score: number;
-  roi_strength_score: number;
-  risk_and_security_handling_score: number;
-  confidence_and_clarity_score: number;
-  missed_opportunities: string[];
-  trust_signals_detected: string[];
-  risk_flags: string[];
-  deal_readiness_score: number;
-  next_step_likelihood: 'low' | 'medium' | 'high';
-  coaching_recommendations: string[];
 }
 
 export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) => {
@@ -40,7 +20,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [isUserListening, setIsUserListening] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
-  const [report, setReport] = useState<AvatarReport | null>(null);
+  const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState("");
 
@@ -48,7 +28,6 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   const recognitionRef = useRef<any>(null);
   const activeAudioSource = useRef<AudioBufferSourceNode | null>(null);
 
-  // Initialize Speech Recognition
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -56,21 +35,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
-
       recognition.onresult = (event: any) => {
         let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript;
         }
         setCurrentCaption(transcript);
-        // While getting results, user is actively talking
         setIsUserListening(true);
       };
-
-      recognition.onend = () => {
-        setIsUserListening(false);
-      };
-
+      recognition.onend = () => setIsUserListening(false);
       recognitionRef.current = recognition;
     }
   }, []);
@@ -119,195 +92,101 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     setMessages([]);
     setCurrentCaption("");
     setStatus("");
-    
     try {
       const stream = streamAvatarSimulation("START SIMULATION", [], meetingContext);
       let firstQuestion = "";
-      for await (const chunk of stream) {
-        firstQuestion += chunk;
-      }
-      
+      for await (const chunk of stream) firstQuestion += chunk;
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: firstQuestion, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(firstQuestion);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsProcessing(false);
-    }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
   const handleNextNode = async () => {
     if (isProcessing || !currentCaption.trim()) return;
-    
     stopListening();
     setIsProcessing(true);
-    setStatus("");
-    
     const userMsg: GPTMessage = { id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
-    
     try {
       const stream = streamAvatarSimulation(currentCaption, messages, meetingContext);
       let nextQuestion = "";
-      for await (const chunk of stream) {
-        nextQuestion += chunk;
-      }
-      
+      for await (const chunk of stream) nextQuestion += chunk;
       const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: nextQuestion, mode: 'standard' };
       setMessages([...updatedMessages, assistantMsg]);
       setCurrentCaption("");
       playAIQuestion(nextQuestion);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsProcessing(false);
-    }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
   const handleEndSession = async () => {
     stopListening();
     setIsProcessing(true);
-    setStatus("Generating Performance Audit...");
-
+    setStatus("Analyzing Conversation Architecture...");
     let finalHistory = [...messages];
     if (currentCaption.trim()) {
       finalHistory.push({ id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' });
     }
-
     try {
       const reportJson = await evaluateAvatarSession(finalHistory, meetingContext);
       setReport(reportJson);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsProcessing(false);
-      setStatus("");
-    }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); setStatus(""); }
   };
 
-  const exportPDF = async () => {
-    if (!report) return;
-    setIsExporting(true);
-    try {
-      const { jsPDF } = (window as any).jspdf;
-      const doc = new jsPDF();
-      let y = 20;
+  const RealHumanCIO = () => (
+    <div className="relative w-full h-full group overflow-hidden rounded-[2rem]">
+      {/* High-End Portrait */}
+      <img 
+        src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=1000" 
+        className={`w-full h-full object-cover transition-all duration-3000 ${isAISpeaking ? 'scale-110 brightness-110' : 'scale-100 brightness-90'} animate-gentle-breathe`}
+        alt="Enterprise CIO"
+      />
+      
+      {/* Neural Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60"></div>
+      
+      {/* Scanning Line */}
+      {isUserListening && (
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <div className="w-full h-1 bg-indigo-500/50 shadow-[0_0_15px_rgba(79,70,229,0.8)] animate-scan-line"></div>
+        </div>
+      )}
 
-      const addLine = (text: string, size = 10, style = "normal", color = [0, 0, 0]) => {
-        doc.setFontSize(size);
-        doc.setFont("helvetica", style);
-        doc.setTextColor(color[0], color[1], color[2]);
-        const split = doc.splitTextToSize(text, 170);
-        if (y + split.length * (size/2) > 280) { doc.addPage(); y = 20; }
-        doc.text(split, 20, y);
-        y += split.length * (size/2) + 5;
-      };
+      {/* Internal Auditor Lens (Glowing eye effect) */}
+      <div className="absolute top-[38%] left-[46.5%] w-1.5 h-1.5 bg-rose-500 rounded-full blur-[2px] opacity-0 animate-neural-eye-pulse shadow-[0_0_8px_rgba(225,29,72,1)] z-20"></div>
 
-      doc.setFillColor(30, 27, 75);
-      doc.rect(0, 0, 210, 40, 'F');
-      doc.setTextColor(255);
-      doc.setFontSize(22);
-      doc.setFont("helvetica", "bold");
-      doc.text("AI HUMAN PERFORMANCE AUDIT", 20, 25);
-      y = 50;
+      {/* Cybernetic HUD Frame */}
+      <div className="absolute inset-0 border border-white/10 m-4 rounded-[1.5rem] pointer-events-none">
+        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-indigo-500/40 rounded-tl-xl"></div>
+        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-indigo-500/40 rounded-br-xl"></div>
+      </div>
 
-      addLine(`Project: Strategic Simulation for ${meetingContext.clientCompany}`, 12, "bold", [79, 70, 229]);
-      y += 10;
-
-      addLine("EXECUTIVE SUMMARY", 14, "bold");
-      addLine(report.conversation_summary);
-      y += 5;
-
-      addLine(`READINESS SCORE: ${report.deal_readiness_score}/10`, 16, "bold", [5, 150, 105]);
-      y += 10;
-
-      addLine("OBJECTION DEFENSE MAPPING", 14, "bold");
-      report.objection_mapping.forEach(obj => {
-        addLine(`• Objection: "${obj.objection}"`, 10, "bold");
-        addLine(`  Quality: ${obj.quality_score}/10 | ${obj.handled_effectively ? 'Validated' : 'Weak Point'}`, 9, "italic");
-      });
-      y += 10;
-
-      addLine("COACHING RECOMMENDATIONS", 14, "bold");
-      report.coaching_recommendations.forEach(rec => addLine(`• ${rec}`, 10));
-
-      doc.save(`Performance-Audit-${meetingContext.clientCompany}.pdf`);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const AIHumanAvatar = () => (
-    <svg viewBox="0 0 200 200" className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'drop-shadow-[0_0_25px_rgba(79,70,229,0.5)] scale-105' : 'drop-shadow-2xl'}`}>
-      <defs>
-        <linearGradient id="avatarGradV1" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={isAISpeaking ? "#4f46e5" : "#1e1b4b"} />
-          <stop offset="100%" stopColor="#0f172a" />
-        </linearGradient>
-        <filter id="burlEffectV1">
-           <feGaussianBlur in="SourceGraphic" stdDeviation={isAISpeaking ? "1.2" : "0"} />
-        </filter>
-      </defs>
-
-      {/* Tilt group for listening mode */}
-      <g className={isUserListening ? "animate-hearing-tilt" : ""}>
-        {/* Head Shape with Burl effect */}
-        <path 
-          d="M100 30 C 60 30, 40 60, 40 100 C 40 140, 60 170, 100 170 C 140 170, 160 140, 160 100 C 160 60, 140 30, 100 30" 
-          fill="url(#avatarGradV1)" 
-          stroke={isAISpeaking ? "#818cf8" : "#4f46e5"} 
-          strokeWidth="2" 
-          filter="url(#burlEffectV1)"
-        />
-
-        {/* Eyes */}
-        <g className={isAISpeaking ? "animate-vocal-eyes" : isUserListening ? "animate-focused-eyes" : ""}>
-          <circle cx="75" cy="85" r="4" fill={isAISpeaking ? "#818cf8" : "#4f46e5"} className={isAISpeaking ? "animate-pulse" : ""} />
-          <circle cx="125" cy="85" r="4" fill={isAISpeaking ? "#818cf8" : "#4f46e5"} className={isAISpeaking ? "animate-pulse" : ""} />
-        </g>
-
-        {/* Dynamic Lip Sync Mouth */}
-        <g transform="translate(100, 130)">
-          {isAISpeaking ? (
-            <path 
-              d="M-20 -10 Q 0 15, 20 -10" 
-              stroke="#818cf8" 
-              strokeWidth="6" 
-              fill="none" 
-              strokeLinecap="round"
-              className="animate-lip-sync"
-            />
-          ) : isUserListening ? (
-            <path 
-              d="M-15 0 Q 0 5, 15 0" 
-              stroke="#4f46e5" 
-              strokeWidth="3" 
-              fill="none" 
-              strokeLinecap="round"
-              className="animate-hearing-mouth"
-            />
-          ) : (
-            <path 
-              d="M-15 0 L 15 0" 
-              stroke="#4f46e5" 
-              strokeWidth="2" 
-              fill="none" 
-              strokeLinecap="round"
-            />
-          )}
-        </g>
-
-        {/* Subtle Brain Glow when thinking/active */}
-        <circle cx="100" cy="100" r="40" fill="indigo" opacity={isAISpeaking ? "0.15" : "0"} className="animate-pulse" />
-      </g>
-
-      {/* Neck & Shoulders (Static) */}
-      <path d="M70 170 C 70 190, 30 190, 10 200 L 190 200 C 170 190, 130 190, 130 170" fill="#1e1b4b" stroke="#4f46e5" strokeWidth="2" />
-    </svg>
+      <style>{`
+        @keyframes scan-line {
+          0% { top: 10%; opacity: 0; }
+          50% { opacity: 1; }
+          100% { top: 90%; opacity: 0; }
+        }
+        .animate-scan-line {
+          animation: scan-line 4s linear infinite;
+        }
+        @keyframes neural-eye-pulse {
+          0%, 100% { opacity: 0; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.5); }
+        }
+        .animate-neural-eye-pulse {
+          animation: neural-eye-pulse 3s ease-in-out infinite;
+        }
+        @keyframes gentle-breathe {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
+        }
+        .animate-gentle-breathe {
+          animation: gentle-breathe 8s ease-in-out infinite;
+        }
+      `}</style>
+    </div>
   );
 
   if (report) {
@@ -317,31 +196,21 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
           <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
           <div className="relative z-10 space-y-8 flex-1 text-left">
             <div>
-              <h2 className="text-4xl font-black tracking-tight">Performance Synthesis Audit</h2>
-              <p className="text-indigo-200/70 font-medium text-lg max-w-2xl mt-6 italic">
-                "{report.conversation_summary}"
-              </p>
+              <h2 className="text-4xl font-black tracking-tight">Cognitive Performance Synthesis</h2>
+              <div className="flex gap-2 mt-4">
+                 <span className="px-3 py-1 bg-white/10 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/5">Likelihood: {report.next_step_likelihood}</span>
+                 <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-500/10">Readiness: {report.deal_readiness_score}/10</span>
+              </div>
+              <p className="text-indigo-200/70 font-medium text-lg max-w-2xl mt-6 italic leading-relaxed">"{report.conversation_summary}"</p>
             </div>
             <div className="flex gap-4">
-              <button onClick={exportPDF} disabled={isExporting} className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-2">
-                {isExporting ? "Compiling Logic..." : <><ICONS.Document className="w-4 h-4" /> Export Performance PDF</>}
-              </button>
-              <button onClick={() => { setReport(null); handleInitiate(); }} className="px-8 py-3.5 bg-white/10 text-white border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all">
-                Reset Simulation
-              </button>
+              <button onClick={() => { setReport(null); handleInitiate(); }} className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all">Reset Simulation</button>
             </div>
           </div>
           <div className="relative z-10 w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.5)]">
             <span className="text-[12px] font-black uppercase tracking-widest text-indigo-200 mb-2">Readiness Score</span>
-            <span className="text-7xl font-black">{report.deal_readiness_score}<span className="text-2xl opacity-40">/10</span></span>
+            <span className="text-7xl font-black">{report.deal_readiness_score}</span>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <ScoreCard label="Value Alignment" score={report.value_alignment_score} color="indigo" />
-          <ScoreCard label="ROI Strength" score={report.roi_strength_score} color="emerald" />
-          <ScoreCard label="Risk Handling" score={report.risk_and_security_handling_score} color="rose" />
-          <ScoreCard label="Confidence & Clarity" score={report.confidence_and_clarity_score} color="amber" />
         </div>
       </div>
     );
@@ -349,204 +218,60 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
 
   return (
     <div className="bg-slate-950 border border-slate-800 rounded-[4rem] p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white animate-in zoom-in-95 duration-500">
-      
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
-           <div className="w-48 h-48 bg-indigo-600 rounded-[3rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20 border-4 border-white/10 group">
-              <AIHumanAvatar />
+           <div className="w-80 h-80 bg-slate-900 rounded-[3rem] border border-white/5 group shadow-2xl overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="Executive Portrait" />
            </div>
            <div className="max-w-2xl space-y-6">
-              <h2 className="text-5xl font-black tracking-tight">Initiate Presence Hub</h2>
-              <p className="text-slate-400 text-lg font-medium leading-relaxed">
-                Connect with the AI Human for a high-stakes verbal scenario. Performance metrics are tracked internally.
-              </p>
+              <h2 className="text-5xl font-black tracking-tight">Initiate Dual-Mode Intelligence</h2>
+              <p className="text-slate-400 text-lg font-medium leading-relaxed">Connect with a real-human persona in 'Enterprise CIO' mode. Internal neural audits active.</p>
            </div>
-           <button 
-             onClick={handleInitiate}
-             className="px-16 py-7 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all"
-           >
-             Connect Neural Interface
-           </button>
+           <button onClick={handleInitiate} className="px-16 py-7 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Activate Simulation</button>
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1">
              <div className="lg:col-span-8 relative">
                 <div className="aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
-                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10"></div>
-                   
-                   <div className="relative z-20">
-                      <AIHumanAvatar />
-                   </div>
-                   
+                   <RealHumanCIO />
                    {(isAISpeaking || isUserListening) && (
                      <div className="absolute bottom-16 left-0 right-0 h-16 flex items-end justify-center gap-1 z-20">
                         {[...Array(40)].map((_, i) => (
-                           <div 
-                             key={i} 
-                             className={`w-1.5 rounded-full transition-all duration-300 ${isAISpeaking ? 'bg-indigo-500 animate-waveform-v1' : 'bg-emerald-500 animate-listening-pulse-v1'}`} 
-                             style={{ 
-                               height: isAISpeaking ? `${20 + Math.random() * 80}%` : `${10 + Math.random() * 30}%`, 
-                               animationDelay: `${i * 0.03}s` 
-                             }}
-                           ></div>
+                           <div key={i} className={`w-1.5 rounded-full transition-all duration-300 ${isAISpeaking ? 'bg-indigo-500' : 'bg-emerald-500'}`} style={{ height: isAISpeaking ? `${20 + Math.random() * 80}%` : `${10 + Math.random() * 30}%`, opacity: isAISpeaking ? 1 : 0.4 }}></div>
                         ))}
                      </div>
                    )}
-
                    <div className="absolute top-10 left-10 z-20 flex items-center gap-3 px-5 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                       <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : isUserListening ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? 'Agent Speaking' : isUserListening ? 'Agent Listening' : 'Presence Online'}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? 'CIO Speaking' : isUserListening ? 'CIO Listening' : 'Presence Online'}</span>
                    </div>
                 </div>
              </div>
-
              <div className="lg:col-span-4 flex flex-col gap-6">
                 <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4 min-h-[150px]">
-                   <h5 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Current Intelligence Probe</h5>
-                   <p className="text-xl font-bold italic leading-relaxed text-indigo-50">
-                     {messages[messages.length - 1]?.content || "Syncing logic..."}
-                   </p>
+                   <h5 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Buyer Query Hub</h5>
+                   <p className="text-xl font-bold italic leading-relaxed text-indigo-50">{messages[messages.length - 1]?.content || "Syncing behaviors..."}</p>
                 </div>
-                
                 <div className={`flex-1 border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
-                   <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}>
-                      <ICONS.Speaker className={`w-8 h-8 ${isUserListening ? 'text-white' : 'text-slate-500'}`} />
-                   </div>
-                   <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}>
-                     {isUserListening ? "Capturing Strategic Logic..." : "Neural Capturing Primed"}
-                   </p>
+                   <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Speaker className={`w-8 h-8 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
+                   <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}>{isUserListening ? "Capturing Strategy..." : "Internal Auditor Ready"}</p>
                 </div>
              </div>
           </div>
-
           <div className="space-y-6">
              <div className="relative group">
-                <label className="absolute -top-3 left-10 px-4 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full z-10 shadow-lg border border-indigo-500">
-                  Neural Auto-Captioning (Editable)
-                </label>
-                <textarea 
-                  value={currentCaption}
-                  onChange={(e) => setCurrentCaption(e.target.value)}
-                  className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-32 resize-none"
-                  placeholder="The AI human is waiting for your strategic response..."
-                />
-                <button 
-                  onClick={() => startListening()}
-                  className={`absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}
-                >
-                  <ICONS.Speaker className="w-5 h-5" />
-                </button>
+                <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-32 resize-none" placeholder="The Enterprise CIO is waiting..." />
              </div>
-
              <div className="flex items-center justify-between">
                 <div className="flex gap-4">
-                   <button 
-                     onClick={handleNextNode}
-                     disabled={isProcessing || !currentCaption.trim()}
-                     className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center gap-3 active:scale-95"
-                   >
-                     {isProcessing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <ICONS.Play className="w-4 h-4" />}
-                     Commit Answer & Next Question
-                   </button>
-                   <button 
-                     onClick={() => setCurrentCaption("")}
-                     className="px-8 py-5 bg-white/5 border border-white/10 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-white/10"
-                   >
-                     Clear Logic
-                   </button>
+                   <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center gap-3 active:scale-95">Commit & Next Question</button>
                 </div>
-
-                <button 
-                  onClick={handleEndSession}
-                  disabled={isProcessing}
-                  className="px-12 py-5 bg-rose-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
-                >
-                  {isProcessing && status ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span className="animate-pulse">{status}</span>
-                    </>
-                  ) : "End Session & Audit"}
-                </button>
+                <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-5 bg-rose-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50 flex items-center justify-center gap-3">End Session & Audit</button>
              </div>
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes lip-sync-v1 {
-          0%, 100% { transform: scaleY(0.6); }
-          25% { transform: scaleY(1.3) scaleX(1.05); }
-          50% { transform: scaleY(0.8) scaleX(0.95); }
-          75% { transform: scaleY(1.5) scaleX(1.1); }
-        }
-        .animate-lip-sync {
-          animation: lip-sync-v1 0.18s ease-in-out infinite;
-          transform-origin: center;
-        }
-        @keyframes hearing-mouth-v1 {
-          0%, 100% { transform: scaleY(1); opacity: 0.8; }
-          50% { transform: scaleY(1.4) scaleX(1.03); opacity: 1; }
-        }
-        .animate-hearing-mouth {
-          animation: hearing-mouth-v1 0.45s ease-in-out infinite;
-          transform-origin: center;
-        }
-        @keyframes hearing-tilt-v1 {
-          0%, 100% { transform: rotate(0deg) translateY(0px); }
-          25% { transform: rotate(1deg) translateY(-1px); }
-          75% { transform: rotate(-1deg) translateY(1px); }
-        }
-        .animate-hearing-tilt {
-          animation: hearing-tilt-v1 3.5s ease-in-out infinite;
-          transform-origin: 100px 100px;
-        }
-        @keyframes vocal-eyes-v1 {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.2); filter: brightness(1.2); }
-        }
-        .animate-vocal-eyes {
-          animation: vocal-eyes-v1 0.12s ease-in-out infinite;
-        }
-        @keyframes focused-eyes-v1 {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(0.92); opacity: 0.8; }
-        }
-        .animate-focused-eyes {
-          animation: focused-eyes-v1 4.5s ease-in-out infinite;
-        }
-        @keyframes waveform-v1 {
-          0%, 100% { transform: scaleY(0.4); opacity: 0.3; }
-          50% { transform: scaleY(1); opacity: 1; }
-        }
-        .animate-waveform-v1 {
-          animation: waveform-v1 0.4s ease-in-out infinite;
-        }
-        @keyframes listening-pulse-v1 {
-          0%, 100% { transform: scaleY(0.5); opacity: 0.4; }
-          50% { transform: scaleY(1.2); opacity: 0.8; }
-        }
-        .animate-listening-pulse-v1 {
-          animation: listening-pulse-v1 0.9s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };
-
-const ScoreCard = ({ label, score, color }: { label: string; score: number; color: string }) => (
-  <div className={`p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-xl border-t-8 border-t-${color}-500 flex flex-col items-center text-center group hover:-translate-y-2 transition-all duration-500`}>
-    <h4 className={`text-[10px] font-black uppercase tracking-widest text-${color}-600 mb-6`}>{label}</h4>
-    <div className="relative mb-4">
-       <svg className="w-20 h-20">
-          <circle cx="40" cy="40" r="36" fill="none" stroke="#f1f5f9" strokeWidth="8" />
-          <circle cx="40" cy="40" r="36" fill="none" stroke={`#4f46e5`} strokeWidth="8" 
-             strokeDasharray={`${(score / 10) * 226} 226`} strokeLinecap="round" transform="rotate(-90 40 40)"
-          />
-       </svg>
-       <span className="absolute inset-0 flex items-center justify-center text-2xl font-black text-slate-800">{score}</span>
-    </div>
-    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Weighted Score</p>
-  </div>
-);
