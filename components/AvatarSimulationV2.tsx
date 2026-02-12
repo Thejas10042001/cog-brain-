@@ -13,10 +13,10 @@ interface AvatarSimulationV2Props {
   meetingContext: MeetingContext;
 }
 
-const PERSONA_ASSETS: Record<SimPersonaV2, { img: string; name: string }> = {
-  CIO: { img: "https://images.unsplash.com/photo-1519085185753-b629fd242ad5?auto=format&fit=crop&q=80&w=1000", name: "Strategic CIO" },
-  CFO: { img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1000", name: "Analytical CFO" },
-  IT_DIRECTOR: { img: "https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&q=80&w=1000", name: "Technical IT Lead" }
+const PERSONA_CONFIG: Record<SimPersonaV2, { color: string; accent: string; label: string }> = {
+  CIO: { color: "#4f46e5", accent: "#818cf8", label: "Enterprise CIO" },
+  CFO: { color: "#10b981", accent: "#34d399", label: "Strategic CFO" },
+  IT_DIRECTOR: { color: "#f43f5e", accent: "#fb7185", label: "IT Director" }
 };
 
 export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext }) => {
@@ -127,61 +127,113 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     } catch (e) { console.error(e); } finally { setIsProcessing(false); setStatus(""); }
   };
 
-  const PersonaDisplay = ({ type }: { type: SimPersonaV2 }) => (
-    <div className="relative w-full h-full overflow-hidden rounded-[3rem]">
-      <img 
-        src={PERSONA_ASSETS[type].img} 
-        className={`w-full h-full object-cover transition-all duration-1000 ${isAISpeaking ? 'scale-110 saturate-150' : 'scale-100 saturate-100'} animate-gentle-breathe`} 
-        alt={type} 
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80"></div>
-      
-      {/* HUD Layer */}
-      <div className="absolute inset-0 z-20 pointer-events-none">
-        {/* Dynamic Scan Ring */}
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] aspect-square border-[1px] border-indigo-500/20 rounded-full transition-all duration-1000 ${isAISpeaking ? 'scale-75 opacity-100' : 'scale-100 opacity-0'}`}></div>
-        
-        {/* Active Listening Overlay */}
-        {isUserListening && (
-          <div className="absolute inset-0 bg-emerald-500/5 animate-pulse flex items-center justify-center">
-             <div className="w-full h-0.5 bg-emerald-400/30 animate-scan-v2 shadow-[0_0_15px_rgba(52,211,153,0.5)]"></div>
-          </div>
-        )}
-      </div>
+  const AnimatedBotV2 = ({ type }: { type: SimPersonaV2 }) => {
+    const config = PERSONA_CONFIG[type];
+    return (
+      <svg viewBox="0 0 200 240" className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? `drop-shadow-[0_0_40px_${config.color}66]` : 'drop-shadow-2xl'}`}>
+        <defs>
+          <linearGradient id={`faceGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#f1f5f9" />
+          </linearGradient>
+          <linearGradient id={`suitGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+        </defs>
 
-      <style>{`
-        @keyframes scan-v2 {
-          0% { transform: translateY(-200px); opacity: 0; }
-          50% { opacity: 1; }
-          100% { transform: translateY(200px); opacity: 0; }
-        }
-        @keyframes gentle-breathe {
-          0%, 100% { transform: scale(1); filter: brightness(1); }
-          50% { transform: scale(1.03); filter: brightness(1.1); }
-        }
-        .animate-gentle-breathe {
-          animation: gentle-breathe 10s ease-in-out infinite;
-        }
-      `}</style>
-    </div>
-  );
+        {/* Shoulders */}
+        <g className="animate-breathe">
+          <path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill={`url(#suitGrad-${type})`} />
+          <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.9" /> {/* Collar */}
+          <path d="M97 170 L 100 220 L 103 170" fill={config.color} opacity="0.7" /> {/* Tie/Accent */}
+        </g>
+
+        {/* Head */}
+        <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
+          <rect x="90" y="155" width="20" height="20" rx="10" fill="#f1f5f9" /> {/* Neck */}
+
+          {/* Synthetic Skin */}
+          <path 
+            d="M100 20 C 60 20, 50 60, 50 100 C 50 150, 70 170, 100 170 C 130 170, 150 150, 150 100 C 150 60, 140 20, 100 20" 
+            fill={`url(#faceGrad-${type})`} 
+            stroke="#1e293b" 
+            strokeWidth="0.5" 
+          />
+
+          {/* Logic Circuits */}
+          <circle cx="55" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} />
+          <circle cx="145" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} />
+
+          {/* Eyes */}
+          <g className="animate-blink">
+            <circle cx="78" cy="85" r="5" fill="#0f172a" />
+            <circle cx="122" cy="85" r="5" fill="#0f172a" />
+            <circle cx="78" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
+            <circle cx="122" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
+          </g>
+
+          {/* Lip Sync Morph */}
+          <g transform="translate(100, 135)">
+            {isAISpeaking ? (
+              <path 
+                d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" 
+                fill="#0f172a" 
+                className="animate-lip-morph-v2"
+              />
+            ) : (
+              <path 
+                d="M-12 0 Q 0 3, 12 0" 
+                stroke="#0f172a" 
+                strokeWidth="3" 
+                fill="none" 
+                strokeLinecap="round"
+                className={isUserListening ? "animate-listen-mouth" : ""}
+              />
+            )}
+          </g>
+        </g>
+
+        <style>{`
+          @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+          .animate-breathe { animation: breathe 5s ease-in-out infinite; }
+          
+          @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+          .animate-blink { transform-origin: center 85px; animation: blink 6s infinite; }
+
+          @keyframes lip-morph-v2 {
+            0%, 100% { d: path("M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0"); }
+            33% { d: path("M-10 0 Q 0 18, 10 0 Q 0 -5, -10 0"); }
+            66% { d: path("M-16 0 Q 0 8, 16 0 Q 0 -2, -16 0"); }
+          }
+          .animate-lip-morph-v2 { animation: lip-morph-v2 0.12s linear infinite; }
+
+          @keyframes listen-tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(2deg); } }
+          .animate-listen-tilt { animation: listen-tilt 4s ease-in-out infinite; transform-origin: center bottom; }
+          
+          @keyframes listen-mouth { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.15); } }
+          .animate-listen-mouth { animation: listen-mouth 0.6s ease-in-out infinite; transform-origin: center; }
+        `}</style>
+      </svg>
+    );
+  };
 
   if (report) {
     return (
       <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24">
-        <div className="bg-slate-900 rounded-[4rem] p-16 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12">
+        <div className="bg-slate-900 rounded-[4rem] p-16 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12 text-left">
           <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
-          <div className="relative z-10 space-y-8 flex-1 text-left">
+          <div className="relative z-10 space-y-8 flex-1">
             <div>
               <h2 className="text-4xl font-black tracking-tight">Strategic Performance Audit</h2>
               <div className="flex gap-3 mt-4">
                  <span className="px-4 py-1.5 bg-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">Persona: {report.persona_used}</span>
               </div>
-              <p className="text-indigo-200/70 font-medium text-lg max-w-2xl mt-6 italic">"{report.conversation_summary}"</p>
+              <p className="text-indigo-200/70 font-medium text-lg max-w-2xl mt-6 italic leading-relaxed">"{report.conversation_summary}"</p>
             </div>
             <button onClick={() => { setReport(null); setSessionActive(false); setPersona(null); }} className="px-8 py-4 bg-white/10 text-white border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all">Restart Session</button>
           </div>
-          <div className="relative z-10 w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10">
+          <div className="relative z-10 w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.5)]">
             <span className="text-7xl font-black">{report.deal_readiness_score}</span>
           </div>
         </div>
@@ -195,12 +247,12 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
            <div className="max-w-2xl space-y-6">
               <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-white via-indigo-200 to-slate-400 bg-clip-text text-transparent">Simulation 2.0</h2>
-              <p className="text-slate-400 text-xl font-medium leading-relaxed">Connect with distinct animated human personas to stress-test your strategy.</p>
+              <p className="text-slate-400 text-xl font-medium leading-relaxed">Select a target persona to connect with a high-fidelity animated AI Human Bot.</p>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
-              <PersonaCardV2 type="CIO" img={PERSONA_ASSETS.CIO.img} onClick={() => handleInitiate('CIO')} />
-              <PersonaCardV2 type="CFO" img={PERSONA_ASSETS.CFO.img} onClick={() => handleInitiate('CFO')} />
-              <PersonaCardV2 type="IT_DIRECTOR" img={PERSONA_ASSETS.IT_DIRECTOR.img} onClick={() => handleInitiate('IT_DIRECTOR')} />
+              {Object.keys(PERSONA_CONFIG).map((p) => (
+                <PersonaCardV2 key={p} type={p as SimPersonaV2} onClick={() => handleInitiate(p as SimPersonaV2)} />
+              ))}
            </div>
         </div>
       ) : (
@@ -208,16 +260,19 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1">
              <div className="lg:col-span-8 relative">
                 <div className="aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
-                   {persona && <PersonaDisplay type={persona} />}
-                   <div className="absolute top-10 left-10 z-20 flex items-center gap-4 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                      <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : isUserListening ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-slate-400'}`}></div>
+                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 z-10"></div>
+                   <div className="relative z-20">
+                      {persona && <AnimatedBotV2 type={persona} />}
+                   </div>
+                   <div className="absolute top-10 left-10 z-30 flex items-center gap-4 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                      <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'animate-pulse' : ''}`} style={{ backgroundColor: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}></div>
                       <span className="text-[12px] font-black uppercase tracking-widest">{persona} Presence Online</span>
                    </div>
                 </div>
              </div>
              <div className="lg:col-span-4 flex flex-col gap-6">
                 <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-6 min-h-[200px]">
-                   <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">Strategic Inquiry</h5>
+                   <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">Strategic Inquiry Node</h5>
                    <p className="text-2xl font-black italic leading-tight text-white">{messages[messages.length - 1]?.content || status || "Syncing Data..."}</p>
                 </div>
                 <div className={`flex-1 border border-white/5 rounded-[3rem] p-12 flex flex-col items-center justify-center text-center space-y-8 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
@@ -227,7 +282,10 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
              </div>
           </div>
           <div className="space-y-6">
-             <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/60 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-indigo-50 shadow-inner h-40 resize-none placeholder:text-slate-700" placeholder="Awaiting your justification..." />
+             <div className="relative group">
+                <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/60 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-indigo-50 shadow-inner h-40 resize-none placeholder:text-slate-700" placeholder="Provide your justification..." />
+                <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-6 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-6 h-6" /></button>
+             </div>
              <div className="flex items-center justify-between gap-6">
                 <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="flex-1 px-12 py-7 bg-indigo-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Logic & Next Node</button>
                 <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-7 bg-rose-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50">End Session & Audit</button>
@@ -239,17 +297,25 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   );
 };
 
-const PersonaCardV2 = ({ type, img, onClick }: { type: string; img: string; onClick: () => void }) => (
-  <button onClick={onClick} className="group p-2 bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] hover:border-indigo-500 transition-all text-left flex flex-col h-full shadow-xl active:scale-95 duration-300">
-    <div className="aspect-square w-full rounded-[2.5rem] overflow-hidden mb-6 relative">
-       <img src={img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={type} />
-       <div className="absolute inset-0 bg-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <ICONS.Play className="w-12 h-12 text-white shadow-2xl" />
-       </div>
-    </div>
-    <div className="px-6 pb-6">
-      <h4 className="text-3xl font-black mb-2 tracking-tight group-hover:text-indigo-400 transition-colors uppercase">{type}</h4>
-      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Connect Presence Node</p>
-    </div>
-  </button>
-);
+const PersonaCardV2 = ({ type, onClick }: { type: SimPersonaV2; onClick: () => void }) => {
+  const config = PERSONA_CONFIG[type];
+  return (
+    <button onClick={onClick} className="group p-1 bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] hover:border-indigo-500 transition-all text-left flex flex-col h-full shadow-xl active:scale-95 duration-300">
+      <div className="aspect-[4/3] w-full rounded-[2.5rem] overflow-hidden mb-6 relative bg-slate-800 flex items-center justify-center">
+         {/* Static placeholder representing the bot style in selection */}
+         <div className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <ICONS.Brain className="w-12 h-12 text-slate-500 group-hover:text-white transition-colors" />
+         </div>
+         <div className="absolute bottom-4 left-4 flex gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }}></div>
+            <div className="w-2 h-2 rounded-full opacity-30" style={{ backgroundColor: config.color }}></div>
+         </div>
+         <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      </div>
+      <div className="px-8 pb-8">
+        <h4 className="text-3xl font-black mb-2 tracking-tight group-hover:text-indigo-400 transition-colors">{config.label}</h4>
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Connect Presence Node</p>
+      </div>
+    </button>
+  );
+};

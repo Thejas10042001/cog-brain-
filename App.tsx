@@ -12,6 +12,7 @@ import { AssessmentLab } from './components/AssessmentLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { analyzeSalesContext } from './services/geminiService';
+// Fix: Import User from local firebaseService to resolve missing export in firebase/auth.
 import { fetchDocumentsFromFirebase, isFirebaseActive, getFirebasePermissionError, subscribeToAuth, User } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';

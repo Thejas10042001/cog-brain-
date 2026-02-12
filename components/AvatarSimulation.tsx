@@ -134,59 +134,110 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     } catch (e) { console.error(e); } finally { setIsProcessing(false); setStatus(""); }
   };
 
-  const RealHumanCIO = () => (
-    <div className="relative w-full h-full group overflow-hidden rounded-[2rem]">
-      {/* High-End Portrait */}
-      <img 
-        src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=1000" 
-        className={`w-full h-full object-cover transition-all duration-3000 ${isAISpeaking ? 'scale-110 brightness-110' : 'scale-100 brightness-90'} animate-gentle-breathe`}
-        alt="Enterprise CIO"
-      />
-      
-      {/* Neural Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60"></div>
-      
-      {/* Scanning Line */}
-      {isUserListening && (
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <div className="w-full h-1 bg-indigo-500/50 shadow-[0_0_15px_rgba(79,70,229,0.8)] animate-scan-line"></div>
-        </div>
-      )}
+  const AIAnimatedBotCIO = () => (
+    <svg viewBox="0 0 200 240" className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'drop-shadow-[0_0_40px_rgba(79,70,229,0.4)]' : 'drop-shadow-2xl'}`}>
+      <defs>
+        <linearGradient id="faceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#f8fafc" />
+          <stop offset="100%" stopColor="#e2e8f0" />
+        </linearGradient>
+        <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#0f172a" />
+          <stop offset="100%" stopColor="#020617" />
+        </linearGradient>
+        <filter id="eyeGlow">
+          <feGaussianBlur stdDeviation="1" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
 
-      {/* Internal Auditor Lens (Glowing eye effect) */}
-      <div className="absolute top-[38%] left-[46.5%] w-1.5 h-1.5 bg-rose-500 rounded-full blur-[2px] opacity-0 animate-neural-eye-pulse shadow-[0_0_8px_rgba(225,29,72,1)] z-20"></div>
+      {/* Shoulders & Suit */}
+      <g className="animate-breathe">
+        <path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill="url(#suitGrad)" />
+        <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.8" /> {/* Shirt Collar */}
+        <path d="M96 170 L 100 210 L 104 170" fill="#4f46e5" opacity="0.6" /> {/* Tie */}
+      </g>
 
-      {/* Cybernetic HUD Frame */}
-      <div className="absolute inset-0 border border-white/10 m-4 rounded-[1.5rem] pointer-events-none">
-        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-indigo-500/40 rounded-tl-xl"></div>
-        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-indigo-500/40 rounded-br-xl"></div>
-      </div>
+      {/* Head Container */}
+      <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
+        <rect x="88" y="150" width="24" height="25" rx="12" fill="#e2e8f0" /> {/* Neck */}
+
+        {/* Face Shape */}
+        <path 
+          d="M100 15 C 55 15, 50 55, 50 95 C 50 145, 70 165, 100 165 C 130 165, 150 145, 150 95 C 150 55, 145 15, 100 15" 
+          fill="url(#faceGrad)" 
+          stroke="#1e1b4b" 
+          strokeWidth="0.5" 
+        />
+
+        {/* Brain Circuitry Glow (Temples) */}
+        <path d="M55 80 Q 60 85, 55 90" stroke="#4f46e5" strokeWidth="0.5" fill="none" opacity={isAISpeaking ? "0.8" : "0.1"} className={isAISpeaking ? "animate-pulse" : ""} />
+        <path d="M145 80 Q 140 85, 145 90" stroke="#4f46e5" strokeWidth="0.5" fill="none" opacity={isAISpeaking ? "0.8" : "0.1"} className={isAISpeaking ? "animate-pulse" : ""} />
+
+        {/* Eyes + Blinking */}
+        <g className="animate-blink">
+          <circle cx="78" cy="82" r="4.5" fill="#0f172a" />
+          <circle cx="122" cy="82" r="4.5" fill="#0f172a" />
+          {/* Neural Pupil */}
+          <circle cx="78" cy="82" r="1.5" fill="#4f46e5" filter="url(#eyeGlow)" />
+          <circle cx="122" cy="82" r="1.5" fill="#4f46e5" filter="url(#eyeGlow)" />
+        </g>
+
+        {/* Mouth - Professional Lip Sync Morphing */}
+        <g transform="translate(100, 132)">
+          {isAISpeaking ? (
+            <path 
+              d="M-12 0 Q 0 12, 12 0 Q 0 -2, -12 0" 
+              fill="#0f172a" 
+              className="animate-lip-morph"
+            />
+          ) : (
+            <path 
+              d="M-10 0 Q 0 2, 10 0" 
+              stroke="#0f172a" 
+              strokeWidth="2.5" 
+              fill="none" 
+              strokeLinecap="round"
+              className={isUserListening ? "animate-listen-mouth" : ""}
+            />
+          )}
+        </g>
+      </g>
 
       <style>{`
-        @keyframes scan-line {
-          0% { top: 10%; opacity: 0; }
-          50% { opacity: 1; }
-          100% { top: 90%; opacity: 0; }
+        @keyframes breathe {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-2px); }
         }
-        .animate-scan-line {
-          animation: scan-line 4s linear infinite;
+        .animate-breathe { animation: breathe 4s ease-in-out infinite; }
+        
+        @keyframes blink {
+          0%, 92%, 100% { transform: scaleY(1); }
+          96% { transform: scaleY(0.05); }
         }
-        @keyframes neural-eye-pulse {
-          0%, 100% { opacity: 0; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.5); }
+        .animate-blink { transform-origin: center 82px; animation: blink 5s infinite; }
+
+        @keyframes lip-morph {
+          0%, 100% { d: path("M-12 0 Q 0 12, 12 0 Q 0 -2, -12 0"); }
+          25% { d: path("M-8 0 Q 0 16, 8 0 Q 0 -4, -8 0"); }
+          50% { d: path("M-14 0 Q 0 8, 14 0 Q 0 -1, -14 0"); }
+          75% { d: path("M-10 0 Q 0 14, 10 0 Q 0 -3, -10 0"); }
         }
-        .animate-neural-eye-pulse {
-          animation: neural-eye-pulse 3s ease-in-out infinite;
+        .animate-lip-morph { animation: lip-morph 0.15s linear infinite; }
+
+        @keyframes listen-tilt {
+          0%, 100% { transform: rotate(0deg) translateX(0px); }
+          50% { transform: rotate(1.5deg) translateX(1px); }
         }
-        @keyframes gentle-breathe {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.02); }
+        .animate-listen-tilt { animation: listen-tilt 3s ease-in-out infinite; transform-origin: center bottom; }
+
+        @keyframes listen-mouth {
+          0%, 100% { transform: scaleX(1); }
+          50% { transform: scaleX(1.1); }
         }
-        .animate-gentle-breathe {
-          animation: gentle-breathe 8s ease-in-out infinite;
-        }
+        .animate-listen-mouth { animation: listen-mouth 0.5s ease-in-out infinite; transform-origin: center; }
       `}</style>
-    </div>
+    </svg>
   );
 
   if (report) {
@@ -220,12 +271,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     <div className="bg-slate-950 border border-slate-800 rounded-[4rem] p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
-           <div className="w-80 h-80 bg-slate-900 rounded-[3rem] border border-white/5 group shadow-2xl overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="Executive Portrait" />
+           <div className="w-80 h-80 bg-slate-900 rounded-[4rem] border border-white/5 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
+              <AIAnimatedBotCIO />
            </div>
            <div className="max-w-2xl space-y-6">
-              <h2 className="text-5xl font-black tracking-tight">Initiate Dual-Mode Intelligence</h2>
-              <p className="text-slate-400 text-lg font-medium leading-relaxed">Connect with a real-human persona in 'Enterprise CIO' mode. Internal neural audits active.</p>
+              <h2 className="text-5xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Initiate Dual-Mode Intelligence</h2>
+              <p className="text-slate-400 text-lg font-medium leading-relaxed">Connect with an animated AI Human Bot in 'Enterprise CIO' mode. Internal neural audits active.</p>
            </div>
            <button onClick={handleInitiate} className="px-16 py-7 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Activate Simulation</button>
         </div>
@@ -234,7 +285,10 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1">
              <div className="lg:col-span-8 relative">
                 <div className="aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
-                   <RealHumanCIO />
+                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60 z-10"></div>
+                   <div className="relative z-20">
+                      <AIAnimatedBotCIO />
+                   </div>
                    {(isAISpeaking || isUserListening) && (
                      <div className="absolute bottom-16 left-0 right-0 h-16 flex items-end justify-center gap-1 z-20">
                         {[...Array(40)].map((_, i) => (
@@ -242,9 +296,9 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                         ))}
                      </div>
                    )}
-                   <div className="absolute top-10 left-10 z-20 flex items-center gap-3 px-5 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                   <div className="absolute top-10 left-10 z-30 flex items-center gap-3 px-5 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                       <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : isUserListening ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? 'CIO Speaking' : isUserListening ? 'CIO Listening' : 'Presence Online'}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? 'CIO Speaking' : isUserListening ? 'CIO Listening' : 'Bot Primed'}</span>
                    </div>
                 </div>
              </div>
@@ -262,6 +316,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
           <div className="space-y-6">
              <div className="relative group">
                 <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-32 resize-none" placeholder="The Enterprise CIO is waiting..." />
+                <button onClick={() => startListening()} className={`absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-5 h-5" /></button>
              </div>
              <div className="flex items-center justify-between">
                 <div className="flex gap-4">
