@@ -1,5 +1,4 @@
 
-// Clean up corrupted file structure and redundant type definitions
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { ICONS } from '../constants';
 import { 
@@ -26,14 +25,18 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   const [currentCaption, setCurrentCaption] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isUserListening, setIsUserListening] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState("");
+  const [lastSuggestion, setLastSuggestion] = useState("");
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const recognitionRef = useRef<any>(null);
+  const activeAudioSource = useRef<AudioBufferSourceNode | null>(null);
+  const lastAudioBytes = useRef<Uint8Array | null>(null);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -43,9 +46,20 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       recognition.interimResults = true;
       recognition.lang = 'en-US';
       recognition.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) transcript += event.results[i][0].transcript;
-        setCurrentCaption(transcript);
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setCurrentCaption(prev => {
+            const trimmedPrev = prev.trim();
+            const trimmedNew = finalTranscript.trim();
+            if (trimmedPrev.endsWith(trimmedNew)) return prev;
+            return trimmedPrev + (trimmedPrev ? " " : "") + trimmedNew;
+          });
+        }
         setIsUserListening(true);
       };
       recognition.onend = () => setIsUserListening(false);
@@ -55,19 +69,54 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
   const playAIQuestion = async (text: string) => {
     setIsAISpeaking(true);
+    setIsPaused(false);
     try {
       if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
+
       const voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
       const bytes = await generatePitchAudio(text, voice);
       if (bytes) {
+        lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
         const source = audioContextRef.current.createBufferSource();
         source.buffer = buffer;
         source.connect(audioContextRef.current.destination);
         source.onended = () => { setIsAISpeaking(false); startListening(); };
+        activeAudioSource.current = source;
         source.start();
       }
     } catch (e) { setIsAISpeaking(false); }
+  };
+
+  const handlePauseResume = async () => {
+    if (!audioContextRef.current) return;
+    if (isPaused) {
+      await audioContextRef.current.resume();
+      setIsPaused(false);
+    } else {
+      await audioContextRef.current.suspend();
+      setIsPaused(true);
+    }
+  };
+
+  const handleRepeat = async () => {
+    if (!lastAudioBytes.current || !audioContextRef.current) return;
+    if (activeAudioSource.current) {
+      activeAudioSource.current.stop();
+    }
+    const buffer = await decodeAudioData(lastAudioBytes.current, audioContextRef.current, 24000, 1);
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContextRef.current.destination);
+    source.onended = () => {
+      setIsAISpeaking(false);
+      startListening();
+    };
+    activeAudioSource.current = source;
+    setIsAISpeaking(true);
+    setIsPaused(false);
+    source.start();
   };
 
   const startListening = () => {
@@ -87,6 +136,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     setMessages([]);
     setCurrentCaption("");
     setReport(null);
+    setLastSuggestion("");
     try {
       const stream = streamAvatarSimulationV2(`PERSONA: ${selected}`, [], meetingContext);
       let firstQuestion = "";
@@ -106,12 +156,21 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     setMessages(updatedMessages);
     try {
       const stream = streamAvatarSimulationV2(currentCaption, messages, meetingContext);
-      let nextQuestion = "";
-      for await (const chunk of stream) nextQuestion += chunk;
-      const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: nextQuestion, mode: 'standard' };
+      let nextContent = "";
+      for await (const chunk of stream) nextContent += chunk;
+      
+      // Parse suggestion if present
+      let displayQuestion = nextContent;
+      const suggestionMatch = nextContent.match(/\[SUGGESTION: (.*?)\]/);
+      if (suggestionMatch) {
+        setLastSuggestion(suggestionMatch[1]);
+        displayQuestion = nextContent.replace(/\[SUGGESTION: .*?\]/, "").trim();
+      }
+
+      const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: displayQuestion, mode: 'standard' };
       setMessages([...updatedMessages, assistantMsg]);
       setCurrentCaption("");
-      playAIQuestion(nextQuestion);
+      playAIQuestion(displayQuestion);
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
@@ -263,21 +322,36 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1">
-             <div className="lg:col-span-8 relative">
-                <div className="aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
-                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 z-10"></div>
-                   <div className="relative z-20">
-                      {persona && <AnimatedBotV2 type={persona} />}
-                   </div>
-                   <div className="absolute top-10 left-10 z-30 flex items-center gap-4 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                      <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'animate-pulse' : ''}`} style={{ backgroundColor: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}></div>
-                      <span className="text-[12px] font-black uppercase tracking-widest">{persona} Presence Online</span>
-                   </div>
+          {/* Top Section: Avatar Hub */}
+          <div className="flex flex-col items-center w-full">
+             <div className="w-full aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 z-10"></div>
+                <div className="relative z-20">
+                   {persona && <AnimatedBotV2 type={persona} />}
                 </div>
+                <div className="absolute top-10 left-10 z-30 flex items-center gap-4 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                   <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'animate-pulse' : ''}`} style={{ backgroundColor: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}></div>
+                   <span className="text-[12px] font-black uppercase tracking-widest">{meetingContext.clientNames || persona} Presence Online</span>
+                </div>
+
+                {/* Audio Controls Overlay */}
+                {isAISpeaking && (
+                  <div className="absolute bottom-10 right-10 z-40 flex items-center gap-3 p-2 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10">
+                     <button onClick={handlePauseResume} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                        {isPaused ? <ICONS.Play className="w-5 h-5 text-emerald-400" /> : <div className="w-5 h-5 flex gap-1 items-center justify-center"><div className="w-1.5 h-4 bg-white rounded-full"></div><div className="w-1.5 h-4 bg-white rounded-full"></div></div>}
+                     </button>
+                     <button onClick={handleRepeat} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                     </button>
+                  </div>
+                )}
              </div>
-             <div className="lg:col-span-4 flex flex-col gap-6">
-                <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-6 min-h-[200px]">
+
+             {/* HUD - Now Below Avatar */}
+             <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-6 min-h-[120px]">
                    <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">Strategic Inquiry Node</h5>
                    <p className="text-2xl font-black italic leading-tight text-white">{messages[messages.length - 1]?.content || status || "Syncing Data..."}</p>
                 </div>
@@ -287,11 +361,20 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                 </div>
              </div>
           </div>
+
           <div className="space-y-6">
              <div className="relative group">
                 <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/60 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-indigo-50 shadow-inner h-40 resize-none placeholder:text-slate-700" placeholder="Provide your justification..." />
                 <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-6 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-6 h-6" /></button>
              </div>
+
+             {lastSuggestion && (
+               <div className="p-8 bg-indigo-600/20 border border-indigo-500/30 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500">
+                  <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">Strategic Feedback Logic</h6>
+                  <p className="text-sm font-bold text-indigo-100 italic">"Instead of that response, you could have stated: {lastSuggestion}"</p>
+               </div>
+             )}
+
              <div className="flex items-center justify-between gap-6">
                 <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="flex-1 px-12 py-7 bg-indigo-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Logic & Next Node</button>
                 <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-7 bg-rose-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50">End Session & Audit</button>

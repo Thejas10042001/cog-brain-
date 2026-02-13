@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport } from "../types";
 
@@ -179,6 +180,12 @@ You are evaluating an enterprise AI platform called Kore.ai – AI for Work.
 You are conducting a serious enterprise buying evaluation.
 
 ===========================================================
+STRATEGIC FEEDBACK RULE
+===========================================================
+If the user provides an answer to your previous question, you MUST provide a brief strategic suggestion for improvement enclosed in square brackets at the start of your response.
+Example: "[SUGGESTION: You should have emphasized ROI metrics here.] Your next question is..."
+
+===========================================================
 PERSONA DEFINITIONS
 ===========================================================
 
@@ -280,6 +287,12 @@ export async function* streamAvatarSimulation(
 
 MODE 1 → Enterprise CIO (Primary Role – Visible to User)
 MODE 2 → Hidden Performance Evaluator (Internal – Do NOT reveal)
+
+===========================================================
+STRATEGIC FEEDBACK RULE
+===========================================================
+If the user provides an answer to your previous question, you MUST provide a brief strategic suggestion for improvement enclosed in square brackets at the start of your response.
+Example: "[SUGGESTION: Instead of technical jargon, focus on the business outcome.] Your next question is..."
 
 ===========================================================
 MODE 1: CIO BUYER SIMULATION

@@ -18,15 +18,18 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   const [currentCaption, setCurrentCaption] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isUserListening, setIsUserListening] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState("");
+  const [lastSuggestion, setLastSuggestion] = useState("");
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const recognitionRef = useRef<any>(null);
   const activeAudioSource = useRef<AudioBufferSourceNode | null>(null);
+  const lastAudioBytes = useRef<Uint8Array | null>(null);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -36,11 +39,20 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       recognition.interimResults = true;
       recognition.lang = 'en-US';
       recognition.onresult = (event: any) => {
-        let transcript = '';
+        let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
         }
-        setCurrentCaption(transcript);
+        if (finalTranscript) {
+          setCurrentCaption(prev => {
+            const trimmedPrev = prev.trim();
+            const trimmedNew = finalTranscript.trim();
+            if (trimmedPrev.endsWith(trimmedNew)) return prev;
+            return trimmedPrev + (trimmedPrev ? " " : "") + trimmedNew;
+          });
+        }
         setIsUserListening(true);
       };
       recognition.onend = () => setIsUserListening(false);
@@ -50,10 +62,14 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
 
   const playAIQuestion = async (text: string) => {
     setIsAISpeaking(true);
+    setIsPaused(false);
     try {
       if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
+      
       const bytes = await generatePitchAudio(text, 'Charon');
       if (bytes) {
+        lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
         const source = audioContextRef.current.createBufferSource();
         source.buffer = buffer;
@@ -68,6 +84,36 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     } catch (e) {
       setIsAISpeaking(false);
     }
+  };
+
+  const handlePauseResume = async () => {
+    if (!audioContextRef.current) return;
+    if (isPaused) {
+      await audioContextRef.current.resume();
+      setIsPaused(false);
+    } else {
+      await audioContextRef.current.suspend();
+      setIsPaused(true);
+    }
+  };
+
+  const handleRepeat = async () => {
+    if (!lastAudioBytes.current || !audioContextRef.current) return;
+    if (activeAudioSource.current) {
+      activeAudioSource.current.stop();
+    }
+    const buffer = await decodeAudioData(lastAudioBytes.current, audioContextRef.current, 24000, 1);
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContextRef.current.destination);
+    source.onended = () => {
+      setIsAISpeaking(false);
+      startListening();
+    };
+    activeAudioSource.current = source;
+    setIsAISpeaking(true);
+    setIsPaused(false);
+    source.start();
   };
 
   const startListening = () => {
@@ -93,10 +139,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     setCurrentCaption("");
     setReport(null);
     setStatus("");
+    setLastSuggestion("");
     try {
       const stream = streamAvatarSimulation("START SIMULATION", [], meetingContext);
       let firstQuestion = "";
       for await (const chunk of stream) firstQuestion += chunk;
+      
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: firstQuestion, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(firstQuestion);
@@ -112,12 +160,21 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     setMessages(updatedMessages);
     try {
       const stream = streamAvatarSimulation(currentCaption, messages, meetingContext);
-      let nextQuestion = "";
-      for await (const chunk of stream) nextQuestion += chunk;
-      const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: nextQuestion, mode: 'standard' };
+      let nextContent = "";
+      for await (const chunk of stream) nextContent += chunk;
+      
+      // Parse suggestion if present
+      let displayQuestion = nextContent;
+      const suggestionMatch = nextContent.match(/\[SUGGESTION: (.*?)\]/);
+      if (suggestionMatch) {
+        setLastSuggestion(suggestionMatch[1]);
+        displayQuestion = nextContent.replace(/\[SUGGESTION: .*?\]/, "").trim();
+      }
+
+      const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: displayQuestion, mode: 'standard' };
       setMessages([...updatedMessages, assistantMsg]);
       setCurrentCaption("");
-      playAIQuestion(nextQuestion);
+      playAIQuestion(displayQuestion);
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
@@ -392,9 +449,10 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1">
-             <div className="lg:col-span-8 relative">
-                <div className="aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
+          <div className="flex flex-col gap-12 flex-1">
+             {/* Top Section: Avatar Hub */}
+             <div className="relative w-full flex flex-col items-center">
+                <div className="w-full aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60 z-10"></div>
                    <div className="relative z-20">
                       <AIAnimatedBotCIO />
@@ -408,31 +466,57 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                    )}
                    <div className="absolute top-10 left-10 z-30 flex items-center gap-3 px-5 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                       <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : isUserListening ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? 'CIO Speaking' : isUserListening ? 'CIO Listening' : 'Bot Primed'}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? `${meetingContext.clientNames || 'Client'} Speaking` : isUserListening ? `${meetingContext.clientNames || 'Client'} Listening` : 'Bot Primed'}</span>
+                   </div>
+
+                   {/* Audio Controls Overlay */}
+                   {isAISpeaking && (
+                     <div className="absolute bottom-10 right-10 z-40 flex items-center gap-3 p-2 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10">
+                        <button onClick={handlePauseResume} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                           {isPaused ? <ICONS.Play className="w-5 h-5 text-emerald-400" /> : <div className="w-5 h-5 flex gap-1 items-center justify-center"><div className="w-1.5 h-4 bg-white rounded-full"></div><div className="w-1.5 h-4 bg-white rounded-full"></div></div>}
+                        </button>
+                        <button onClick={handleRepeat} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                           </svg>
+                        </button>
+                     </div>
+                   )}
+                </div>
+
+                {/* Info Nodes - Now Below Avatar */}
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                   <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4 min-h-[120px]">
+                      <h5 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Buyer Query Hub</h5>
+                      <p className="text-xl font-bold italic leading-relaxed text-indigo-50">{messages[messages.length - 1]?.content || "Syncing behaviors..."}</p>
+                   </div>
+                   <div className={`border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Speaker className={`w-6 h-6 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
+                      <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}>{isUserListening ? "Capturing Strategy..." : "Internal Auditor Ready"}</p>
                    </div>
                 </div>
              </div>
-             <div className="lg:col-span-4 flex flex-col gap-6">
-                <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4 min-h-[150px]">
-                   <h5 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Buyer Query Hub</h5>
-                   <p className="text-xl font-bold italic leading-relaxed text-indigo-50">{messages[messages.length - 1]?.content || "Syncing behaviors..."}</p>
+
+             {/* Input & Suggestions */}
+             <div className="space-y-6">
+                <div className="relative group">
+                   <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-32 resize-none" placeholder={`${meetingContext.clientNames || 'The Enterprise CIO'} is waiting...`} />
+                   <button onClick={() => startListening()} className={`absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-5 h-5" /></button>
                 </div>
-                <div className={`flex-1 border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
-                   <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Speaker className={`w-8 h-8 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
-                   <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}>{isUserListening ? "Capturing Strategy..." : "Internal Auditor Ready"}</p>
+                
+                {lastSuggestion && (
+                  <div className="p-8 bg-indigo-600/20 border border-indigo-500/30 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500">
+                     <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">Neural Coaching Suggestion</h6>
+                     <p className="text-sm font-bold text-indigo-100 italic">"Instead of your previous approach, {lastSuggestion}"</p>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                   <div className="flex gap-4">
+                      <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center gap-3 active:scale-95">Commit Logic & Next Node</button>
+                   </div>
+                   <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-5 bg-rose-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50 flex items-center justify-center gap-3">End Session & Audit</button>
                 </div>
-             </div>
-          </div>
-          <div className="space-y-6">
-             <div className="relative group">
-                <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-32 resize-none" placeholder="The Enterprise CIO is waiting..." />
-                <button onClick={() => startListening()} className={`absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-5 h-5" /></button>
-             </div>
-             <div className="flex items-center justify-between">
-                <div className="flex gap-4">
-                   <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center gap-3 active:scale-95">Commit & Next Question</button>
-                </div>
-                <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-5 bg-rose-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50 flex items-center justify-center gap-3">End Session & Audit</button>
              </div>
           </div>
         </div>
