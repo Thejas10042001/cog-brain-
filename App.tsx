@@ -11,11 +11,43 @@ import { DocumentGallery } from './components/DocumentGallery';
 import { AssessmentLab } from './components/AssessmentLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
+import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { analyzeSalesContext } from './services/geminiService';
-// Fix: Import User from local firebaseService to resolve missing export in firebase/auth.
 import { fetchDocumentsFromFirebase, isFirebaseActive, getFirebasePermissionError, subscribeToAuth, User } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
+
+const ALL_ANSWER_STYLES = [
+  "Executive Summary", 
+  "Analogy Based", 
+  "Data-Driven Insights",
+  "Concise Answer", 
+  "In-Depth Response", 
+  "Answer in Points", 
+  "Define Technical Terms", 
+  "Sales Points", 
+  "Key Statistics", 
+  "Case Study Summary", 
+  "Competitive Comparison", 
+  "Anticipated Customer Questions", 
+  "Information Gap", 
+  "Pricing Overview",
+  "ROI Forecast",
+  "SWOT Analysis",
+  "Strategic Roadmap",
+  "Risk Assessment",
+  "Implementation Timeline",
+  "Technical Deep-Dive",
+  "Value Proposition",
+  "Financial Justification",
+  "Stakeholder Alignment",
+  "Competitive Wedge",
+  "Success Story Summary",
+  "Psychological Projection",
+  "Buying Fear Mitigation",
+  "Security & Compliance",
+  "Decision Matrix"
+];
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -27,7 +59,7 @@ const App: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
-  const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2'>('context');
+  const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
 
   const lastAnalyzedHash = useRef<string | null>(null);
 
@@ -42,16 +74,11 @@ const App: React.FC = () => {
     persona: "Balanced",
     thinkingLevel: "Medium",
     temperature: 1.0,
-    answerStyles: [
-      "Executive Summary",
-      "Data-Driven Insights",
-      "Concise Answer", 
-      "Sales Points", 
-      "Anticipated Customer Questions"
-    ],
+    answerStyles: ALL_ANSWER_STYLES,
     executiveSnapshot: "",
     strategicKeywords: [],
-    baseSystemPrompt: ""
+    baseSystemPrompt: "",
+    kycDocId: ""
   });
 
   const loadHistory = useCallback(async () => {
@@ -88,7 +115,6 @@ const App: React.FC = () => {
 
   const isAnyFileProcessing = useMemo(() => files.some(f => f.status === 'processing'), [files]);
   const readyFilesCount = useMemo(() => files.filter(f => f.status === 'ready').length, [files]);
-  const readyLibraryCount = useMemo(() => selectedLibraryDocIds.length, [selectedLibraryDocIds]);
 
   const activeDocuments = useMemo(() => {
     const sessionDocs = files.filter(f => f.status === 'ready').map(f => ({ name: f.name, content: f.content }));
@@ -174,9 +200,10 @@ const App: React.FC = () => {
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>
                 <div className="flex flex-col gap-1">
+                  <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Trophy />} label="Staged Simulation" />
                   <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label="Avatar Simulation 2.0" />
                   <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label="Avatar Simulation 1.0" />
-                  <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Trophy />} label="Assignment" />
+                  <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Document />} label="Assignment" />
                   <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label="Simulation" />
                   <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label="Audio" />
                   <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.Sparkles />} label="Fast Answering" />
@@ -240,7 +267,11 @@ const App: React.FC = () => {
                    />
                 </div>
 
-                <MeetingContextConfig context={meetingContext} onContextChange={setMeetingContext} />
+                <MeetingContextConfig 
+                  context={meetingContext} 
+                  onContextChange={setMeetingContext} 
+                  documents={history}
+                />
 
                 <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
                   <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-8">
@@ -269,9 +300,6 @@ const App: React.FC = () => {
                         <ICONS.Brain />
                         {isAnyFileProcessing ? 'Retaining Documents...' : 'Synthesize Strategy Core'}
                       </button>
-                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest italic text-center max-w-md">
-                        Synthesizing {activeDocuments.length} documents for {meetingContext.clientCompany || 'prospect'}
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -298,7 +326,6 @@ const App: React.FC = () => {
                           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                             <ICONS.Research /> Cognitive Library Management
                           </h3>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Manage grounded intelligence nodes</p>
                       </div>
                       <DocumentGallery 
                         documents={history} 
@@ -309,11 +336,14 @@ const App: React.FC = () => {
                         isAnalyzing={isAnalyzing}
                       />
                       <div className="mt-10 pt-8 border-t border-slate-100">
-                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Ingest New Intelligence</h4>
                          <FileUpload files={files} onFilesChange={setFiles} onUploadSuccess={loadHistory} />
                       </div>
                     </div>
-                    <MeetingContextConfig context={meetingContext} onContextChange={setMeetingContext} />
+                    <MeetingContextConfig 
+                      context={meetingContext} 
+                      onContextChange={setMeetingContext} 
+                      documents={history}
+                    />
                     <div className="flex justify-center pb-10">
                       <button 
                         onClick={runAnalysis}
@@ -326,6 +356,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 )}
+                {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}
                 {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                 {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
                 {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}

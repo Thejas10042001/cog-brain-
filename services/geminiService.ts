@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport } from "../types";
+import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage } from "../types";
 
 // Upgraded thinking budget map for gemini-3-pro-preview capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
@@ -379,6 +379,89 @@ Focus: ${context.meetingFocus}`;
   } catch (error) {
     console.error("Avatar stream failed:", error);
     yield "Error: Avatar Simulation Engine link severed.";
+  }
+}
+
+// Avatar Staged Simulation Streaming
+export async function* streamAvatarStagedSimulation(
+  prompt: string,
+  history: GPTMessage[],
+  context: MeetingContext,
+  currentStage: StagedSimStage,
+  kycDocContent: string
+): AsyncGenerator<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-pro-preview';
+
+  const formattedHistory = history.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.content }]
+  }));
+
+  const systemInstruction = `You are ${context.clientNames || 'the Client'}, an elite decision maker at ${context.clientCompany}.
+You are in a Staged Strategic Simulation Mode.
+
+===========================================================
+YOUR BEHAVIOR (Grounded in KYC)
+===========================================================
+Primary Behavior Source: Use the Know Your Customer (KYC) Document below to dictate your personality, skepticism, specific pain points, and vocal style. 
+Name: You must refer to yourself as ${context.clientNames || 'the Client'}.
+
+KYC DOCUMENT CONTEXT:
+${kycDocContent}
+
+===========================================================
+CURRENT STAGE: ${currentStage}
+===========================================================
+Stages logic:
+1. Ice Breakers - Common interest, rapport.
+2. About Business - Core value, business problem alignment.
+3. Pricing - ROI, cost structure, justification.
+4. Technical - Architecture, integration, security.
+5. Legal - Compliance, liability, terms.
+6. Closing - Next steps, final commitment.
+
+===========================================================
+GATEKEEPING RULES (CRITICAL)
+===========================================================
+You must evaluate the user's latest response.
+If the response is weak, vague, lacks document grounding, or misses the objective of the current stage (${currentStage}):
+1. Start your response with: [RESULT: FAIL]
+2. Provide a section: [COACHING: Explain EXACTLY why they failed. Mention what was missing.]
+3. Provide a section: [STYLE_GUIDE: Tell them how they should have presented it - e.g., 'Be more direct', 'Use metrics', 'Show empathy'].
+4. Provide a section: [RETRY_PROMPT: Repeat your question for the stage ${currentStage} but with a slight twist to push them.]
+
+If the response is strong, professional, and well-aligned:
+1. Start your response with: [RESULT: SUCCESS]
+2. Move to the logic for the NEXT STAGE.
+3. If current stage is Closing and they succeed, end with a strong commitment message.
+
+Always ask exactly one focused question at a time.
+Tone: Executive, firm, and based on the KYC doc.
+
+MEETING CONTEXT:
+Focus: ${context.meetingFocus}
+Target Products: ${context.targetProducts}`;
+
+  try {
+    const result = await ai.models.generateContentStream({
+      model: modelName,
+      contents: [
+        ...formattedHistory,
+        { role: 'user', parts: [{ text: prompt }] }
+      ],
+      config: {
+        systemInstruction,
+        thinkingConfig: { thinkingBudget: 16000 }
+      }
+    });
+
+    for await (const chunk of result) {
+      yield chunk.text || "";
+    }
+  } catch (error) {
+    console.error("Staged stream failed:", error);
+    yield "Error: Staged Simulation Engine disconnected.";
   }
 }
 
@@ -825,7 +908,9 @@ export async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampl
   const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
   for (let channel = 0; channel < numChannels; channel++) {
     const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    for (let i = 0; i < frameCount; i++) {
+      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    }
   }
   return buffer;
 }
@@ -835,6 +920,7 @@ export async function generateExplanation(question: string, context: AnalysisRes
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Explain the deep sales strategy behind: "${question}" based on the buyer snapshot: ${JSON.stringify(context.snapshot)}.`,
+    // Fix: thinkingBudget must be wrapped in thinkingConfig
     config: { thinkingConfig: { thinkingBudget: 0 } }
   });
   return response.text || "";

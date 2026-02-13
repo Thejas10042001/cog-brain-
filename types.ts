@@ -176,6 +176,7 @@ export interface MeetingContext {
   baseSystemPrompt: string;
   thinkingLevel: ThinkingLevel;
   temperature: number;
+  kycDocId?: string;
 }
 
 // Comprehensive Simulation Report Structure
@@ -268,3 +269,5 @@ export interface GroomingEvaluation {
 
 // Avatar Simulation 2.0 Types
 export type SimPersonaV2 = 'CIO' | 'CFO' | 'IT_DIRECTOR';
+
+export type StagedSimStage = 'Ice Breakers' | 'About Business' | 'Pricing' | 'Technical' | 'Legal' | 'Closing';

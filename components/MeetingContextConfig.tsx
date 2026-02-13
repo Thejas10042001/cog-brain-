@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MeetingContext, CustomerPersonaType, ThinkingLevel } from '../types';
+import { MeetingContext, CustomerPersonaType, ThinkingLevel, StoredDocument } from '../types';
 import { ICONS } from '../constants';
 
 interface MeetingContextConfigProps {
   context: MeetingContext;
   onContextChange: (updated: MeetingContext) => void;
+  documents?: StoredDocument[];
 }
 
 const PERSONAS: { type: CustomerPersonaType; label: string; desc: string; icon: React.ReactNode; strategicGuidance: string }[] = [
@@ -71,7 +72,7 @@ const ANSWER_STYLES = [
   "Decision Matrix"
 ];
 
-export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ context, onContextChange }) => {
+export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ context, onContextChange, documents = [] }) => {
   const [keywordInput, setKeywordInput] = useState("");
   const [localPrompt, setLocalPrompt] = useState(context.baseSystemPrompt);
   const [isSaved, setIsSaved] = useState(false);
@@ -169,15 +170,12 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-slate-100 pb-12 mb-12">
           <div className="space-y-6">
             <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                <div className="text-indigo-500"><ICONS.Trophy /></div>
                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Seller Side</h4>
             </div>
-            {showHelp && (
-              <p className="text-[9px] font-bold text-slate-400 uppercase leading-snug italic">Used to cross-reference your organization's known capabilities against extracted client needs.</p>
-            )}
             <div className="space-y-5">
               <Input label="Seller Company" value={context.sellerCompany} onChange={v => handleChange('sellerCompany', v)} placeholder="e.g. Your Organization Name" />
               <Input label="Seller Name(s)" value={context.sellerNames} onChange={v => handleChange('sellerNames', v)} placeholder="e.g. Full names of participants" />
@@ -189,9 +187,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                <div className="text-rose-500"><ICONS.Search /></div>
                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Prospect Side</h4>
             </div>
-            {showHelp && (
-              <p className="text-[9px] font-bold text-slate-400 uppercase leading-snug italic">Critical for pinpointing industry-specific pain points within the documentary data.</p>
-            )}
             <div className="space-y-5">
               <Input label="Client Company" value={context.clientCompany} onChange={v => handleChange('clientCompany', v)} placeholder="e.g. Prospect Organization Name" />
               <Input label="Client Name(s)" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="e.g. Primary stakeholder(s)" />
@@ -203,21 +198,41 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                <div className="text-emerald-500"><ICONS.Efficiency /></div>
                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Solution Context</h4>
             </div>
-            {showHelp && (
-              <p className="text-[9px] font-bold text-slate-400 uppercase leading-snug italic">Tells the AI which solution pillars to focus on during the 'Comparative SWOT' analysis.</p>
-            )}
             <div className="space-y-5">
               <Input label="Target Products / Services" value={context.targetProducts} onChange={v => handleChange('targetProducts', v)} placeholder="e.g. Enterprise Solution XYZ" />
               <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="e.g. Cybersecurity, AI SaaS" />
             </div>
           </div>
+        </div>
 
-          <div className="lg:col-span-3 pt-6">
+        {/* New KYC Option */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-inner">
+             <div className="shrink-0 flex flex-col items-center gap-2">
+                <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg">
+                   <ICONS.Shield />
+                </div>
+                <span className="text-[8px] font-black uppercase text-indigo-500 tracking-widest">Neural Anchor</span>
+             </div>
+             <div className="flex-1 space-y-3">
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 ml-1">Choose Know Your Customer (KYC) Document</label>
+                <select 
+                  value={context.kycDocId || ""} 
+                  onChange={(e) => handleChange('kycDocId', e.target.value)}
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all shadow-sm"
+                >
+                  <option value="">Select behavior grounding source...</option>
+                  {documents.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+                <p className="text-[9px] text-slate-500 font-medium italic">This document will freeze the agent's behavior to match the specific stakeholder profiles discovered in this file.</p>
+             </div>
+          </div>
+
+          <div className="pt-6">
              <div className="flex items-center justify-between mb-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Meeting Focus / Domains</label>
-                {showHelp && (
-                  <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-lg">Critical for 'Cognitive Answering' accuracy</span>
-                )}
              </div>
              <Input 
                label="" 
@@ -226,33 +241,17 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                placeholder="e.g. ROI presentation, Technical deep-dive on integration APIs, Q3 Budget Review"
                isLarge
              />
-             {showHelp && (
-               <p className="mt-4 text-[10px] text-slate-400 font-medium leading-relaxed italic max-w-3xl">
-                 Example: If you focus on "Security & Compliance," the AI will prioritize finding data privacy clauses, encryption mentions, and SOC2 evidence in your library.
-               </p>
-             )}
           </div>
         </div>
       </div>
 
       {/* Persona Selection */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-             <ICONS.Brain /> Target Buyer Persona
-           </h3>
-           {showHelp && (
-              <span className="text-[10px] font-black uppercase text-indigo-500 tracking-widest bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100">Shifts Reasoning Archetype</span>
-           )}
-        </div>
-        
-        {showHelp && (
-          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
-            Selecting a persona adjusts the AI's <strong>Psychological Projection</strong>. It changes the perceived "Decision Logic" and "Risk Tolerance" levels for the entire analysis.
-          </p>
-        )}
-
+        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <ICONS.Brain /> Target Buyer Persona
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Fix: Corrected variable name from PERSONS to PERSONAS */}
           {PERSONAS.map(p => (
             <button
               key={p.type}
@@ -262,19 +261,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
               <div className={`p-4 rounded-2xl mb-6 inline-block ${context.persona === p.type ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500'}`}>{p.icon}</div>
               <p className={`font-black text-base uppercase tracking-widest mb-3 ${context.persona === p.type ? 'text-white' : 'text-slate-800'}`}>{p.label}</p>
               <p className={`text-[11px] leading-relaxed font-medium mb-6 ${context.persona === p.type ? 'text-indigo-100' : 'text-slate-500'}`}>{p.desc}</p>
-              
-              {showHelp && (
-                <div className={`mt-auto pt-4 border-t ${context.persona === p.type ? 'border-white/20' : 'border-slate-50'}`}>
-                   <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${context.persona === p.type ? 'text-indigo-200' : 'text-indigo-400'}`}>Strategic Bias</p>
-                   <p className={`text-[9px] font-bold leading-snug italic ${context.persona === p.type ? 'text-white/80' : 'text-slate-400'}`}>
-                      {p.strategicGuidance}
-                   </p>
-                </div>
-              )}
-
-              {context.persona === p.type && (
-                <div className="absolute top-6 right-6 text-white animate-bounce"><ICONS.Trophy /></div>
-              )}
             </button>
           ))}
         </div>
@@ -282,27 +268,9 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
 
       {/* Answer Styles */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-             <ICONS.Sparkles /> Desired Strategic Response Styles
-           </h3>
-           {showHelp && (
-              <span className="text-[10px] font-black uppercase text-indigo-500 tracking-widest bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100">Controls Synthesis Structure</span>
-           )}
-        </div>
-
-        {showHelp && (
-          <div className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] flex items-start gap-4">
-             <div className="p-3 bg-white rounded-xl shadow-sm text-indigo-600 shrink-0"><ICONS.Document /></div>
-             <div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-1">Synthesized Header Control</h4>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  These selections define the <strong>sections</strong> in the "Cognitive Search" output and the structure of the "Briefing Report". Select styles that correspond to your specific knowledge gaps or presentation slides.
-                </p>
-             </div>
-          </div>
-        )}
-
+        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <ICONS.Sparkles /> Desired Strategic Response Styles
+        </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {ANSWER_STYLES.map(style => (
             <button
@@ -319,37 +287,24 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
       {/* Opportunity Snapshot & Keywords */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-slate-800">Opportunity Snapshot</h3>
-            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-widest rounded-full">Executive Lens</span>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed font-medium">Provide a high-level summary of the deal stage and specific meeting objectives.</p>
+          <h3 className="text-xl font-bold text-slate-800">Opportunity Snapshot</h3>
           <textarea
             value={context.executiveSnapshot}
             onChange={e => handleChange('executiveSnapshot', e.target.value)}
             className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-8 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all h-40 resize-none shadow-inner leading-relaxed"
-            placeholder="e.g. Q3 renewal discussion, focus is on expanding to 500 seats while addressing recent concerns..."
+            placeholder="e.g. Q3 renewal discussion..."
           />
-          {showHelp && (
-            <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest text-center px-4">
-               Anchors the AI's empathy logic during objection handling and rehearsal.
-            </p>
-          )}
         </div>
 
         <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-slate-800">Strategic Semantic Keywords</h3>
-            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest rounded-full">Reasoning Anchors</span>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed font-medium">Add competitors, internal project names, or critical jargon that should trigger specific logic.</p>
+          <h3 className="text-xl font-bold text-slate-800">Strategic Semantic Keywords</h3>
           <div className="flex gap-3 mb-6">
             <input
               type="text"
               value={keywordInput}
               onChange={e => setKeywordInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addKeyword()}
-              placeholder="e.g. Salesforce, Project Hydra, Technical Debt..."
+              placeholder="e.g. Salesforce, Project Hydra..."
               className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-3 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-inner"
             />
             <button onClick={addKeyword} className="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transform active:scale-95 transition-all"><ICONS.X className="rotate-45" /></button>
@@ -361,80 +316,31 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                 <button onClick={() => handleChange('strategicKeywords', context.strategicKeywords.filter((_, idx) => idx !== i))} className="hover:text-rose-500 transition-colors bg-white/50 w-5 h-5 flex items-center justify-center rounded-lg">×</button>
               </span>
             ))}
-            {context.strategicKeywords.length === 0 && <p className="text-slate-300 text-xs italic">No keywords added yet.</p>}
           </div>
-          {showHelp && (
-            <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest text-center px-4">
-               Increases the weighting of these terms during document retrieval.
-            </p>
-          )}
         </div>
       </div>
 
-      {/* Neural Core System Prompt with Manual Save Button */}
+      {/* Neural Core System Prompt */}
       <div className="bg-slate-900 rounded-[3rem] p-12 shadow-2xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:opacity-30 transition-opacity">
+        <div className="absolute top-0 right-0 p-10 opacity-10 transition-opacity">
           <ICONS.Brain className="text-indigo-400 w-24 h-24" />
         </div>
         <div className="relative z-10 space-y-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
-              <h3 className="text-indigo-400 text-[11px] font-black uppercase tracking-[0.4em]">Neural Core System Prompt</h3>
-            </div>
-            
+            <h3 className="text-indigo-400 text-[11px] font-black uppercase tracking-[0.4em]">Neural Core System Prompt</h3>
             <button 
               onClick={savePrompt}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 ${isSaved ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
             >
-              {isSaved ? (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Prompt Retained
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                  Update & Save Prompt
-                </>
-              )}
+              {isSaved ? 'Prompt Retained' : 'Update & Save Prompt'}
             </button>
           </div>
-          
-          {showHelp && (
-            <p className="text-[10px] text-slate-500 font-medium leading-relaxed max-w-4xl italic">
-              The AI auto-generates this prompt based on your configuration above. You can <strong>manually override</strong> it here if you need to inject specific rules or role-play constraints not covered by the UI.
-            </p>
-          )}
-
           <textarea
             value={localPrompt}
             onChange={e => handlePromptUpdate(e.target.value)}
             className="w-full bg-slate-800/40 text-slate-200 border-2 border-slate-700/50 rounded-[2.5rem] p-10 text-sm focus:border-indigo-500 outline-none transition-all h-40 font-mono leading-relaxed shadow-inner"
             placeholder="AI system prompt..."
           />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-               <div className={`w-2 h-2 rounded-full ${isCustomizedRef.current ? 'bg-amber-500' : 'bg-indigo-500 animate-pulse'}`}></div>
-               <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-                 {isCustomizedRef.current 
-                   ? "Manual Neural Override Active" 
-                   : "Engine Auto-Synchronization Enabled"}
-               </p>
-            </div>
-            {isCustomizedRef.current && (
-              <button 
-                onClick={() => { isCustomizedRef.current = false; generateBasePrompt(); }}
-                className="text-[9px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors border-b border-indigo-400/30"
-              >
-                Reset to Core Logic
-              </button>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -448,7 +354,7 @@ const Input = ({ label, value, onChange, placeholder, isLarge }: { label: string
       type="text"
       value={value}
       onChange={e => onChange(e.target.value)}
-      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 focus:bg-white focus:shadow-[0_0_20px_-5px_rgba(79,70,229,0.2)] outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-300 shadow-inner ${isLarge ? 'text-lg py-6' : ''}`}
+      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-300 shadow-inner ${isLarge ? 'text-lg py-6' : ''}`}
       placeholder={placeholder}
     />
   </div>
