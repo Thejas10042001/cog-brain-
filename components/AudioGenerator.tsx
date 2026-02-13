@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo } from 'react';
 import { AnalysisResult } from '../types';
 import { ICONS } from '../constants';
@@ -14,7 +15,30 @@ const VOICES = [
   { name: 'Zephyr', label: 'Calm Strategist', desc: 'Consultative, soft, trusted advisor.' },
 ];
 
-type BriefingTrack = 'psychology' | 'conversation' | 'objections' | 'custom';
+type BriefingTrack = 
+  | 'psychology' 
+  | 'conversation' 
+  | 'objections' 
+  | 'ice_breakers' 
+  | 'about_business' 
+  | 'pricing' 
+  | 'technical' 
+  | 'legal' 
+  | 'closing' 
+  | 'custom';
+
+const TRACK_NUMBERS: Record<BriefingTrack, string> = {
+  psychology: '01',
+  conversation: '02',
+  objections: '03',
+  ice_breakers: '04',
+  about_business: '05',
+  pricing: '06',
+  technical: '07',
+  legal: '08',
+  closing: '09',
+  custom: 'QUERY'
+};
 
 export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -50,6 +74,42 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
                When they say this, they likely mean: ${(analysis.objectionHandling || [])[0]?.realMeaning || "something else"}. 
                Respond with: ${(analysis.objectionHandling || [])[0]?.exactWording || "a clarifying question"}. 
                Stay focused on ${(analysis.snapshot.priorities || [])[0]?.text || "the primary value proposition"} throughout your defense.`
+    },
+    ice_breakers: {
+      title: "Ice Breakers - Rapport",
+      description: "Tactical hooks based on common interests and rapport.",
+      script: `In the ice-breaking phase, focus on building rapport through: ${analysis.openingLines.find(l => l.label.toLowerCase().includes('rapport'))?.text || "finding common organizational pain points"}. 
+               Avoid jumping into product too fast. Establish your role as a strategic partner before the technical deep-dive.`
+    },
+    about_business: {
+      title: "About Business",
+      description: "Business problem alignment and core priority mapping.",
+      script: `When discussing business, align your value to their primary driver: ${analysis.snapshot.priorities[0]?.text || "strategic efficiency"}. 
+               Explain how the solution addresses their specific organizational pressure: ${analysis.snapshot.decisionLogic}.`
+    },
+    pricing: {
+      title: "Pricing & ROI",
+      description: "Financial justification and cost-structure defenses.",
+      script: `For pricing, focus on the ROI Forecast. Your buyer's metrics show a ${analysis.snapshot.metrics.analyticalDepth > 70 ? 'high demand for data' : 'need for executive-level outcomes'}. 
+               Frame the cost as an investment against the risk of ${analysis.objectionHandling.find(o => o.objection.toLowerCase().includes('price') || o.objection.toLowerCase().includes('cost'))?.realMeaning || 'operational stagnation'}.`
+    },
+    technical: {
+      title: "Technical Validation",
+      description: "Architecture, security, and integration briefing.",
+      script: `The technical briefing focuses on: ${analysis.reportSections.technicalDiscussion.substring(0, 200)}... 
+               Be prepared to discuss architecture compatibility and the implementation roadmap specifically for ${analysis.documentInsights.entities.find(e => e.type === 'Metric')?.context || 'enterprise-scale'}.`
+    },
+    legal: {
+      title: "Legal & Risk",
+      description: "Compliance, liability, and risk mitigation strategies.",
+      script: `Address legal and compliance hurdles by highlighting our ${analysis.snapshot.riskTolerance.toLowerCase()} risk posture. 
+               Focus on safety protocols and the implementation timeline to mitigate deployment anxiety.`
+    },
+    closing: {
+      title: "Closing Logic",
+      description: "Final commitment strategy and next-step execution.",
+      script: `To close effectively, use this final coaching principle: ${analysis.finalCoaching.finalAdvice}. 
+               Reiterate the primary win vector which is ${analysis.snapshot.personaIdentity.split(' ')[0]} alignment, and secure the next tactical step.`
     },
     custom: {
       title: "Dynamic Strategy Inquiry",
@@ -137,7 +197,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
         <div className="lg:col-span-4 space-y-10">
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Strategy Modules</h4>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
               {(Object.keys(tracks) as BriefingTrack[]).map((key) => (
                 <button
                   key={key}
@@ -149,7 +209,9 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
                   }}
                   className={`w-full p-5 rounded-2xl border text-left transition-all relative group ${activeTrack === key ? 'bg-indigo-600 border-indigo-600 shadow-lg' : 'bg-slate-50 border-slate-100 hover:border-indigo-300'}`}
                 >
-                  <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${activeTrack === key ? 'text-indigo-200' : 'text-indigo-500'}`}>Track {key === 'psychology' ? '01' : key === 'conversation' ? '02' : key === 'objections' ? '03' : 'QUERY'}</div>
+                  <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${activeTrack === key ? 'text-indigo-200' : 'text-indigo-500'}`}>
+                    Track {TRACK_NUMBERS[key]}
+                  </div>
                   <p className={`font-black text-sm mb-1 ${activeTrack === key ? 'text-white' : 'text-slate-800'}`}>{tracks[key].title}</p>
                   <p className={`text-[10px] leading-tight ${activeTrack === key ? 'text-indigo-100' : 'text-slate-500'}`}>{tracks[key].description}</p>
                 </button>
