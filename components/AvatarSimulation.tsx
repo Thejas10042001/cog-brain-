@@ -213,7 +213,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
         doc.setFontSize(size);
         doc.setTextColor(color[0], color[1], color[2]);
         const split = doc.splitTextToSize(t, 170);
-        if (y + (split.length * (size / 2)) > 275) { doc.addPage(); y = 20; }
+        if (y + (split.length * (size / 2)) > 20) { doc.addPage(); y = 20; }
         doc.text(split, margin, y);
         y += (split.length * (size / 2)) + 4;
         doc.setTextColor(0, 0, 0);
@@ -269,7 +269,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   };
 
   const AIAnimatedBotCIO = () => (
-    <svg viewBox="0 0 200 240" className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'drop-shadow-[0_0_40px_rgba(79,70,229,0.4)]' : 'drop-shadow-2xl'}`}>
+    <svg viewBox="0 0 200 240" className={`w-80 h-80 md:w-96 md:h-96 transition-all duration-700 ${isAISpeaking ? 'drop-shadow-[0_0_60px_rgba(79,70,229,0.5)]' : 'drop-shadow-2xl'}`}>
       <defs>
         <linearGradient id="faceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#f8fafc" />
@@ -307,7 +307,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
         </g>
       </g>
       <style>{`
-        @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+        @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
         .animate-breathe { animation: breathe 4s ease-in-out infinite; }
         @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.05); } }
         .animate-blink { transform-origin: center 82px; animation: blink 5s infinite; }
@@ -434,100 +434,100 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   }
 
   return (
-    <div className="bg-slate-950 p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto px-12">
            <div className="w-80 h-80 bg-slate-900 rounded-[4rem] border border-white/5 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
               <AIAnimatedBotCIO />
            </div>
-           <div className="max-w-2xl space-y-6">
-              <h2 className="text-5xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
-              <p className="text-slate-400 text-lg font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
+           <div className="space-y-6">
+              <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
+              <p className="text-slate-400 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
            </div>
-           <button onClick={handleInitiate} className="px-16 py-7 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Activate Simulation</button>
+           <button onClick={handleInitiate} className="px-16 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Activate Simulation</button>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col gap-10">
-          <div className="flex flex-col gap-12 flex-1">
-             <div className="relative w-full flex flex-col items-center">
-                <div className="w-full aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col items-center justify-center group relative">
-                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60 z-10"></div>
-                   
-                   <div className="absolute top-12 left-1/2 -translate-x-1/2 z-40 bg-white/5 backdrop-blur-2xl border border-white/10 px-10 py-4 rounded-full shadow-2xl flex items-center gap-4">
-                      <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_15px_rgba(79,70,229,0.6)]"></div>
-                      <span className="text-lg font-black uppercase tracking-[0.3em] text-white">Identity: {meetingContext.clientNames || 'Executive Client'}</span>
-                   </div>
-
-                   <div className="relative z-20">
-                      <AIAnimatedBotCIO />
-                   </div>
-                   {(isAISpeaking || isUserListening) && (
-                     <div className="absolute bottom-16 left-0 right-0 h-16 flex items-end justify-center gap-1 z-20">
-                        {[...Array(40)].map((_, i) => (
-                           <div key={i} className={`w-1.5 rounded-full transition-all duration-300 ${isAISpeaking ? 'bg-indigo-500' : 'bg-emerald-500'}`} style={{ height: isAISpeaking ? `${20 + Math.random() * 80}%` : `${10 + Math.random() * 30}%`, opacity: isAISpeaking ? 1 : 0.4 }}></div>
-                        ))}
-                     </div>
-                   )}
-                   <div className="absolute top-10 left-10 z-30 flex items-center gap-3 px-5 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                      <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : isUserListening ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? `${meetingContext.clientNames || 'Client'} Speaking` : isUserListening ? 'Listening...' : 'Bot Primed'}</span>
-                   </div>
-
-                   {meetingContext.clonedVoiceBase64 && (
-                      <div className="absolute top-10 right-10 z-30 flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                         <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></div>
-                         <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.1em]">Neural Vocal Mimicry Protocol</span>
-                      </div>
-                   )}
-
-                   {isAISpeaking && (
-                     <div className="absolute bottom-10 right-10 z-40 flex items-center gap-3 p-2 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10">
-                        <button onClick={handlePauseResume} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
-                           {isPaused ? <ICONS.Play className="w-5 h-5 text-emerald-400" /> : <div className="w-5 h-5 flex gap-1 items-center justify-center"><div className="w-1.5 h-4 bg-white rounded-full"></div><div className="w-1.5 h-4 bg-white rounded-full"></div></div>}
-                        </button>
-                        <button onClick={handleRepeat} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
-                           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                           </svg>
-                        </button>
-                     </div>
-                   )}
-                </div>
-
-                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                   <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4 min-h-[120px]">
-                      <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">{meetingContext.clientNames || 'Client'} Inquiry Hub</h5>
-                      <p className="text-xl font-bold italic leading-relaxed text-indigo-50">{messages[messages.length - 1]?.content || "Syncing behaviors..."}</p>
-                   </div>
-                   <div className={`border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Ear className={`w-6 h-6 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
-                      <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-50'}`}>{isUserListening ? "Capturing Strategy..." : ""}</p>
-                   </div>
-                </div>
+        <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full py-16 px-12 gap-12 justify-center">
+             {/* Unified Single Focus Header */}
+             <div className="text-center space-y-4">
+                <span className="px-5 py-2 bg-indigo-600/20 text-indigo-400 text-xs font-black uppercase tracking-[0.3em] rounded-full border border-indigo-500/20">
+                   Identity: {meetingContext.clientNames || 'Executive Client'}
+                </span>
+                <h3 className="text-5xl font-black tracking-tight leading-tight">
+                   {isAISpeaking ? 'Client is Speaking...' : isUserListening ? 'Listening to Architect...' : 'Dialogue Protocol Active'}
+                </h3>
              </div>
 
-             <div className="space-y-6 px-12">
+             {/* Main Visual Core */}
+             <div className="relative flex flex-col items-center">
+                <div className="relative z-20 transition-all duration-700 transform hover:scale-[1.02]">
+                   <AIAnimatedBotCIO />
+                </div>
+                
+                {/* Minimalized Voice Protocol Badge */}
+                {meetingContext.clonedVoiceBase64 && (
+                   <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span>
+                   </div>
+                )}
+             </div>
+
+             {/* Cinematic Narrative Display */}
+             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+                <div className="flex items-center justify-between mb-2">
+                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500">Dialogue Node</h5>
+                   <div className="flex gap-1">
+                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
+                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-75' : 'bg-slate-700'}`}></div>
+                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-150' : 'bg-slate-700'}`}></div>
+                   </div>
+                </div>
+                <p className="text-4xl font-bold italic leading-[1.4] text-white tracking-tight">
+                   {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
+                </p>
+             </div>
+
+             {/* User Interaction Layer */}
+             <div className="space-y-8">
                 <div className="relative group">
-                   <div className={`absolute top-6 left-6 w-2 h-2 rounded-full z-10 transition-all duration-700 ${isUserListening ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-slate-800'}`}></div>
-                   <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-32 resize-none" placeholder={`${meetingContext.clientNames || 'The Executive'} is waiting for your response...`} />
-                   <button onClick={() => startListening()} className={`absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-5 h-5" /></button>
+                   <textarea 
+                     value={currentCaption} 
+                     onChange={(e) => setCurrentCaption(e.target.value)} 
+                     className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-100 shadow-inner h-48 resize-none placeholder:text-slate-700 leading-relaxed" 
+                     placeholder={`${meetingContext.clientNames || 'The Executive'} is awaiting your strategic response...`} 
+                   />
+                   <button 
+                     onClick={() => startListening()} 
+                     className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}
+                   >
+                     <ICONS.Ear className="w-8 h-8" />
+                   </button>
                 </div>
                 
                 {lastSuggestion && (
-                  <div className="p-8 bg-indigo-600/20 border border-indigo-500/30 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500">
-                     <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">Neural Coaching Suggestion</h6>
-                     <p className="text-sm font-bold text-indigo-100 italic">"Instead of your previous approach, {lastSuggestion}"</p>
+                  <div className="p-8 bg-indigo-600/10 border border-indigo-500/20 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500 text-center">
+                     <p className="text-sm font-bold text-indigo-300 italic">"Strategic Adjustment: {lastSuggestion}"</p>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pb-12">
-                   <div className="flex gap-4">
-                      <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center gap-3 active:scale-95">Commit Logic & Next Node</button>
-                   </div>
-                   <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-5 bg-rose-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50 flex items-center justify-center gap-3">End Session & Audit</button>
+                <div className="flex items-center gap-6">
+                   <button 
+                     onClick={handleNextNode} 
+                     disabled={isProcessing || !currentCaption.trim()} 
+                     className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95"
+                   >
+                     Commit Logic
+                   </button>
+                   <button 
+                     onClick={handleEndSession} 
+                     disabled={isProcessing} 
+                     className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50"
+                   >
+                     End & Audit
+                   </button>
                 </div>
              </div>
-          </div>
         </div>
       )}
     </div>

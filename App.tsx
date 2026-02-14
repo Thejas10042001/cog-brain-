@@ -425,7 +425,13 @@ const App: React.FC = () => {
                 {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}
                 {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                 {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
-                {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
+                {activeTab === 'gpt' && (
+                  <div className="w-full h-full bg-slate-50 flex flex-col items-center">
+                    <div className="w-full max-w-7xl h-full px-6 md:px-12">
+                       <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />
+                    </div>
+                  </div>
+                )}
                 {activeTab === 'audio' && <div className="p-8 md:p-12 max-w-7xl mx-auto"><AudioGenerator analysis={analysis!} /></div>}
                 {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
                 {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
