@@ -436,7 +436,7 @@ const App: React.FC = () => {
                 {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                 {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
                 {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                {activeTab === 'audio' && <AudioGenerator analysis={analysis!} meetingContext={meetingContext} />}
+                {activeTab === 'audio' && <AudioGenerator analysis={analysis!} />}
                 {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
                 {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
               </div>

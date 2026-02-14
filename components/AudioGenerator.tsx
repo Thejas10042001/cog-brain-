@@ -1,12 +1,11 @@
 
 import React, { useState, useRef, useMemo } from 'react';
-import { AnalysisResult, MeetingContext } from '../types';
+import { AnalysisResult } from '../types';
 import { ICONS } from '../constants';
 import { generatePitchAudio, decodeAudioData, generateExplanation } from '../services/geminiService';
 
 interface AudioGeneratorProps {
   analysis: AnalysisResult;
-  meetingContext?: MeetingContext; // Added optional context for voice cloning access
 }
 
 const VOICES = [
@@ -41,7 +40,7 @@ const TRACK_NUMBERS: Record<BriefingTrack, string> = {
   custom: 'QUERY'
 };
 
-export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis, meetingContext }) => {
+export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('Kore');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -147,7 +146,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis, meetin
       const explanation = await generateExplanation(customQuestion, analysis);
       setCustomResponse(explanation);
       
-      const audioBytes = await generatePitchAudio(explanation, selectedVoice, meetingContext?.clonedVoiceBase64);
+      const audioBytes = await generatePitchAudio(explanation, selectedVoice);
       if (audioBytes) {
         await playAudio(audioBytes);
       }
@@ -171,7 +170,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis, meetin
     }
 
     setIsGenerating(true);
-    const audioBytes = await generatePitchAudio(tracks[activeTrack].script, selectedVoice, meetingContext?.clonedVoiceBase64);
+    const audioBytes = await generatePitchAudio(tracks[activeTrack].script, selectedVoice);
     setIsGenerating(false);
 
     if (audioBytes) {
@@ -191,12 +190,6 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis, meetin
             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Auditory Strategic Briefings</p>
           </div>
         </div>
-        {meetingContext?.clonedVoiceBase64 && (
-          <div className="px-4 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full flex items-center gap-2">
-             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-             <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest">Vocal Replica Active</span>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -204,6 +197,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis, meetin
         <div className="lg:col-span-4 space-y-10">
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Strategy Modules</h4>
+            {/* Enabled custom-scrollbar for Track Selection */}
             <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-3">
               {(Object.keys(tracks) as BriefingTrack[]).map((key) => (
                 <button
@@ -232,9 +226,8 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis, meetin
               {VOICES.map((v) => (
                 <button
                   key={v.name}
-                  disabled={!!meetingContext?.clonedVoiceBase64}
                   onClick={() => setSelectedVoice(v.name)}
-                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${meetingContext?.clonedVoiceBase64 ? 'opacity-50 grayscale cursor-not-allowed' : selectedVoice === v.name ? 'bg-indigo-50 border-indigo-400' : 'hover:bg-slate-50 border-transparent'}`}
+                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${selectedVoice === v.name ? 'bg-indigo-50 border-indigo-400' : 'hover:bg-slate-50 border-transparent'}`}
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black ${selectedVoice === v.name ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>{v.name[0]}</div>
                   <div className="text-left">
@@ -243,12 +236,6 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis, meetin
                   </div>
                 </button>
               ))}
-              {meetingContext?.clonedVoiceBase64 && (
-                <div className="mt-2 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center">
-                   <p className="text-[9px] font-black uppercase text-emerald-600 tracking-widest">Manual Selection Disabled</p>
-                   <p className="text-[8px] text-emerald-500 font-medium mt-1">Cloned voice replica is overriding prebuilt personas.</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
