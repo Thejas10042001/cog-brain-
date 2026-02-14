@@ -256,7 +256,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   };
 
   return (
-    <div className="bg-slate-950 border-y border-slate-800 p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
            <div className="p-8 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl">

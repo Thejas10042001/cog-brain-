@@ -213,7 +213,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
         doc.setFontSize(size);
         doc.setTextColor(color[0], color[1], color[2]);
         const split = doc.splitTextToSize(t, 170);
-        if (y + (split.length * (size / 2)) > 20) { doc.addPage(); y = 20; }
+        if (y + (split.length * (size / 2)) > 275) { doc.addPage(); y = 20; }
         doc.text(split, margin, y);
         y += (split.length * (size / 2)) + 4;
         doc.setTextColor(0, 0, 0);
@@ -323,8 +323,8 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
 
   if (report) {
     return (
-      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24 text-white">
-        <div className="bg-slate-900 p-16 shadow-2xl relative overflow-hidden flex flex-col items-start gap-12 text-left">
+      <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] bg-slate-900 text-white">
+        <div className="p-16 shadow-2xl relative overflow-hidden flex flex-col items-start gap-12 text-left">
           <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
           
           <div className="w-full flex justify-between items-center relative z-10">
@@ -434,7 +434,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   }
 
   return (
-    <div className="bg-slate-950 border-y border-slate-800 p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
            <div className="w-80 h-80 bg-slate-900 rounded-[4rem] border border-white/5 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">

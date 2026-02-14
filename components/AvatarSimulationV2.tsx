@@ -206,7 +206,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         doc.setFont("helvetica", "normal"); doc.setFontSize(size);
         doc.setTextColor(color[0], color[1], color[2]);
         const split = doc.splitTextToSize(t, 170);
-        if (y + (split.length * (size / 2)) > 20) { doc.addPage(); y = 20; }
+        if (y + (split.length * (size / 2)) > 275) { doc.addPage(); y = 20; }
         doc.text(split, margin, y);
         y += (split.length * (size / 2)) + 4;
         doc.setTextColor(0, 0, 0);
@@ -306,7 +306,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   };
 
   return (
-    <div className="bg-slate-950 border-y border-slate-800 p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
            <div className="max-w-2xl space-y-6">

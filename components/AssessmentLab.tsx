@@ -32,7 +32,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Initialize Speech Recognition for MIC/VIDEO questions
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -66,7 +65,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
     };
   }, [questions, currentIdx]);
 
-  // Handle Camera for Video Questions
   useEffect(() => {
     const currentQ = questions[currentIdx];
     if (stage === 'running' && currentQ?.type === 'video') {
@@ -245,7 +243,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
 
   if (stage === 'config') {
     return (
-      <div className="bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-500">
+      <div className="bg-white p-12 border-y border-slate-200 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-64px)]">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div className="flex items-center gap-4">
             <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100">
@@ -255,32 +253,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Assessment Lab Configuration</h2>
               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Pressure-test your document mastery</p>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-             <button 
-               onClick={() => handleStart({ ...config, mcq: 10, short: 0, long: 0, mic: 0, video: 0, timer: 15 })}
-               className="px-6 py-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center gap-2"
-             >
-               <ICONS.Document className="w-4 h-4" /> Quick MCQ Quiz
-             </button>
-             <button 
-               onClick={() => handleStart({ ...config, mcq: 0, short: 5, long: 0, mic: 0, video: 0, timer: 20 })}
-               className="px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center gap-2"
-             >
-               <ICONS.Efficiency className="w-4 h-4" /> Tactical Short Answers
-             </button>
-             <button 
-               onClick={() => handleStart({ ...config, mcq: 0, short: 0, long: 0, mic: 3, video: 0, timer: 15 })}
-               className="px-6 py-3 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center gap-2"
-             >
-               <ICONS.Speaker className="w-4 h-4" /> Verbal Mastery Drill
-             </button>
-             <button 
-               onClick={() => handleStart({ ...config, mcq: 0, short: 0, long: 0, mic: 0, video: 3, timer: 30 })}
-               className="px-6 py-3 bg-indigo-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2"
-             >
-               <ICONS.Play className="w-4 h-4" /> Performance Pitch Deck
-             </button>
           </div>
         </div>
 
@@ -308,7 +280,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                   onChange={(e) => setConfig({ ...config, timer: parseInt(e.target.value) })}
                   className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                 />
-                <p className="text-[10px] text-slate-400 italic">Total available time for all generated nodes.</p>
               </div>
             </div>
 
@@ -322,7 +293,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                   <ICONS.Document className={`w-6 h-6 ${perspective === 'document' ? 'text-white' : 'text-indigo-500 group-hover:scale-110 transition-transform'}`} />
                   <div className="text-center">
                     <p className="text-[10px] font-black uppercase tracking-widest">Document Focused</p>
-                    <p className={`text-[9px] font-medium mt-1 ${perspective === 'document' ? 'text-indigo-100' : 'text-slate-400'}`}>Factual Mastery & Retrieval</p>
                   </div>
                 </button>
 
@@ -333,17 +303,9 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                   <ICONS.Brain className={`w-6 h-6 ${perspective === 'customer' ? 'text-white' : 'text-rose-500 group-hover:scale-110 transition-transform'}`} />
                   <div className="text-center">
                     <p className="text-[10px] font-black uppercase tracking-widest">Buyer Centric</p>
-                    <p className={`text-[9px] font-medium mt-1 ${perspective === 'customer' ? 'text-indigo-100' : 'text-slate-400'}`}>Psychology & Objections</p>
                   </div>
                 </button>
               </div>
-            </div>
-
-            <div className="p-8 bg-indigo-50 rounded-[2.5rem] flex items-center gap-6 border border-indigo-100">
-               <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200"><ICONS.Sparkles className="text-white" /></div>
-               <p className="text-xs text-indigo-900 font-medium leading-relaxed">
-                 AI will shift its reasoning core based on your chosen perspective to pressure-test different facets of your readiness.
-               </p>
             </div>
           </div>
         </div>
@@ -353,17 +315,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
           disabled={isGenerating || activeDocuments.length === 0}
           className={`w-full py-8 rounded-[2rem] font-black text-xl uppercase tracking-widest transition-all shadow-2xl flex items-center justify-center gap-4 ${isGenerating ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.01] active:scale-95 shadow-indigo-200'}`}
         >
-          {isGenerating ? (
-            <>
-              <div className="w-6 h-6 border-4 border-slate-300 border-t-indigo-500 rounded-full animate-spin"></div>
-              Generating Performance Nodes...
-            </>
-          ) : (
-            <>
-              <ICONS.Play className="w-6 h-6" />
-              Initiate Neural Assessment
-            </>
-          )}
+          {isGenerating ? "Synthesizing..." : "Initiate Neural Assessment"}
         </button>
       </div>
     );
@@ -374,66 +326,47 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
     const progressPercent = totalSessionTime > 0 ? (timeLeft / totalSessionTime) * 100 : 100;
 
     return (
-      <div className="space-y-8 animate-in fade-in duration-500">
-        <div className="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden">
-          <div className="h-2 w-full bg-slate-100">
-             <div 
-               className={`h-full transition-all duration-1000 ${timeLeft < 60 ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-indigo-500'}`}
-               style={{ width: `${progressPercent}%` }}
-             ></div>
+      <div className="animate-in fade-in duration-500 min-h-[calc(100vh-64px)] flex flex-col">
+        <div className="bg-white border-b border-slate-200 overflow-hidden">
+          <div className="h-1 w-full bg-slate-100">
+             <div className="h-full bg-indigo-500" style={{ width: `${progressPercent}%` }}></div>
           </div>
           <div className="flex items-center justify-between px-10 py-6">
             <div className="flex items-center gap-6">
                 <div className="px-4 py-1.5 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
                   Question {currentIdx + 1} / {questions.length}
                 </div>
-                <div className={`flex items-center gap-2 text-lg font-black ${timeLeft < 60 ? 'text-rose-600 animate-pulse' : 'text-slate-800'}`}>
-                   <ICONS.Efficiency className="w-4 h-4" />
+                <div className="text-lg font-black text-slate-800">
                    {formatTime(timeLeft)}
                 </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="px-4 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200">
-                Mode: {perspective === 'document' ? 'Document Mastery' : 'Buyer Psychology'}
-              </div>
-              {timeLeft < 30 && (
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-full text-[9px] font-black uppercase tracking-widest animate-bounce">
-                  Low Time Warning
-                </div>
-              )}
-              <button 
-                onClick={handleSubmit}
-                className="px-8 py-2.5 bg-emerald-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg"
-              >
+            <button onClick={handleSubmit} className="px-8 py-2.5 bg-emerald-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
                 Submit Assessment
-              </button>
-            </div>
+            </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-[4rem] p-16 shadow-2xl border border-slate-200 relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-12 opacity-[0.03]"><ICONS.Research className="w-64 h-64" /></div>
-           
-           <div className="relative z-10 space-y-12">
-              <div className="space-y-4">
-                 <span className={`px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${currentQ.type === 'video' ? 'bg-indigo-950 text-white' : currentQ.type === 'mic' ? 'bg-rose-100 text-rose-600' : currentQ.type === 'long' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'}`}>
-                    {currentQ.type === 'video' ? 'VISUAL PERFORMANCE HUB' : currentQ.type === 'mic' ? 'VERBAL MASTERY' : currentQ.type === 'long' ? 'STRATEGIC LONG FORM' : `${currentQ.type} MODE`}
+        <div className="flex-1 bg-white p-16 relative overflow-hidden flex flex-col">
+           <div className="relative z-10 space-y-12 flex-1 flex flex-col justify-center">
+              <div className="space-y-4 text-center">
+                 <span className="px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-400">
+                    {currentQ.type.toUpperCase()} MODE
                  </span>
-                 <h3 className="text-3xl font-black text-slate-900 leading-tight tracking-tight">
+                 <h3 className="text-4xl font-black text-slate-900 tracking-tight max-w-4xl mx-auto">
                    {currentQ.text}
                  </h3>
               </div>
 
-              <div className="min-h-[300px]">
+              <div className="min-h-[300px] flex items-center justify-center">
                 {currentQ.type === 'mcq' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
                     {currentQ.options?.map((opt, i) => (
                       <button
                         key={i}
                         onClick={() => setAnswers(prev => ({ ...prev, [currentQ.id]: opt }))}
-                        className={`p-8 rounded-[2rem] border-2 text-left transition-all relative flex items-center gap-6 group ${answers[currentQ.id] === opt ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl' : 'bg-slate-50 border-slate-100 hover:border-indigo-300'}`}
+                        className={`p-8 rounded-[2rem] border-2 text-left transition-all flex items-center gap-6 ${answers[currentQ.id] === opt ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-50 border-slate-100 hover:border-indigo-300'}`}
                       >
-                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${answers[currentQ.id] === opt ? 'bg-white/20 text-white' : 'bg-white text-indigo-600 shadow-sm'}`}>
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${answers[currentQ.id] === opt ? 'bg-white/20 text-white' : 'bg-white text-indigo-600'}`}>
                            {String.fromCharCode(65 + i)}
                          </div>
                          <span className="text-lg font-bold">{opt}</span>
@@ -443,321 +376,109 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                 )}
 
                 {(currentQ.type === 'short' || currentQ.type === 'long') && (
-                  <div className="space-y-4">
+                  <div className="w-full max-w-5xl">
                     <textarea 
                       value={answers[currentQ.id] || ""}
                       onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
-                      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-10 text-xl font-medium focus:border-indigo-500 focus:bg-white transition-all outline-none shadow-inner ${currentQ.type === 'short' ? 'h-40' : 'h-80'}`}
-                      placeholder={currentQ.type === 'short' ? "Provide a concise tactical response..." : "Synthesize your detailed strategic response here. Aim for depth and grounding in document evidence..."}
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-10 text-2xl outline-none transition-all h-80"
+                      placeholder="Response..."
                     />
-                    <div className="flex justify-between px-4 text-[9px] font-black uppercase text-slate-400">
-                      <span>{currentQ.type === 'short' ? 'Target: Concise Logic' : 'Target: Comprehensive Strategic Alignment'}</span>
-                      <span>{(answers[currentQ.id] || "").length} characters</span>
-                    </div>
                   </div>
                 )}
 
                 {(currentQ.type === 'mic' || currentQ.type === 'video') && (
-                  <div className="flex flex-col items-center justify-center gap-10 py-12">
+                  <div className="flex flex-col items-center justify-center gap-10 w-full max-w-5xl">
                      {currentQ.type === 'video' ? (
                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
-                         <div className="relative rounded-[3rem] overflow-hidden bg-slate-900 shadow-2xl border-8 border-slate-800 aspect-video flex items-center justify-center">
-                            <video 
-                              ref={videoRef} 
-                              autoPlay 
-                              muted 
-                              playsInline 
-                              className="w-full h-full object-cover scale-x-[-1]"
-                            />
-                            <div className="absolute top-6 left-6 flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10">
-                               <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`}></div>
-                               <span className="text-[10px] font-black text-white uppercase tracking-widest">{isRecording ? 'Active Performance Trace' : 'Neural Feed Primed'}</span>
-                            </div>
-                            
-                            {!streamRef.current && (
-                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm space-y-6">
-                                 <ICONS.Efficiency className="w-16 h-16 text-indigo-400 animate-pulse" />
-                                 <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Requesting Neural Camera Access...</p>
-                              </div>
-                            )}
+                         <div className="relative rounded-[3rem] overflow-hidden bg-slate-900 aspect-video flex items-center justify-center">
+                            <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                          </div>
-
-                         <div className="space-y-6 flex flex-col justify-center">
-                            <h4 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.3em]">Visual Delivery Hub</h4>
-                            <div className="relative group">
-                              <label className="absolute -top-3 left-10 px-4 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full z-10 shadow-lg">
-                                Editable Performance Transcription
-                              </label>
-                              <textarea 
-                                value={answers[currentQ.id] || ""}
-                                onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
-                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-10 text-lg font-medium focus:border-indigo-500 outline-none transition-all h-60 resize-none shadow-inner italic"
-                                placeholder="Transcription will appear here. You can manually correct it for audit precision..."
-                              />
-                            </div>
-                            <button 
-                              onClick={toggleRecording}
-                              className={`group relative overflow-hidden px-16 py-5 rounded-full font-black text-lg transition-all shadow-2xl ${isRecording ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white hover:scale-105 active:scale-95'}`}
-                            >
-                               <div className="relative z-10 flex items-center justify-center gap-3">
-                                  {isRecording ? <><ICONS.X /> Terminate & Parse</> : <><ICONS.Play /> Start Performance</>}
-                               </div>
-                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                         <div className="flex flex-col justify-center gap-6">
+                            <textarea 
+                              value={answers[currentQ.id] || ""}
+                              onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
+                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-10 text-lg h-60"
+                              placeholder="Transcribed performance..."
+                            />
+                            <button onClick={toggleRecording} className={`py-5 rounded-full font-black text-lg transition-all ${isRecording ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white'}`}>
+                               {isRecording ? "End Trace" : "Begin Performance"}
                             </button>
                          </div>
                        </div>
                      ) : (
-                       <>
-                        <div className="relative">
-                           <div className={`absolute inset-0 rounded-full border-4 border-rose-500/20 transition-transform duration-1000 ${isRecording ? 'scale-[1.6] animate-ping' : 'scale-100'}`}></div>
-                           <div className={`absolute inset-0 rounded-full border-4 border-rose-500/10 transition-transform duration-1000 ${isRecording ? 'scale-[2.2] animate-ping [animation-delay:0.5s]' : 'scale-100'}`}></div>
-                           
-                           <button 
-                             onClick={toggleRecording}
-                             className={`relative z-10 w-40 h-40 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-rose-600 shadow-[0_0_60px_rgba(225,29,72,0.6)]' : 'bg-indigo-600 hover:bg-indigo-700 shadow-xl'}`}
-                           >
-                             {isRecording ? <ICONS.X className="w-16 h-16 text-white" /> : <ICONS.Speaker className="w-16 h-16 text-white" />}
-                           </button>
-                        </div>
-
-                        <div className="text-center space-y-4">
-                           <h4 className="text-2xl font-black text-slate-800">{isRecording ? "Neural Transcription Active..." : "Initiate Verbal Answer"}</h4>
-                           <div className="flex items-center justify-center gap-1 h-8">
-                              {isRecording ? (
-                                 [...Array(12)].map((_, i) => (
-                                    <div 
-                                       key={i} 
-                                       className="w-1 bg-rose-500 rounded-full animate-waveform-sm"
-                                       style={{ 
-                                          height: `${20 + Math.random() * 80}%`,
-                                          animationDelay: `${i * 0.1}s`
-                                       }}
-                                    ></div>
-                                 ))
-                              ) : (
-                                 <p className="text-slate-400 font-medium italic">Speak your strategy clearly. Performance will be audited for logic.</p>
-                              )}
-                           </div>
-                        </div>
-
-                        <div className="max-w-3xl w-full relative group">
-                           <label className="absolute -top-3 left-10 px-4 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full z-10 shadow-lg">
-                             Editable Transcription Trace
-                           </label>
-                           <textarea 
+                       <div className="space-y-10 flex flex-col items-center w-full">
+                          <button onClick={toggleRecording} className={`w-32 h-32 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-rose-600 scale-110 shadow-2xl' : 'bg-indigo-600'}`}>
+                             {isRecording ? <ICONS.X className="w-12 h-12 text-white" /> : <ICONS.Speaker className="w-12 h-12 text-white" />}
+                          </button>
+                          <textarea 
                              value={answers[currentQ.id] || ""}
                              onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
-                             className="w-full p-10 bg-indigo-50/50 rounded-[3rem] border-2 border-indigo-100 text-indigo-900 font-bold italic shadow-inner h-48 focus:border-indigo-500 outline-none transition-all resize-none"
-                             placeholder="The engine will capture your verbal output. Correct transcription errors here for maximum audit accuracy..."
-                           />
-                        </div>
-                       </>
+                             className="w-full p-10 bg-slate-50 rounded-[3rem] border-2 border-slate-100 text-lg h-48"
+                             placeholder="Voice trace..."
+                          />
+                       </div>
                      )}
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-12 border-t border-slate-100">
-                <button 
-                  onClick={handlePrevious}
-                  disabled={currentIdx === 0}
-                  className="px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all disabled:opacity-30"
-                >
+              <div className="flex items-center justify-between pt-12">
+                <button onClick={handlePrevious} disabled={currentIdx === 0} className="px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30">
                   Previous Node
                 </button>
-                <div className="flex gap-2">
-                   {questions.map((_, i) => (
-                     <div key={i} className={`h-1.5 rounded-full transition-all ${i === currentIdx ? 'w-8 bg-indigo-600' : 'w-1.5 bg-slate-200'}`}></div>
-                   ))}
-                </div>
                 {currentIdx < questions.length - 1 ? (
-                  <button 
-                    onClick={handleNext}
-                    className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl transition-all"
-                  >
-                    Next Performance Node
+                  <button onClick={handleNext} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                    Next Node
                   </button>
                 ) : (
-                  <button 
-                    onClick={handleSubmit}
-                    className="px-12 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl transition-all"
-                  >
+                  <button onClick={handleSubmit} className="px-12 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">
                     Final Submission
                   </button>
                 )}
               </div>
            </div>
         </div>
-        <style>{`
-           @keyframes waveform-sm {
-              0%, 100% { transform: scaleY(0.5); }
-              50% { transform: scaleY(1.2); }
-           }
-           .animate-waveform-sm {
-              animation: waveform-sm 0.6s ease-in-out infinite;
-           }
-        `}</style>
       </div>
     );
   }
 
   if (stage === 'results') {
     const totalScore = Math.round(results.reduce((acc, r) => acc + r.evaluation.score, 0) / (results.length || 1));
-    const timeUsed = totalSessionTime - timeLeft;
-    const timeUsedPercent = Math.round((timeUsed / totalSessionTime) * 100);
-
     return (
-      <div className="space-y-12 animate-in slide-in-from-bottom-8 duration-700 pb-20">
-        <div className="bg-slate-900 rounded-[4rem] p-16 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12 text-left">
-           <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
-           <div className="relative z-10 space-y-8 flex-1">
-              <div>
-                <h2 className="text-4xl font-black tracking-tight">Cognitive Readiness Report</h2>
-                <div className="flex items-center gap-3 mt-4">
-                  <span className="px-3 py-1 bg-white/10 text-indigo-300 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/10">
-                    Perspective: {perspective === 'document' ? 'Document Oriented' : 'Buyer Psychology'}
-                  </span>
-                </div>
-                <p className="text-indigo-200/70 font-medium text-lg max-w-xl mt-4">
-                  Your performance has been cross-referenced against <strong>{activeDocuments.length} document nodes</strong> using the high-fidelity reasoning core.
-                </p>
-              </div>
-
-              <div className="flex gap-12 items-center">
-                 <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Time Efficiency</p>
-                    <div className="flex items-end gap-3">
-                       <span className="text-4xl font-black">{formatTime(timeUsed)}</span>
-                       <span className="text-indigo-500 font-bold mb-1">/ {config.timer}m</span>
-                    </div>
-                 </div>
-                 <div className="w-px h-12 bg-white/10"></div>
-                 <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest">Completion Pace</p>
-                    <p className="text-4xl font-black">{timeUsedPercent}% <span className="text-xs text-emerald-600 align-middle">Used</span></p>
-                 </div>
-              </div>
-
+      <div className="animate-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] flex flex-col bg-slate-900 text-white">
+        <div className="p-16 flex flex-col md:flex-row items-center justify-between gap-12 text-left flex-1">
+           <div className="space-y-8 flex-1">
+              <h2 className="text-5xl font-black tracking-tight">Readiness Report</h2>
+              <p className="text-indigo-200/70 font-medium text-xl max-w-xl">
+                 Logic validated against intelligence core. Master assessment complete.
+              </p>
               <div className="flex gap-4">
-                 <button onClick={exportPDF} disabled={isExporting} className="px-8 py-3.5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2">
-                   {isExporting ? <div className="w-3 h-3 border-2 border-slate-900 border-t-transparent animate-spin"></div> : <ICONS.Document className="w-4 h-4" />}
-                   Export Branded PDF
+                 <button onClick={exportPDF} className="px-8 py-3.5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                   Export PDF
                  </button>
-                 <button onClick={() => setStage('config')} className="px-8 py-3.5 bg-white/10 text-white border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all">
-                   Retake Lab
+                 <button onClick={() => setStage('config')} className="px-8 py-3.5 bg-white/10 text-white border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                   Retake
                  </button>
               </div>
            </div>
-           <div className="relative z-10 w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.5)]">
-              <span className="text-[12px] font-black uppercase tracking-widest text-indigo-200 mb-2">Total Score</span>
+           <div className="w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10">
+              <span className="text-[12px] font-black uppercase text-indigo-200 mb-2">Score</span>
               <span className="text-7xl font-black">{totalScore}%</span>
            </div>
         </div>
-
-        <div className="space-y-10">
+        <div className="bg-white p-12 space-y-10">
            {questions.map((q, idx) => {
              const res = results.find(r => r.questionId === q.id);
              return (
-               <div key={q.id} className="bg-white rounded-[4rem] p-12 border border-slate-200 shadow-xl group hover:border-indigo-300 transition-all text-left relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-8 opacity-[0.02] -rotate-12"><ICONS.Brain className="w-64 h-64" /></div>
-                  
-                  <div className="flex items-start justify-between mb-12 relative z-10">
-                     <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                           <span className="px-4 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg">Node {idx + 1}</span>
-                           <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{q.type} Mode • {res?.timeSpent}s Logic Scan</span>
-                        </div>
-                        <h4 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">{q.text}</h4>
-                     </div>
-                     <div className={`px-10 py-6 rounded-[2.5rem] flex flex-col items-center justify-center border-4 ${res?.evaluation.isCorrect ? 'bg-emerald-50 border-emerald-100 text-emerald-600 shadow-emerald-50' : 'bg-rose-50 border-rose-100 text-rose-600 shadow-rose-50'} shadow-xl`}>
-                        <span className="text-5xl font-black">{res?.evaluation.score}%</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-60">{res?.evaluation.isCorrect ? 'Logic Validated' : 'Strategic Misstep'}</span>
-                     </div>
+               <div key={q.id} className="p-10 border border-slate-100 rounded-[3rem] text-slate-900 flex flex-col gap-6">
+                  <div className="flex justify-between items-start">
+                     <h4 className="text-2xl font-black">{idx + 1}. {q.text}</h4>
+                     <span className={`px-6 py-2 rounded-full font-black ${res?.evaluation.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{res?.evaluation.score}%</span>
                   </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10">
-                     <div className="lg:col-span-7 space-y-10">
-                        <div className="space-y-4">
-                           <h5 className="text-[11px] font-black uppercase text-indigo-500 tracking-[0.3em] flex items-center gap-3">
-                              <div className="w-1 h-1 bg-indigo-500 rounded-full"></div> Captured Performance Trace
-                           </h5>
-                           <div className="p-10 bg-slate-50 rounded-[3rem] border border-slate-100 italic text-slate-700 text-lg leading-relaxed shadow-inner">
-                              “{res?.userAnswer || "No verbal or text input detected."}”
-                           </div>
-                        </div>
-
-                        {res?.evaluation.correctionSuggestions && res.evaluation.correctionSuggestions.length > 0 && (
-                          <div className="space-y-4">
-                             <h5 className="text-[11px] font-black uppercase text-rose-500 tracking-[0.3em] flex items-center gap-3">
-                                <div className="w-1 h-1 bg-rose-500 rounded-full"></div> Correction Suggestions
-                             </h5>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {res.evaluation.correctionSuggestions.map((s, i) => (
-                                  <div key={i} className="p-6 bg-rose-50/50 border border-rose-100 rounded-2xl flex gap-4 animate-in slide-in-from-left-2">
-                                     <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center font-black text-[9px] shrink-0 mt-0.5">!</div>
-                                     <p className="text-xs font-bold text-rose-800 leading-relaxed italic">{s}</p>
-                                  </div>
-                                ))}
-                             </div>
-                          </div>
-                        )}
-
-                        {res?.evaluation.improvementPoints && res.evaluation.improvementPoints.length > 0 && (
-                          <div className="space-y-4">
-                             <h5 className="text-[11px] font-black uppercase text-emerald-600 tracking-[0.3em] flex items-center gap-3">
-                                <div className="w-1 h-1 bg-emerald-600 rounded-full"></div> Strategic Improvement Points
-                             </h5>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {res.evaluation.improvementPoints.map((p, i) => (
-                                  <div key={i} className="p-6 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex gap-4 animate-in slide-in-from-left-2">
-                                     <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-[9px] shrink-0 mt-0.5">+</div>
-                                     <p className="text-xs font-bold text-emerald-800 leading-relaxed italic">{p}</p>
-                                  </div>
-                                ))}
-                             </div>
-                          </div>
-                        )}
-                     </div>
-
-                     <div className="lg:col-span-5 space-y-8">
-                        <div className="p-10 bg-indigo-950 text-white rounded-[3.5rem] shadow-2xl relative overflow-hidden flex-1 group">
-                           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform"><ICONS.Speaker className="w-20 h-20" /></div>
-                           <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-[0.4em] mb-8">Neural Auditor Briefing</h5>
-                           
-                           <div className="space-y-8">
-                              <p className="text-xl font-medium leading-relaxed italic text-indigo-50 border-l-4 border-indigo-500/30 pl-8">
-                                {res?.evaluation.feedback}
-                              </p>
-
-                              {(q.type === 'mic' || q.type === 'video') && res?.evaluation.toneResult && (
-                                <div className="space-y-3 pt-6 border-t border-white/10">
-                                   <h6 className="text-[9px] font-black uppercase text-indigo-400 tracking-widest flex items-center gap-2">
-                                      <ICONS.Speaker className="w-3 h-3" /> Voice Tone & Delivery Audit
-                                   </h6>
-                                   <p className="text-xs font-bold text-white/80 leading-relaxed italic">{res.evaluation.toneResult}</p>
-                                </div>
-                              )}
-
-                              {q.type === 'video' && res?.evaluation.bodyLanguageAdvice && (
-                                <div className="space-y-3 pt-6 border-t border-white/10">
-                                   <h6 className="text-[9px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-2">
-                                      <ICONS.Efficiency className="w-3 h-3" /> Visual Impact Audit
-                                   </h6>
-                                   <p className="text-xs font-bold text-white/80 leading-relaxed italic">{res.evaluation.bodyLanguageAdvice}</p>
-                                </div>
-                              )}
-                           </div>
-                        </div>
-
-                        <div className="p-8 bg-slate-900 rounded-[3rem] border border-white/5 space-y-4">
-                           <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Ideal Strategy Logic</h5>
-                           <p className="text-sm font-bold text-slate-100 leading-relaxed">{q.correctAnswer}</p>
-                           <div className="pt-4 border-t border-white/5">
-                              <p className="text-[9px] font-black uppercase text-slate-500 mb-1">Coaching Principle</p>
-                              <p className="text-xs font-medium text-slate-400 italic">“{q.explanation}”</p>
-                           </div>
-                        </div>
-                     </div>
+                  <p className="italic text-slate-500">“{res?.userAnswer || "N/A"}”</p>
+                  <div className="p-6 bg-slate-50 rounded-2xl">
+                     <p className="text-xs font-black text-indigo-600 uppercase mb-2">Strategic Insight</p>
+                     <p className="text-sm">{res?.evaluation.feedback}</p>
                   </div>
                </div>
              );
@@ -771,15 +492,15 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
 };
 
 const ConfigRow = ({ label, val, set, icon }: { label: string; val: number; set: (v: number) => void; icon: React.ReactNode }) => (
-  <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all border border-transparent hover:border-slate-100 group">
+  <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-transparent group">
     <div className="flex items-center gap-4">
       <div className="text-slate-400 group-hover:text-indigo-600 transition-colors">{icon}</div>
-      <span className="text-[11px] font-black uppercase text-slate-500 group-hover:text-slate-900">{label}</span>
+      <span className="text-[11px] font-black uppercase text-slate-500">{label}</span>
     </div>
     <div className="flex items-center gap-4">
-       <button onClick={() => set(Math.max(0, val - 1))} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all">-</button>
+       <button onClick={() => set(Math.max(0, val - 1))} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center">-</button>
        <span className="w-8 text-center font-black text-indigo-600">{val}</span>
-       <button onClick={() => set(val + 1)} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all">+</button>
+       <button onClick={() => set(val + 1)} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center">+</button>
     </div>
   </div>
 );

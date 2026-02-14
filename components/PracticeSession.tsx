@@ -261,7 +261,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
         const source = audioContextRef.current.createBufferSource();
         source.buffer = buffer;
         source.connect(audioContextRef.current.destination);
-        source.onended = () => setIsPlayingExplanation(false);
+        source.onended = () => { setIsPlayingExplanation(false); };
         explanationSourceRef.current = source;
         source.start();
       }
@@ -281,7 +281,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-none md:rounded-[3rem] p-6 md:p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col">
+    <div className="bg-white border-y border-slate-200 p-6 md:p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col">
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
         <div className="flex items-center gap-4">
           <div className="p-3.5 bg-rose-600 text-white rounded-2xl shadow-xl shadow-rose-100"><ICONS.Speaker /></div>
@@ -366,7 +366,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
             </p>
           </div>
 
-          <div className="w-full space-y-10 max-w-7xl">
+          <div className="w-full space-y-10">
              {sessionMode === 'grooming' ? (
                <div className="space-y-4 max-w-2xl mx-auto text-left">
                   <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-2">Target Objection / Question</label>
@@ -384,12 +384,12 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                   </select>
                </div>
              ) : (
-               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 px-12">
                  {PERSONA_OPTIONS.map((option) => (
                    <button
                      key={option.type}
                      onClick={() => setSelectedPersona(option.type)}
-                     className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-600 shadow-2xl scale-[1.03]' : 'bg-white border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/10'}`}
+                     className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-[1.03]' : 'bg-white border-slate-100 hover:border-indigo-300 shadow-sm'}`}
                    >
                      <div className={`p-4 rounded-2xl mb-6 inline-block w-fit ${selectedPersona === option.type ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600 shadow-sm'}`}>{option.icon}</div>
                      <h5 className={`font-black text-xs uppercase tracking-widest mb-2 ${selectedPersona === option.type ? 'text-white' : 'text-slate-900'}`}>{option.label}</h5>
@@ -425,7 +425,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
            </div>
         </div>
       ) : evaluation ? (
-        <div className="flex-1 space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-20 w-full max-w-7xl mx-auto">
+        <div className="flex-1 space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-20 w-full px-12">
           <div className="flex items-center justify-between">
              <button onClick={() => setEvaluation(null)} className="text-[11px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
                <ICONS.X /> Close Mastery Review

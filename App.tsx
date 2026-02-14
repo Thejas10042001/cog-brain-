@@ -217,10 +217,10 @@ const App: React.FC = () => {
   const hasPermissionError = getFirebasePermissionError();
 
   return (
-    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden flex flex-col">
       <Header user={user} />
       
-      <div className="pt-16 flex min-h-screen">
+      <div className="pt-16 flex flex-1">
         {analysis && !isAnalyzing && (
           <aside className="w-72 bg-white border-r border-slate-200 flex flex-col fixed h-[calc(100vh-64px)] overflow-y-auto no-scrollbar z-30">
             <div className="p-6 space-y-8 flex flex-col h-full">
@@ -261,7 +261,7 @@ const App: React.FC = () => {
         )}
 
         <main className={`flex-1 transition-all duration-300 ${analysis && !isAnalyzing ? 'ml-72' : ''}`}>
-          <div className="w-full">
+          <div className="w-full h-full">
             {!analysis && !isAnalyzing ? (
               <div className="p-8 md:p-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
                 <div className="text-center space-y-4">
@@ -332,7 +332,7 @@ const App: React.FC = () => {
                 </div>
               </div>
             ) : isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center py-32 space-y-12 h-[calc(100vh-64px)]">
+              <div className="flex flex-col items-center justify-center space-y-12 h-[calc(100vh-64px)]">
                 <div className="relative">
                   <div 
                     className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out"
@@ -384,7 +384,7 @@ const App: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="animate-in fade-in duration-500">
+              <div className="animate-in fade-in duration-500 h-full">
                 {activeTab === 'context' && (
                   <div className="p-8 md:p-12 space-y-12 max-w-7xl mx-auto">
                     <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
@@ -425,10 +425,10 @@ const App: React.FC = () => {
                 {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}
                 {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                 {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
-                {activeTab === 'gpt' && <div className="p-0"><SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} /></div>}
+                {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
                 {activeTab === 'audio' && <div className="p-8 md:p-12 max-w-7xl mx-auto"><AudioGenerator analysis={analysis!} /></div>}
                 {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
-                {activeTab === 'qa' && <div className="p-8 md:p-12 max-w-7xl mx-auto"><AssessmentLab activeDocuments={activeDocuments} /></div>}
+                {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
               </div>
             )}
           </div>
