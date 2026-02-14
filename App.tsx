@@ -57,6 +57,7 @@ const App: React.FC = () => {
   const [selectedLibraryDocIds, setSelectedLibraryDocIds] = useState<string[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
@@ -143,24 +144,55 @@ const App: React.FC = () => {
     }
 
     setIsAnalyzing(true);
+    setLoadingProgress(0);
     setError(null);
     setStatusMessage("Synthesizing Intelligence Core...");
+
+    // Simulated Progress logic
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 98) return prev;
+        const remaining = 100 - prev;
+        // Slow down as we get closer to 100
+        const step = Math.max(0.1, Math.random() * (remaining / 10));
+        return parseFloat((prev + step).toFixed(1));
+      });
+    }, 400);
 
     try {
       const combinedContent = activeDocuments.map(d => `DOC NAME: ${d.name}\n${d.content}`).join('\n\n');
       const result = await analyzeSalesContext(combinedContent, meetingContext);
       
-      setAnalysis(result);
-      lastAnalyzedHash.current = currentHash;
-      setActiveTab('qa');
+      clearInterval(progressInterval);
+      setLoadingProgress(100);
+      
+      // Small delay for UX impact of reaching 100%
+      setTimeout(() => {
+        setAnalysis(result);
+        lastAnalyzedHash.current = currentHash;
+        setIsAnalyzing(false);
+        setActiveTab('qa');
+      }, 800);
+
     } catch (err: any) {
+      clearInterval(progressInterval);
       console.error(err);
       setError(err.message || "An unexpected error occurred during analysis.");
-    } finally {
       setIsAnalyzing(false);
+    } finally {
       setStatusMessage("");
     }
   }, [activeDocuments, meetingContext, analysis, generateStateHash]);
+
+  // Derived loading messages based on progress
+  const loadingStatusText = useMemo(() => {
+    if (loadingProgress < 20) return "Neural Ingestion: Parsing Documentary Nodes...";
+    if (loadingProgress < 40) return "Context Alignment: Mapping Seller/Prospect Domains...";
+    if (loadingProgress < 60) return "Psychological Synthesis: Inferring Buyer Resistance...";
+    if (loadingProgress < 80) return "Strategy Extraction: Modeling Competitive Wedge...";
+    if (loadingProgress < 95) return "Refining Intelligence: Calibrating Master Playbook...";
+    return "Finalizing Core Strategy Brief...";
+  }, [loadingProgress]);
 
   const reset = () => {
     if(confirm("Are you sure you want to wipe current strategy context?")) {
@@ -305,16 +337,60 @@ const App: React.FC = () => {
                 </div>
               </div>
             ) : isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center py-32 space-y-8">
+              <div className="flex flex-col items-center justify-center py-32 space-y-12">
                 <div className="relative">
-                  <div className="w-24 h-24 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                  <div className="absolute inset-0 flex items-center justify-center text-indigo-600 scale-125">
-                    <ICONS.Brain />
+                  {/* Neural Glow Backdrop */}
+                  <div 
+                    className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out"
+                    style={{ 
+                      transform: `scale(${1 + (loadingProgress / 100)})`,
+                      opacity: 0.2 + (loadingProgress / 100)
+                    }}
+                  ></div>
+                  
+                  {/* Spinning Ring */}
+                  <div className="relative w-32 h-32 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
+                  
+                  {/* Glowing Core Bulb (Brain Icon) */}
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center text-indigo-600 transition-all duration-700"
+                    style={{
+                      transform: `scale(${1.2 + (loadingProgress / 200)})`,
+                      filter: `drop-shadow(0 0 ${loadingProgress / 5}px rgba(79, 70, 229, ${loadingProgress / 100}))`
+                    }}
+                  >
+                    <ICONS.Brain className="w-10 h-10" />
+                  </div>
+
+                  {/* Percentage Indicator */}
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                    <span className="text-3xl font-black text-slate-800 tracking-tighter">
+                      {Math.floor(loadingProgress)}<span className="text-indigo-500 text-sm ml-0.5">%</span>
+                    </span>
                   </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-slate-800 animate-pulse tracking-tight">{statusMessage}</p>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-4">Cross-referencing {activeDocuments.length} document nodes...</p>
+
+                <div className="text-center space-y-6 max-w-md">
+                  <div className="space-y-2">
+                    <p className="text-2xl font-black text-slate-800 tracking-tight transition-all">
+                      {loadingStatusText}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] animate-pulse">
+                      Synthesizing intelligence core...
+                    </p>
+                  </div>
+                  
+                  {/* Linear Progress Bar */}
+                  <div className="w-64 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden shadow-inner">
+                    <div 
+                      className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(79,70,229,0.4)]"
+                      style={{ width: `${loadingProgress}%` }}
+                    ></div>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pt-2">
+                    Cross-referencing {activeDocuments.length} document nodes...
+                  </p>
                 </div>
               </div>
             ) : (
