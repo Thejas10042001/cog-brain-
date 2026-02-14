@@ -25,6 +25,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const hasError = getFirebasePermissionError();
 
@@ -42,6 +43,25 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
     if (confirm("Delete this document from the cognitive library?")) {
       const success = await deleteDocumentFromFirebase(id);
       if (success) onRefresh();
+    }
+  };
+
+  const handleDeleteSelected = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedIds.length === 0) return;
+    
+    if (confirm(`Are you sure you want to permanently delete the ${selectedIds.length} selected document(s) from cloud memory?`)) {
+      setIsDeleting(true);
+      try {
+        await Promise.all(selectedIds.map(id => deleteDocumentFromFirebase(id)));
+        // Clear selections after deletion
+        selectedIds.forEach(id => onToggleSelect(id));
+        onRefresh();
+      } catch (err) {
+        console.error("Bulk delete failed:", err);
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -114,13 +134,27 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         
         <div className="flex items-center gap-3">
           {selectedIds.length > 0 && (
-            <button 
-              onClick={onSynthesize}
-              disabled={isAnalyzing}
-              className="px-6 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50"
-            >
-              {isAnalyzing ? "Analyzing..." : `Synthesize ${selectedIds.length} Docs`}
-            </button>
+            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
+              <button 
+                onClick={handleDeleteSelected}
+                disabled={isDeleting}
+                className="px-6 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-100 shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <div className="w-3 h-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin"></div>
+                ) : (
+                  <ICONS.Trash className="w-3 h-3" />
+                )}
+                Delete Selected
+              </button>
+              <button 
+                onClick={onSynthesize}
+                disabled={isAnalyzing}
+                className="px-6 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {isAnalyzing ? "Analyzing..." : `Synthesize ${selectedIds.length} Docs`}
+              </button>
+            </div>
           )}
           
           <div className="flex items-center gap-1 border border-slate-200 rounded-xl p-1 bg-slate-50">
@@ -186,7 +220,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                       className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
                       title="Delete"
                     >
-                      <ICONS.X className="w-4 h-4" />
+                      <ICONS.Trash className="w-4 h-4" />
                     </button>
                   </div>
                 </div>

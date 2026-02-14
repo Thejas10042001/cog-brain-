@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { ICONS } from '../constants';
 import { 
@@ -386,7 +385,8 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   );
 };
 
-const PersonaCardV2 = ({ type, onClick }: { type: SimPersonaV2; onClick: () => void }) => {
+// Fix: Explicitly type PersonaCardV2 as a React.FC to handle reserved props like 'key' and provide strict typing for map usage
+const PersonaCardV2: FC<{ type: SimPersonaV2; onClick: () => void | Promise<void> }> = ({ type, onClick }) => {
   const config = PERSONA_CONFIG[type];
   return (
     <button onClick={onClick} className="group p-1 bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] hover:border-indigo-500 transition-all text-left flex flex-col h-full shadow-xl active:scale-95 duration-300">
