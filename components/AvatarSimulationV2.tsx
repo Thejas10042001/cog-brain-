@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { ICONS } from '../constants';
 import { 
@@ -74,7 +75,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
 
       const voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
-      const bytes = await generatePitchAudio(text, voice);
+      const bytes = await generatePitchAudio(text, voice, meetingContext.clonedVoiceBase64);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -331,6 +332,12 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                 <div className="absolute top-10 left-10 z-30 flex items-center gap-4 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                    <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'animate-pulse' : ''}`} style={{ backgroundColor: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}></div>
                    <span className="text-[12px] font-black uppercase tracking-widest">{meetingContext.clientNames || persona} Presence Online</span>
+                   {meetingContext.clonedVoiceBase64 && (
+                      <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full ml-4">
+                         <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
+                         <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Voice Clone Active</span>
+                      </div>
+                   )}
                 </div>
 
                 {/* Audio Controls Overlay */}
@@ -385,7 +392,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   );
 };
 
-// Fix: Explicitly type PersonaCardV2 as a React.FC to handle reserved props like 'key' and provide strict typing for map usage
+// PersonaCardV2 remains the same
 const PersonaCardV2: FC<{ type: SimPersonaV2; onClick: () => void | Promise<void> }> = ({ type, onClick }) => {
   const config = PERSONA_CONFIG[type];
   return (

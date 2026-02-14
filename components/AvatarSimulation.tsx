@@ -67,7 +67,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      const bytes = await generatePitchAudio(text, 'Charon');
+      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.clonedVoiceBase64);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -487,7 +487,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                 {/* Info Nodes - Now Below Avatar */}
                 <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                    <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4 min-h-[120px]">
-                      <h5 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Buyer Query Hub</h5>
+                      <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">Buyer Query Hub</h5>
                       <p className="text-xl font-bold italic leading-relaxed text-indigo-50">{messages[messages.length - 1]?.content || "Syncing behaviors..."}</p>
                    </div>
                    <div className={`border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>

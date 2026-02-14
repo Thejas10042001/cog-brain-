@@ -569,7 +569,7 @@ Target Products: ${context.targetProducts}`;
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction,
         thinkingConfig: { thinkingBudget: 16000 }
       }
     });
@@ -1044,9 +1044,52 @@ export async function generateExplanation(question: string, context: AnalysisRes
   return response.text || "";
 }
 
-// Text to speech generation using specialized TTS model
-export async function generatePitchAudio(text: string, voiceName: string = 'Kore'): Promise<Uint8Array | null> {
+/**
+ * Text to speech generation using specialized TTS model or Native Audio cloning.
+ * If clonedVoiceBase64 is present, it uses the Native Audio model to replicate the source voice.
+ */
+export async function generatePitchAudio(
+  text: string, 
+  voiceName: string = 'Kore', 
+  clonedVoiceBase64?: string
+): Promise<Uint8Array | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  // If we have a voice sample, use the native audio model for high-fidelity cloning
+  if (clonedVoiceBase64) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-native-audio-preview-12-2025",
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                data: clonedVoiceBase64,
+                mimeType: "audio/mp3"
+              }
+            },
+            {
+              text: `Act as a Vocal Chameleon. Listen to the provided voice sample carefully.
+              Now, say exactly the following text using EXACTLY the same pitch, emotional resonance, cadence, and vocal timber as the sample:
+              "${text}"
+              Generate the audio output immediately.`
+            }
+          ]
+        },
+        config: {
+          responseModalities: [Modality.AUDIO]
+        }
+      });
+      
+      const base64Audio = response.candidates?.[0]?.content?.parts.find(p => p.inlineData)?.inlineData?.data;
+      return base64Audio ? decode(base64Audio) : null;
+    } catch (e) {
+      console.warn("Vocal cloning failed, falling back to prebuilt TTS:", e);
+      // Fallback to standard TTS if cloning fails
+    }
+  }
+
+  // Standard TTS fallback
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-preview-tts",
     contents: [{ parts: [{ text: text }] }],
