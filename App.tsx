@@ -384,7 +384,7 @@ const App: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="animate-in fade-in duration-500 h-full">
+              <div className="animate-in fade-in duration-500 h-full flex flex-col">
                 {activeTab === 'context' && (
                   <div className="p-8 md:p-12 space-y-12 max-w-7xl mx-auto">
                     <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
@@ -425,14 +425,8 @@ const App: React.FC = () => {
                 {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}
                 {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                 {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
-                {activeTab === 'gpt' && (
-                  <div className="w-full h-full bg-slate-50 flex flex-col items-center">
-                    <div className="w-full max-w-7xl h-full px-6 md:px-12">
-                       <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />
-                    </div>
-                  </div>
-                )}
-                {activeTab === 'audio' && <div className="p-8 md:p-12 max-w-7xl mx-auto"><AudioGenerator analysis={analysis!} /></div>}
+                {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
+                {activeTab === 'audio' && <div className="p-8 md:p-12 max-w-7xl mx-auto flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
                 {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
                 {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
               </div>
