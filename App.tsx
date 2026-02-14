@@ -148,12 +148,10 @@ const App: React.FC = () => {
     setError(null);
     setStatusMessage("Synthesizing Intelligence Core...");
 
-    // Simulated Progress logic
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
         if (prev >= 98) return prev;
         const remaining = 100 - prev;
-        // Slow down as we get closer to 100
         const step = Math.max(0.1, Math.random() * (remaining / 10));
         return parseFloat((prev + step).toFixed(1));
       });
@@ -166,7 +164,6 @@ const App: React.FC = () => {
       clearInterval(progressInterval);
       setLoadingProgress(100);
       
-      // Small delay for UX impact of reaching 100%
       setTimeout(() => {
         setAnalysis(result);
         lastAnalyzedHash.current = currentHash;
@@ -184,7 +181,6 @@ const App: React.FC = () => {
     }
   }, [activeDocuments, meetingContext, analysis, generateStateHash]);
 
-  // Derived loading messages based on progress
   const loadingStatusText = useMemo(() => {
     if (loadingProgress < 20) return "Neural Ingestion: Parsing Documentary Nodes...";
     if (loadingProgress < 40) return "Context Alignment: Mapping Seller/Prospect Domains...";
@@ -220,14 +216,11 @@ const App: React.FC = () => {
 
   const hasPermissionError = getFirebasePermissionError();
 
-  const isSimulationTab = ['avatar', 'avatar2', 'avatar-staged', 'practice'].includes(activeTab);
-
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <Header user={user} />
       
       <div className="pt-16 flex min-h-screen">
-        {/* Persistent Sidebar Navigation */}
         {analysis && !isAnalyzing && (
           <aside className="w-72 bg-white border-r border-slate-200 flex flex-col fixed h-[calc(100vh-64px)] overflow-y-auto no-scrollbar z-30">
             <div className="p-6 space-y-8 flex flex-col h-full">
@@ -268,9 +261,9 @@ const App: React.FC = () => {
         )}
 
         <main className={`flex-1 transition-all duration-300 ${analysis && !isAnalyzing ? 'ml-72' : ''}`}>
-          <div className={`${isSimulationTab ? 'w-full' : 'max-w-6xl mx-auto px-4'} py-12`}>
+          <div className="w-full">
             {!analysis && !isAnalyzing ? (
-              <div className="space-y-12 animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="p-8 md:p-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
                 <div className="text-center space-y-4">
                   <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight">
                     Cognitive Brain Strategy Hub
@@ -339,9 +332,8 @@ const App: React.FC = () => {
                 </div>
               </div>
             ) : isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center py-32 space-y-12">
+              <div className="flex flex-col items-center justify-center py-32 space-y-12 h-[calc(100vh-64px)]">
                 <div className="relative">
-                  {/* Neural Glow Backdrop */}
                   <div 
                     className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out"
                     style={{ 
@@ -350,10 +342,8 @@ const App: React.FC = () => {
                     }}
                   ></div>
                   
-                  {/* Spinning Ring */}
                   <div className="relative w-32 h-32 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
                   
-                  {/* Glowing Core Bulb (Brain Icon) */}
                   <div 
                     className="absolute inset-0 flex items-center justify-center text-indigo-600 transition-all duration-700"
                     style={{
@@ -364,7 +354,6 @@ const App: React.FC = () => {
                     <ICONS.Brain className="w-10 h-10" />
                   </div>
 
-                  {/* Percentage Indicator */}
                   <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
                     <span className="text-3xl font-black text-slate-800 tracking-tighter">
                       {Math.floor(loadingProgress)}<span className="text-indigo-500 text-sm ml-0.5">%</span>
@@ -382,7 +371,6 @@ const App: React.FC = () => {
                     </p>
                   </div>
                   
-                  {/* Linear Progress Bar */}
                   <div className="w-64 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden shadow-inner">
                     <div 
                       className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(79,70,229,0.4)]"
@@ -398,7 +386,7 @@ const App: React.FC = () => {
             ) : (
               <div className="animate-in fade-in duration-500">
                 {activeTab === 'context' && (
-                  <div className="space-y-12">
+                  <div className="p-8 md:p-12 space-y-12 max-w-7xl mx-auto">
                     <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
                       <div className="flex items-center justify-between mb-8">
                           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -437,11 +425,10 @@ const App: React.FC = () => {
                 {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}
                 {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                 {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
-                {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                {/* Fix: Removed unsupported meetingContext prop from AudioGenerator */}
-                {activeTab === 'audio' && <AudioGenerator analysis={analysis!} />}
+                {activeTab === 'gpt' && <div className="p-0"><SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} /></div>}
+                {activeTab === 'audio' && <div className="p-8 md:p-12 max-w-7xl mx-auto"><AudioGenerator analysis={analysis!} /></div>}
                 {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
-                {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
+                {activeTab === 'qa' && <div className="p-8 md:p-12 max-w-7xl mx-auto"><AssessmentLab activeDocuments={activeDocuments} /></div>}
               </div>
             )}
           </div>

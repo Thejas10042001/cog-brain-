@@ -34,7 +34,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
   const [transcription, setTranscription] = useState<{ user: string; ai: string }[]>([]);
   const [currentTranscription, setCurrentTranscription] = useState({ user: '', ai: '' });
   
-  // Grooming specific state
   const [groomingTarget, setGroomingTarget] = useState(analysis.objectionHandling[0]?.objection || "How do you define value?");
   const [evaluation, setEvaluation] = useState<GroomingEvaluation | null>(null);
   const [isPlayingIdeal, setIsPlayingIdeal] = useState(false);
@@ -194,14 +193,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
         SALESPERSON PERFORMANCE: "${finalTranscript}"
         TARGET AUDIENCE PERSONA: ${selectedPersona}
         
-        Your task is to provide a detailed, critical, yet encouraging audit in JSON format.
-        
-        CRITICAL AUDIT DIMENSIONS:
-        1. Grammar & Sentence Formation: Identify specific weak phrasing, filler words, or run-on sentences.
-        2. Voice Tone: Evaluate if the tone was authoritative, empathetic, or nervous based on syntax and pauses.
-        3. Tactical Pacing & Breathing: Provide a script where you insert EXACT markers like [Take Breath], [Pause - 2s], or [Slow Down] to show them how to deliver for impact.
-        4. Strategic Alignment: How well does this satisfy a ${selectedPersona} buyer?
-        
         REQUIRED JSON SCHEMA:
         {
           "transcription": "Cleaned up version of their answer.",
@@ -290,8 +281,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-2xl overflow-hidden relative min-h-[750px] flex flex-col">
-      {/* Header & Mode Toggle */}
+    <div className="bg-white border border-slate-200 rounded-none md:rounded-[3rem] p-6 md:p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col">
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
         <div className="flex items-center gap-4">
           <div className="p-3.5 bg-rose-600 text-white rounded-2xl shadow-xl shadow-rose-100"><ICONS.Speaker /></div>
@@ -326,7 +316,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
       </div>
 
       {showGroomingJournal ? (
-        <div className="flex-1 space-y-8 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto max-h-[600px] no-scrollbar pb-12">
+        <div className="flex-1 space-y-8 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar pb-12">
            <div className="flex items-center justify-between border-b border-slate-100 pb-6">
               <h4 className="text-xl font-black text-slate-900 tracking-tight">Your Self-Grooming Journal</h4>
               <span className="text-[9px] font-black uppercase text-indigo-500 tracking-widest bg-indigo-50 px-3 py-1 rounded-lg">{savedGroomings.length} Saved Protocols</span>
@@ -348,7 +338,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                         ><ICONS.X className="w-4 h-4" /></button>
                      </div>
                      <p className="text-sm font-black text-slate-900 mb-2 truncate">Q: {saved.question}</p>
-                     <p className="text-[11px] font-bold text-slate-500 italic mb-6 line-clamp-2">"{(saved.evaluation as any).idealWording}"</p>
+                     <p className="text-[11px] font-bold text-slate-500 italic mb-6 line-clamp-2">"{saved.evaluation.idealWording}"</p>
                      <button 
                        onClick={() => { setEvaluation(saved.evaluation); setShowGroomingJournal(false); }}
                        className="text-[10px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform"
@@ -361,7 +351,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
            )}
         </div>
       ) : !isActive && status !== 'analyzing' && !evaluation ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto py-12">
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto py-12">
           <div className="space-y-4">
             <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-2xl transition-transform hover:scale-105 duration-500 ${sessionMode === 'roleplay' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'}`}>
                {sessionMode === 'roleplay' ? <ICONS.Brain className="w-10 h-10" /> : <ICONS.Trophy className="w-10 h-10" />}
@@ -372,11 +362,11 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
             <p className="text-slate-500 text-lg leading-relaxed max-w-2xl mx-auto font-medium">
               {sessionMode === 'roleplay' 
                 ? 'Test your strategic reflexes in a real-time, low-latency dialogue with a persona-grounded buyer.'
-                : 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit of your tone, grammar, sentence structure, and tactical pacing.'}
+                : 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit.'}
             </p>
           </div>
 
-          <div className="w-full space-y-10">
+          <div className="w-full space-y-10 max-w-7xl">
              {sessionMode === 'grooming' ? (
                <div className="space-y-4 max-w-2xl mx-auto text-left">
                   <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-2">Target Objection / Question</label>
@@ -435,7 +425,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
            </div>
         </div>
       ) : evaluation ? (
-        <div className="flex-1 space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-20">
+        <div className="flex-1 space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-20 w-full max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
              <button onClick={() => setEvaluation(null)} className="text-[11px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
                <ICONS.X /> Close Mastery Review
@@ -445,7 +435,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                   onClick={addToGroomingJournal}
                   className="px-6 py-2.5 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 flex items-center gap-2"
                 >
-                  <ICONS.Efficiency className="w-4 h-4" /> Add to here (Journal)
+                  <ICONS.Efficiency className="w-4 h-4" /> Add to Journal
                 </button>
                 <div className="px-6 py-2.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
@@ -455,7 +445,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            {/* Left: Feedback Cards */}
             <div className="space-y-8">
                <div className="p-10 bg-slate-50 border border-slate-100 rounded-[3rem] shadow-inner relative overflow-hidden group">
                   <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">Recorded Performance</h4>
@@ -487,7 +476,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                </div>
             </div>
 
-            {/* Right: Ideal & Explanations */}
             <div className="space-y-8">
                <div className="p-12 bg-white border-4 border-indigo-50 rounded-[4rem] shadow-2xl relative overflow-hidden group/master">
                   <div className="relative z-10">
@@ -536,9 +524,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
           </div>
         </div>
       ) : (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-10 overflow-hidden">
-          {/* Main Visualizer Area */}
-          <div className="lg:col-span-2 bg-slate-900 rounded-[3.5rem] p-12 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden border-2 border-slate-800">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden h-full">
+          <div className="lg:col-span-2 bg-slate-900 p-12 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
             <div className={`absolute inset-0 opacity-10 blur-[150px] transition-colors duration-2000 ${selectedPersona === 'Technical' ? 'bg-blue-600' : selectedPersona === 'Financial' ? 'bg-emerald-600' : 'bg-indigo-600'}`}></div>
             
             <div className="relative w-80 h-80 mb-12 flex items-center justify-center">
@@ -588,8 +575,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
             )}
           </div>
           
-          {/* Interaction Log Sidebar */}
-          <div className="bg-slate-50 rounded-[3.5rem] p-10 flex flex-col border border-slate-100 overflow-hidden shadow-inner relative">
+          <div className="bg-slate-50 p-10 flex flex-col border-l border-slate-200 overflow-hidden shadow-inner relative h-full">
             <h6 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8 flex items-center gap-3">
                <ICONS.Efficiency className="w-4 h-4" /> Mastery Log
             </h6>

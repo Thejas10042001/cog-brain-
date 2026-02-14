@@ -75,7 +75,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
 
       const voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
-      // Fix: Removed unsupported 3rd argument clonedVoiceBase64 from generatePitchAudio
       const bytes = await generatePitchAudio(text, voice);
       if (bytes) {
         lastAudioBytes.current = bytes;
@@ -160,7 +159,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       let nextContent = "";
       for await (const chunk of stream) nextContent += chunk;
       
-      // Parse suggestion if present
       let displayQuestion = nextContent;
       const suggestionMatch = nextContent.match(/\[SUGGESTION: (.*?)\]/);
       if (suggestionMatch) {
@@ -208,7 +206,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         doc.setFont("helvetica", "normal"); doc.setFontSize(size);
         doc.setTextColor(color[0], color[1], color[2]);
         const split = doc.splitTextToSize(t, 170);
-        if (y + (split.length * (size / 2)) > 275) { doc.addPage(); y = 20; }
+        if (y + (split.length * (size / 2)) > 20) { doc.addPage(); y = 20; }
         doc.text(split, margin, y);
         y += (split.length * (size / 2)) + 4;
         doc.setTextColor(0, 0, 0);
@@ -308,7 +306,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   };
 
   return (
-    <div className="bg-slate-950 border-y border-slate-800 p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 border-y border-slate-800 p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
            <div className="max-w-2xl space-y-6">
@@ -323,12 +321,10 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-10">
-          {/* Top Section: Avatar Hub */}
           <div className="flex flex-col items-center w-full">
              <div className="w-full aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col items-center justify-center group relative">
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 z-10"></div>
                 
-                {/* Nameplate Overlay */}
                 <div className="absolute top-10 left-1/2 -translate-x-1/2 z-40 bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-3 rounded-full shadow-2xl flex items-center gap-3">
                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                    <span className="text-sm font-black uppercase tracking-[0.2em] text-white">Digital Persona: {meetingContext.clientNames || persona}</span>
@@ -342,7 +338,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                    <span className="text-[12px] font-black uppercase tracking-widest">{persona} Mode Online</span>
                 </div>
 
-                {/* Voice Protocol Badge */}
                 {meetingContext.clonedVoiceBase64 && (
                    <div className="absolute top-10 right-10 z-30 flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                       <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></div>
@@ -350,7 +345,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                    </div>
                 )}
 
-                {/* Audio Controls Overlay */}
                 {isAISpeaking && (
                   <div className="absolute bottom-10 right-10 z-40 flex items-center gap-3 p-2 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10">
                      <button onClick={handlePauseResume} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
@@ -365,7 +359,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                 )}
              </div>
 
-             {/* HUD - Now Below Avatar */}
              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-6 min-h-[120px]">
                    <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">{meetingContext.clientNames || persona} Strategic Inquiry</h5>
