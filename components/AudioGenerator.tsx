@@ -197,7 +197,8 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
         <div className="lg:col-span-4 space-y-10">
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Strategy Modules</h4>
-            <div className="space-y-3 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
+            {/* Enabled custom-scrollbar for Track Selection */}
+            <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-3">
               {(Object.keys(tracks) as BriefingTrack[]).map((key) => (
                 <button
                   key={key}
@@ -293,7 +294,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
                   )}
                 </div>
               ) : (
-                <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl border border-white/80 shadow-sm max-h-[120px] overflow-y-auto no-scrollbar italic text-slate-500 text-xs leading-relaxed">
+                <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl border border-white/80 shadow-sm max-h-[120px] overflow-y-auto custom-scrollbar italic text-slate-500 text-xs leading-relaxed">
                   "{tracks[activeTrack].script}"
                 </div>
               )}
@@ -335,8 +336,6 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
           animation: waveform 0.5s ease-in-out infinite;
           transform-origin: bottom;
         }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );

@@ -216,6 +216,38 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
+  const handleSkip = async () => {
+    const currentIndex = STAGES.indexOf(currentStage);
+    if (currentIndex >= STAGES.length - 1) return;
+
+    stopListening();
+    setIsProcessing(true);
+    setCoachingFeedback(null);
+    setCurrentCaption("");
+
+    const nextStage = STAGES[currentIndex + 1];
+    setCurrentStage(nextStage);
+
+    const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
+    const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
+
+    try {
+      // Signal manual override to the model to begin the next phase immediately
+      const stream = streamAvatarStagedSimulation(`Manual Override: Advance to Stage ${nextStage}`, messages, meetingContext, nextStage, kycContent);
+      let response = "";
+      for await (const chunk of stream) response += chunk;
+
+      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]/, "").trim();
+      const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+      setMessages(prev => [...prev, aiMsg]);
+      playAIQuestion(cleaned);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleEndSession = async () => {
     stopListening();
     setIsProcessing(true);
@@ -340,8 +372,21 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                    />
                    <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-5 h-5" /></button>
                 </div>
-                <div className="flex items-center justify-between">
-                   <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="px-16 py-6 bg-indigo-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Strategy & Next Stage</button>
+                <div className="flex items-center justify-between gap-4">
+                   <div className="flex items-center gap-4">
+                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="px-16 py-6 bg-indigo-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Strategy & Next Stage</button>
+                      
+                      {currentStage !== 'Closing' && (
+                        <button 
+                          onClick={handleSkip} 
+                          disabled={isProcessing} 
+                          className="px-10 py-6 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2.5rem] font-black text-base uppercase tracking-widest hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          Skip & Advance Node
+                        </button>
+                      )}
+                   </div>
+                   
                    <button onClick={handleEndSession} disabled={isProcessing} className="px-10 py-6 bg-rose-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest hover:bg-rose-700 transition-all active:scale-95">End Early</button>
                 </div>
              </div>
