@@ -121,15 +121,25 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
     setIsExtracting(true);
     try {
       const metadata = await extractMetadataFromDocument(doc.content);
+      
+      // Merge existing keywords with extracted ones, ensuring uniqueness
+      const existingKeywords = new Set(context.strategicKeywords);
+      if (metadata.strategicKeywords) {
+        metadata.strategicKeywords.forEach(kw => existingKeywords.add(kw));
+      }
+
       onContextChange({
         ...context,
         kycDocId: docId,
+        sellerCompany: metadata.sellerCompany || context.sellerCompany,
+        sellerNames: metadata.sellerNames || context.sellerNames,
         clientCompany: metadata.clientCompany || context.clientCompany,
         clientNames: metadata.clientNames || context.clientNames,
         targetProducts: metadata.targetProducts || context.targetProducts,
         productDomain: metadata.productDomain || context.productDomain,
         meetingFocus: metadata.meetingFocus || context.meetingFocus,
         executiveSnapshot: metadata.executiveSnapshot || context.executiveSnapshot,
+        strategicKeywords: Array.from(existingKeywords)
       });
     } catch (e) {
       console.error("KYC Metadata extraction failed", e);
@@ -264,7 +274,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
-                <p className="text-[9px] text-slate-500 font-medium italic">Selecting a document will automatically trigger neural logic to populate company, stakeholder, and product details.</p>
+                <p className="text-[9px] text-slate-500 font-medium italic">Selecting a document will automatically trigger neural logic to populate company, stakeholder, and tactical semantic keywords.</p>
              </div>
           </div>
 

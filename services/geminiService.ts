@@ -72,18 +72,23 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
-  const prompt = `Act as an Elite Sales Operations Analyst. Analyze the following document and extract key meeting configuration data.
-  
+  const prompt = `Act as an Elite Sales Operations Analyst. Analyze the following document and extract key meeting configuration data. 
+  Determine who the Seller (Vendor) is and who the Client (Prospect) is. 
+  Identify 5-8 highly relevant strategic semantic keywords for the deal.
+
   DOCUMENT CONTENT:
   ${content}
 
   Extract the following fields into JSON:
+  - sellerCompany: The organization name of the vendor/seller.
+  - sellerNames: Specific individuals representing the vendor.
   - clientCompany: The organization name of the prospect.
-  - clientNames: Specific stakeholders or participants mentioned.
+  - clientNames: Specific stakeholders or participants mentioned from the client side.
   - targetProducts: Products or services the customer is interested in.
   - productDomain: The industry or technical domain (e.g., Fintech, Cybersecurity).
   - meetingFocus: The primary objective or focus of the upcoming interaction.
   - executiveSnapshot: A brief summary of the opportunity.
+  - strategicKeywords: An array of 5-8 strings representing key project names, technologies, or concepts mentioned.
 
   Return ONLY the JSON object.`;
 
@@ -96,14 +101,24 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
         responseSchema: {
           type: Type.OBJECT,
           properties: {
+            sellerCompany: { type: Type.STRING },
+            sellerNames: { type: Type.STRING },
             clientCompany: { type: Type.STRING },
             clientNames: { type: Type.STRING },
             targetProducts: { type: Type.STRING },
             productDomain: { type: Type.STRING },
             meetingFocus: { type: Type.STRING },
-            executiveSnapshot: { type: Type.STRING }
+            executiveSnapshot: { type: Type.STRING },
+            strategicKeywords: { 
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
           },
-          required: ["clientCompany", "clientNames", "targetProducts", "productDomain", "meetingFocus", "executiveSnapshot"]
+          required: [
+            "sellerCompany", "sellerNames", "clientCompany", "clientNames", 
+            "targetProducts", "productDomain", "meetingFocus", "executiveSnapshot", 
+            "strategicKeywords"
+          ]
         }
       }
     });
