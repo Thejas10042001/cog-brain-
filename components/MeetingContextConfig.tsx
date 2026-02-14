@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MeetingContext, CustomerPersonaType, ThinkingLevel, StoredDocument } from '../types';
 import { ICONS } from '../constants';
-import { extractMetadataFromDocument } from '../services/geminiService';
+import { extractMetadataFromDocument, analyzeVocalPersona } from '../services/geminiService';
 
 interface MeetingContextConfigProps {
   context: MeetingContext;
@@ -79,13 +79,15 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
   const [isSaved, setIsSaved] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
   const isCustomizedRef = useRef(false);
+  const voiceInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isCustomizedRef.current) {
       generateBasePrompt();
     }
-  }, [context.persona, context.answerStyles, context.meetingFocus]);
+  }, [context.persona, context.answerStyles, context.meetingFocus, context.vocalPersonaAnalysis]);
 
   useEffect(() => {
     setLocalPrompt(context.baseSystemPrompt);
@@ -93,6 +95,9 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
 
   const generateBasePrompt = () => {
     let prompt = `Act as a Cognitive Brain Intelligence Agent for ${context.persona} buyers. `;
+    if (context.vocalPersonaAnalysis) {
+      prompt += `VOCAL IDENTITY MIMICRY: You must mirror this analyzed prospect signature: "${context.vocalPersonaAnalysis}". `;
+    }
     if (context.answerStyles.length > 0) {
       prompt += `Your responses should strictly follow these styles as headers: ${context.answerStyles.join(', ')}. `;
     }
@@ -109,6 +114,30 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
 
   const handleChange = (field: keyof MeetingContext, value: any) => {
     onContextChange({ ...context, [field]: value });
+  };
+
+  const handleVoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzingVoice(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = (event.target?.result as string).split(',')[1];
+        const analysis = await analyzeVocalPersona(base64, file.type);
+        onContextChange({
+          ...context,
+          clonedVoiceBase64: base64,
+          vocalPersonaAnalysis: analysis
+        });
+        setIsAnalyzingVoice(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Voice analysis error:", err);
+      setIsAnalyzingVoice(false);
+    }
   };
 
   const handleKycChange = async (docId: string) => {
@@ -209,9 +238,9 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
           </div>
         )}
 
-        {/* Neural Anchor - MOVED TO TOP */}
-        <div className="mb-12 space-y-6">
-          <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-inner relative overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Neural Anchor - Top Left */}
+          <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-inner relative overflow-hidden h-full">
              {isExtracting && (
                <div className="absolute inset-0 bg-indigo-600/5 backdrop-blur-[2px] flex items-center justify-center z-10 animate-in fade-in">
                  <div className="flex items-center gap-3 px-6 py-3 bg-white border border-indigo-100 rounded-full shadow-xl">
@@ -228,7 +257,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                 <span className="text-[8px] font-black uppercase text-indigo-500 tracking-widest">Neural Anchor</span>
              </div>
              <div className="flex-1 space-y-3">
-                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 ml-1">Choose Know Your Customer (KYC) Document</label>
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 ml-1">Know Your Customer (KYC) Document</label>
                 <select 
                   value={context.kycDocId || ""} 
                   onChange={(e) => handleKycChange(e.target.value)}
@@ -239,7 +268,60 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
-                <p className="text-[9px] text-slate-500 font-medium italic">Selecting a document will automatically trigger neural logic to populate company, stakeholder, and tactical semantic keywords below.</p>
+                <p className="text-[9px] text-slate-500 font-medium italic">Triggers auto-population of company and stakeholder nodes.</p>
+             </div>
+          </div>
+
+          {/* Voice Identity Lab - Top Right */}
+          <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-2xl relative overflow-hidden h-full text-white">
+             {isAnalyzingVoice && (
+                <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex items-center justify-center z-10">
+                   <div className="flex flex-col items-center gap-3">
+                      <div className="flex gap-1.5">
+                         {[...Array(5)].map((_, i) => (
+                           <div key={i} className="w-1.5 h-6 bg-indigo-500 rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s` }}></div>
+                         ))}
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 animate-pulse">Fingerprinting Voice Signature...</span>
+                   </div>
+                </div>
+             )}
+
+             <div className="shrink-0 flex flex-col items-center gap-2">
+                <div className={`p-4 rounded-2xl shadow-lg transition-colors ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                   <ICONS.Speaker />
+                </div>
+                <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Voice Identity Lab</span>
+             </div>
+
+             <div className="flex-1 space-y-3">
+                <div className="flex justify-between items-center">
+                   <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-1">Clone Customer Voice (MP3)</label>
+                   {context.clonedVoiceBase64 && <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest border border-emerald-400/30 px-2 py-0.5 rounded-full">Replica Active</span>}
+                </div>
+                <div 
+                   onClick={() => voiceInputRef.current?.click()}
+                   className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl px-6 py-4 cursor-pointer transition-all flex items-center gap-4 group"
+                >
+                   <input 
+                      type="file" 
+                      ref={voiceInputRef} 
+                      className="hidden" 
+                      accept=".mp3,.wav,.m4a" 
+                      onChange={handleVoiceUpload} 
+                   />
+                   <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                      <ICONS.Play className="w-3.5 h-3.5" />
+                   </div>
+                   <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">
+                      {context.clonedVoiceBase64 ? 'Voice Signature Extracted. Click to swap.' : 'Upload prospect voice sample...'}
+                   </p>
+                </div>
+                {context.vocalPersonaAnalysis && (
+                   <p className="text-[9px] text-indigo-300/80 font-medium italic border-l-2 border-indigo-500/30 pl-3 leading-tight">
+                     Analyzed Signature: {context.vocalPersonaAnalysis.substring(0, 100)}...
+                   </p>
+                )}
              </div>
           </div>
         </div>
@@ -392,6 +474,15 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
           />
         </div>
       </div>
+      <style>{`
+        @keyframes waveform-sm {
+          0%, 100% { transform: scaleY(0.5); }
+          50% { transform: scaleY(1); }
+        }
+        .animate-waveform-sm {
+          animation: waveform-sm 0.5s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };

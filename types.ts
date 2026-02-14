@@ -177,6 +177,9 @@ export interface MeetingContext {
   thinkingLevel: ThinkingLevel;
   temperature: number;
   kycDocId?: string;
+  // New Voice Cloning Fields
+  clonedVoiceBase64?: string;
+  vocalPersonaAnalysis?: string;
 }
 
 // Comprehensive Simulation Report Structure

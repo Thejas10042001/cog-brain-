@@ -311,6 +311,12 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                    <div className="absolute top-10 left-10 z-30 flex items-center gap-4 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                       <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-600'}`}></div>
                       <span className="text-[12px] font-black uppercase tracking-widest">{meetingContext.clientNames || 'Client'} Online</span>
+                      {meetingContext.clonedVoiceBase64 && (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
+                           <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Cloned Voice Identity</span>
+                        </div>
+                      )}
                    </div>
 
                    {/* Audio Controls Overlay */}

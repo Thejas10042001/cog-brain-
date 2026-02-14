@@ -129,6 +129,41 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
   }
 }
 
+// Analyze Audio for Vocal Persona
+export async function analyzeVocalPersona(base64Audio: string, mimeType: string): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+
+  const prompt = `Act as an Expert Neural Audio Engineer and Behavioral Psychologist.
+  Listen to the attached audio sample and create an EXHAUSTIVE Vocal Persona Signature for voice cloning/simulation.
+  
+  ANALYSIS REQUIREMENTS:
+  - Pitch: (e.g., Deep baritone, Mid-range tenor, High-energy soprano)
+  - Cadence: (e.g., Staccato, rhythmic, slow and deliberate, rapid-fire)
+  - Emotional Timbre: (e.g., Skeptical, authoritative, warm, cautious, direct)
+  - Regional/Social Markers: (e.g., Mid-Atlantic executive, Silicon Valley tech-casual, UK-formal)
+  - Breathing/Pause Patterns: (e.g., Frequent analytical pauses, continuous flow)
+
+  Provide a 2-paragraph summary that can be used as a "Mimicry Directive" for an AI agent. 
+  Output ONLY the text description.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: {
+        parts: [
+          { inlineData: { data: base64Audio, mimeType: mimeType } },
+          { text: prompt }
+        ]
+      }
+    });
+    return response.text || "Direct, professional, and analytical vocal archetype.";
+  } catch (error) {
+    console.error("Vocal analysis failed:", error);
+    return "Standard professional business vocal signature.";
+  }
+}
+
 // Unified High-Depth Avatar Evaluation
 async function performHighDepthEvaluation(
   history: GPTMessage[], 
@@ -241,6 +276,13 @@ You must switch behavior instantly and remain fully in that persona until change
 You are evaluating an enterprise AI platform called Kore.ai – AI for Work.
 You are conducting a serious enterprise buying evaluation.
 
+${context.vocalPersonaAnalysis ? `===========================================================
+VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
+===========================================================
+Adopt the following vocal and behavioral signature extracted from a recording of the actual customer:
+"${context.vocalPersonaAnalysis}"
+Use linguistic patterns, pacing, and emotional subtext that matches this signature strictly.` : ""}
+
 ===========================================================
 STRATEGIC FEEDBACK RULE
 ===========================================================
@@ -349,6 +391,13 @@ export async function* streamAvatarSimulation(
 
 MODE 1 → Enterprise CIO (Primary Role – Visible to User)
 MODE 2 → Hidden Performance Evaluator (Internal – Do NOT reveal)
+
+${context.vocalPersonaAnalysis ? `===========================================================
+VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
+===========================================================
+Adopt the following vocal and behavioral signature extracted from a recording of the actual customer:
+"${context.vocalPersonaAnalysis}"
+Mirror the analyzed emotional timbre and linguistic pacing exactly.` : ""}
 
 ===========================================================
 STRATEGIC FEEDBACK RULE
@@ -468,6 +517,13 @@ YOUR BEHAVIOR (Grounded in KYC)
 ===========================================================
 Primary Behavior Source: Use the Know Your Customer (KYC) Document below to dictate your personality, skepticism, specific pain points, and vocal style. 
 Name: You must refer to yourself as ${context.clientNames || 'the Client'}.
+
+${context.vocalPersonaAnalysis ? `===========================================================
+VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
+===========================================================
+Adopt the following vocal signature extracted from your voice recording:
+"${context.vocalPersonaAnalysis}"
+Maintain this prosody throughout the simulation.` : ""}
 
 KYC DOCUMENT CONTEXT:
 ${kycDocContent}
