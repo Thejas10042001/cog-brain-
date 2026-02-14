@@ -220,6 +220,8 @@ const App: React.FC = () => {
 
   const hasPermissionError = getFirebasePermissionError();
 
+  const isSimulationTab = ['avatar', 'avatar2', 'avatar-staged', 'practice'].includes(activeTab);
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Header user={user} />
@@ -266,7 +268,7 @@ const App: React.FC = () => {
         )}
 
         <main className={`flex-1 transition-all duration-300 ${analysis && !isAnalyzing ? 'ml-72' : ''}`}>
-          <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className={`${isSimulationTab ? 'w-full' : 'max-w-6xl mx-auto px-4'} py-12`}>
             {!analysis && !isAnalyzing ? (
               <div className="space-y-12 animate-in fade-in slide-in-from-top-4 duration-500">
                 <div className="text-center space-y-4">
@@ -436,7 +438,7 @@ const App: React.FC = () => {
                 {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                 {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
                 {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                {activeTab === 'audio' && <AudioGenerator analysis={analysis!} />}
+                {activeTab === 'audio' && <AudioGenerator analysis={analysis!} meetingContext={meetingContext} />}
                 {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
                 {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
               </div>

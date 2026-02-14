@@ -74,7 +74,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      const bytes = await generatePitchAudio(text, 'Charon');
+      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.clonedVoiceBase64);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -258,7 +258,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   };
 
   return (
-    <div className="bg-slate-950 border border-slate-800 rounded-[4rem] p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 border-y border-slate-800 p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
            <div className="p-8 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl">
@@ -267,10 +267,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
            <div className="max-w-2xl space-y-6">
               <h2 className="text-5xl font-black tracking-tight">Staged Simulation Node</h2>
               <p className="text-slate-400 text-lg font-medium leading-relaxed">
-                Advance through 6 tactical stages. You will only proceed if the {meetingContext.clientNames || 'Client'} validates your response.
+                Advance through 6 tactical stages. You will only proceed if {meetingContext.clientNames || 'the Client'} validates your response.
               </p>
            </div>
-           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
+           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 w-full px-12">
               {STAGES.map((s, i) => (
                 <div key={s} className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500">
                   {i+1}. {s}
@@ -289,7 +289,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         <div className="flex-1 flex flex-col gap-10">
           <div className="flex flex-col gap-12 flex-1">
              {/* Stage Progress Tracker */}
-             <div className="grid grid-cols-6 gap-4">
+             <div className="grid grid-cols-6 gap-4 px-12">
                 {STAGES.map((s, i) => {
                   const isActive = currentStage === s;
                   const isDone = STAGES.indexOf(currentStage) > i;
@@ -303,21 +303,31 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
              </div>
 
              <div className="relative w-full flex flex-col items-center">
-                <div className="w-full aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
+                <div className="w-full aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col items-center justify-center group relative">
                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 z-10"></div>
+                   
+                   {/* Nameplate Overlay */}
+                   <div className="absolute top-10 left-1/2 -translate-x-1/2 z-40 bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-3 rounded-full shadow-2xl flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                      <span className="text-sm font-black uppercase tracking-[0.2em] text-white">Digital Persona: {meetingContext.clientNames || 'Executive Client'}</span>
+                   </div>
+
                    <div className="relative z-20">
                       <ICONS.Brain className={`w-64 h-64 transition-all duration-700 ${isAISpeaking ? 'text-indigo-500 drop-shadow-[0_0_40px_rgba(79,70,229,0.5)] scale-110' : 'text-slate-800'}`} />
                    </div>
+
                    <div className="absolute top-10 left-10 z-30 flex items-center gap-4 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                       <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-600'}`}></div>
-                      <span className="text-[12px] font-black uppercase tracking-widest">{meetingContext.clientNames || 'Client'} Online</span>
-                      {meetingContext.clonedVoiceBase64 && (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
-                           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                           <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Cloned Voice Identity</span>
-                        </div>
-                      )}
+                      <span className="text-[12px] font-black uppercase tracking-widest">Presence Node Active</span>
                    </div>
+
+                   {/* Voice Protocal Badge */}
+                   {meetingContext.clonedVoiceBase64 && (
+                      <div className="absolute top-10 right-10 z-30 flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                         <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
+                         <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.1em]">Neural Vocal Mimicry Protocol</span>
+                      </div>
+                   )}
 
                    {/* Audio Controls Overlay */}
                    {isAISpeaking && (
@@ -335,21 +345,21 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                 </div>
 
                 {/* Info Nodes */}
-                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 px-12">
                    <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-4">
-                      <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">Current Inquiry</h5>
-                      <p className="text-xl font-bold italic leading-relaxed text-white">{messages[messages.length - 1]?.content || "Initializing..."}</p>
+                      <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry</h5>
+                      <p className="text-xl font-bold italic leading-relaxed text-white">{messages[messages.length - 1]?.content || "Initializing Persona..."}</p>
                    </div>
                    <div className={`border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
                       <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Speaker className={`w-6 h-6 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
-                      <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}>{isUserListening ? "Listening..." : "Waiting for Answer"}</p>
+                      <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? "Listening..." : "Waiting for Answer"}`}>{isUserListening ? "Capturing Strategy..." : "Strategic Auditor Ready"}</p>
                    </div>
                 </div>
              </div>
 
              {/* Coaching Feedback (Fail/Success UI) */}
              {coachingFeedback && (
-               <div className="p-8 bg-rose-950/40 border border-rose-500/30 rounded-[3rem] space-y-6 animate-in slide-in-from-top-4">
+               <div className="mx-12 p-8 bg-rose-950/40 border border-rose-500/30 rounded-[3rem] space-y-6 animate-in slide-in-from-top-4">
                   <div className="flex items-center gap-3">
                      <span className="px-3 py-1 bg-rose-600 text-white text-[9px] font-black uppercase rounded-full">Stage Blocked</span>
                      <h4 className="text-xl font-black text-rose-200">Neural Performance Deficit</h4>
@@ -368,13 +378,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
              )}
 
              {/* Input Area */}
-             <div className="space-y-6">
+             <div className="space-y-6 px-12 pb-12">
                 <div className="relative group">
                    <textarea 
                      value={currentCaption} 
                      onChange={(e) => setCurrentCaption(e.target.value)} 
                      className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-36 resize-none" 
-                     placeholder={`Answer for ${currentStage}...`}
+                     placeholder={`Provide answer for ${meetingContext.clientNames || 'the client'}...`}
                    />
                    <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-5 h-5" /></button>
                 </div>

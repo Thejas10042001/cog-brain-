@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { ICONS } from '../constants';
 import { 
@@ -74,7 +75,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
 
       const voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
-      const bytes = await generatePitchAudio(text, voice);
+      const bytes = await generatePitchAudio(text, voice, meetingContext.clonedVoiceBase64);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -306,7 +307,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   };
 
   return (
-    <div className="bg-slate-950 border border-slate-800 rounded-[4rem] p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 border-y border-slate-800 p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
            <div className="max-w-2xl space-y-6">
@@ -323,15 +324,30 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         <div className="flex-1 flex flex-col gap-10">
           {/* Top Section: Avatar Hub */}
           <div className="flex flex-col items-center w-full">
-             <div className="w-full aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex items-center justify-center group relative">
+             <div className="w-full aspect-video bg-slate-900 rounded-[3.5rem] border-8 border-slate-800 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col items-center justify-center group relative">
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 z-10"></div>
+                
+                {/* Nameplate Overlay */}
+                <div className="absolute top-10 left-1/2 -translate-x-1/2 z-40 bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-3 rounded-full shadow-2xl flex items-center gap-3">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                   <span className="text-sm font-black uppercase tracking-[0.2em] text-white">Digital Persona: {meetingContext.clientNames || persona}</span>
+                </div>
+
                 <div className="relative z-20">
                    {persona && <AnimatedBotV2 type={persona} />}
                 </div>
                 <div className="absolute top-10 left-10 z-30 flex items-center gap-4 px-6 py-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
                    <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'animate-pulse' : ''}`} style={{ backgroundColor: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}></div>
-                   <span className="text-[12px] font-black uppercase tracking-widest">{meetingContext.clientNames || persona} Presence Online</span>
+                   <span className="text-[12px] font-black uppercase tracking-widest">{persona} Mode Online</span>
                 </div>
+
+                {/* Voice Protocol Badge */}
+                {meetingContext.clonedVoiceBase64 && (
+                   <div className="absolute top-10 right-10 z-30 flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                      <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></div>
+                      <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.1em]">Mimicry Protocol: Active</span>
+                   </div>
+                )}
 
                 {/* Audio Controls Overlay */}
                 {isAISpeaking && (
@@ -351,30 +367,30 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
              {/* HUD - Now Below Avatar */}
              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem] space-y-6 min-h-[120px]">
-                   <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">Strategic Inquiry Node</h5>
-                   <p className="text-2xl font-black italic leading-tight text-white">{messages[messages.length - 1]?.content || status || "Syncing Data..."}</p>
+                   <h5 className="text-[11px] font-black uppercase tracking-widest text-indigo-400">{meetingContext.clientNames || persona} Strategic Inquiry</h5>
+                   <p className="text-2xl font-black italic leading-tight text-white">{messages[messages.length - 1]?.content || status || "Synchronizing Neural Core..."}</p>
                 </div>
                 <div className={`flex-1 border border-white/5 rounded-[3rem] p-12 flex flex-col items-center justify-center text-center space-y-8 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
                    <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 ${isUserListening ? 'bg-emerald-600 shadow-[0_0_60px_rgba(16,185,129,0.6)] scale-110' : 'bg-slate-800'}`}><ICONS.Speaker className={`w-10 h-10 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
-                   <p className={`text-sm font-black uppercase tracking-[0.4em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}>{isUserListening ? "Capturing Strategy" : "Ready for Input"}</p>
+                   <p className={`text-sm font-black uppercase tracking-[0.4em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-50'}`}>{isUserListening ? "Capturing Strategy" : "Ready for Argument"}</p>
                 </div>
              </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 px-12">
              <div className="relative group">
-                <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/60 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-indigo-50 shadow-inner h-40 resize-none placeholder:text-slate-700" placeholder="Provide your justification..." />
+                <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/60 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-indigo-50 shadow-inner h-40 resize-none placeholder:text-slate-700" placeholder={`Respond to ${meetingContext.clientNames || 'the Executive'}...`} />
                 <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-6 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-6 h-6" /></button>
              </div>
 
              {lastSuggestion && (
                <div className="p-8 bg-indigo-600/20 border border-indigo-500/30 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500">
-                  <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">Strategic Feedback Logic</h6>
+                  <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">Neural Coaching suggestion</h6>
                   <p className="text-sm font-bold text-indigo-100 italic">"Instead of that response, you could have stated: {lastSuggestion}"</p>
                </div>
              )}
 
-             <div className="flex items-center justify-between gap-6">
+             <div className="flex items-center justify-between gap-6 pb-12">
                 <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="flex-1 px-12 py-7 bg-indigo-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Logic & Next Node</button>
                 <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-7 bg-rose-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50">End Session & Audit</button>
              </div>
@@ -385,7 +401,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   );
 };
 
-// Fix: Explicitly type PersonaCardV2 as a React.FC to handle reserved props like 'key' and provide strict typing for map usage
 const PersonaCardV2: FC<{ type: SimPersonaV2; onClick: () => void | Promise<void> }> = ({ type, onClick }) => {
   const config = PERSONA_CONFIG[type];
   return (
