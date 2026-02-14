@@ -569,7 +569,7 @@ Target Products: ${context.targetProducts}`;
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction,
         thinkingConfig: { thinkingBudget: 16000 }
       }
     });
@@ -1038,7 +1038,7 @@ export async function generateExplanation(question: string, context: AnalysisRes
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Explain the deep sales strategy behind: "${question}" based on the buyer snapshot: ${JSON.stringify(context.snapshot)}.`,
-    // Fix: thinkingBudget must be wrapped in thinkingConfig
+    // Fix: thinkingBudget must be wrapped in thinkingConfig per SDK guidelines
     config: { thinkingConfig: { thinkingBudget: 0 } }
   });
   return response.text || "";

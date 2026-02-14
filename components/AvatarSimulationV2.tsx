@@ -75,7 +75,8 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
 
       const voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
-      const bytes = await generatePitchAudio(text, voice, meetingContext.clonedVoiceBase64);
+      // Fix: Removed unsupported 3rd argument clonedVoiceBase64 from generatePitchAudio
+      const bytes = await generatePitchAudio(text, voice);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -371,16 +372,17 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                    <p className="text-2xl font-black italic leading-tight text-white">{messages[messages.length - 1]?.content || status || "Synchronizing Neural Core..."}</p>
                 </div>
                 <div className={`flex-1 border border-white/5 rounded-[3rem] p-12 flex flex-col items-center justify-center text-center space-y-8 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
-                   <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 ${isUserListening ? 'bg-emerald-600 shadow-[0_0_60px_rgba(16,185,129,0.6)] scale-110' : 'bg-slate-800'}`}><ICONS.Speaker className={`w-10 h-10 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
-                   <p className={`text-sm font-black uppercase tracking-[0.4em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-50'}`}>{isUserListening ? "Capturing Strategy" : "Ready for Argument"}</p>
+                   <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 ${isUserListening ? 'bg-emerald-600 shadow-[0_0_60px_rgba(16,185,129,0.6)] scale-110' : 'bg-slate-800'}`}><ICONS.Ear className={`w-10 h-10 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
+                   <p className={`text-sm font-black uppercase tracking-[0.4em] ${isUserListening ? 'text-emerald-400 animate-pulse' : ''}`}>{isUserListening ? "Capturing Strategy" : ""}</p>
                 </div>
              </div>
           </div>
 
           <div className="space-y-6 px-12">
              <div className="relative group">
+                <div className={`absolute top-8 left-8 w-2 h-2 rounded-full z-10 transition-all duration-700 ${isUserListening ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-slate-800'}`}></div>
                 <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/60 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-indigo-50 shadow-inner h-40 resize-none placeholder:text-slate-700" placeholder={`Respond to ${meetingContext.clientNames || 'the Executive'}...`} />
-                <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-6 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-6 h-6" /></button>
+                <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-6 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-6 h-6" /></button>
              </div>
 
              {lastSuggestion && (

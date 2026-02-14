@@ -53,6 +53,13 @@ export const ICONS = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
     </svg>
   ),
+  Ear: ({ className }: { className?: string } = {}) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className || "w-5 h-5"} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 11a1 1 0 001 1h.172a2 2 0 011.414.586l.828.828A2 2 0 0015.828 14H17a1 1 0 001-1V9a1 1 0 00-1-1h-1.172a2 2 0 01-1.414-.586l-.828-.828A2 2 0 0012.172 6H11a1 1 0 00-1 1v4z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11V7a5 5 0 0110 0v4" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 11a5 5 0 0010 0" />
+    </svg>
+  ),
   Sparkles: ({ className }: { className?: string } = {}) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className || "w-5 h-5"} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />

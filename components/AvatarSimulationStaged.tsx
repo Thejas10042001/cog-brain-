@@ -74,7 +74,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.clonedVoiceBase64);
+      // Fix: Removed unsupported 3rd argument clonedVoiceBase64 from generatePitchAudio
+      const bytes = await generatePitchAudio(text, 'Charon');
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -351,8 +352,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                       <p className="text-xl font-bold italic leading-relaxed text-white">{messages[messages.length - 1]?.content || "Initializing Persona..."}</p>
                    </div>
                    <div className={`border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Speaker className={`w-6 h-6 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
-                      <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? "Listening..." : "Waiting for Answer"}`}>{isUserListening ? "Capturing Strategy..." : "Strategic Auditor Ready"}</p>
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Ear className={`w-6 h-6 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
+                      <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? "text-emerald-400 animate-pulse" : ""}`}>{isUserListening ? "Capturing Strategy..." : ""}</p>
                    </div>
                 </div>
              </div>
@@ -380,13 +381,14 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
              {/* Input Area */}
              <div className="space-y-6 px-12 pb-12">
                 <div className="relative group">
+                   <div className={`absolute top-8 left-8 w-2 h-2 rounded-full z-10 transition-all duration-700 ${isUserListening ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-slate-800'}`}></div>
                    <textarea 
                      value={currentCaption} 
                      onChange={(e) => setCurrentCaption(e.target.value)} 
                      className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-36 resize-none" 
                      placeholder={`Provide answer for ${meetingContext.clientNames || 'the client'}...`}
                    />
-                   <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-5 h-5" /></button>
+                   <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-5 h-5" /></button>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                    <div className="flex items-center gap-4">

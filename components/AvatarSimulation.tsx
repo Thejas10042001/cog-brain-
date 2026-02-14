@@ -64,10 +64,11 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     setIsAISpeaking(true);
     setIsPaused(false);
     try {
-      if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.clonedVoiceBase64);
+      // Fix: Removed unsupported 3rd argument clonedVoiceBase64 from generatePitchAudio
+      const bytes = await generatePitchAudio(text, 'Charon');
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -472,7 +473,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                      </div>
                    )}
                    <div className="absolute top-10 left-10 z-30 flex items-center gap-3 px-5 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                      <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : isUserListening ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
+                      <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-emerald-500'}`}></div>
                       <span className="text-[10px] font-black uppercase tracking-widest">{isAISpeaking ? `${meetingContext.clientNames || 'Client'} Speaking` : isUserListening ? 'Listening...' : 'Bot Primed'}</span>
                    </div>
 
@@ -506,8 +507,8 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                       <p className="text-xl font-bold italic leading-relaxed text-indigo-50">{messages[messages.length - 1]?.content || "Syncing behaviors..."}</p>
                    </div>
                    <div className={`border border-white/5 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center space-y-6 transition-all duration-500 ${isUserListening ? 'bg-emerald-600/10 border-emerald-500/20' : 'bg-slate-900'}`}>
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Speaker className={`w-6 h-6 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
-                      <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-50'}`}>{isUserListening ? "Capturing Strategy..." : "Internal Auditor Ready"}</p>
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isUserListening ? 'bg-emerald-600 shadow-[0_0_40px_rgba(16,185,129,0.4)] scale-110' : 'bg-slate-800'}`}><ICONS.Ear className={`w-6 h-6 ${isUserListening ? 'text-white' : 'text-slate-500'}`} /></div>
+                      <p className={`text-xs font-black uppercase tracking-[0.3em] ${isUserListening ? 'text-emerald-400 animate-pulse' : 'text-slate-50'}`}>{isUserListening ? "Capturing Strategy..." : ""}</p>
                    </div>
                 </div>
              </div>
@@ -515,8 +516,9 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
              {/* Input & Suggestions */}
              <div className="space-y-6 px-12">
                 <div className="relative group">
+                   <div className={`absolute top-6 left-6 w-2 h-2 rounded-full z-10 transition-all duration-700 ${isUserListening ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'bg-slate-800'}`}></div>
                    <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-32 resize-none" placeholder={`${meetingContext.clientNames || 'The Executive'} is waiting for your response...`} />
-                   <button onClick={() => startListening()} className={`absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Speaker className="w-5 h-5" /></button>
+                   <button onClick={() => startListening()} className={`absolute right-6 top-1/2 -translate-y-1/2 p-4 rounded-2xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-5 h-5" /></button>
                 </div>
                 
                 {lastSuggestion && (
