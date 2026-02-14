@@ -62,15 +62,15 @@ export const Auth: React.FC = () => {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-indigo-600 text-white rounded-[1.5rem] shadow-2xl shadow-indigo-100 animate-in zoom-in-50 duration-700">
-              <ICONS.Brain className="w-10 h-10" />
+            <div className="w-16 h-16 bg-red-600 text-white rounded-xl flex items-center justify-center font-black text-4xl shadow-2xl animate-in zoom-in-50 duration-700">
+              !
             </div>
           </div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">
-            Cognitive<span className="text-indigo-600">Brain</span>
+          <h2 className="text-5xl font-black tracking-tighter text-slate-900">
+            SPIKED<span className="text-red-600">AI</span>
           </h2>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">
-            Neural Strategic Intelligence Hub
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">
+            Cognitive Intelligence Brain Simulation
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export const Auth: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold"
-                placeholder="architect@cognitivebrain.ai"
+                placeholder="architect@spikedai.io"
               />
             </div>
 
@@ -125,7 +125,7 @@ export const Auth: React.FC = () => {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+              className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

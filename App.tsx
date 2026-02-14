@@ -265,11 +265,11 @@ const App: React.FC = () => {
             {!analysis && !isAnalyzing ? (
               <div className="p-8 md:p-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
                 <div className="text-center space-y-4">
-                  <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight">
-                    Cognitive Brain Strategy Hub
+                  <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
+                    SPIKED<span className="text-red-600">AI</span> Hub
                   </h1>
-                  <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-                    Configure strategic parameters and leverage the cognitive library for grounded AI synthesis.
+                  <p className="text-xl text-slate-400 font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto">
+                    Cognitive Intelligence Brain Simulation
                   </p>
                 </div>
 

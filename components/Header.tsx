@@ -12,12 +12,17 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-md">
-            <ICONS.Brain />
+        <div className="flex flex-col items-start leading-none">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-red-600 text-white rounded flex items-center justify-center font-black text-xl shadow-md">
+              !
+            </div>
+            <span className="font-black text-2xl tracking-tighter text-slate-900">
+              SPIKED<span className="text-red-600">AI</span>
+            </span>
           </div>
-          <span className="font-extrabold text-xl tracking-tight text-slate-800">
-            Cognitive<span className="text-indigo-600">Brain</span>
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 ml-1 hidden md:block">
+            Cognitive Intelligence Brain Simulation
           </span>
         </div>
 
