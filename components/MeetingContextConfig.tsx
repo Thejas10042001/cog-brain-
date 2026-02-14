@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MeetingContext, CustomerPersonaType, ThinkingLevel, StoredDocument } from '../types';
 import { ICONS } from '../constants';
+import { extractMetadataFromDocument } from '../services/geminiService';
 
 interface MeetingContextConfigProps {
   context: MeetingContext;
@@ -77,6 +78,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
   const [localPrompt, setLocalPrompt] = useState(context.baseSystemPrompt);
   const [isSaved, setIsSaved] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
+  const [isExtracting, setIsExtracting] = useState(false);
   const isCustomizedRef = useRef(false);
 
   useEffect(() => {
@@ -107,6 +109,33 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
 
   const handleChange = (field: keyof MeetingContext, value: any) => {
     onContextChange({ ...context, [field]: value });
+  };
+
+  const handleKycChange = async (docId: string) => {
+    handleChange('kycDocId', docId);
+    if (!docId) return;
+
+    const doc = documents.find(d => d.id === docId);
+    if (!doc) return;
+
+    setIsExtracting(true);
+    try {
+      const metadata = await extractMetadataFromDocument(doc.content);
+      onContextChange({
+        ...context,
+        kycDocId: docId,
+        clientCompany: metadata.clientCompany || context.clientCompany,
+        clientNames: metadata.clientNames || context.clientNames,
+        targetProducts: metadata.targetProducts || context.targetProducts,
+        productDomain: metadata.productDomain || context.productDomain,
+        meetingFocus: metadata.meetingFocus || context.meetingFocus,
+        executiveSnapshot: metadata.executiveSnapshot || context.executiveSnapshot,
+      });
+    } catch (e) {
+      console.error("KYC Metadata extraction failed", e);
+    } finally {
+      setIsExtracting(false);
+    }
   };
 
   const handlePromptUpdate = (val: string) => {
@@ -205,9 +234,18 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
           </div>
         </div>
 
-        {/* New KYC Option */}
+        {/* KYC Option with Neural Extraction */}
         <div className="lg:col-span-3 space-y-6">
-          <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-inner">
+          <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-inner relative overflow-hidden">
+             {isExtracting && (
+               <div className="absolute inset-0 bg-indigo-600/5 backdrop-blur-[2px] flex items-center justify-center z-10 animate-in fade-in">
+                 <div className="flex items-center gap-3 px-6 py-3 bg-white border border-indigo-100 rounded-full shadow-xl">
+                   <div className="w-4 h-4 border-2 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                   <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest animate-pulse">Neural Extraction Active...</span>
+                 </div>
+               </div>
+             )}
+             
              <div className="shrink-0 flex flex-col items-center gap-2">
                 <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg">
                    <ICONS.Shield />
@@ -218,7 +256,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 ml-1">Choose Know Your Customer (KYC) Document</label>
                 <select 
                   value={context.kycDocId || ""} 
-                  onChange={(e) => handleChange('kycDocId', e.target.value)}
+                  onChange={(e) => handleKycChange(e.target.value)}
                   className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all shadow-sm"
                 >
                   <option value="">Select behavior grounding source...</option>
@@ -226,7 +264,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
-                <p className="text-[9px] text-slate-500 font-medium italic">This document will freeze the agent's behavior to match the specific stakeholder profiles discovered in this file.</p>
+                <p className="text-[9px] text-slate-500 font-medium italic">Selecting a document will automatically trigger neural logic to populate company, stakeholder, and product details.</p>
              </div>
           </div>
 
@@ -251,7 +289,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
           <ICONS.Brain /> Target Buyer Persona
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Fix: Corrected variable name from PERSONS to PERSONAS */}
           {PERSONAS.map(p => (
             <button
               key={p.type}

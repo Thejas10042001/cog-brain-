@@ -67,6 +67,53 @@ function safeJsonParse(str: string) {
   throw new Error("Failed to parse cognitive intelligence response as valid JSON.");
 }
 
+// Extract meeting metadata from a document content
+export async function extractMetadataFromDocument(content: string): Promise<Partial<MeetingContext>> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const prompt = `Act as an Elite Sales Operations Analyst. Analyze the following document and extract key meeting configuration data.
+  
+  DOCUMENT CONTENT:
+  ${content}
+
+  Extract the following fields into JSON:
+  - clientCompany: The organization name of the prospect.
+  - clientNames: Specific stakeholders or participants mentioned.
+  - targetProducts: Products or services the customer is interested in.
+  - productDomain: The industry or technical domain (e.g., Fintech, Cybersecurity).
+  - meetingFocus: The primary objective or focus of the upcoming interaction.
+  - executiveSnapshot: A brief summary of the opportunity.
+
+  Return ONLY the JSON object.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            clientCompany: { type: Type.STRING },
+            clientNames: { type: Type.STRING },
+            targetProducts: { type: Type.STRING },
+            productDomain: { type: Type.STRING },
+            meetingFocus: { type: Type.STRING },
+            executiveSnapshot: { type: Type.STRING }
+          },
+          required: ["clientCompany", "clientNames", "targetProducts", "productDomain", "meetingFocus", "executiveSnapshot"]
+        }
+      }
+    });
+    return safeJsonParse(response.text || "{}");
+  } catch (error) {
+    console.error("Neural extraction failed:", error);
+    return {};
+  }
+}
+
 // Unified High-Depth Avatar Evaluation
 async function performHighDepthEvaluation(
   history: GPTMessage[], 
@@ -451,7 +498,7 @@ Target Products: ${context.targetProducts}`;
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction,
+        systemInstruction: systemInstruction,
         thinkingConfig: { thinkingBudget: 16000 }
       }
     });
