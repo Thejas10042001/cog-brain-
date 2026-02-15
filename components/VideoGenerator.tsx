@@ -88,9 +88,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
                 tacticalClosing: { type: Type.STRING }
               },
               required: ["voiceTone", "openingManeuver", "answerStrategy", "handMovements", "bodyLanguage", "eyeExpression", "tacticalClosing"]
-            },
-            // Set thinkingBudget for complex strategic analysis on pro model.
-            thinkingConfig: { thinkingBudget: 16000 }
+            }
           }
         });
 
@@ -140,7 +138,6 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
         setStatusMessage(loadingMessages[msgIdx % loadingMessages.length]);
         msgIdx++;
         await new Promise(resolve => setTimeout(resolve, 10000));
-        // Refresh GoogleGenAI instance for polling to ensure valid API key.
         const pollingAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
         operation = await pollingAi.operations.getVideosOperation({ operation: operation });
       }
@@ -178,7 +175,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
          <ICONS.Play className="w-96 h-96" />
       </div>
 
-      <div className="flex items-center justify-between mb-12 relative z-10 text-left">
+      <div className="flex items-center justify-between mb-12 relative z-10">
         <div className="flex items-center gap-6">
           <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-2xl shadow-indigo-500/20">
             <ICONS.Efficiency className="w-8 h-8" />
@@ -213,7 +210,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
         {!videoUrl ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1">
             {/* Left Column: Configuration */}
-            <div className="lg:col-span-8 space-y-8 flex flex-col text-left">
+            <div className="lg:col-span-8 space-y-8 flex flex-col">
                {/* Mode Selection */}
                <div className="flex gap-2 p-1.5 bg-slate-900 rounded-2xl border border-slate-800 w-fit">
                   <button onClick={() => setMode('delivery-coach')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'delivery-coach' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-200'}`}>Strategic Delivery Coach</button>
@@ -267,7 +264,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
             </div>
 
             {/* Right Column: Controls & Execution */}
-            <div className="lg:col-span-4 space-y-8 flex flex-col text-left">
+            <div className="lg:col-span-4 space-y-8 flex flex-col">
                <div className="p-10 bg-slate-900 border border-white/5 rounded-[3rem] space-y-12">
                   <div className="space-y-6">
                      <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
@@ -322,7 +319,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
             </div>
           </div>
         ) : (
-          <div className="space-y-12 animate-in zoom-in-95 duration-1000 flex-1 flex flex-col pb-24 text-left">
+          <div className="space-y-12 animate-in zoom-in-95 duration-1000 flex-1 flex flex-col pb-24">
             <div className="flex flex-col lg:flex-row gap-16 items-start">
               {/* Video Interface */}
               <div className={`flex-1 rounded-[4rem] overflow-hidden border-[16px] border-slate-900 shadow-[0_60px_120px_-30px_rgba(0,0,0,0.8)] bg-black relative group ${aspectRatio === '9:16' ? 'max-w-md mx-auto aspect-[9/16]' : 'aspect-video'}`}>

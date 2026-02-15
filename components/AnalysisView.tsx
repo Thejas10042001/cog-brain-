@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { AnalysisResult, Citation, UploadedFile, BuyerSnapshot, MeetingContext, CompetitorInsight, MatrixItem } from '../types';
 import { ICONS } from '../constants';
@@ -40,17 +39,17 @@ const CognitiveRadarChart = ({ data, size = 320 }: { data: { label: string, valu
       <svg width={size + 160} height={size + 100} className="overflow-visible drop-shadow-xl">
         <defs>
           <radialGradient id="radarGrad">
-            <stop offset="0%" stopColor="rgba(220, 38, 38, 0.4)" />
-            <stop offset="100%" stopColor="rgba(220, 38, 38, 0.05)" />
+            <stop offset="0%" stopColor="rgba(79, 70, 229, 0.4)" />
+            <stop offset="100%" stopColor="rgba(79, 70, 229, 0.05)" />
           </radialGradient>
         </defs>
         {[0.2, 0.4, 0.6, 0.8, 1].map((r, idx) => (
-          <circle key={idx} cx={center} cy={center} r={radius * r} fill={idx === 4 ? "url(#radarGrad)" : "none"} stroke="rgba(220, 38, 38, 0.1)" strokeWidth="1" />
+          <circle key={idx} cx={center} cy={center} r={radius * r} fill={idx === 4 ? "url(#radarGrad)" : "none"} stroke="rgba(79, 70, 229, 0.1)" strokeWidth="1" />
         ))}
         {data.map((_, i) => (
-          <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(i * angleStep - Math.PI / 2)} y2={center + radius * Math.sin(i * angleStep - Math.PI / 2)} stroke="rgba(220, 38, 38, 0.15)" strokeWidth="1" />
+          <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(i * angleStep - Math.PI / 2)} y2={center + radius * Math.sin(i * angleStep - Math.PI / 2)} stroke="rgba(79, 70, 229, 0.15)" strokeWidth="1" />
         ))}
-        <polygon points={polygonPath} fill="rgba(220, 38, 38, 0.3)" stroke="rgba(220, 38, 38, 0.8)" strokeWidth="3" />
+        <polygon points={polygonPath} fill="rgba(79, 70, 229, 0.3)" stroke="rgba(79, 70, 229, 0.8)" strokeWidth="3" />
         {data.map((d, i) => (
           <text key={i} x={points[i].labelX} y={points[i].labelY} textAnchor="middle" className="text-[9px] font-black uppercase fill-slate-500 tracking-widest">{d.label}</text>
         ))}
@@ -76,8 +75,9 @@ const SWOTItem = ({ label, items, color, symbol }: { label: string, items: strin
   </div>
 );
 
+// Fix: Explicitly type CompetitorCard as a React.FC to handle reserved props like 'key' and provide strict typing for map usage
 const CompetitorCard: React.FC<{ comp: CompetitorInsight, name: string }> = ({ comp, name }) => (
-  <div className="p-10 rounded-[4rem] bg-white border border-slate-100 hover:border-red-300 hover:shadow-[0_40px_80px_-15px_rgba(220,38,38,0.12)] transition-all duration-700 group flex flex-col h-full relative overflow-hidden">
+  <div className="p-10 rounded-[4rem] bg-white border border-slate-100 hover:border-indigo-300 hover:shadow-[0_40px_80px_-15px_rgba(79,70,229,0.12)] transition-all duration-700 group flex flex-col h-full relative overflow-hidden">
     <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
        <ICONS.Trophy className="w-48 h-48" />
     </div>
@@ -94,18 +94,17 @@ const CompetitorCard: React.FC<{ comp: CompetitorInsight, name: string }> = ({ c
         </div>
       </div>
       <div className="text-right">
-         <p className="text-[9px] font-black uppercase text-red-500 tracking-widest mb-1">Our Displacement Wedge</p>
-         <p className="text-sm font-bold text-slate-900 border-b-2 border-red-100 pb-1">{comp.ourWedge}</p>
+         <p className="text-[9px] font-black uppercase text-indigo-500 tracking-widest mb-1">Our Displacement Wedge</p>
+         <p className="text-sm font-bold text-slate-900 border-b-2 border-indigo-100 pb-1">{comp.ourWedge}</p>
       </div>
     </div>
 
     <p className="text-xs text-slate-500 font-medium mb-8 leading-relaxed italic border-l-4 border-slate-100 pl-4">“{comp.overview}”</p>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-      {/* Fix: Property 'priorities' does not exist on type 'CompetitorInsight'. Replaced with strengths. */}
       <SWOTItem label="Strengths" items={comp.strengths || []} color="emerald" symbol="S" />
       <SWOTItem label="Weaknesses" items={comp.weaknesses || []} color="rose" symbol="W" />
-      <SWOTItem label="Opportunities" items={comp.opportunities || []} color="red" symbol="O" />
+      <SWOTItem label="Opportunities" items={comp.opportunities || []} color="indigo" symbol="O" />
       <SWOTItem label="Threats" items={comp.threats || []} color="amber" symbol="T" />
     </div>
 
@@ -114,7 +113,7 @@ const CompetitorCard: React.FC<{ comp: CompetitorInsight, name: string }> = ({ c
           <ICONS.Document className="w-3 h-3 text-slate-300" />
           <span className="text-[8px] font-bold text-slate-400 truncate max-w-[150px]">{comp.citation.sourceFile}</span>
        </div>
-       <button className="text-[9px] font-black uppercase text-red-600 tracking-widest hover:text-red-800 transition-colors">View Citation Details</button>
+       <button className="text-[9px] font-black uppercase text-indigo-600 tracking-widest hover:text-indigo-800 transition-colors">View Citation Details</button>
     </div>
   </div>
 );
@@ -174,7 +173,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       const margin = 20;
       const pageWidth = doc.internal.pageSize.getWidth();
 
-      const addHeader = (text: string, color = [220, 38, 38]) => {
+      const addHeader = (text: string, color = [79, 70, 229]) => {
         if (y > 250) { doc.addPage(); y = 20; }
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
@@ -213,14 +212,14 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       };
 
       // --- COVER PAGE ---
-      doc.setFillColor(15, 23, 42); // Slate 900
+      doc.setFillColor(30, 27, 75); // Indigo 950
       doc.rect(0, 0, pageWidth, 297, 'F');
       
       doc.setTextColor(255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(32);
       doc.text("COGNITIVE SALES", margin, 100);
-      doc.setTextColor(220, 38, 38); // Red 600
+      doc.setTextColor(79, 70, 229); // Indigo 600
       doc.text("STRATEGY REPORT", margin, 115);
       
       doc.setFontSize(12);
@@ -346,7 +345,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
   const renderSection = (title: string, content: string) => (
     <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-      <h4 className="text-[10px] font-black uppercase text-red-500 tracking-widest mb-4">{title}</h4>
+      <h4 className="text-[10px] font-black uppercase text-indigo-500 tracking-widest mb-4">{title}</h4>
       <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{content}</p>
     </div>
   );
@@ -359,7 +358,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
            <select 
              value={selectedVoice} 
              onChange={(e) => setSelectedVoice(e.target.value)}
-             className="bg-transparent text-[11px] font-black uppercase text-red-600 outline-none cursor-pointer"
+             className="bg-transparent text-[11px] font-black uppercase text-indigo-600 outline-none cursor-pointer"
            >
              {VOICES.map(v => <option key={v.name} value={v.name}>{v.label}</option>)}
            </select>
@@ -367,7 +366,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
         <button 
           onClick={generateReportPDF} 
           disabled={isExporting} 
-          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 ${isExporting ? 'bg-slate-400 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'}`}
+          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 ${isExporting ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
         >
           {isExporting ? (
             <>
@@ -386,17 +385,17 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       </div>
 
       {/* Strategic Opening Hooks Section */}
-      <section className="bg-slate-900 rounded-[4rem] p-12 shadow-2xl relative overflow-hidden flex flex-col items-start gap-12 text-left">
+      <section className="bg-indigo-950 rounded-[4rem] p-12 shadow-2xl relative overflow-hidden group border border-indigo-900">
         <div className="absolute top-0 right-0 p-16 opacity-[0.05] translate-x-1/4 -translate-y-1/4 group-hover:translate-x-0 transition-transform duration-1000"><ICONS.Sparkles className="w-96 h-96 text-white" /></div>
-        <div className="relative z-10 w-full">
+        <div className="relative z-10">
           <div className="flex items-center justify-between mb-12">
             <div>
-              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-red-400 mb-2">Psychological Priming</h3>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2">Psychological Priming</h3>
               <h2 className="text-4xl font-black text-white tracking-tight">Strategic Opening Hooks</h2>
-              <p className="text-slate-300 mt-3 text-sm font-medium max-w-2xl">Use these persona-aligned openers to establish authority and empathy immediately. Grounded in document analysis of {context.clientCompany}'s core priorities.</p>
+              <p className="text-indigo-200/70 mt-3 text-sm font-medium max-w-2xl">Use these persona-aligned openers to establish authority and empathy immediately. Grounded in document analysis of {context.clientCompany}'s core priorities.</p>
             </div>
             <div className="hidden lg:flex flex-col items-end gap-2">
-               <div className="px-4 py-2 bg-red-900/50 border border-red-500/30 rounded-xl text-[10px] font-black text-red-300 uppercase tracking-widest">
+               <div className="px-4 py-2 bg-indigo-900/50 border border-indigo-500/30 rounded-xl text-[10px] font-black text-indigo-300 uppercase tracking-widest">
                   Target: {context.persona}
                </div>
                <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-[10px] font-black text-emerald-400 uppercase tracking-widest">
@@ -407,22 +406,22 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {result.openingLines.map((line, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 p-10 rounded-[3rem] hover:bg-white/10 hover:border-red-400/50 transition-all duration-500 group/hook flex flex-col justify-between">
+              <div key={i} className="bg-white/5 border border-white/10 p-10 rounded-[3rem] hover:bg-white/10 hover:border-indigo-400/50 transition-all duration-500 group/hook flex flex-col justify-between">
                 <div>
                    <div className="flex items-center justify-between mb-6">
-                      <span className="px-4 py-1.5 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-red-500/20">
+                      <span className="px-4 py-1.5 bg-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-indigo-500/20">
                         {line.label}
                       </span>
-                      <ICONS.Chat className="w-4 h-4 text-red-400 opacity-50" />
+                      <ICONS.Chat className="w-4 h-4 text-indigo-400 opacity-50" />
                    </div>
-                   <p className="text-xl font-bold text-white leading-relaxed tracking-tight mb-8 group-hover/hook:text-red-100 transition-colors italic">
+                   <p className="text-xl font-bold text-white leading-relaxed tracking-tight mb-8 group-hover/hook:text-indigo-100 transition-colors italic">
                      “{line.text}”
                    </p>
                 </div>
                 <div className="space-y-6">
                    <button 
                      onClick={() => playAudioForText(line.text, `hook-${i}`)}
-                     className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-600/20 border border-red-500/30 text-red-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all group-active/hook:scale-95"
+                     className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all group-active/hook:scale-95"
                    >
                      {playingAudioId === `hook-${i}` ? (
                         <>Stop Playback</>
@@ -443,17 +442,17 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
       {/* Ground Matrix Hero Section */}
       <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-12 opacity-5"><ICONS.Shield className="w-64 h-64 text-red-900" /></div>
+        <div className="absolute top-0 right-0 p-12 opacity-5"><ICONS.Shield className="w-64 h-64 text-indigo-900" /></div>
         <div className="relative z-10">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-red-500 mb-2">Source Grounding</h3>
+          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 mb-2">Source Grounding</h3>
           <h2 className="text-4xl font-black text-slate-900 mb-10">Cognitive Ground Matrix</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {result.groundMatrix.map((item, idx) => (
-              <div key={idx} className="bg-slate-50 border border-slate-100 p-8 rounded-[2.5rem] flex flex-col hover:bg-white hover:border-red-300 hover:shadow-xl transition-all group">
-                <span className="text-[8px] font-black uppercase tracking-widest text-red-500 mb-3 px-2 py-1 bg-white border border-red-50 rounded-full inline-block w-fit">
+              <div key={idx} className="bg-slate-50 border border-slate-100 p-8 rounded-[2.5rem] flex flex-col hover:bg-white hover:border-indigo-300 hover:shadow-xl transition-all group">
+                <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500 mb-3 px-2 py-1 bg-white border border-indigo-50 rounded-full inline-block w-fit">
                   {item.category}
                 </span>
-                <p className="text-md font-bold text-slate-900 mb-4 leading-tight group-hover:text-red-600 transition-colors">
+                <p className="text-md font-bold text-slate-900 mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
                   {item.observation}
                 </p>
                 <div className="mt-auto space-y-3">
@@ -476,11 +475,11 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       {/* Psychology Matrix Enhanced */}
       <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200">
         <div className="flex flex-col lg:flex-row gap-16 items-start">
-          <div className="w-full lg:w-1/2 space-y-10 text-left">
+          <div className="w-full lg:w-1/2 space-y-10">
             <div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-red-500 mb-2">Neural Matrix</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 mb-2">Neural Matrix</h3>
               <h2 className="text-4xl font-black text-slate-900 mb-6">Buyer Psychology Identity</h2>
-              <div className="space-y-6 text-slate-600 italic border-l-4 border-red-100 pl-6">
+              <div className="space-y-6 text-slate-600 italic border-l-4 border-indigo-100 pl-6">
                 <p><strong>Persona:</strong> {result.snapshot.personaIdentity}</p>
                 <p><strong>Logic:</strong> {result.snapshot.decisionLogic}</p>
               </div>
@@ -492,7 +491,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
                       <span>{d.value}%</span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-red-500 rounded-full" style={{ width: `${d.value}%` }}></div>
+                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${d.value}%` }}></div>
                     </div>
                   </div>
                 ))}
@@ -514,7 +513,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
                     <div key={i} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-rose-200 transition-all group">
                        <p className="text-xs font-black text-slate-800 mb-2 tracking-tight group-hover:text-rose-600 transition-colors">“{objection.text}”</p>
                        <div className="flex items-start gap-2">
-                          <span className="text-[9px] font-black uppercase text-red-500 mt-0.5 tracking-widest shrink-0">Strategy:</span>
+                          <span className="text-[9px] font-black uppercase text-indigo-500 mt-0.5 tracking-widest shrink-0">Strategy:</span>
                           <p className="text-[10px] font-bold text-slate-500 leading-snug">
                             {handle?.strategy || "Leverage grounded ROI proof and persona-specific empathy nodes."}
                           </p>
@@ -527,8 +526,8 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
           </div>
           <div className="w-full lg:w-1/2 flex flex-col items-center justify-center sticky top-24">
             <CognitiveRadarChart data={radarData} />
-            <div className="mt-4 p-6 bg-red-50 rounded-[2.5rem] border border-red-100 text-center max-w-sm">
-               <p className="text-[9px] font-black uppercase text-red-600 tracking-widest mb-1">Synthesized Decision Driver</p>
+            <div className="mt-4 p-6 bg-indigo-50 rounded-[2.5rem] border border-indigo-100 text-center max-w-sm">
+               <p className="text-[9px] font-black uppercase text-indigo-600 tracking-widest mb-1">Synthesized Decision Driver</p>
                <p className="text-xs font-bold text-slate-700 italic">“Anchored in high {radarData.sort((a,b) => b.value - a.value)[0].label.toLowerCase()}—responses must prioritize structural validation.”</p>
             </div>
           </div>
@@ -544,17 +543,17 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
       {/* Competitive Intelligence Hub with Comparative SWOT */}
       <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 via-red-600 to-emerald-500"></div>
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 text-left">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 via-indigo-600 to-emerald-500"></div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div>
             <div className="flex items-center gap-4 mb-3">
                <div className="p-4 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200"><ICONS.Trophy /></div>
-               <h3 className="text-[11px] font-black uppercase tracking-[0.5em] text-red-500">Market Intelligence Hub</h3>
+               <h3 className="text-[11px] font-black uppercase tracking-[0.5em] text-indigo-500">Market Intelligence Hub</h3>
             </div>
             <h2 className="text-4xl font-black text-slate-900 tracking-tight">Comparative SWOT Analysis</h2>
             <p className="text-slate-500 mt-2 font-medium max-w-2xl">Deep-dive into inferred and explicit competitive dynamics. This matrix identifies specific vulnerabilities and threat vectors grounded in your documentary data.</p>
           </div>
-          <div className="flex items-center gap-3 px-6 py-3 bg-red-50 text-red-600 rounded-2xl border border-red-100 shadow-sm">
+          <div className="flex items-center gap-3 px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100 shadow-sm">
              <span className="text-[10px] font-black uppercase tracking-widest">Wedge Logic: Enabled</span>
              <ICONS.Shield className="w-3 h-3" />
           </div>
@@ -569,9 +568,9 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
         {/* Tactical Synthesis Footer */}
         <div className="mt-16 p-10 bg-slate-900 rounded-[3.5rem] text-white relative overflow-hidden group">
            <div className="absolute top-0 right-0 p-12 opacity-5 translate-x-1/4 -translate-y-1/4 rotate-12 transition-transform group-hover:rotate-0 duration-700"><ICONS.Brain className="w-80 h-80" /></div>
-           <div className="relative z-10 flex flex-col lg:flex-row gap-12 items-center text-left">
+           <div className="relative z-10 flex flex-col lg:flex-row gap-12 items-center">
               <div className="flex-1 space-y-4">
-                 <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-red-400">Competitive Synthesis Summary</h4>
+                 <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Competitive Synthesis Summary</h4>
                  <p className="text-2xl font-black leading-tight tracking-tight">
                     "Exploit Cognigy's {(result.competitiveHub.cognigy.weaknesses[0] || "logic gaps").toLowerCase()} while countering Amelia's {(result.competitiveHub.amelia.strengths[0] || "market presence").toLowerCase()} by anchoring on our {(result.snapshot.priorities[0]?.text || "core value").toLowerCase()} advantage."
                  </p>
@@ -592,7 +591,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
       {/* Battle Drills with Tactical Playbook Layout */}
       <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200">
-        <div className="flex items-center justify-between mb-10 text-left">
+        <div className="flex items-center justify-between mb-10">
           <div>
             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-rose-500 mb-2">Tactical Playbook</h3>
             <h2 className="text-3xl font-black text-slate-900">Objection Defense Drills</h2>
@@ -610,7 +609,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
                 <div className="absolute left-6 top-full h-16 w-0.5 bg-slate-100"></div>
               )}
               
-              <div className="p-10 rounded-[3.5rem] bg-slate-50 border border-slate-100 hover:border-red-200 hover:bg-white hover:shadow-2xl transition-all duration-500 overflow-hidden relative text-left">
+              <div className="p-10 rounded-[3.5rem] bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:bg-white hover:shadow-2xl transition-all duration-500 overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-12 opacity-[0.02] -translate-y-1/4 translate-x-1/4 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-700">
                    <ICONS.Shield className="w-64 h-64 text-rose-900" />
                 </div>
@@ -632,24 +631,24 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
                   </div>
 
                   <div className="lg:col-span-7 space-y-8">
-                     <div className="p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-xl relative overflow-hidden group/strat">
+                     <div className="p-8 bg-indigo-950 text-white rounded-[2.5rem] shadow-xl relative overflow-hidden group/strat">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/strat:scale-125 transition-transform"><ICONS.Research /></div>
-                        <h5 className="text-[10px] font-black uppercase text-red-400 tracking-widest mb-3">Strategic Maneuver</h5>
+                        <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-3">Strategic Maneuver</h5>
                         <p className="text-lg font-bold text-white/90 leading-snug">{o.strategy}</p>
                      </div>
 
-                     <div className="p-10 bg-white border border-red-100 rounded-[3rem] shadow-inner flex flex-col items-center text-center relative">
+                     <div className="p-10 bg-white border border-indigo-100 rounded-[3rem] shadow-inner flex flex-col items-center text-center relative">
                         <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                           <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                           <div className="w-1 h-1 bg-indigo-500 rounded-full"></div>
                            <h5 className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Validated Verbal Script</h5>
-                           <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                           <div className="w-1 h-1 bg-indigo-500 rounded-full"></div>
                         </div>
                         <p className="text-xl font-bold text-slate-900 leading-relaxed italic mt-4">“{o.exactWording}”</p>
                         
                         <div className="mt-8 flex items-center gap-4">
                            <button 
                              onClick={() => playAudioForText(o.exactWording, `obj-${i}`)} 
-                             className="flex items-center gap-3 px-8 py-3.5 bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-100"
+                             className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
                            >
                              {playingAudioId === `obj-${i}` ? (
                                'Terminate Playback'
@@ -665,7 +664,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
                 <div className="mt-12 pt-10 border-t border-slate-200/50 grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                   <div className="flex gap-4">
-                    <div className="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center shrink-0"><ICONS.Brain className="w-5 h-5" /></div>
+                    <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shrink-0"><ICONS.Brain className="w-5 h-5" /></div>
                     <div>
                        <h5 className="text-[10px] font-black uppercase text-slate-900 tracking-widest mb-1">Empathy Anchor</h5>
                        <p className="text-xs text-slate-500 font-medium leading-relaxed">{o.empathyTip}</p>
@@ -697,31 +696,31 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       <section className="bg-slate-900 rounded-[4rem] p-12 text-white shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Document className="w-96 h-96" /></div>
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-12 text-left">
+          <div className="flex items-center justify-between mb-12">
             <div>
-              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-red-400 mb-2">Master Traceability Index</h3>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2">Master Traceability Index</h3>
               <h2 className="text-3xl font-black">Analysis Evidence Index</h2>
             </div>
             <div className="flex items-center gap-2 px-6 py-3 bg-white/10 rounded-2xl border border-white/10">
-               <span className="text-red-300 font-black text-xl">{evidenceIndex.length}</span>
+               <span className="text-indigo-300 font-black text-xl">{evidenceIndex.length}</span>
                <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Verified Document Links</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {evidenceIndex.map((ev, i) => (
-              <div key={i} className="group bg-white/5 border border-white/10 p-8 rounded-[2.5rem] hover:bg-white/10 hover:border-red-500/50 transition-all">
+              <div key={i} className="group bg-white/5 border border-white/10 p-8 rounded-[2.5rem] hover:bg-white/10 hover:border-indigo-500/50 transition-all">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[7px] font-black uppercase tracking-widest px-2 py-1 bg-red-500/20 text-red-300 rounded-full border border-red-500/30">
+                  <span className="text-[7px] font-black uppercase tracking-widest px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">
                     {ev.category}
                   </span>
-                  <ICONS.Shield className="w-3 h-3 text-red-400 opacity-50" />
+                  <ICONS.Shield className="w-3 h-3 text-indigo-400 opacity-50" />
                 </div>
                 <p className="text-[11px] font-serif italic text-white/80 leading-relaxed mb-6 group-hover:text-white transition-colors">
                   “{ev.snippet.length > 150 ? ev.snippet.substring(0, 150) + '...' : ev.snippet}”
                 </p>
                 <div className="pt-4 border-t border-white/5 flex items-center gap-3">
-                   <div className="w-6 h-6 rounded-lg bg-red-600/30 flex items-center justify-center text-red-400">
+                   <div className="w-6 h-6 rounded-lg bg-indigo-600/30 flex items-center justify-center text-indigo-400">
                      <ICONS.Document className="w-3 h-3" />
                    </div>
                    <div className="overflow-hidden">
