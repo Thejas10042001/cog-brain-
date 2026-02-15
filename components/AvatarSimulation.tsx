@@ -68,7 +68,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
       // Integration of the Cloned Voice Signature into the TTS generation
-      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.vocalPersonaAnalysis);
+      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.vocalPersonaAnalysis?.mimicryDirective);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);

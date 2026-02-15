@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage } from "../types";
+import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure } from "../types";
 
 // Upgraded thinking budget map for gemini-3-pro-preview capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
@@ -135,22 +135,23 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
 }
 
 // Analyze Audio for Vocal Persona
-export async function analyzeVocalPersona(base64Audio: string, mimeType: string): Promise<string> {
+export async function analyzeVocalPersona(base64Audio: string, mimeType: string): Promise<VocalPersonaStructure> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Act as an Expert Neural Audio Engineer and Behavioral Psychologist.
-  Analyze this audio sample of a specific customer to create a "Vocal Identity Fingerprint" for perfect cloning.
+  Analyze this audio sample of a specific customer to create a comprehensive "Vocal Identity Fingerprint".
   
-  DETERMINE WITH MAXIMUM PRECISION:
-  - EXACT PITCH & RESONANCE (e.g., deep chesty baritone, nasal high-pitched tenor, breathy soft soprano).
-  - TEMPO & CADENCE (e.g., rapid-fire staccato, slow drawling, rhythmic and melodic).
-  - ACCENT & DIALECT (e.g., Mid-Atlantic executive, subtle Southern warmth, clipped British professional).
-  - EMOTIONAL BASELINE (e.g., permanently skeptical, overly enthusiastic, cold and calculating).
-  - BREATHING & INFLECTION (e.g., frequent audible breaths, upward inflections at ends of sentences, flat monotone).
+  EXTRACT WITH MAXIMUM PRECISION:
+  - pitch: EXACT PITCH & RESONANCE (e.g., deep chesty baritone, nasal high-pitched tenor, breathy soft soprano).
+  - tempo: TEMPO in descriptions (e.g., rapid-fire staccato, slow drawling, measured and rhythmic).
+  - cadence: CADENCE & LINGUISTIC MELODY (e.g., flat monotone, melodic and sing-song, choppy and authoritative).
+  - accent: ACCENT & DIALECT (e.g., Mid-Atlantic executive, subtle Southern warmth, clipped British professional).
+  - emotionalBaseline: EMOTIONAL BASELINE (e.g., permanently skeptical, overly enthusiastic, cold and calculating, warm and inviting).
+  - breathingPatterns: BREATHING & INFLECTION (e.g., frequent audible breaths, upward inflections at ends of sentences, sighs, sharp intakes).
+  - mimicryDirective: A single paragraph of dense "Mimicry Instructions" that a high-end TTS engine can use to clone this voice exactly. Use descriptive, technical language.
 
-  Provide a detailed "Mimicry Directive". This will be used to instruct a TTS engine to clone this EXACT voice.
-  Structure it as a single paragraph of dense instructions.`;
+  Return ONLY a JSON object.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -160,12 +161,36 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
           { inlineData: { data: base64Audio, mimeType: mimeType } },
           { text: prompt }
         ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            pitch: { type: Type.STRING },
+            tempo: { type: Type.STRING },
+            cadence: { type: Type.STRING },
+            accent: { type: Type.STRING },
+            emotionalBaseline: { type: Type.STRING },
+            breathingPatterns: { type: Type.STRING },
+            mimicryDirective: { type: Type.STRING }
+          },
+          required: ["pitch", "tempo", "cadence", "accent", "emotionalBaseline", "breathingPatterns", "mimicryDirective"]
+        }
       }
     });
-    return response.text || "Direct, professional business vocal profile.";
+    return safeJsonParse(response.text || "{}") as VocalPersonaStructure;
   } catch (error) {
     console.error("Vocal analysis failed:", error);
-    return "Standard professional business vocal signature.";
+    return {
+      pitch: "Professional Neutral",
+      tempo: "Balanced",
+      cadence: "Direct",
+      accent: "Global Business",
+      emotionalBaseline: "Serious",
+      breathingPatterns: "Controlled",
+      mimicryDirective: "Direct, professional business vocal profile."
+    };
   }
 }
 
@@ -285,7 +310,7 @@ ${context.vocalPersonaAnalysis ? `==============================================
 VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
 ===========================================================
 Adopt the following vocal and behavioral signature extracted from a recording of the actual customer:
-"${context.vocalPersonaAnalysis}"
+"${context.vocalPersonaAnalysis.mimicryDirective}"
 Use linguistic patterns, pacing, and emotional subtext that matches this signature strictly.` : ""}
 
 ===========================================================
@@ -401,7 +426,7 @@ ${context.vocalPersonaAnalysis ? `==============================================
 VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
 ===========================================================
 Adopt the following vocal and behavioral signature extracted from a recording of the actual customer:
-"${context.vocalPersonaAnalysis}"
+"${context.vocalPersonaAnalysis.mimicryDirective}"
 Mirror the analyzed emotional timbre and linguistic pacing exactly.` : ""}
 
 ===========================================================
@@ -527,7 +552,7 @@ ${context.vocalPersonaAnalysis ? `==============================================
 VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
 ===========================================================
 Adopt the following vocal signature extracted from your voice recording:
-"${context.vocalPersonaAnalysis}"
+"${context.vocalPersonaAnalysis.mimicryDirective}"
 Maintain this prosody throughout the simulation.` : ""}
 
 KYC DOCUMENT CONTEXT:

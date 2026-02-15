@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MeetingContext, CustomerPersonaType, ThinkingLevel, StoredDocument } from '../types';
+import { MeetingContext, CustomerPersonaType, ThinkingLevel, StoredDocument, VocalPersonaStructure } from '../types';
 import { ICONS } from '../constants';
 import { extractMetadataFromDocument, analyzeVocalPersona } from '../services/geminiService';
 
@@ -82,6 +82,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
   const [isExtracting, setIsExtracting] = useState(false);
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const [showVocalDirective, setShowVocalDirective] = useState(false);
   const isCustomizedRef = useRef(false);
   const voiceInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -117,7 +118,7 @@ Proactively neutralize these objections in your reasoning.` : ''}
 
 ${context.vocalPersonaAnalysis ? `VOCAL IDENTITY MIMICRY (CLONED VOICE ACTIVE):
 You must mirror the following analyzed prospect signature in your behavioral logic, emotional subtext, and linguistic pacing:
-"${context.vocalPersonaAnalysis}"` : ''}
+"${context.vocalPersonaAnalysis.mimicryDirective}"` : ''}
 
 REQUIRED RESPONSE ARCHITECTURE:
 ${context.answerStyles.length > 0 
@@ -315,9 +316,9 @@ OPERATIONAL CONSTRAINTS:
              </div>
           </div>
 
-          <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-2xl relative overflow-hidden h-full text-white">
+          <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col md:flex-row md:items-start gap-8 shadow-2xl relative overflow-hidden h-full text-white transition-all duration-500">
              {isAnalyzingVoice && (
-                <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex items-center justify-center z-20">
                    <div className="flex flex-col items-center gap-3">
                       <div className="flex gap-1.5 items-end h-8">
                          {[...Array(6)].map((_, i) => (
@@ -333,19 +334,19 @@ OPERATIONAL CONSTRAINTS:
                 <div className={`p-4 rounded-2xl shadow-lg transition-colors ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
                    <ICONS.Speaker />
                 </div>
-                <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Voice Identity Lab</span>
+                <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Voice Identity</span>
              </div>
 
-             <div className="flex-1 space-y-3">
+             <div className="flex-1 space-y-4">
                 <div className="flex justify-between items-center">
-                   <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-1">Clone Customer Voice (MP3)</label>
+                   <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-1">Vocal Fingerprint (MP3)</label>
                    {context.clonedVoiceBase64 && (
                      <div className="flex gap-2">
                         <button 
                           onClick={playVoiceSample}
                           className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${isPlayingVoice ? 'bg-rose-500 text-white animate-pulse' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
                         >
-                          {isPlayingVoice ? 'Stop' : 'Play Sample'}
+                          {isPlayingVoice ? 'Stop' : 'Play'}
                         </button>
                         <button 
                           onClick={() => onContextChange({...context, clonedVoiceBase64: undefined, vocalPersonaAnalysis: undefined, clonedVoiceMimeType: undefined})}
@@ -356,31 +357,51 @@ OPERATIONAL CONSTRAINTS:
                      </div>
                    )}
                 </div>
-                <div 
-                   onClick={() => voiceInputRef.current?.click()}
-                   className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl px-6 py-4 cursor-pointer transition-all flex items-center gap-4 group"
-                >
-                   <input 
-                      type="file" 
-                      ref={voiceInputRef} 
-                      className="hidden" 
-                      accept=".mp3,.wav,.m4a" 
-                      onChange={handleVoiceUpload} 
-                   />
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-indigo-400 group-hover:scale-110'}`}>
-                      <ICONS.Play className="w-3.5 h-3.5" />
-                   </div>
-                   <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">
-                      {context.clonedVoiceBase64 ? 'Identity Locked. Click to swap.' : 'Upload prospect voice sample...'}
-                   </p>
-                </div>
-                {context.vocalPersonaAnalysis && (
-                   <div className="group/sig relative">
-                      <p className="text-[9px] text-indigo-300/80 font-medium italic border-l-2 border-indigo-500/30 pl-3 leading-tight line-clamp-2 cursor-help">
-                        Analyzed Signature: {context.vocalPersonaAnalysis}
+
+                {!context.clonedVoiceBase64 ? (
+                   <div 
+                      onClick={() => voiceInputRef.current?.click()}
+                      className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl px-6 py-6 cursor-pointer transition-all flex items-center gap-4 group"
+                   >
+                      <input 
+                         type="file" 
+                         ref={voiceInputRef} 
+                         className="hidden" 
+                         accept=".mp3,.wav,.m4a" 
+                         onChange={handleVoiceUpload} 
+                      />
+                      <div className="w-10 h-10 rounded-full bg-slate-700 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                         <ICONS.Speaker className="w-4 h-4" />
+                      </div>
+                      <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">
+                         Upload prospect voice sample...
                       </p>
-                      <div className="absolute left-0 bottom-full mb-2 w-full p-4 bg-slate-800 border border-slate-700 rounded-xl opacity-0 group-hover/sig:opacity-100 transition-opacity z-50 shadow-2xl pointer-events-none max-h-40 overflow-y-auto no-scrollbar">
-                         <p className="text-[10px] text-indigo-100 leading-relaxed italic">{context.vocalPersonaAnalysis}</p>
+                   </div>
+                ) : context.vocalPersonaAnalysis && (
+                   <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
+                      <div className="grid grid-cols-2 gap-2">
+                         <VocalTrait label="Pitch" val={context.vocalPersonaAnalysis.pitch} color="indigo" />
+                         <VocalTrait label="Tempo" val={context.vocalPersonaAnalysis.tempo} color="indigo" />
+                         <VocalTrait label="Cadence" val={context.vocalPersonaAnalysis.cadence} color="indigo" />
+                         <VocalTrait label="Accent" val={context.vocalPersonaAnalysis.accent} color="indigo" />
+                         <VocalTrait label="Baseline" val={context.vocalPersonaAnalysis.emotionalBaseline} color="emerald" />
+                         <VocalTrait label="Patterns" val={context.vocalPersonaAnalysis.breathingPatterns} color="emerald" />
+                      </div>
+                      <div className="pt-2">
+                        <button 
+                          onClick={() => setShowVocalDirective(!showVocalDirective)}
+                          className="w-full flex items-center justify-between px-4 py-2 bg-slate-800/80 rounded-xl border border-slate-700 hover:bg-slate-750 transition-all group"
+                        >
+                          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-400">View Neural Directive</span>
+                          <svg className={`w-3 h-3 text-slate-500 transition-transform ${showVocalDirective ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {showVocalDirective && (
+                          <div className="mt-2 p-4 bg-slate-800 border border-slate-700 rounded-xl text-[10px] text-indigo-200 italic leading-relaxed animate-in slide-in-from-top-2">
+                             "{context.vocalPersonaAnalysis.mimicryDirective}"
+                          </div>
+                        )}
                       </div>
                    </div>
                 )}
@@ -551,6 +572,13 @@ OPERATIONAL CONSTRAINTS:
     </div>
   );
 };
+
+const VocalTrait = ({ label, val, color }: { label: string, val: string, color: string }) => (
+  <div className={`p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:border-${color}-500/50 transition-all`}>
+    <span className="text-[7px] font-black uppercase text-slate-500 tracking-widest">{label}</span>
+    <span className="text-[10px] font-bold text-white truncate">{val}</span>
+  </div>
+);
 
 const Input = ({ label, value, onChange, placeholder, isLarge }: { label: string; value: string; onChange: (v: string) => void; placeholder: string, isLarge?: boolean }) => (
   <div className="space-y-2">

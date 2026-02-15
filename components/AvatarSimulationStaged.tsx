@@ -74,8 +74,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      // Use analyzed mimicry fingerprint for "same to same" cloning effect
-      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.vocalPersonaAnalysis);
+      // Fix: Pass analyzed mimicry fingerprint string for "same to same" cloning effect instead of object
+      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.vocalPersonaAnalysis?.mimicryDirective);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);

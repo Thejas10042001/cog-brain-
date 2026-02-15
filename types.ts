@@ -161,6 +161,16 @@ export type CustomerPersonaType = 'Balanced' | 'Technical' | 'Financial' | 'Busi
 
 export type ThinkingLevel = 'Minimal' | 'Low' | 'Medium' | 'High';
 
+export interface VocalPersonaStructure {
+  pitch: string;
+  tempo: string;
+  cadence: string;
+  accent: string;
+  emotionalBaseline: string;
+  breathingPatterns: string;
+  mimicryDirective: string;
+}
+
 export interface MeetingContext {
   sellerCompany: string;
   sellerNames: string;
@@ -180,7 +190,7 @@ export interface MeetingContext {
   kycDocId?: string;
   clonedVoiceBase64?: string;
   clonedVoiceMimeType?: string;
-  vocalPersonaAnalysis?: string;
+  vocalPersonaAnalysis?: VocalPersonaStructure;
 }
 
 export interface ComprehensiveAvatarReport {
