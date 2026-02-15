@@ -14,7 +14,7 @@ interface AvatarSimulationV2Props {
 }
 
 const PERSONA_CONFIG: Record<SimPersonaV2, { color: string; accent: string; label: string }> = {
-  CIO: { color: "#4f46e5", accent: "#818cf8", label: "Enterprise CIO" },
+  CIO: { color: "#dc2626", accent: "#ef4444", label: "Enterprise CIO" },
   CFO: { color: "#10b981", accent: "#34d399", label: "Strategic CFO" },
   IT_DIRECTOR: { color: "#f43f5e", accent: "#fb7185", label: "IT Director" }
 };
@@ -48,9 +48,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       recognition.onresult = (event: any) => {
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
+          if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
         }
         if (finalTranscript) {
           setCurrentCaption(prev => {
@@ -73,7 +71,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     try {
       if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
-
       const voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
       const bytes = await generatePitchAudio(text, voice);
       if (bytes) {
@@ -91,52 +88,29 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
   const handlePauseResume = async () => {
     if (!audioContextRef.current) return;
-    if (isPaused) {
-      await audioContextRef.current.resume();
-      setIsPaused(false);
-    } else {
-      await audioContextRef.current.suspend();
-      setIsPaused(true);
-    }
+    if (isPaused) { await audioContextRef.current.resume(); setIsPaused(false); }
+    else { await audioContextRef.current.suspend(); setIsPaused(true); }
   };
 
   const handleRepeat = async () => {
     if (!lastAudioBytes.current || !audioContextRef.current) return;
-    if (activeAudioSource.current) {
-      activeAudioSource.current.stop();
-    }
+    if (activeAudioSource.current) activeAudioSource.current.stop();
     const buffer = await decodeAudioData(lastAudioBytes.current, audioContextRef.current, 24000, 1);
     const source = audioContextRef.current.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContextRef.current.destination);
-    source.onended = () => {
-      setIsAISpeaking(false);
-      startListening();
-    };
+    source.onended = () => { setIsAISpeaking(false); startListening(); };
     activeAudioSource.current = source;
     setIsAISpeaking(true);
     setIsPaused(false);
     source.start();
   };
 
-  const startListening = () => {
-    if (recognitionRef.current && !isAISpeaking) {
-      try { recognitionRef.current.start(); setIsUserListening(true); } catch (e) {}
-    }
-  };
-
-  const stopListening = () => {
-    if (recognitionRef.current) { recognitionRef.current.stop(); setIsUserListening(false); }
-  };
+  const startListening = () => { if (recognitionRef.current && !isAISpeaking) { try { recognitionRef.current.start(); setIsUserListening(true); } catch (e) {} } };
+  const stopListening = () => { if (recognitionRef.current) { recognitionRef.current.stop(); setIsUserListening(false); } };
 
   const handleInitiate = async (selected: SimPersonaV2) => {
-    setPersona(selected);
-    setSessionActive(true);
-    setIsProcessing(true);
-    setMessages([]);
-    setCurrentCaption("");
-    setReport(null);
-    setLastSuggestion("");
+    setPersona(selected); setSessionActive(true); setIsProcessing(true); setMessages([]); setCurrentCaption(""); setReport(null); setLastSuggestion("");
     try {
       const stream = streamAvatarSimulationV2(`PERSONA: ${selected}`, [], meetingContext);
       let firstQuestion = "";
@@ -149,8 +123,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
   const handleNextNode = async () => {
     if (isProcessing || !currentCaption.trim()) return;
-    stopListening();
-    setIsProcessing(true);
+    stopListening(); setIsProcessing(true);
     const userMsg: GPTMessage = { id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
@@ -158,14 +131,12 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       const stream = streamAvatarSimulationV2(currentCaption, messages, meetingContext);
       let nextContent = "";
       for await (const chunk of stream) nextContent += chunk;
-      
       let displayQuestion = nextContent;
       const suggestionMatch = nextContent.match(/\[SUGGESTION: (.*?)\]/);
       if (suggestionMatch) {
         setLastSuggestion(suggestionMatch[1]);
         displayQuestion = nextContent.replace(/\[SUGGESTION: .*?\]/, "").trim();
       }
-
       const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: displayQuestion, mode: 'standard' };
       setMessages([...updatedMessages, assistantMsg]);
       setCurrentCaption("");
@@ -174,13 +145,9 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   };
 
   const handleEndSession = async () => {
-    stopListening();
-    setIsProcessing(true);
-    setStatus("Generating Strategic Audit...");
+    stopListening(); setIsProcessing(true); setStatus("Generating Strategic Audit...");
     let finalHistory = [...messages];
-    if (currentCaption.trim()) {
-      finalHistory.push({ id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' });
-    }
+    if (currentCaption.trim()) finalHistory.push({ id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' });
     try {
       const reportJson = await evaluateAvatarSessionV2(finalHistory, meetingContext);
       setReport(reportJson);
@@ -193,60 +160,15 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     try {
       const { jsPDF } = (window as any).jspdf;
       const doc = new jsPDF();
-      let y = 20;
-      const margin = 20;
-
-      const addH = (t: string, size = 16) => {
-        if (y > 260) { doc.addPage(); y = 20; }
-        doc.setFont("helvetica", "bold"); doc.setFontSize(size);
-        doc.text(t, margin, y); y += size / 2 + 2;
-      };
-
+      let y = 20; const margin = 20;
+      const addH = (t: string, size = 16) => { if (y > 260) { doc.addPage(); y = 20; } doc.setFont("helvetica", "bold"); doc.setFontSize(size); doc.text(t, margin, y); y += size / 2 + 2; };
       const addP = (t: string, size = 10, color = [60, 60, 60]) => {
-        doc.setFont("helvetica", "normal"); doc.setFontSize(size);
-        doc.setTextColor(color[0], color[1], color[2]);
-        const split = doc.splitTextToSize(t, 170);
-        if (y + (split.length * (size / 2)) > 20) { doc.addPage(); y = 20; }
-        doc.text(split, margin, y);
-        y += (split.length * (size / 2)) + 4;
-        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(size); doc.setTextColor(color[0], color[1], color[2]);
+        const split = doc.splitTextToSize(t, 170); if (y + (split.length * (size / 2)) > 20) { doc.addPage(); y = 20; } doc.text(split, margin, y); y += (split.length * (size / 2)) + 4; doc.setTextColor(0, 0, 0);
       };
-
-      addH(`Avatar V2 performance Audit: ${persona}`);
-      addP(`Target Client: ${meetingContext.clientCompany}`);
-      addP(`Deal Readiness Score: ${report.deal_readiness_score}/10`);
-      addP(`Confidence Score: ${report.confidence_clarity_analysis.score}/10`);
-      
-      addH("Conversation Summary", 12);
-      addP("Main Themes: " + report.conversation_summary.main_themes.join(", "));
-      addH("Critical Inflection Points", 11);
-      report.conversation_summary.inflection_points.forEach(p => addP(`• ${p}`));
-
-      addH("Sentiment Trends & Emotional Shifts", 12);
-      addP(`General Trend: ${report.sentiment_analysis.trend.toUpperCase()}`);
-      addP(report.sentiment_analysis.narrative);
-      report.sentiment_analysis.emotional_shifts.forEach(s => addP(`- ${s.point}: ${s.shift}`, 9));
-
-      addH("Confidence & Clarity Narrative", 12);
-      addP(report.confidence_clarity_analysis.narrative);
-
-      addH("Objection Mapping", 12);
-      report.objection_mapping.forEach(o => {
-        addP(`Obj: "${o.objection}"`);
-        addP(`Quality: ${o.quality_score}/10 | Handled: ${o.handled_effectively ? 'Yes' : 'No'}`);
-        addP(`Coaching: ${o.coaching_note}`, 9);
-      });
-
-      addH("Risk & Trust Matrix", 12);
-      addP("Identified Risks: " + report.risk_signals.join(", "), 10, [225, 29, 72]);
-      addP("Identified Trust Signals: " + report.trust_signals.join(", "), 10, [16, 185, 129]);
-
-      addH("Missed Opportunities", 12);
-      report.missed_opportunities.forEach(o => addP(`• ${o}`, 10, [245, 158, 11]));
-
-      addH("Strategic Recommendations", 12);
-      report.coaching_recommendations.forEach(r => addP(`• ${r}`, 10, [79, 70, 229]));
-
+      addH(`Avatar V2 performance Audit: ${persona}`); addP(`Target Client: ${meetingContext.clientCompany}`); addP(`Deal Readiness Score: ${report.deal_readiness_score}/10`);
+      addH("Sentiment Trends & Emotional Shifts", 12); addP(`General Trend: ${report.sentiment_analysis.trend.toUpperCase()}`); addP(report.sentiment_analysis.narrative);
+      addH("Strategic Recommendations", 12); report.coaching_recommendations.forEach(r => addP(`• ${r}`, 10, [220, 38, 38]));
       doc.save(`V2-Simulation-Audit-${persona}-${meetingContext.clientCompany}.pdf`);
     } catch (e) { console.error(e); } finally { setIsExporting(false); }
   };
@@ -256,50 +178,17 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     return (
       <svg viewBox="0 0 200 240" className={`w-80 h-80 md:w-96 md:h-96 transition-all duration-700 ${isAISpeaking ? `drop-shadow-[0_0_60px_${config.color}88]` : 'drop-shadow-2xl'}`}>
         <defs>
-          <linearGradient id={`faceGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#f1f5f9" />
-          </linearGradient>
-          <linearGradient id={`suitGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e293b" />
-            <stop offset="100%" stopColor="#020617" />
-          </linearGradient>
+          <linearGradient id={`faceGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#ffffff" /><stop offset="100%" stopColor="#f1f5f9" /></linearGradient>
+          <linearGradient id={`suitGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#1e293b" /><stop offset="100%" stopColor="#020617" /></linearGradient>
         </defs>
-        <g className="animate-breathe">
-          <path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill={`url(#suitGrad-${type})`} />
-          <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.9" />
-          <path d="M97 170 L 100 220 L 103 170" fill={config.color} opacity="0.7" />
-        </g>
-        <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
-          <rect x="90" y="155" width="20" height="20" rx="10" fill="#f1f5f9" />
-          <path d="M100 20 C 60 20, 50 60, 50 100 C 50 150, 70 170, 100 170 C 130 170, 150 150, 150 100 C 150 60, 140 20, 100 20" fill={`url(#faceGrad-${type})`} stroke="#1e293b" strokeWidth="0.5" />
-          <circle cx="55" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} />
-          <circle cx="145" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} />
-          <g className="animate-blink">
-            <circle cx="78" cy="85" r="5" fill="#0f172a" />
-            <circle cx="122" cy="85" r="5" fill="#0f172a" />
-            <circle cx="78" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
-            <circle cx="122" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
-          </g>
-          <g transform="translate(100, 135)">
-            {isAISpeaking ? (
-              <path d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" fill="#0f172a" className="animate-lip-morph-v2" />
-            ) : (
-              <path d="M-12 0 Q 0 3, 12 0" stroke="#0f172a" strokeWidth="3" fill="none" strokeLinecap="round" className={isUserListening ? "animate-listen-mouth" : ""} />
-            )}
-          </g>
-        </g>
+        <g className="animate-breathe"><path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill={`url(#suitGrad-${type})`} /><path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.9" /><path d="M97 170 L 100 220 L 103 170" fill={config.color} opacity="0.7" /></g>
+        <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}><rect x="90" y="155" width="20" height="20" rx="10" fill="#f1f5f9" /><path d="M100 20 C 60 20, 50 60, 50 100 C 50 150, 70 170, 100 170 C 130 170, 150 150, 150 100 C 150 60, 140 20, 100 20" fill={`url(#faceGrad-${type})`} stroke="#1e293b" strokeWidth="0.5" /><circle cx="55" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} /><circle cx="145" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} /><g className="animate-blink"><circle cx="78" cy="85" r="5" fill="#0f172a" /><circle cx="122" cy="85" r="5" fill="#0f172a" /><circle cx="78" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} /><circle cx="122" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} /></g><g transform="translate(100, 135)">{isAISpeaking ? <path d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" fill="#0f172a" className="animate-lip-morph-v2" /> : <path d="M-12 0 Q 0 3, 12 0" stroke="#0f172a" strokeWidth="3" fill="none" strokeLinecap="round" className={isUserListening ? "animate-listen-mouth" : ""} />}</g></g>
         <style>{`
-          @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-          .animate-breathe { animation: breathe 5s ease-in-out infinite; }
-          @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
-          .animate-blink { transform-origin: center 85px; animation: blink 6s infinite; }
-          @keyframes lip-morph-v2 { 0%, 100% { d: path("M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0"); } 33% { d: path("M-10 0 Q 0 18, 10 0 Q 0 -5, -10 0"); } 66% { d: path("M-16 0 Q 0 8, 16 0 Q 0 -2, -16 0"); } }
-          .animate-lip-morph-v2 { animation: lip-morph-v2 0.12s linear infinite; }
-          @keyframes listen-tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(2deg); } }
-          .animate-listen-tilt { animation: listen-tilt 4s ease-in-out infinite; transform-origin: center bottom; }
-          @keyframes listen-mouth { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.15); } }
-          .animate-listen-mouth { animation: listen-mouth 0.6s ease-in-out infinite; transform-origin: center; }
+          @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } } .animate-breathe { animation: breathe 5s ease-in-out infinite; }
+          @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } } .animate-blink { transform-origin: center 85px; animation: blink 6s infinite; }
+          @keyframes lip-morph-v2 { 0%, 100% { d: path("M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0"); } 33% { d: path("M-10 0 Q 0 18, 10 0 Q 0 -5, -10 0"); } 66% { d: path("M-16 0 Q 0 8, 16 0 Q 0 -2, -16 0"); } } .animate-lip-morph-v2 { animation: lip-morph-v2 0.12s linear infinite; }
+          @keyframes listen-tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(2deg); } } .animate-listen-tilt { animation: listen-tilt 4s ease-in-out infinite; transform-origin: center bottom; }
+          @keyframes listen-mouth { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.15); } } .animate-listen-mouth { animation: listen-mouth 0.6s ease-in-out infinite; transform-origin: center; }
         `}</style>
       </svg>
     );
@@ -309,74 +198,18 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-5xl mx-auto px-12">
-           <div className="space-y-6">
-              <h2 className="text-7xl font-black tracking-tight bg-gradient-to-r from-white via-indigo-200 to-slate-400 bg-clip-text text-transparent">Simulation 2.0</h2>
-              <p className="text-slate-400 text-2xl font-medium leading-relaxed">Select a target persona to connect with a high-fidelity animated AI Human Bot.</p>
-           </div>
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-              {(Object.keys(PERSONA_CONFIG) as SimPersonaV2[]).map((p) => (
-                <PersonaCardV2 key={p} type={p} onClick={() => handleInitiate(p)} />
-              ))}
-           </div>
+           <div className="space-y-6"><h2 className="text-7xl font-black tracking-tight bg-gradient-to-r from-white via-red-200 to-slate-400 bg-clip-text text-transparent">Simulation 2.0</h2><p className="text-slate-400 text-2xl font-medium leading-relaxed">Select a target persona to connect with a high-fidelity animated AI Human Bot.</p></div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">{(Object.keys(PERSONA_CONFIG) as SimPersonaV2[]).map((p) => (<PersonaCardV2 key={p} type={p} onClick={() => handleInitiate(p)} />))}</div>
         </div>
       ) : (
         <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full py-16 px-12 gap-12 justify-center">
-             {/* Unified Focus Header */}
-             <div className="text-center space-y-4">
-                <span className="px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.4em] border border-white/10 bg-white/5" style={{ color: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}>
-                   {persona} PROTOCOL ONLINE
-                </span>
-                <h3 className="text-5xl font-black tracking-tight leading-tight">
-                   Presence: {meetingContext.clientNames || persona}
-                </h3>
-             </div>
-
-             {/* Main Visual Core */}
-             <div className="relative flex flex-col items-center">
-                <div className="relative z-20">
-                   {persona && <AnimatedBotV2 type={persona} />}
-                </div>
-                
-                {meetingContext.clonedVoiceBase64 && (
-                   <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span>
-                   </div>
-                )}
-             </div>
-
-             {/* Cinematic Narrative Display */}
-             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
-                <div className="flex items-center justify-between mb-2">
-                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">{persona} Strategic Inquiry</h5>
-                   <div className="flex gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/20"></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                   </div>
-                </div>
-                <p className="text-4xl font-black italic leading-[1.4] text-white tracking-tight">
-                   {messages[messages.length - 1]?.content || status || "Synchronizing Strategic Core..."}
-                </p>
-             </div>
-
-             {/* User Interaction Layer */}
+             <div className="text-center space-y-4"><span className="px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.4em] border border-white/10 bg-white/5" style={{ color: persona ? PERSONA_CONFIG[persona].color : '#dc2626' }}>{persona} PROTOCOL ONLINE</span><h3 className="text-5xl font-black tracking-tight leading-tight">Presence: {meetingContext.clientNames || persona}</h3></div>
+             <div className="relative flex flex-col items-center"><div className="relative z-20">{persona && <AnimatedBotV2 type={persona} />}</div>{meetingContext.clonedVoiceBase64 && (<div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg"><div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div><span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span></div>)}</div>
+             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700 text-left"><div className="flex items-center justify-between mb-2"><h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-red-400">{persona} Strategic Inquiry</h5><div className="flex gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-500/20"></div><div className="w-1.5 h-1.5 rounded-full bg-red-500/40"></div><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div></div></div><p className="text-4xl font-black italic leading-[1.4] text-white tracking-tight">{messages[messages.length - 1]?.content || status || "Synchronizing Strategic Core..."}</p></div>
              <div className="space-y-8">
-                <div className="relative group">
-                   <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/60 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-indigo-50 shadow-inner h-48 resize-none placeholder:text-slate-800 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || persona}...`} />
-                   <button onClick={() => startListening()} className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-8 h-8" /></button>
-                </div>
-
-                {lastSuggestion && (
-                  <div className="p-8 bg-indigo-600/10 border border-indigo-500/20 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500 text-center">
-                     <p className="text-sm font-bold text-indigo-300 italic">"Coach Directive: {lastSuggestion}"</p>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-6">
-                   <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Strategy</button>
-                   <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50">End Session & Audit</button>
-                </div>
+                <div className="relative group text-left"><textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900/60 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-red-500 transition-all font-bold italic text-red-50 shadow-inner h-48 resize-none placeholder:text-slate-800 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || persona}...`} /><button onClick={() => startListening()} className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-red-400 hover:bg-white/10'}`}><ICONS.Ear className="w-8 h-8" /></button></div>
+                {lastSuggestion && (<div className="p-8 bg-red-600/10 border border-red-500/20 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500 text-center"><p className="text-sm font-bold text-red-300 italic">"Coach Directive: {lastSuggestion}"</p></div>)}
+                <div className="flex items-center gap-6"><button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-red-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-red-700 disabled:opacity-50 transition-all active:scale-95">Commit Strategy</button><button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50">End Session & Audit</button></div>
              </div>
         </div>
       )}
@@ -387,21 +220,13 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 const PersonaCardV2: FC<{ type: SimPersonaV2; onClick: () => void | Promise<void> }> = ({ type, onClick }) => {
   const config = PERSONA_CONFIG[type];
   return (
-    <button onClick={onClick} className="group p-1 bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] hover:border-indigo-500 transition-all text-left flex flex-col h-full shadow-xl active:scale-95 duration-300">
+    <button onClick={onClick} className="group p-1 bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] hover:border-red-500 transition-all text-left flex flex-col h-full shadow-xl active:scale-95 duration-300">
       <div className="aspect-[4/3] w-full rounded-[2.5rem] overflow-hidden mb-6 relative bg-slate-800 flex items-center justify-center">
-         <div className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <ICONS.Brain className="w-12 h-12 text-slate-500 group-hover:text-white transition-colors" />
-         </div>
-         <div className="absolute bottom-4 left-4 flex gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }}></div>
-            <div className="w-2 h-2 rounded-full opacity-30" style={{ backgroundColor: config.color }}></div>
-         </div>
-         <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+         <div className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform"><ICONS.Brain className="w-12 h-12 text-slate-500 group-hover:text-white transition-colors" /></div>
+         <div className="absolute bottom-4 left-4 flex gap-2"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }}></div><div className="w-2 h-2 rounded-full opacity-30" style={{ backgroundColor: config.color }}></div></div>
+         <div className="absolute inset-0 bg-red-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
       </div>
-      <div className="px-8 pb-8">
-        <h4 className="text-3xl font-black mb-2 tracking-tight group-hover:text-indigo-400 transition-colors">{config.label}</h4>
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Connect Presence Node</p>
-      </div>
+      <div className="px-8 pb-8"><h4 className="text-3xl font-black mb-2 tracking-tight group-hover:text-red-400 transition-colors">{config.label}</h4><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Connect Presence Node</p></div>
     </button>
   );
 };

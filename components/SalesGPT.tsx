@@ -30,21 +30,14 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
       const fieldMarker = `"${field}": "`;
       const startIdx = json.indexOf(fieldMarker);
       if (startIdx === -1) return "";
-      
       const contentStart = startIdx + fieldMarker.length;
       let content = "";
-      
       for (let i = contentStart; i < json.length; i++) {
-        if (json[i] === '"' && (i === 0 || json[i-1] !== '\\')) {
-          break;
-        }
+        if (json[i] === '"' && (i === 0 || json[i-1] !== '\\')) break;
         content += json[i];
       }
-      
       return content.replace(/\\n/g, '\n').replace(/\\"/g, '"');
-    } catch (e) {
-      return "";
-    }
+    } catch (e) { return ""; }
   };
 
   const handleSend = async () => {
@@ -102,9 +95,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         let fullText = "";
         for await (const chunk of stream) {
           fullText += chunk;
-          setMessages(prev => prev.map(m => 
-            m.id === assistantId ? { ...m, content: fullText } : m
-          ));
+          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: fullText } : m));
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
       } else if (mode === 'cognitive') {
@@ -114,15 +105,11 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           fullBuffer += chunk;
           const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
           const partialShot = extractFieldFromPartialJson(fullBuffer, "cognitiveShot");
-          
           if (partialAnswer || partialShot) {
             let displayContent = "";
             if (partialShot) displayContent += `**Strategic Shot:** ${partialShot}\n\n`;
             displayContent += partialAnswer;
-            
-            setMessages(prev => prev.map(m => 
-              m.id === assistantId ? { ...m, content: displayContent } : m
-            ));
+            setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: displayContent } : m));
           }
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
@@ -131,25 +118,19 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         let fullText = "";
         for await (const chunk of stream) {
           fullText += chunk;
-          setMessages(prev => prev.map(m => 
-            m.id === assistantId ? { ...m, content: fullText } : m
-          ));
+          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: fullText } : m));
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
       }
     } catch (error) {
       console.error(error);
-      setMessages(prev => prev.map(m => 
-        m.id === assistantId ? { ...m, content: "Neural link severed.", isStreaming: false } : m
-      ));
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: "Neural link severed.", isStreaming: false } : m));
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const clearChat = () => {
-    setMessages([]);
-  };
+  const clearChat = () => setMessages([]);
 
   const downloadImage = (url: string, filename: string) => {
     const link = document.createElement('a');
@@ -162,17 +143,15 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)] relative bg-slate-50">
-      {/* Background Ambience (Spans Edge-to-Edge) */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed opacity-10 pointer-events-none"></div>
 
-      {/* Header (Spans Edge-to-Edge) */}
       <div className="w-full bg-white/80 backdrop-blur-xl border-b border-slate-200 z-20">
         <div className="max-w-5xl mx-auto px-12 py-6 flex items-center justify-between">
           <div className="flex items-center gap-5">
-            <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-xl">
+            <div className="p-3 bg-red-600 text-white rounded-2xl shadow-xl">
               <ICONS.Sparkles className="w-6 h-6" />
             </div>
-            <div>
+            <div className="text-left">
               <h3 className="text-2xl font-black text-slate-900 tracking-tight">Intelligence Studio</h3>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">Fast Answer Core</p>
             </div>
@@ -189,12 +168,11 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         </div>
       </div>
 
-      {/* Conversation Area (Centered with white margins) */}
       <div className="flex-1 overflow-y-auto no-scrollbar relative">
         <div className="max-w-5xl mx-auto px-12 py-12 space-y-12">
           {messages.length === 0 && (
             <div className="h-[50vh] flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
-               <div className="p-12 bg-white rounded-[4rem] shadow-2xl border border-slate-100 text-indigo-100 transform -rotate-2">
+               <div className="p-12 bg-white rounded-[4rem] shadow-2xl border border-slate-100 text-red-100 transform -rotate-2">
                   <ICONS.Brain className="w-24 h-24" />
                </div>
                <div className="space-y-3">
@@ -209,13 +187,13 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           {messages.map((msg) => (
             <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
               <div className="mb-2 px-6 flex items-center gap-3">
-                <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${msg.role === 'user' ? 'text-indigo-400' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${msg.role === 'user' ? 'text-red-400' : 'text-slate-400'}`}>
                    {msg.role === 'user' ? 'Strategic Architect' : 'Cognitive Core'}
                 </span>
-                {msg.isStreaming && <div className="flex gap-1"><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></div><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce delay-75"></div><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce delay-150"></div></div>}
+                {msg.isStreaming && <div className="flex gap-1"><div className="w-1 h-1 bg-red-500 rounded-full animate-bounce"></div><div className="w-1 h-1 bg-red-500 rounded-full animate-bounce delay-75"></div><div className="w-1 h-1 bg-red-500 rounded-full animate-bounce delay-150"></div></div>}
               </div>
               <div className={`
-                max-w-[100%] md:max-w-[85%] p-10 rounded-[3.5rem] text-2xl font-medium leading-[1.6] shadow-2xl
+                max-w-[100%] md:max-w-[85%] p-10 rounded-[3.5rem] text-2xl font-medium leading-[1.6] shadow-2xl text-left
                 ${msg.role === 'user' 
                   ? 'bg-slate-900 text-white rounded-tr-none border-4 border-slate-800' 
                   : 'bg-white text-slate-800 rounded-tl-none border border-slate-200'}
@@ -229,7 +207,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                        <button 
                          onClick={() => downloadImage(msg.imageUrl!, 'StrategicAsset')}
-                         className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-3"
+                         className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-red-600 hover:text-white transition-all flex items-center gap-3"
                        >
                          <ICONS.Efficiency className="w-5 h-5" /> Download Master
                        </button>
@@ -243,12 +221,11 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         </div>
       </div>
 
-      {/* Input Area (Centered with white margins) */}
       <div className="w-full bg-white/80 backdrop-blur-xl border-t border-slate-200 z-20">
         <div className="max-w-5xl mx-auto px-12 py-10 space-y-6">
           <div className="flex flex-wrap gap-4 justify-center">
-             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
-             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" />
+             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" color="red" />
+             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" color="red" />
              <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-4 h-4" />} label="Deep Study" color="amber" />
              <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-4 h-4" />} label="Visual Logic" color="emerald" />
           </div>
@@ -260,12 +237,12 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type your strategic inquiry..."
-              className="w-full bg-white border-4 border-slate-200 rounded-[3rem] px-12 py-10 text-3xl outline-none transition-all pr-48 font-bold italic shadow-2xl focus:border-indigo-500 placeholder:text-slate-200"
+              className="w-full bg-white border-4 border-slate-200 rounded-[3rem] px-12 py-10 text-3xl outline-none transition-all pr-48 font-bold italic shadow-2xl focus:border-red-500 placeholder:text-slate-200"
             />
             <button 
               onClick={handleSend}
               disabled={!input.trim() || isProcessing}
-              className={`absolute right-6 top-6 bottom-6 px-12 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl flex items-center gap-3 transition-all active:scale-95 ${isProcessing ? 'bg-slate-100 text-slate-300' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+              className={`absolute right-6 top-6 bottom-6 px-12 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl flex items-center gap-3 transition-all active:scale-95 ${isProcessing ? 'bg-slate-100 text-slate-300' : 'bg-red-600 text-white hover:bg-red-700'}`}
             >
               {isProcessing ? 'Synthesizing' : 'Synthesize'}
             </button>
@@ -287,9 +264,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
   );
 };
 
-const ToolToggle = ({ active, onClick, icon, label, color = 'indigo' }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; color?: string }) => {
+const ToolToggle = ({ active, onClick, icon, label, color = 'red' }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; color?: string }) => {
   const activeClasses = {
-    indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 scale-105',
+    red: 'bg-red-600 border-red-600 text-white shadow-2xl shadow-red-200 scale-105',
     emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 scale-105',
     amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 scale-105',
   }[color];
@@ -297,7 +274,7 @@ const ToolToggle = ({ active, onClick, icon, label, color = 'indigo' }: { active
   return (
     <button 
       onClick={onClick}
-      className={`flex items-center gap-3 px-8 py-3 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.1em] text-[10px] shadow-sm ${active ? activeClasses : 'bg-white border-slate-100 text-slate-400 hover:border-indigo-300 hover:text-slate-600'}`}
+      className={`flex items-center gap-3 px-8 py-3 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.1em] text-[10px] shadow-sm ${active ? activeClasses : 'bg-white border-slate-100 text-slate-400 hover:border-red-300 hover:text-slate-600'}`}
     >
       {icon}
       {label}

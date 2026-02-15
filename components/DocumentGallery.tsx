@@ -54,7 +54,6 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
       setIsDeleting(true);
       try {
         await Promise.all(selectedIds.map(id => deleteDocumentFromFirebase(id)));
-        // Clear selections after deletion
         selectedIds.forEach(id => onToggleSelect(id));
         onRefresh();
       } catch (err) {
@@ -72,7 +71,6 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
     if (success) {
       setIsEditing(false);
       onRefresh();
-      // Optional: Refresh the local view data or re-fetch from list
       const updatedDoc = { ...viewingDoc, content: editContent, updatedAt: Date.now() };
       setViewingDoc(updatedDoc);
     }
@@ -104,12 +102,12 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         <p className="text-sm text-rose-700 leading-relaxed">
           The cloud memory is locked. If you've updated your <strong>Firebase Rules</strong>, click the button below to establish the connection.
         </p>
-        <div className="bg-slate-900 text-indigo-300 p-4 rounded-xl font-mono text-[10px] shadow-inner overflow-x-auto">
+        <div className="bg-slate-900 text-red-300 p-4 rounded-xl font-mono text-[10px] shadow-inner overflow-x-auto">
           <code>{`match /cognitive_documents/{doc=**} { allow read, write: if true; }`}</code>
         </div>
         <button 
           onClick={onRefresh}
-          className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95"
+          className="flex items-center gap-2 px-8 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 shadow-xl shadow-red-100 transition-all active:scale-95"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9" />
@@ -126,7 +124,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         <div className="flex items-center gap-4">
           <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Cognitive Library History</h4>
           {selectedIds.length > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-indigo-600 text-white rounded-full animate-in slide-in-from-left-2">
+            <div className="flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded-full animate-in slide-in-from-left-2">
               <span className="text-[9px] font-black uppercase tracking-widest">{selectedIds.length} Selected</span>
             </div>
           )}
@@ -150,7 +148,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
               <button 
                 onClick={onSynthesize}
                 disabled={isAnalyzing}
-                className="px-6 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50"
+                className="px-6 py-2.5 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 shadow-xl shadow-red-100 transition-all active:scale-95 disabled:opacity-50"
               >
                 {isAnalyzing ? "Analyzing..." : `Synthesize ${selectedIds.length} Docs`}
               </button>
@@ -160,7 +158,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
           <div className="flex items-center gap-1 border border-slate-200 rounded-xl p-1 bg-slate-50">
             <button 
               onClick={() => documents.forEach(d => !selectedIds.includes(d.id) && onToggleSelect(d.id))}
-              className="px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:bg-white rounded-lg transition-all"
+              className="px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-red-600 hover:bg-white rounded-lg transition-all"
             >
               Select All
             </button>
@@ -199,18 +197,18 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                 onClick={() => onToggleSelect(doc.id)}
                 className={`
                   bg-white border p-5 rounded-[2rem] transition-all cursor-pointer group relative h-full flex flex-col
-                  ${isSelected ? 'border-indigo-600 ring-4 ring-indigo-50 shadow-2xl' : 'border-slate-100 hover:border-indigo-300'}
+                  ${isSelected ? 'border-red-600 ring-4 ring-red-50 shadow-2xl' : 'border-slate-100 hover:border-red-300'}
                 `}
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-2xl transition-colors ${isSelected ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-500'}`}>
+                  <div className={`p-3 rounded-2xl transition-colors ${isSelected ? 'bg-red-600 text-white' : 'bg-red-50 text-red-500'}`}>
                     <ICONS.Document className="w-4 h-4" />
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setViewingDoc(doc); }}
-                      className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                      className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                       title="View & Edit Content"
                     >
                       <ICONS.Search className="w-4 h-4" />
@@ -244,17 +242,16 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     <div className="flex flex-col gap-0.5">
                        <span className="text-[8px] font-black uppercase text-slate-400 px-3 py-1 bg-slate-50 rounded-lg">Stored In Cloud</span>
                        {doc.updatedAt && doc.updatedAt !== doc.timestamp && (
-                         <span className="text-[7px] font-bold text-indigo-400 px-1">Modified: {formatDate(doc.updatedAt)}</span>
+                         <span className="text-[7px] font-bold text-red-400 px-1">Modified: {formatDate(doc.updatedAt)}</span>
                        )}
                     </div>
                   )}
                   <span className="text-[8px] font-bold text-slate-300 uppercase">{doc.type.split('/')[1] || 'DOC'}</span>
                 </div>
 
-                {/* Selection Overlay Indicator */}
                 <div className={`
                   absolute top-5 right-5 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center
-                  ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-200 bg-white group-hover:border-indigo-400'}
+                  ${isSelected ? 'bg-red-600 border-red-600' : 'border-slate-200 bg-white group-hover:border-red-400'}
                 `}>
                   {isSelected && (
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -268,13 +265,12 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         </div>
       )}
 
-      {/* OCR Result Viewer & Editor Modal */}
       {viewingDoc && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[3rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-100">
+                <div className="p-3 bg-red-600 text-white rounded-2xl shadow-lg shadow-red-100">
                   <ICONS.Search className="w-5 h-5" />
                 </div>
                 <div>
@@ -288,7 +284,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     {viewingDoc.updatedAt && viewingDoc.updatedAt !== viewingDoc.timestamp && (
                       <>
                         <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
-                        <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">
+                        <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest">
                           Updated: {formatDate(viewingDoc.updatedAt)} at {formatTime(viewingDoc.updatedAt)}
                         </p>
                       </>
@@ -300,7 +296,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                 {!isEditing ? (
                   <button 
                     onClick={() => setIsEditing(true)}
-                    className="px-6 py-2.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm"
+                    className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all shadow-sm"
                   >
                     Edit Intelligence
                   </button>
@@ -315,7 +311,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     <button 
                       onClick={handleSaveEdit}
                       disabled={isSaving}
-                      className="px-8 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 flex items-center gap-2 disabled:opacity-50"
+                      className="px-8 py-2.5 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 shadow-xl shadow-red-100 flex items-center gap-2 disabled:opacity-50"
                     >
                       {isSaving ? (
                         <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -338,8 +334,8 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto p-12 custom-scrollbar">
-              <div className="mb-10 p-6 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
-                 <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest mb-2">Cognitive Source Meta</h4>
+              <div className="mb-10 p-6 bg-red-50/50 border border-red-100 rounded-2xl">
+                 <h4 className="text-[10px] font-black uppercase text-red-600 tracking-widest mb-2">Cognitive Source Meta</h4>
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div>
                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">File Name</p>
@@ -368,7 +364,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                      {isEditing ? 'Editing OCR Extracted Payload' : 'Extracted Intelligence Core'}
                    </h4>
                    {isEditing && (
-                     <span className="text-[9px] font-bold text-indigo-400 animate-pulse uppercase tracking-widest">Manual Override Active</span>
+                     <span className="text-[9px] font-bold text-red-400 animate-pulse uppercase tracking-widest">Manual Override Active</span>
                    )}
                  </div>
                  
@@ -376,7 +372,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                    <textarea
                      value={editContent}
                      onChange={(e) => setEditContent(e.target.value)}
-                     className="w-full h-[500px] bg-slate-50 border-2 border-indigo-100 rounded-[2rem] p-10 font-mono text-sm leading-relaxed text-slate-700 shadow-inner focus:border-indigo-500 outline-none transition-all resize-none"
+                     className="w-full h-[500px] bg-slate-50 border-2 border-red-100 rounded-[2rem] p-10 font-mono text-sm leading-relaxed text-slate-700 shadow-inner focus:border-red-500 outline-none transition-all resize-none"
                      placeholder="Edit document intelligence content here..."
                    />
                  ) : (

@@ -254,7 +254,7 @@ OPERATIONAL CONSTRAINTS:
       <div className="flex justify-end">
         <button 
           onClick={() => setShowHelp(!showHelp)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${showHelp ? 'bg-indigo-600 text-white border-indigo-700 shadow-lg' : 'bg-white text-slate-400 border-slate-200'}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${showHelp ? 'bg-red-600 text-white border-red-700 shadow-lg' : 'bg-white text-slate-400 border-slate-200'}`}
         >
           <ICONS.Sparkles className="w-3.5 h-3.5" />
           {showHelp ? "Hide Intelligence Guidance" : "Show Intelligence Guidance"}
@@ -263,7 +263,7 @@ OPERATIONAL CONSTRAINTS:
 
       <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl border border-slate-200 overflow-hidden relative">
         <div className="flex items-center gap-3 mb-10">
-          <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-lg"><ICONS.Document /></div>
+          <div className="p-3 bg-red-600 text-white rounded-2xl shadow-lg"><ICONS.Document /></div>
           <div>
             <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Meeting Intel Configuration</h3>
             <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Define the strategic landscape</p>
@@ -271,40 +271,40 @@ OPERATIONAL CONSTRAINTS:
         </div>
 
         {showHelp && (
-          <div className="mb-10 p-6 bg-indigo-50/50 border border-indigo-100 rounded-[2rem] animate-in slide-in-from-top-4">
+          <div className="mb-10 p-6 bg-red-50/50 border border-red-100 rounded-[2rem] animate-in slide-in-from-top-4">
              <div className="flex items-center gap-3 mb-3">
-                <ICONS.Research className="text-indigo-600 w-4 h-4" />
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-700">Strategic Orientation Guide</h4>
+                <ICONS.Research className="text-red-600 w-4 h-4" />
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-red-700">Strategic Orientation Guide</h4>
              </div>
-             <p className="text-xs text-indigo-900 font-medium leading-relaxed">
+             <p className="text-xs text-red-900 font-medium leading-relaxed">
                Accurate configuration allows the AI to prioritize "Winning Arguments" specifically tailored to your role, the client's industry, and the specific phase of the sales cycle.
              </p>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-inner relative overflow-hidden h-full">
+          <div className="p-8 bg-red-50 border border-red-100 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-inner relative overflow-hidden h-full">
              {isExtracting && (
-               <div className="absolute inset-0 bg-indigo-600/5 backdrop-blur-[2px] flex items-center justify-center z-10 animate-in fade-in">
-                 <div className="flex items-center gap-3 px-6 py-3 bg-white border border-indigo-100 rounded-full shadow-xl">
-                   <div className="w-4 h-4 border-2 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                   <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest animate-pulse">Neural Extraction Active...</span>
+               <div className="absolute inset-0 bg-red-600/5 backdrop-blur-[2px] flex items-center justify-center z-10 animate-in fade-in">
+                 <div className="flex items-center gap-3 px-6 py-3 bg-white border border-red-100 rounded-full shadow-xl">
+                   <div className="w-4 h-4 border-2 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
+                   <span className="text-[10px] font-black uppercase text-red-600 tracking-widest animate-pulse">Neural Extraction Active...</span>
                  </div>
                </div>
              )}
              
              <div className="shrink-0 flex flex-col items-center gap-2">
-                <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg">
+                <div className="p-4 bg-red-600 text-white rounded-2xl shadow-lg">
                    <ICONS.Shield />
                 </div>
-                <span className="text-[8px] font-black uppercase text-indigo-500 tracking-widest">Neural Anchor</span>
+                <span className="text-[8px] font-black uppercase text-red-500 tracking-widest">Neural Anchor</span>
              </div>
              <div className="flex-1 space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 ml-1">Know Your Customer (KYC) Document</label>
                 <select 
                   value={context.kycDocId || ""} 
                   onChange={(e) => handleKycChange(e.target.value)}
-                  className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all shadow-sm"
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 outline-none focus:border-red-500 transition-all shadow-sm"
                 >
                   <option value="">Select behavior grounding source...</option>
                   {documents.map(d => (
@@ -317,14 +317,14 @@ OPERATIONAL CONSTRAINTS:
 
           <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-2xl relative overflow-hidden h-full text-white">
              {isAnalyzingVoice && (
-                <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-red-600/10 backdrop-blur-sm flex items-center justify-center z-10">
                    <div className="flex flex-col items-center gap-3">
                       <div className="flex gap-1.5 items-end h-8">
                          {[...Array(6)].map((_, i) => (
-                           <div key={i} className="w-1 bg-indigo-500 rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s`, height: `${40 + Math.random() * 60}%` }}></div>
+                           <div key={i} className="w-1 bg-red-500 rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s`, height: `${40 + Math.random() * 60}%` }}></div>
                          ))}
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 animate-pulse">Fingerprinting Voice Signature...</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-red-400 animate-pulse">Fingerprinting Voice Signature...</span>
                    </div>
                 </div>
              )}
@@ -333,7 +333,7 @@ OPERATIONAL CONSTRAINTS:
                 <div className={`p-4 rounded-2xl shadow-lg transition-colors ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
                    <ICONS.Speaker />
                 </div>
-                <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Voice Identity Lab</span>
+                <span className="text-[8px] font-black uppercase text-red-400 tracking-widest">Voice Identity Lab</span>
              </div>
 
              <div className="flex-1 space-y-3">
@@ -358,7 +358,7 @@ OPERATIONAL CONSTRAINTS:
                 </div>
                 <div 
                    onClick={() => voiceInputRef.current?.click()}
-                   className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl px-6 py-4 cursor-pointer transition-all flex items-center gap-4 group"
+                   className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-red-500 rounded-2xl px-6 py-4 cursor-pointer transition-all flex items-center gap-4 group"
                 >
                    <input 
                       type="file" 
@@ -367,7 +367,7 @@ OPERATIONAL CONSTRAINTS:
                       accept=".mp3,.wav,.m4a" 
                       onChange={handleVoiceUpload} 
                    />
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-indigo-400 group-hover:scale-110'}`}>
+                   <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-red-400 group-hover:scale-110'}`}>
                       <ICONS.Play className="w-3.5 h-3.5" />
                    </div>
                    <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">
@@ -376,11 +376,11 @@ OPERATIONAL CONSTRAINTS:
                 </div>
                 {context.vocalPersonaAnalysis && (
                    <div className="group/sig relative">
-                      <p className="text-[9px] text-indigo-300/80 font-medium italic border-l-2 border-indigo-500/30 pl-3 leading-tight line-clamp-2 cursor-help">
+                      <p className="text-[9px] text-red-300/80 font-medium italic border-l-2 border-red-500/30 pl-3 leading-tight line-clamp-2 cursor-help">
                         Analyzed Signature: {context.vocalPersonaAnalysis}
                       </p>
                       <div className="absolute left-0 bottom-full mb-2 w-full p-4 bg-slate-800 border border-slate-700 rounded-xl opacity-0 group-hover/sig:opacity-100 transition-opacity z-50 shadow-2xl pointer-events-none max-h-40 overflow-y-auto no-scrollbar">
-                         <p className="text-[10px] text-indigo-100 leading-relaxed italic">{context.vocalPersonaAnalysis}</p>
+                         <p className="text-[10px] text-red-100 leading-relaxed italic">{context.vocalPersonaAnalysis}</p>
                       </div>
                    </div>
                 )}
@@ -391,7 +391,7 @@ OPERATIONAL CONSTRAINTS:
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-slate-100 pb-12 mb-12">
           <div className="space-y-6">
             <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-               <div className="text-indigo-500"><ICONS.Trophy /></div>
+               <div className="text-red-500"><ICONS.Trophy /></div>
                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Seller Side</h4>
             </div>
             <div className="space-y-5">
@@ -448,11 +448,11 @@ OPERATIONAL CONSTRAINTS:
             <button
               key={p.type}
               onClick={() => handleChange('persona', p.type)}
-              className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group flex flex-col h-full ${context.persona === p.type ? 'bg-indigo-600 border-indigo-600 shadow-2xl scale-[1.02]' : 'bg-white border-slate-100 hover:border-indigo-300 shadow-sm'}`}
+              className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group flex flex-col h-full ${context.persona === p.type ? 'bg-red-600 border-red-600 shadow-2xl scale-[1.02]' : 'bg-white border-slate-100 hover:border-red-300 shadow-sm'}`}
             >
-              <div className={`p-4 rounded-2xl mb-6 inline-block ${context.persona === p.type ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500'}`}>{p.icon}</div>
+              <div className={`p-4 rounded-2xl mb-6 inline-block ${context.persona === p.type ? 'bg-white/20 text-white' : 'bg-red-50 text-red-500'}`}>{p.icon}</div>
               <p className={`font-black text-base uppercase tracking-widest mb-3 ${context.persona === p.type ? 'text-white' : 'text-slate-800'}`}>{p.label}</p>
-              <p className={`text-[11px] leading-relaxed font-medium mb-6 ${context.persona === p.type ? 'text-indigo-100' : 'text-slate-500'}`}>{p.desc}</p>
+              <p className={`text-[11px] leading-relaxed font-medium mb-6 ${context.persona === p.type ? 'text-red-100' : 'text-slate-500'}`}>{p.desc}</p>
             </button>
           ))}
         </div>
@@ -467,7 +467,7 @@ OPERATIONAL CONSTRAINTS:
             <button
               key={style}
               onClick={() => toggleStyle(style)}
-              className={`px-4 py-4 rounded-[1.25rem] text-[9px] font-black uppercase tracking-widest border transition-all leading-tight text-center ${context.answerStyles.includes(style) ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-indigo-200 shadow-sm'}`}
+              className={`px-4 py-4 rounded-[1.25rem] text-[9px] font-black uppercase tracking-widest border transition-all leading-tight text-center ${context.answerStyles.includes(style) ? 'bg-red-600 text-white border-red-600 shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-red-200 shadow-sm'}`}
             >
               {style}
             </button>
@@ -481,7 +481,7 @@ OPERATIONAL CONSTRAINTS:
           <textarea
             value={context.executiveSnapshot}
             onChange={e => handleChange('executiveSnapshot', e.target.value)}
-            className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-8 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all h-40 resize-none shadow-inner leading-relaxed"
+            className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-8 text-sm focus:border-red-500 focus:bg-white outline-none transition-all h-40 resize-none shadow-inner leading-relaxed"
             placeholder="e.g. Q3 renewal discussion..."
           />
         </div>
@@ -489,7 +489,7 @@ OPERATIONAL CONSTRAINTS:
         <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 space-y-6 flex flex-col h-full">
            <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                 <ICONS.Security className="text-rose-500" /> Potential Objections
+                 Potential Objections
               </h3>
               <span className="text-[8px] font-black uppercase text-rose-500 bg-rose-50 px-2 py-1 rounded-md border border-rose-100">Inferred Resistance Nodes</span>
            </div>
@@ -500,7 +500,7 @@ OPERATIONAL CONSTRAINTS:
               onChange={e => setObjectionInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addObjection()}
               placeholder="e.g. Price is too high, Legacy integration..."
-              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-3 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-inner"
+              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-3 text-sm focus:border-red-500 focus:bg-white outline-none transition-all shadow-inner"
             />
             <button onClick={addObjection} className="p-3 bg-rose-600 text-white rounded-2xl hover:bg-rose-700 shadow-xl transition-all"><ICONS.X className="rotate-45" /></button>
           </div>
@@ -519,14 +519,14 @@ OPERATIONAL CONSTRAINTS:
 
       <div className="bg-slate-900 rounded-[3rem] p-12 shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-10 opacity-10 transition-opacity">
-          <ICONS.Brain className="text-indigo-400 w-24 h-24" />
+          <ICONS.Brain className="text-red-400 w-24 h-24" />
         </div>
         <div className="relative z-10 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-indigo-400 text-[11px] font-black uppercase tracking-[0.4em]">Neural Core System Prompt</h3>
+            <h3 className="text-red-400 text-[11px] font-black uppercase tracking-[0.4em]">Neural Core System Prompt</h3>
             <button 
               onClick={savePrompt}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 ${isSaved ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 ${isSaved ? 'bg-emerald-500 text-white' : 'bg-red-600 text-white hover:bg-red-700'}`}
             >
               {isSaved ? 'Prompt Retained' : 'Update & Save Prompt'}
             </button>
@@ -534,7 +534,7 @@ OPERATIONAL CONSTRAINTS:
           <textarea
             value={localPrompt}
             onChange={e => handlePromptUpdate(e.target.value)}
-            className="w-full bg-slate-800/40 text-slate-200 border-2 border-slate-700/50 rounded-[2.5rem] p-10 text-sm focus:border-indigo-500 outline-none transition-all h-40 font-mono leading-relaxed shadow-inner"
+            className="w-full bg-slate-800/40 text-slate-200 border-2 border-slate-700/50 rounded-[2.5rem] p-10 text-sm focus:border-red-500 outline-none transition-all h-40 font-mono leading-relaxed shadow-inner"
             placeholder="AI system prompt..."
           />
         </div>
@@ -559,7 +559,7 @@ const Input = ({ label, value, onChange, placeholder, isLarge }: { label: string
       type="text"
       value={value}
       onChange={e => onChange(e.target.value)}
-      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-300 shadow-inner ${isLarge ? 'text-lg py-6' : ''}`}
+      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm focus:border-red-500 focus:bg-white outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-300 shadow-inner ${isLarge ? 'text-lg py-6' : ''}`}
       placeholder={placeholder}
     />
   </div>
