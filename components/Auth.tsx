@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { loginUser, registerUser } from '../services/firebaseService';
+import { loginUser } from '../services/firebaseService';
 import { ICONS } from '../constants';
 
 export const Auth: React.FC = () => {
@@ -35,6 +35,8 @@ export const Auth: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin) return; // Prevent any submission attempt for registration
+
     setError(null);
 
     if (password.length < 6) {
@@ -45,11 +47,7 @@ export const Auth: React.FC = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        await loginUser(email, password);
-      } else {
-        await registerUser(email, password);
-      }
+      await loginUser(email, password);
     } catch (err: any) {
       console.error("Auth Error:", err);
       setError(mapAuthError(err.code));
@@ -91,32 +89,32 @@ export const Auth: React.FC = () => {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Identifier</label>
-              <input 
-                type="email" 
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800"
-                placeholder="architect@spikedai.io"
-              />
-            </div>
+          {isLogin ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Identifier</label>
+                <input 
+                  type="email" 
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800"
+                  placeholder="architect@spikedai.io"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Secure Protocol Key</label>
-              <input 
-                type="password" 
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800"
-                placeholder="••••••••"
-              />
-              <div className="flex justify-between items-center px-1">
-                <p className="text-[9px] text-slate-400 italic">Minimum 6 characters required.</p>
-                {isLogin && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Secure Protocol Key</label>
+                <input 
+                  type="password" 
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800"
+                  placeholder="••••••••"
+                />
+                <div className="flex justify-between items-center px-1">
+                  <p className="text-[9px] text-slate-400 italic">Minimum 6 characters required.</p>
                   <a 
                     href={SUPPORT_LINK} 
                     target="_blank" 
@@ -125,17 +123,15 @@ export const Auth: React.FC = () => {
                   >
                     Forgot Key?
                   </a>
-                )}
-              </div>
-            </div>
-
-            {error && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-[10px] font-bold text-center">
-                  {error}
                 </div>
-                
-                {isLogin && (
+              </div>
+
+              {error && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-[10px] font-bold text-center">
+                    {error}
+                  </div>
+                  
                   <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl text-center space-y-3">
                     <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-tight">
                       Unable to log in? Contact Spiked AI support team
@@ -150,22 +146,56 @@ export const Auth: React.FC = () => {
                       Contact Support Team
                     </a>
                   </div>
-                )}
-              </div>
-            )}
-
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                isLogin ? 'Initiate Link' : 'Register Profile'
+                </div>
               )}
-            </button>
-          </form>
+
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  'Initiate Link'
+                )}
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-8 py-4 animate-in fade-in zoom-in-95 duration-500">
+               <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2.5rem] text-center space-y-6">
+                  <div className="flex justify-center">
+                    <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl">
+                      <ICONS.Shield className="w-8 h-8" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight">Provisioning Restricted</h3>
+                    <p className="text-xs text-indigo-700 font-bold uppercase tracking-widest">Protocol: Elite Managed Access</p>
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                    Direct profile instantiation is currently restricted to verified enterprise partners. 
+                    To provision your cognitive intelligence core, please coordinate with our <strong>Sales Engineering team</strong> for tailored onboarding.
+                  </p>
+                  <div className="pt-4">
+                    <a 
+                      href={SUPPORT_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
+                    >
+                      <ICONS.Sparkles className="w-4 h-4" />
+                      Coordinate with Sales Team
+                    </a>
+                  </div>
+               </div>
+
+               <div className="flex items-center gap-3 justify-center text-slate-400">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                  <span className="text-[9px] font-black uppercase tracking-widest">Ensuring Grounded Data Integrity</span>
+               </div>
+            </div>
+          )}
           
           {isLogin && !error && (
             <div className="mt-8 pt-6 border-t border-slate-50 text-center">
