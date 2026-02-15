@@ -72,23 +72,30 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
-  const prompt = `Act as an Elite Sales Operations Analyst. Analyze the following document and extract key meeting configuration data. 
-  Determine who the Seller (Vendor) is and who the Client (Prospect) is. 
-  Identify 5-8 highly relevant strategic semantic keywords for the deal.
+  const prompt = `Act as an Elite Sales Operations Analyst and Psychological Profiler. 
+  Your goal is to perform high-fidelity strategic extraction from the provided document to prime a sales intelligence core.
 
   DOCUMENT CONTENT:
   ${content}
 
-  Extract the following fields into JSON:
-  - sellerCompany: The organization name of the vendor/seller.
-  - sellerNames: Specific individuals representing the vendor.
-  - clientCompany: The organization name of the prospect.
-  - clientNames: Specific stakeholders or participants mentioned from the client side.
-  - targetProducts: Products or services the customer is interested in.
-  - productDomain: The industry or technical domain (e.g., Fintech, Cybersecurity).
-  - meetingFocus: The primary objective or focus of the upcoming interaction.
-  - executiveSnapshot: A brief summary of the opportunity.
-  - strategicKeywords: An array of 5-8 strings representing key project names, technologies, or concepts mentioned.
+  EXTRACTION DIRECTIVES:
+  1. STAKEHOLDER MAPPING: Identify names and roles of key power brokers, decision-makers, and technical gatekeepers on the client side.
+  2. POTENTIAL OBJECTIONS: Analyze the text for "Resistance Nodes". These are inferred tensions, legacy constraints, budget skepticism, or information gaps mentioned or implied.
+  3. STRATEGIC CONTEXT: Identify the seller organization, client organization, and primary products of interest.
+  4. DEAL SEMANTICS: Extract 5-8 highly relevant strategic keywords or project identifiers.
+  5. MISSION BRIEF: Provide a concise executive snapshot of the deal's current state.
+
+  REQUIRED JSON FIELDS:
+  - sellerCompany: string
+  - sellerNames: string
+  - clientCompany: string
+  - clientNames: string (Specifically Power Brokers, Titles, and Stakeholders)
+  - targetProducts: string
+  - productDomain: string
+  - meetingFocus: string
+  - executiveSnapshot: string
+  - strategicKeywords: string[]
+  - potentialObjections: string[] (Inferred Resistance Nodes and psychological barriers)
 
   Return ONLY the JSON object.`;
 
@@ -104,20 +111,18 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
             sellerCompany: { type: Type.STRING },
             sellerNames: { type: Type.STRING },
             clientCompany: { type: Type.STRING },
-            clientNames: { type: Type.STRING },
+            clientNames: { type: Type.STRING, description: "Power brokers, stakeholders, and their titles found in the doc." },
             targetProducts: { type: Type.STRING },
             productDomain: { type: Type.STRING },
             meetingFocus: { type: Type.STRING },
             executiveSnapshot: { type: Type.STRING },
-            strategicKeywords: { 
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
+            strategicKeywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+            potentialObjections: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Specific risks, skepticism, or barriers identified in document sentiment." }
           },
           required: [
             "sellerCompany", "sellerNames", "clientCompany", "clientNames", 
             "targetProducts", "productDomain", "meetingFocus", "executiveSnapshot", 
-            "strategicKeywords"
+            "strategicKeywords", "potentialObjections"
           ]
         }
       }
@@ -135,17 +140,16 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Act as an Expert Neural Audio Engineer and Behavioral Psychologist.
-  Listen to the attached audio sample and create an EXHAUSTIVE Vocal Persona Signature for voice cloning/simulation.
+  Analyze this audio sample to create a "Vocal Identity Fingerprint".
   
-  ANALYSIS REQUIREMENTS:
-  - Pitch: (e.g., Deep baritone, Mid-range tenor, High-energy soprano)
-  - Cadence: (e.g., Staccato, rhythmic, slow and deliberate, rapid-fire)
-  - Emotional Timbre: (e.g., Skeptical, authoritative, warm, cautious, direct)
-  - Regional/Social Markers: (e.g., Mid-Atlantic executive, Silicon Valley tech-casual, UK-formal)
-  - Breathing/Pause Patterns: (e.g., Frequent analytical pauses, continuous flow)
+  DETERMINE:
+  - Pitch & Frequency (e.g., resonant baritone, sharp tenor)
+  - Cadence & Rhythm (e.g., clipped professional, fast-talking startup, slow deliberate executive)
+  - Emotional Baseline (e.g., skeptical, warm/empathetic, authoritative/dominant)
+  - Breathing & Emphasis patterns.
 
-  Provide a 2-paragraph summary that can be used as a "Mimicry Directive" for an AI agent. 
-  Output ONLY the text description.`;
+  Provide a 2-paragraph "Mimicry Directive" that describes how an actor or AI should replicate this specific human presence. 
+  Output ONLY the text.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -157,12 +161,14 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
         ]
       }
     });
-    return response.text || "Direct, professional, and analytical vocal archetype.";
+    return response.text || "Direct, professional business vocal profile.";
   } catch (error) {
     console.error("Vocal analysis failed:", error);
     return "Standard professional business vocal signature.";
   }
 }
+
+// ... rest of the file remains unchanged ...
 
 // Unified High-Depth Avatar Evaluation
 async function performHighDepthEvaluation(

@@ -10,24 +10,26 @@ export const Auth: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const SUPPORT_LINK = "https://www.spiked.ai/contact-sales";
+
   const mapAuthError = (code: string) => {
     switch (code) {
       case 'auth/invalid-credential':
-        return 'Invalid email or password. Please try again.';
+        return 'Invalid email or password. Please verify your credentials.';
       case 'auth/user-not-found':
-        return 'No account found with this email.';
+        return 'No account found with this email identifier.';
       case 'auth/wrong-password':
-        return 'Incorrect password.';
+        return 'The password entered is incorrect.';
       case 'auth/weak-password':
-        return 'Password is too weak. It must be at least 6 characters.';
+        return 'Password protocol requires at least 6 characters.';
       case 'auth/email-already-in-use':
-        return 'An account already exists with this email.';
+        return 'A profile already exists with this email.';
       case 'auth/invalid-email':
-        return 'Please enter a valid email address.';
+        return 'The provided email identifier is invalid.';
       case 'auth/too-many-requests':
-        return 'Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.';
+        return 'Access temporarily restricted due to multiple failed attempts.';
       default:
-        return 'Authentication failed. Please try again.';
+        return 'Neural link failed. Please verify your connection and credentials.';
     }
   };
 
@@ -35,7 +37,6 @@ export const Auth: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    // Client-side validation
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
       return;
@@ -98,7 +99,7 @@ export const Auth: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold"
+                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800"
                 placeholder="architect@spikedai.io"
               />
             </div>
@@ -110,15 +111,46 @@ export const Auth: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold"
+                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800"
                 placeholder="••••••••"
               />
-              <p className="text-[9px] text-slate-400 px-1 italic">Minimum 6 characters required.</p>
+              <div className="flex justify-between items-center px-1">
+                <p className="text-[9px] text-slate-400 italic">Minimum 6 characters required.</p>
+                {isLogin && (
+                  <a 
+                    href={SUPPORT_LINK} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[9px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-700 transition-colors"
+                  >
+                    Forgot Key?
+                  </a>
+                )}
+              </div>
             </div>
 
             {error && (
-              <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-[10px] font-bold text-center animate-in fade-in">
-                {error}
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-[10px] font-bold text-center">
+                  {error}
+                </div>
+                
+                {isLogin && (
+                  <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl text-center space-y-3">
+                    <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-tight">
+                      Unable to log in? Contact Spiked AI support team
+                    </p>
+                    <a 
+                      href={SUPPORT_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-indigo-200 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
+                    >
+                      <ICONS.Search className="w-3 h-3" />
+                      Contact Support Team
+                    </a>
+                  </div>
+                )}
               </div>
             )}
 
@@ -134,6 +166,20 @@ export const Auth: React.FC = () => {
               )}
             </button>
           </form>
+          
+          {isLogin && !error && (
+            <div className="mt-8 pt-6 border-t border-slate-50 text-center">
+               <p className="text-[10px] text-slate-400 font-bold mb-3">NEED ASSISTANCE?</p>
+               <a 
+                 href={SUPPORT_LINK}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-indigo-600 transition-colors"
+               >
+                 Contact Spiked AI Support
+               </a>
+            </div>
+          )}
         </div>
 
         <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] pt-4">

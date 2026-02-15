@@ -78,6 +78,7 @@ const App: React.FC = () => {
     answerStyles: ALL_ANSWER_STYLES,
     executiveSnapshot: "",
     strategicKeywords: [],
+    potentialObjections: [],
     baseSystemPrompt: "",
     kycDocId: ""
   });

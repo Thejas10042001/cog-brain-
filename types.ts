@@ -173,16 +173,16 @@ export interface MeetingContext {
   answerStyles: string[];
   executiveSnapshot: string;
   strategicKeywords: string[];
+  potentialObjections: string[];
   baseSystemPrompt: string;
   thinkingLevel: ThinkingLevel;
   temperature: number;
   kycDocId?: string;
-  // New Voice Cloning Fields
   clonedVoiceBase64?: string;
+  clonedVoiceMimeType?: string;
   vocalPersonaAnalysis?: string;
 }
 
-// Comprehensive Simulation Report Structure
 export interface ComprehensiveAvatarReport {
   persona_used: string;
   conversation_summary: {
@@ -216,37 +216,35 @@ export interface ComprehensiveAvatarReport {
   coaching_recommendations: string[];
 }
 
-// Assessment Lab Types
 export type QuestionType = 'mcq' | 'short' | 'long' | 'mic' | 'video';
 
 export interface AssessmentQuestion {
   id: string;
   type: QuestionType;
   text: string;
-  options?: string[]; // Only for MCQ
+  options?: string[];
   correctAnswer: string;
   explanation: string;
-  citation?: Citation; // Grounded evidence for the answer
+  citation?: Citation;
 }
 
 export interface AssessmentEvaluation {
   score: number;
   feedback: string;
   isCorrect: boolean;
-  toneResult?: string; // Specific for mic/video
-  bodyLanguageAdvice?: string; // Specific for video
-  correctionSuggestions: string[]; // Specific points to fix
-  improvementPoints: string[]; // How to improve further
+  toneResult?: string;
+  bodyLanguageAdvice?: string;
+  correctionSuggestions: string[];
+  improvementPoints: string[];
 }
 
 export interface AssessmentResult {
   questionId: string;
   userAnswer: string;
   evaluation: AssessmentEvaluation;
-  timeSpent: number; // Seconds spent on this specific question
+  timeSpent: number;
 }
 
-// Sales GPT Types
 export type GPTToolMode = 'standard' | 'pineapple' | 'deep-study' | 'cognitive';
 
 export interface GPTMessage {
@@ -270,7 +268,6 @@ export interface GroomingEvaluation {
   correctionExplanation: string;
 }
 
-// Avatar Simulation 2.0 Types
 export type SimPersonaV2 = 'CIO' | 'CFO' | 'IT_DIRECTOR';
 
 export type StagedSimStage = 'Ice Breakers' | 'About Business' | 'Pricing' | 'Technical' | 'Legal' | 'Closing';

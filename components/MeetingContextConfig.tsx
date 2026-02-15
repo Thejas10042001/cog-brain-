@@ -6,7 +6,7 @@ import { extractMetadataFromDocument, analyzeVocalPersona } from '../services/ge
 
 interface MeetingContextConfigProps {
   context: MeetingContext;
-  onContextChange: (updated: MeetingContext) => void;
+  onContextChange: (context: MeetingContext) => void;
   documents?: StoredDocument[];
 }
 
@@ -16,28 +16,28 @@ const PERSONAS: { type: CustomerPersonaType; label: string; desc: string; icon: 
     label: 'Balanced', 
     desc: 'Versatile profile for general business users in B2B settings', 
     icon: <ICONS.Document />,
-    strategicGuidance: "Best for multi-stakeholder initial discovery. AI balances operational utility with basic business value."
+    strategicGuidance: "Adopt a consultative 'Trusted Advisor' stance. Balance operational ease-of-use with tangible business outcomes. Focus on lowering the barrier to adoption while proving mid-term value."
   },
   { 
     type: 'Technical', 
     label: 'Technical', 
     desc: 'Deep technical, jargon-friendly (CTO, VP Engineering, Tech Lead)', 
     icon: <ICONS.Brain />,
-    strategicGuidance: "AI shifts into 'Verification' mode. Focuses on architecture, APIs, security, and scalability. Skeptical of non-technical claims."
+    strategicGuidance: "Engage in 'Verification' mode. Prioritize technical architectural integrity, API security protocols, data residency, and scalability benchmarks. Challenge assumptions with logic and demands for documentation."
   },
   { 
     type: 'Financial', 
     label: 'Financial', 
     desc: 'ROI-driven, cost-benefit analysis (CFO, Financial Controller)', 
     icon: <ICONS.ROI />,
-    strategicGuidance: "AI shifts into 'Efficiency' mode. Prioritizes ROI, TCO, payback periods, and budgetary alignment. Requires hard data proof."
+    strategicGuidance: "Execute in 'Fiscal Optimization' mode. Focus exclusively on EBITDA impact, Total Cost of Ownership (TCO) vs ROI, payback periods, and capital allocation efficiency. Treat software as a financial instrument."
   },
   { 
     type: 'Business Executives', 
     label: 'Executives', 
     desc: 'Strategic impact, operational clarity (CEO, Founder, MD)', 
     icon: <ICONS.Trophy />,
-    strategicGuidance: "AI shifts into 'Growth' mode. Focuses on market positioning, competitive displacement, and top-line strategic impact."
+    strategicGuidance: "Operate in 'Strategic Growth' mode. Prioritize market share displacement, competitive moats, long-term vision alignment, and organizational velocity. Ignore tactical minutiae; focus on top-line mission success."
   },
 ];
 
@@ -75,37 +75,60 @@ const ANSWER_STYLES = [
 
 export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ context, onContextChange, documents = [] }) => {
   const [keywordInput, setKeywordInput] = useState("");
+  const [objectionInput, setObjectionInput] = useState("");
   const [localPrompt, setLocalPrompt] = useState(context.baseSystemPrompt);
   const [isSaved, setIsSaved] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const isCustomizedRef = useRef(false);
   const voiceInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!isCustomizedRef.current) {
       generateBasePrompt();
     }
-  }, [context.persona, context.answerStyles, context.meetingFocus, context.vocalPersonaAnalysis]);
+  }, [context.persona, context.answerStyles, context.meetingFocus, context.vocalPersonaAnalysis, context.potentialObjections]);
 
   useEffect(() => {
     setLocalPrompt(context.baseSystemPrompt);
   }, [context.baseSystemPrompt]);
 
   const generateBasePrompt = () => {
-    let prompt = `Act as a Cognitive Brain Intelligence Agent for ${context.persona} buyers. `;
-    if (context.vocalPersonaAnalysis) {
-      prompt += `VOCAL IDENTITY MIMICRY: You must mirror this analyzed prospect signature: "${context.vocalPersonaAnalysis}". `;
-    }
-    if (context.answerStyles.length > 0) {
-      prompt += `Your responses should strictly follow these styles as headers: ${context.answerStyles.join(', ')}. `;
-    }
-    if (context.meetingFocus) {
-      prompt += `The primary meeting focus is ${context.meetingFocus}. `;
-    }
-    prompt += `Always ground your logic in source documents and maintain a ${context.persona.toLowerCase()} tone. Use high-density articulation.`;
-    
+    const selectedPersona = PERSONAS.find(p => p.type === context.persona);
+    const personaGuidance = selectedPersona?.strategicGuidance || "";
+
+    let prompt = `Act as an Elite Cognitive Sales Intelligence Architect. 
+Your primary objective is to provide high-fidelity, persona-aligned sales strategy for a buyer identified as: ${context.persona}.
+
+PERSONA-SPECIFIC STRATEGIC DIRECTIVE:
+"${personaGuidance}"
+You must adapt your vocabulary, risk assessment parameters, and value prioritization to match this profile's psychological drivers and professional accountability.
+
+${context.meetingFocus ? `CRITICAL MEETING OBJECTIVE & FOCUS:
+"${context.meetingFocus}"
+All synthesized insights must be filtered through this lens. If a data point doesn't serve this focus, deprioritize it. If it directly addresses the focus, elevate it as a 'Core Narrative Pillar'.` : ''}
+
+${context.potentialObjections.length > 0 ? `PREDICTED RESISTANCE NODES:
+${context.potentialObjections.map(o => `- ${o}`).join('\n')}
+Proactively neutralize these objections in your reasoning.` : ''}
+
+${context.vocalPersonaAnalysis ? `VOCAL IDENTITY MIMICRY (CLONED VOICE ACTIVE):
+You must mirror the following analyzed prospect signature in your behavioral logic, emotional subtext, and linguistic pacing:
+"${context.vocalPersonaAnalysis}"` : ''}
+
+REQUIRED RESPONSE ARCHITECTURE:
+${context.answerStyles.length > 0 
+  ? `Your responses must be structured using the following sections where relevant to the query: ${context.answerStyles.join(', ')}.` 
+  : 'Provide direct, strategic, and high-density responses without fluff.'}
+
+OPERATIONAL CONSTRAINTS:
+1. GROUNDED SYNTHESIS: Exclusively utilize the provided documentary context. Cite specific filenames or snippets to reinforce credibility.
+2. COGNITIVE GAP ANALYSIS: If critical data for the ${context.persona} is missing from the docs, explicitly identify the 'Information Gap' and suggest a strategic question to ask the client to uncover it.
+3. EXECUTIVE ARTICULATION: Maintain a tone that is authoritative, decisive, and intellectually rigorous. Use sophisticated sales-semantic language (e.g., 'Displacement Wedge', 'Value Realization', 'Governance Moat').`;
+
     if (prompt !== context.baseSystemPrompt) {
       setLocalPrompt(prompt);
       onContextChange({ ...context, baseSystemPrompt: prompt });
@@ -129,6 +152,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
         onContextChange({
           ...context,
           clonedVoiceBase64: base64,
+          clonedVoiceMimeType: file.type,
           vocalPersonaAnalysis: analysis
         });
         setIsAnalyzingVoice(false);
@@ -138,6 +162,21 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
       console.error("Voice analysis error:", err);
       setIsAnalyzingVoice(false);
     }
+  };
+
+  const playVoiceSample = () => {
+    if (!context.clonedVoiceBase64) return;
+    if (isPlayingVoice && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlayingVoice(false);
+      return;
+    }
+    
+    const audio = new Audio(`data:${context.clonedVoiceMimeType || 'audio/mpeg'};base64,${context.clonedVoiceBase64}`);
+    audioRef.current = audio;
+    audio.onended = () => setIsPlayingVoice(false);
+    audio.play();
+    setIsPlayingVoice(true);
   };
 
   const handleKycChange = async (docId: string) => {
@@ -151,7 +190,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
     try {
       const metadata = await extractMetadataFromDocument(doc.content);
       
-      // Merge existing keywords with extracted ones, ensuring uniqueness
       const existingKeywords = new Set(context.strategicKeywords);
       if (metadata.strategicKeywords) {
         metadata.strategicKeywords.forEach(kw => existingKeywords.add(kw));
@@ -168,7 +206,8 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
         productDomain: metadata.productDomain || context.productDomain,
         meetingFocus: metadata.meetingFocus || context.meetingFocus,
         executiveSnapshot: metadata.executiveSnapshot || context.executiveSnapshot,
-        strategicKeywords: Array.from(existingKeywords)
+        strategicKeywords: Array.from(existingKeywords),
+        potentialObjections: metadata.potentialObjections || context.potentialObjections
       });
     } catch (e) {
       console.error("KYC Metadata extraction failed", e);
@@ -203,9 +242,15 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
     }
   };
 
+  const addObjection = () => {
+    if (objectionInput.trim()) {
+      handleChange('potentialObjections', [...context.potentialObjections, objectionInput.trim()]);
+      setObjectionInput("");
+    }
+  };
+
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
-      {/* Help Toggle Overlay */}
       <div className="flex justify-end">
         <button 
           onClick={() => setShowHelp(!showHelp)}
@@ -216,7 +261,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
         </button>
       </div>
 
-      {/* Participant Info */}
       <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl border border-slate-200 overflow-hidden relative">
         <div className="flex items-center gap-3 mb-10">
           <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-lg"><ICONS.Document /></div>
@@ -239,7 +283,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Neural Anchor - Top Left */}
           <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-inner relative overflow-hidden h-full">
              {isExtracting && (
                <div className="absolute inset-0 bg-indigo-600/5 backdrop-blur-[2px] flex items-center justify-center z-10 animate-in fade-in">
@@ -268,18 +311,17 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>
-                <p className="text-[9px] text-slate-500 font-medium italic">Triggers auto-population of company and stakeholder nodes.</p>
+                <p className="text-[9px] text-slate-500 font-medium italic">Auto-populates Power Brokers and Predicted Resistance Nodes.</p>
              </div>
           </div>
 
-          {/* Voice Identity Lab - Top Right */}
           <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col md:flex-row md:items-center gap-8 shadow-2xl relative overflow-hidden h-full text-white">
              {isAnalyzingVoice && (
                 <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex items-center justify-center z-10">
                    <div className="flex flex-col items-center gap-3">
-                      <div className="flex gap-1.5">
-                         {[...Array(5)].map((_, i) => (
-                           <div key={i} className="w-1.5 h-6 bg-indigo-500 rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s` }}></div>
+                      <div className="flex gap-1.5 items-end h-8">
+                         {[...Array(6)].map((_, i) => (
+                           <div key={i} className="w-1 bg-indigo-500 rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s`, height: `${40 + Math.random() * 60}%` }}></div>
                          ))}
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 animate-pulse">Fingerprinting Voice Signature...</span>
@@ -297,7 +339,22 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
              <div className="flex-1 space-y-3">
                 <div className="flex justify-between items-center">
                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-1">Clone Customer Voice (MP3)</label>
-                   {context.clonedVoiceBase64 && <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest border border-emerald-400/30 px-2 py-0.5 rounded-full">Replica Active</span>}
+                   {context.clonedVoiceBase64 && (
+                     <div className="flex gap-2">
+                        <button 
+                          onClick={playVoiceSample}
+                          className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${isPlayingVoice ? 'bg-rose-500 text-white animate-pulse' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                        >
+                          {isPlayingVoice ? 'Stop' : 'Play Sample'}
+                        </button>
+                        <button 
+                          onClick={() => onContextChange({...context, clonedVoiceBase64: undefined, vocalPersonaAnalysis: undefined, clonedVoiceMimeType: undefined})}
+                          className="px-3 py-1 bg-slate-700 text-slate-400 hover:text-rose-400 rounded-full text-[8px] font-black uppercase tracking-widest"
+                        >
+                          Clear
+                        </button>
+                     </div>
+                   )}
                 </div>
                 <div 
                    onClick={() => voiceInputRef.current?.click()}
@@ -310,17 +367,22 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
                       accept=".mp3,.wav,.m4a" 
                       onChange={handleVoiceUpload} 
                    />
-                   <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                   <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-indigo-400 group-hover:scale-110'}`}>
                       <ICONS.Play className="w-3.5 h-3.5" />
                    </div>
                    <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">
-                      {context.clonedVoiceBase64 ? 'Voice Signature Extracted. Click to swap.' : 'Upload prospect voice sample...'}
+                      {context.clonedVoiceBase64 ? 'Identity Locked. Click to swap.' : 'Upload prospect voice sample...'}
                    </p>
                 </div>
                 {context.vocalPersonaAnalysis && (
-                   <p className="text-[9px] text-indigo-300/80 font-medium italic border-l-2 border-indigo-500/30 pl-3 leading-tight">
-                     Analyzed Signature: {context.vocalPersonaAnalysis.substring(0, 100)}...
-                   </p>
+                   <div className="group/sig relative">
+                      <p className="text-[9px] text-indigo-300/80 font-medium italic border-l-2 border-indigo-500/30 pl-3 leading-tight line-clamp-2 cursor-help">
+                        Analyzed Signature: {context.vocalPersonaAnalysis}
+                      </p>
+                      <div className="absolute left-0 bottom-full mb-2 w-full p-4 bg-slate-800 border border-slate-700 rounded-xl opacity-0 group-hover/sig:opacity-100 transition-opacity z-50 shadow-2xl pointer-events-none max-h-40 overflow-y-auto no-scrollbar">
+                         <p className="text-[10px] text-indigo-100 leading-relaxed italic">{context.vocalPersonaAnalysis}</p>
+                      </div>
+                   </div>
                 )}
              </div>
           </div>
@@ -345,7 +407,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
             </div>
             <div className="space-y-5">
               <Input label="Client Company" value={context.clientCompany} onChange={v => handleChange('clientCompany', v)} placeholder="e.g. Prospect Organization Name" />
-              <Input label="Client Name(s)" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="e.g. Primary stakeholder(s)" />
+              <Input label="Power Brokers & Stakeholders" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="e.g. Names and titles extracted from doc" />
             </div>
           </div>
 
@@ -377,7 +439,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
         </div>
       </div>
 
-      {/* Persona Selection */}
       <div className="space-y-6">
         <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
           <ICONS.Brain /> Target Buyer Persona
@@ -397,7 +458,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
         </div>
       </div>
 
-      {/* Answer Styles */}
       <div className="space-y-6">
         <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
           <ICONS.Sparkles /> Desired Strategic Response Styles
@@ -415,7 +475,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
         </div>
       </div>
 
-      {/* Opportunity Snapshot & Keywords */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 space-y-6">
           <h3 className="text-xl font-bold text-slate-800">Opportunity Snapshot</h3>
@@ -427,31 +486,37 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
           />
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 space-y-6">
-          <h3 className="text-xl font-bold text-slate-800">Strategic Semantic Keywords</h3>
-          <div className="flex gap-3 mb-6">
+        <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 space-y-6 flex flex-col h-full">
+           <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                 <ICONS.Security className="text-rose-500" /> Potential Objections
+              </h3>
+              <span className="text-[8px] font-black uppercase text-rose-500 bg-rose-50 px-2 py-1 rounded-md border border-rose-100">Inferred Resistance Nodes</span>
+           </div>
+           <div className="flex gap-3 mb-6">
             <input
               type="text"
-              value={keywordInput}
-              onChange={e => setKeywordInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addKeyword()}
-              placeholder="e.g. Salesforce, Project Hydra..."
+              value={objectionInput}
+              onChange={e => setObjectionInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addObjection()}
+              placeholder="e.g. Price is too high, Legacy integration..."
               className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-3 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-inner"
             />
-            <button onClick={addKeyword} className="p-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transform active:scale-95 transition-all"><ICONS.X className="rotate-45" /></button>
+            <button onClick={addObjection} className="p-3 bg-rose-600 text-white rounded-2xl hover:bg-rose-700 shadow-xl transition-all"><ICONS.X className="rotate-45" /></button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {context.strategicKeywords.map((kw, i) => (
-              <span key={i} className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] border border-indigo-100 flex items-center gap-3 animate-in zoom-in duration-300">
-                {kw}
-                <button onClick={() => handleChange('strategicKeywords', context.strategicKeywords.filter((_, idx) => idx !== i))} className="hover:text-rose-500 transition-colors bg-white/50 w-5 h-5 flex items-center justify-center rounded-lg">×</button>
-              </span>
+          <div className="flex-1 overflow-y-auto max-h-40 custom-scrollbar pr-2 space-y-2">
+            {context.potentialObjections.map((obj, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-rose-50/50 border border-rose-100 rounded-xl group animate-in slide-in-from-right-2 duration-300">
+                <div className="flex flex-col">
+                   <p className="text-[11px] font-bold text-rose-800 leading-snug">“{obj}”</p>
+                </div>
+                <button onClick={() => handleChange('potentialObjections', context.potentialObjections.filter((_, idx) => idx !== i))} className="text-rose-300 hover:text-rose-600"><ICONS.Trash className="w-3.5 h-3.5" /></button>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Neural Core System Prompt */}
       <div className="bg-slate-900 rounded-[3rem] p-12 shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-10 opacity-10 transition-opacity">
           <ICONS.Brain className="text-indigo-400 w-24 h-24" />
