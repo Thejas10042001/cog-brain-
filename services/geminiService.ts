@@ -140,16 +140,17 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Act as an Expert Neural Audio Engineer and Behavioral Psychologist.
-  Analyze this audio sample to create a "Vocal Identity Fingerprint".
+  Analyze this audio sample of a specific customer to create a "Vocal Identity Fingerprint" for perfect cloning.
   
-  DETERMINE:
-  - Pitch & Frequency (e.g., resonant baritone, sharp tenor)
-  - Cadence & Rhythm (e.g., clipped professional, fast-talking startup, slow deliberate executive)
-  - Emotional Baseline (e.g., skeptical, warm/empathetic, authoritative/dominant)
-  - Breathing & Emphasis patterns.
+  DETERMINE WITH MAXIMUM PRECISION:
+  - EXACT PITCH & RESONANCE (e.g., deep chesty baritone, nasal high-pitched tenor, breathy soft soprano).
+  - TEMPO & CADENCE (e.g., rapid-fire staccato, slow drawling, rhythmic and melodic).
+  - ACCENT & DIALECT (e.g., Mid-Atlantic executive, subtle Southern warmth, clipped British professional).
+  - EMOTIONAL BASELINE (e.g., permanently skeptical, overly enthusiastic, cold and calculating).
+  - BREATHING & INFLECTION (e.g., frequent audible breaths, upward inflections at ends of sentences, flat monotone).
 
-  Provide a 2-paragraph "Mimicry Directive" that describes how an actor or AI should replicate this specific human presence. 
-  Output ONLY the text.`;
+  Provide a detailed "Mimicry Directive". This will be used to instruct a TTS engine to clone this EXACT voice.
+  Structure it as a single paragraph of dense instructions.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -167,8 +168,6 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
     return "Standard professional business vocal signature.";
   }
 }
-
-// ... rest of the file remains unchanged ...
 
 // Unified High-Depth Avatar Evaluation
 async function performHighDepthEvaluation(
@@ -1050,12 +1049,28 @@ export async function generateExplanation(question: string, context: AnalysisRes
   return response.text || "";
 }
 
-// Text to speech generation using specialized TTS model
-export async function generatePitchAudio(text: string, voiceName: string = 'Kore'): Promise<Uint8Array | null> {
+/**
+ * Text to speech generation using specialized TTS model.
+ * Includes "Vocal Clone" logic by prepending analyzed mimicry directives to the text content.
+ */
+export async function generatePitchAudio(
+  text: string, 
+  voiceName: string = 'Kore', 
+  personaDirective?: string
+): Promise<Uint8Array | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  // High-fidelity mimicry logic: Prepend instructions to the content for the TTS model's LLM core to modulate its prosody.
+  const contents = personaDirective 
+    ? `MIMICRY PROTOCOL ACTIVE. 
+       TARGET SIGNATURE: "${personaDirective}"
+       INSTRUCTION: Adopt this tone, cadence, and resonance exactly.
+       TEXT TO SPEAK: "${text}"`
+    : text;
+
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-preview-tts",
-    contents: [{ parts: [{ text: text }] }],
+    contents: [{ parts: [{ text: contents }] }],
     config: {
       responseModalities: [Modality.AUDIO],
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } },
