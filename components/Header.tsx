@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ICONS } from '../constants';
-// Fix: Import logoutUser and User from local firebaseService to resolve missing export in firebase/auth.
 import { logoutUser, User } from '../services/firebaseService';
 
 interface HeaderProps {

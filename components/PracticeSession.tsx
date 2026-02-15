@@ -221,7 +221,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
               correctionExplanation: { type: Type.STRING }
             },
             required: ["transcription", "grammarScore", "toneAnalysis", "grammarFeedback", "sentenceFormation", "breathPacingGuide", "strategicAlignment", "idealWording", "correctionExplanation"]
-          }
+          },
+          // Set thinkingBudget to 16000 for complex audit reasoning on pro model.
+          thinkingConfig: { thinkingBudget: 16000 }
         }
       });
       setEvaluation(JSON.parse(response.text || "{}"));
@@ -444,7 +446,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
              </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start text-left">
             <div className="space-y-8">
                <div className="p-10 bg-slate-50 border border-slate-100 rounded-[3rem] shadow-inner relative overflow-hidden group">
                   <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">Recorded Performance</h4>
@@ -511,7 +513,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                   </div>
                </div>
 
-               <div className="p-10 bg-emerald-50 border border-emerald-100 rounded-[3.5rem] animate-in fade-in zoom-in-95 duration-1000 shadow-sm">
+               <div className="p-10 bg-emerald-50 border border-emerald-100 rounded-[3.5rem] animate-in fade-in zoom-in-95 duration-1000 shadow-sm text-left">
                   <div className="flex items-center gap-3 mb-6">
                      <div className="p-3 bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-100"><ICONS.Brain /></div>
                      <h4 className="text-[11px] font-black uppercase text-emerald-600 tracking-[0.3em]">Self-Grooming Explanation</h4>
@@ -575,7 +577,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
             )}
           </div>
           
-          <div className="bg-slate-50 p-10 flex flex-col border-l border-slate-200 overflow-hidden shadow-inner relative h-full">
+          <div className="bg-slate-50 p-10 flex flex-col border-l border-slate-200 overflow-hidden shadow-inner relative h-full text-left">
             <h6 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8 flex items-center gap-3">
                <ICONS.Efficiency className="w-4 h-4" /> Mastery Log
             </h6>
@@ -594,7 +596,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                   </div>
                   {turn.ai && (
                     <div className="flex flex-col items-start text-left">
-                      <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1.5">Coach input</p>
+                      <p className="text-[9px] font-black text-indigo-50 uppercase tracking-widest mb-1.5">Coach input</p>
                       <p className="text-sm text-indigo-950 bg-indigo-50/80 p-6 rounded-[2rem] rounded-tl-none border border-indigo-100 font-bold leading-relaxed w-full">“{turn.ai}”</p>
                     </div>
                   )}

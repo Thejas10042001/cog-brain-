@@ -205,7 +205,7 @@ const App: React.FC = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-4 border-red-100 border-t-red-600 rounded-full animate-spin"></div>
         <p className="mt-6 text-[10px] font-black uppercase text-slate-400 tracking-widest animate-pulse">Establishing Secure Neural Link...</p>
       </div>
     );
@@ -321,7 +321,7 @@ const App: React.FC = () => {
                         className={`
                           flex items-center gap-3 px-16 py-6 rounded-full font-black text-xl shadow-2xl transition-all
                           ${(activeDocuments.length > 0 && !isAnyFileProcessing)
-                            ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105 active:scale-95 cursor-pointer shadow-indigo-200' 
+                            ? 'bg-red-600 text-white hover:bg-red-700 hover:scale-105 active:scale-95 cursor-pointer shadow-red-200' 
                             : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}
                         `}
                       >
@@ -336,20 +336,20 @@ const App: React.FC = () => {
               <div className="flex flex-col items-center justify-center space-y-12 h-[calc(100vh-64px)]">
                 <div className="relative">
                   <div 
-                    className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out"
+                    className="absolute inset-0 bg-red-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out"
                     style={{ 
                       transform: `scale(${1 + (loadingProgress / 100)})`,
                       opacity: 0.2 + (loadingProgress / 100)
                     }}
                   ></div>
                   
-                  <div className="relative w-32 h-32 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
+                  <div className="relative w-32 h-32 border-4 border-red-50 border-t-red-600 rounded-full animate-spin"></div>
                   
                   <div 
-                    className="absolute inset-0 flex items-center justify-center text-indigo-600 transition-all duration-700"
+                    className="absolute inset-0 flex items-center justify-center text-red-600 transition-all duration-700"
                     style={{
                       transform: `scale(${1.2 + (loadingProgress / 200)})`,
-                      filter: `drop-shadow(0 0 ${loadingProgress / 5}px rgba(79, 70, 229, ${loadingProgress / 100}))`
+                      filter: `drop-shadow(0 0 ${loadingProgress / 5}px rgba(220, 38, 38, ${loadingProgress / 100}))`
                     }}
                   >
                     <ICONS.Brain className="w-10 h-10" />
@@ -357,7 +357,7 @@ const App: React.FC = () => {
 
                   <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
                     <span className="text-3xl font-black text-slate-800 tracking-tighter">
-                      {Math.floor(loadingProgress)}<span className="text-indigo-500 text-sm ml-0.5">%</span>
+                      {Math.floor(loadingProgress)}<span className="text-red-500 text-sm ml-0.5">%</span>
                     </span>
                   </div>
                 </div>
@@ -374,7 +374,7 @@ const App: React.FC = () => {
                   
                   <div className="w-64 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden shadow-inner">
                     <div 
-                      className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(79,70,229,0.4)]"
+                      className="h-full bg-red-600 transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(220,38,38,0.4)]"
                       style={{ width: `${loadingProgress}%` }}
                     ></div>
                   </div>
@@ -415,7 +415,7 @@ const App: React.FC = () => {
                       <button 
                         onClick={runAnalysis}
                         disabled={isAnalyzing}
-                        className="px-12 py-5 bg-indigo-600 text-white rounded-full font-black text-lg shadow-2xl hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+                        className="px-12 py-5 bg-red-600 text-white rounded-full font-black text-lg shadow-2xl hover:bg-red-700 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                       >
                         <ICONS.Brain />
                         {isAnalyzing ? 'Re-Synthesizing...' : 'Update & Re-Synthesize Strategy'}
@@ -444,11 +444,11 @@ const SidebarBtn = ({ active, onClick, icon, label }: { active: boolean; onClick
     onClick={onClick}
     className={`w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl font-bold transition-all text-sm group ${
       active 
-      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02]' 
+      ? 'bg-red-600 text-white shadow-xl shadow-red-100 scale-[1.02]' 
       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
     }`}
   >
-    <div className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`}>
+    <div className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-red-500'} transition-colors`}>
       {icon}
     </div>
     <span className="tracking-tight">{label}</span>
