@@ -16,8 +16,18 @@ interface AvatarSimulationStagedProps {
 
 const STAGES: StagedSimStage[] = ['Ice Breakers', 'About Business', 'Pricing', 'Technical', 'Legal', 'Closing'];
 
+const STAGE_DESCRIPTIONS: Record<StagedSimStage, string> = {
+  'Ice Breakers': 'Establish rapport and mirror the client behavior.',
+  'About Business': 'Align solution value with organizational pain points.',
+  'Pricing': 'Justify cost through ROI and fiscal logic.',
+  'Technical': 'Validate architecture, security, and integration.',
+  'Legal': 'Navigate compliance, terms, and liability risks.',
+  'Closing': 'Secure final commitment and define next tactical steps.'
+};
+
 export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetingContext, documents }) => {
   const [currentStage, setCurrentStage] = useState<StagedSimStage>('Ice Breakers');
+  const [startStageChoice, setStartStageChoice] = useState<StagedSimStage>('Ice Breakers');
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [currentCaption, setCurrentCaption] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,7 +84,6 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      // Fix: Pass analyzed mimicry fingerprint string for "same to same" cloning effect instead of object
       const bytes = await generatePitchAudio(text, 'Charon', meetingContext.vocalPersonaAnalysis?.mimicryDirective);
       if (bytes) {
         lastAudioBytes.current = bytes;
@@ -144,17 +153,17 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     setMessages([]);
     setCurrentCaption("");
     setCoachingFeedback(null);
-    setCurrentStage('Ice Breakers');
+    setCurrentStage(startStageChoice);
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
 
     try {
-      const stream = streamAvatarStagedSimulation("START", [], meetingContext, 'Ice Breakers', kycContent);
+      const stream = streamAvatarStagedSimulation(`START AT STAGE: ${startStageChoice}`, [], meetingContext, startStageChoice, kycContent);
       let firstMsg = "";
       for await (const chunk of stream) firstMsg += chunk;
       
-      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]/, "").trim();
+      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
@@ -259,24 +268,43 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   return (
     <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto px-12">
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-5xl mx-auto px-12 py-12">
            <div className="p-8 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl">
               <ICONS.Brain className="w-32 h-32 text-indigo-600 animate-pulse" />
            </div>
            <div className="space-y-6">
               <h2 className="text-6xl font-black tracking-tight">Staged Simulation Node</h2>
-              <p className="text-slate-400 text-2xl font-medium leading-relaxed">
-                Advance through 6 tactical stages. You will only proceed if {meetingContext.clientNames || 'the Client'} validates your response.
+              <p className="text-slate-400 text-2xl font-medium leading-relaxed max-w-3xl mx-auto">
+                Advance through 6 tactical stages. Select your starting point below to begin the challenge.
               </p>
            </div>
-           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
-              {STAGES.map((s, i) => (
-                <div key={s} className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500">
-                  {i+1}. {s}
-                </div>
-              ))}
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+              {STAGES.map((s, i) => {
+                const isSelected = startStageChoice === s;
+                return (
+                  <button 
+                    key={s} 
+                    onClick={() => setStartStageChoice(s)}
+                    className={`p-6 border-2 rounded-[2rem] text-left transition-all group flex flex-col gap-3 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-white/5 border-white/10 hover:border-indigo-400'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                       <span className={`text-[10px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Node 0{i+1}</span>
+                       {isSelected && <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>}
+                    </div>
+                    <h4 className={`text-xl font-black ${isSelected ? 'text-white' : 'text-slate-200'}`}>{s}</h4>
+                    <p className={`text-xs font-medium leading-relaxed ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
+                      {STAGE_DESCRIPTIONS[s]}
+                    </p>
+                  </button>
+                );
+              })}
            </div>
-           <button onClick={handleInitiate} className="px-16 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Simulation</button>
+
+           <div className="pt-6">
+              <button onClick={handleInitiate} className="px-20 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Simulation @ {startStageChoice}</button>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mt-6">Neural Presence Engine: V3.1 Primed</p>
+           </div>
         </div>
       ) : report ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in">
