@@ -10,6 +10,54 @@ const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
   'High': 32768 // Max for gemini-3-pro-preview
 };
 
+export const FAMOUS_PERSONAS: Record<string, VocalPersonaStructure> = {
+  "Steve Jobs": {
+    pitch: "Intense, visionary tenor with sharp resonance",
+    tempo: "Calculated with long dramatic pauses",
+    cadence: "Rhythmic and persuasive, emphasizing 'one more thing'",
+    accent: "Palo Alto Tech Visionary / Standard American",
+    emotionalBaseline: "Passionate, perfectionist, and occasionally dismissive",
+    breathingPatterns: "Sharp intakes before big reveals",
+    mimicryDirective: "Adopt the persona of Steve Jobs. Be intense, visionary, and hyper-critical of mediocre products. Use dramatic pauses and a 'mission-driven' vocabulary."
+  },
+  "Elon Musk": {
+    pitch: "Slightly nasal baritone with technical weight",
+    tempo: "Staccato with intellectual processing pauses",
+    cadence: "Erratic but brilliant, frequently self-correcting",
+    accent: "South African/North American hybrid",
+    emotionalBaseline: "Hyper-focused, futuristic, and impatient with legacy constraints",
+    breathingPatterns: "Occasional processing stutters and heavy sighs",
+    mimicryDirective: "Adopt the persona of Elon Musk. Focus on first-principles thinking. Be dismissive of 'business as usual' and demand fundamental physics/math-based logic."
+  },
+  "Warren Buffett": {
+    pitch: "Warm, grandfatherly Midwestern baritone",
+    tempo: "Slow, deliberate, and folksy",
+    cadence: "Rhythmic and steady, using simple analogies",
+    accent: "Omaha, Nebraska / Midwestern Folk",
+    emotionalBaseline: "Calm, wise, and ruthlessly disciplined on value",
+    breathingPatterns: "Gentle, measured breaths",
+    mimicryDirective: "Adopt the persona of Warren Buffett. Use folksy analogies to explain complex financial concepts. Be ruthless about capital allocation and EBITDA but deliver it with a smile."
+  },
+  "Oprah Winfrey": {
+    pitch: "Rich, resonant, and authoritative alto",
+    tempo: "Engaging and emotionally dynamic",
+    cadence: "Soulful and emphatic, emphasizing key nouns",
+    accent: "Mid-Atlantic / Professional American",
+    emotionalBaseline: "Deeply empathetic but commandingly powerful",
+    breathingPatterns: "Deep, diaphragmatic breaths for emotional resonance",
+    mimicryDirective: "Adopt the persona of Oprah Winfrey. Focus on human connection, empathy, and personal truth. Be commandingly present and emotionally intelligent."
+  },
+  "Morgan Freeman": {
+    pitch: "Deep, gravelly, and omniscient bass-baritone",
+    tempo: "Slow, rhythmic, and soothing",
+    cadence: "God-like authority, every word carries weight",
+    accent: "Deep Southern / Standard Professional hybrid",
+    emotionalBaseline: "Permanently calm and deeply insightful",
+    breathingPatterns: "Invisible, controlled breathing",
+    mimicryDirective: "Adopt the persona of Morgan Freeman. Speak with absolute gravitas and a soothing, rhythmic authority. Make the salesperson feel like they are being mentored by the universe."
+  }
+};
+
 /**
  * Robustly parses JSON from a string, handling markdown wrappers, prefix/suffix text,
  * and the specific 'Unexpected non-whitespace character after JSON' error.
@@ -296,6 +344,14 @@ export async function* streamAvatarSimulationV2(
     parts: [{ text: msg.content }]
   }));
 
+  // Resolve mimicry logic for V2
+  let activeMimicry = "";
+  if (context.famousPersonaName && FAMOUS_PERSONAS[context.famousPersonaName]) {
+    activeMimicry = FAMOUS_PERSONAS[context.famousPersonaName].mimicryDirective;
+  } else if (context.vocalPersonaAnalysis) {
+    activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
+  }
+
   const systemInstruction = `You are operating in Multi-Persona Enterprise Evaluation Mode.
 The user will specify which persona to activate by typing:
 PERSONA: CIO
@@ -306,12 +362,12 @@ You must switch behavior instantly and remain fully in that persona until change
 You are evaluating an enterprise AI platform called Kore.ai – AI for Work.
 You are conducting a serious enterprise buying evaluation.
 
-${context.vocalPersonaAnalysis ? `===========================================================
-VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
+${activeMimicry ? `===========================================================
+BEHAVIORAL MIMICRY DIRECTIVE (PERSONA CLONE ACTIVE)
 ===========================================================
-Adopt the following vocal and behavioral signature extracted from a recording of the actual customer:
-"${context.vocalPersonaAnalysis.mimicryDirective}"
-Use linguistic patterns, pacing, and emotional subtext that matches this signature strictly.` : ""}
+Adopt the following behavioral and linguistic signature strictly:
+"${activeMimicry}"
+Infuse this personality into the selected Persona roles below.` : ""}
 
 ===========================================================
 STRATEGIC FEEDBACK RULE
@@ -417,17 +473,24 @@ export async function* streamAvatarSimulation(
     parts: [{ text: msg.content }]
   }));
 
+  let activeMimicry = "";
+  if (context.famousPersonaName && FAMOUS_PERSONAS[context.famousPersonaName]) {
+    activeMimicry = FAMOUS_PERSONAS[context.famousPersonaName].mimicryDirective;
+  } else if (context.vocalPersonaAnalysis) {
+    activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
+  }
+
   const systemInstruction = `You are operating in dual-mode:
 
 MODE 1 → Enterprise CIO (Primary Role – Visible to User)
 MODE 2 → Hidden Performance Evaluator (Internal – Do NOT reveal)
 
-${context.vocalPersonaAnalysis ? `===========================================================
-VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
+${activeMimicry ? `===========================================================
+BEHAVIORAL MIMICRY DIRECTIVE (PERSONA CLONE ACTIVE)
 ===========================================================
-Adopt the following vocal and behavioral signature extracted from a recording of the actual customer:
-"${context.vocalPersonaAnalysis.mimicryDirective}"
-Mirror the analyzed emotional timbre and linguistic pacing exactly.` : ""}
+Adopt the following behavioral signature strictly:
+"${activeMimicry}"
+Maintain this perspective throughout the Mode 1 interaction.` : ""}
 
 ===========================================================
 STRATEGIC FEEDBACK RULE
@@ -539,6 +602,13 @@ export async function* streamAvatarStagedSimulation(
     parts: [{ text: msg.content }]
   }));
 
+  let activeMimicry = "";
+  if (context.famousPersonaName && FAMOUS_PERSONAS[context.famousPersonaName]) {
+    activeMimicry = FAMOUS_PERSONAS[context.famousPersonaName].mimicryDirective;
+  } else if (context.vocalPersonaAnalysis) {
+    activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
+  }
+
   const systemInstruction = `You are ${context.clientNames || 'the Client'}, an elite decision maker at ${context.clientCompany}.
 You are in a Staged Strategic Simulation Mode.
 
@@ -548,11 +618,11 @@ YOUR BEHAVIOR (Grounded in KYC)
 Primary Behavior Source: Use the Know Your Customer (KYC) Document below to dictate your personality, skepticism, specific pain points, and vocal style. 
 Name: You must refer to yourself as ${context.clientNames || 'the Client'}.
 
-${context.vocalPersonaAnalysis ? `===========================================================
-VOCAL MIMICRY DIRECTIVE (CLONED VOICE ACTIVE)
+${activeMimicry ? `===========================================================
+BEHAVIORAL MIMICRY DIRECTIVE (PERSONA CLONE ACTIVE)
 ===========================================================
-Adopt the following vocal signature extracted from your voice recording:
-"${context.vocalPersonaAnalysis.mimicryDirective}"
+Adopt the following behavioral signature strictly:
+"${activeMimicry}"
 Maintain this prosody throughout the simulation.` : ""}
 
 KYC DOCUMENT CONTEXT:

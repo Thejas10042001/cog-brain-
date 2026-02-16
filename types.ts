@@ -72,7 +72,7 @@ export interface QuestionPair {
   customerAsks: string;
   salespersonShouldRespond: string;
   reasoning: string;
-  category: 'Business Value' | 'Technical' | 'Risk' | 'ROI' | 'Integration';
+  category: 'Business Value' | 'Technical' | 'ROI' | 'Integration';
   citation: Citation;
 }
 
@@ -191,6 +191,7 @@ export interface MeetingContext {
   clonedVoiceBase64?: string;
   clonedVoiceMimeType?: string;
   vocalPersonaAnalysis?: VocalPersonaStructure;
+  famousPersonaName?: string;
 }
 
 export interface ComprehensiveAvatarReport {

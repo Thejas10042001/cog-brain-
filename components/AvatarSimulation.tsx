@@ -5,7 +5,8 @@ import {
   streamAvatarSimulation, 
   generatePitchAudio, 
   decodeAudioData,
-  evaluateAvatarSession 
+  evaluateAvatarSession,
+  FAMOUS_PERSONAS
 } from '../services/geminiService';
 import { GPTMessage, MeetingContext, ComprehensiveAvatarReport } from '../types';
 
@@ -67,8 +68,14 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      // Integration of the Cloned Voice Signature into the TTS generation
-      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.vocalPersonaAnalysis?.mimicryDirective);
+      let activeDirective = "";
+      if (meetingContext.famousPersonaName && FAMOUS_PERSONAS[meetingContext.famousPersonaName]) {
+          activeDirective = FAMOUS_PERSONAS[meetingContext.famousPersonaName].mimicryDirective;
+      } else if (meetingContext.vocalPersonaAnalysis) {
+          activeDirective = meetingContext.vocalPersonaAnalysis.mimicryDirective;
+      }
+
+      const bytes = await generatePitchAudio(text, 'Charon', activeDirective);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -442,8 +449,8 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
               <AIAnimatedBotCIO />
            </div>
            <div className="space-y-6">
-              <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
-              <p className="text-slate-400 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
+              <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Initiate Presence: {meetingContext.famousPersonaName || meetingContext.clientNames || 'Executive CIO'}</h2>
+              <p className="text-slate-400 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.famousPersonaName || meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
            </div>
            <button onClick={handleInitiate} className="px-16 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Activate Simulation</button>
         </div>
@@ -452,7 +459,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
              {/* Unified Single Focus Header */}
              <div className="text-center space-y-4">
                 <span className="px-5 py-2 bg-indigo-600/20 text-indigo-400 text-xs font-black uppercase tracking-[0.3em] rounded-full border border-indigo-500/20">
-                   Identity: {meetingContext.clientNames || 'Executive Client'}
+                   Identity: {meetingContext.famousPersonaName || meetingContext.clientNames || 'Executive Client'}
                 </span>
                 <h3 className="text-5xl font-black tracking-tight leading-tight">
                    {isAISpeaking ? 'Client is Speaking...' : isUserListening ? 'Listening to Architect...' : 'Dialogue Protocol Active'}
@@ -466,10 +473,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                 </div>
                 
                 {/* Minimalized Voice Protocol Badge */}
-                {meetingContext.clonedVoiceBase64 && (
+                {(meetingContext.clonedVoiceBase64 || meetingContext.famousPersonaName) && (
                    <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
                       <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span>
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                        {meetingContext.famousPersonaName ? `${meetingContext.famousPersonaName} Archetype Protocol Active` : 'Neural Vocal Mimicry Active'}
+                      </span>
                    </div>
                 )}
              </div>
@@ -496,7 +505,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                      value={currentCaption} 
                      onChange={(e) => setCurrentCaption(e.target.value)} 
                      className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-100 shadow-inner h-48 resize-none placeholder:text-slate-700 leading-relaxed" 
-                     placeholder={`${meetingContext.clientNames || 'The Executive'} is awaiting your strategic response...`} 
+                     placeholder={`${meetingContext.famousPersonaName || meetingContext.clientNames || 'The Executive'} is awaiting your strategic response...`} 
                    />
                    <button 
                      onClick={() => startListening()} 
