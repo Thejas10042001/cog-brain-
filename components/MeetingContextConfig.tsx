@@ -41,43 +41,10 @@ const PERSONAS: { type: CustomerPersonaType; label: string; desc: string; icon: 
   },
 ];
 
-const ANSWER_STYLES = [
-  "Executive Summary", 
-  "Analogy Based", 
-  "Data-Driven Insights",
-  "Concise Answer", 
-  "In-Depth Response", 
-  "Answer in Points", 
-  "Define Technical Terms", 
-  "Sales Points", 
-  "Key Statistics", 
-  "Case Study Summary", 
-  "Competitive Comparison", 
-  "Anticipated Customer Questions", 
-  "Information Gap", 
-  "Pricing Overview",
-  "ROI Forecast",
-  "SWOT Analysis",
-  "Strategic Roadmap",
-  "Risk Assessment",
-  "Implementation Timeline",
-  "Technical Deep-Dive",
-  "Value Proposition",
-  "Financial Justification",
-  "Stakeholder Alignment",
-  "Competitive Wedge",
-  "Success Story Summary",
-  "Psychological Projection",
-  "Buying Fear Mitigation",
-  "Security & Compliance",
-  "Decision Matrix"
-];
-
 export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ context, onContextChange, documents = [] }) => {
   const [keywordInput, setKeywordInput] = useState("");
   const [objectionInput, setObjectionInput] = useState("");
   const [localPrompt, setLocalPrompt] = useState(context.baseSystemPrompt);
-  const [isSaved, setIsSaved] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
@@ -215,25 +182,6 @@ OPERATIONAL CONSTRAINTS:
     } finally {
       setIsExtracting(false);
     }
-  };
-
-  const handlePromptUpdate = (val: string) => {
-    setLocalPrompt(val);
-    isCustomizedRef.current = true;
-    setIsSaved(false);
-  };
-
-  const savePrompt = () => {
-    onContextChange({ ...context, baseSystemPrompt: localPrompt });
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
-  };
-
-  const toggleStyle = (style: string) => {
-    const updated = context.answerStyles.includes(style)
-      ? context.answerStyles.filter(s => s !== style)
-      : [...context.answerStyles, style];
-    handleChange('answerStyles', updated);
   };
 
   const addKeyword = () => {
@@ -479,23 +427,6 @@ OPERATIONAL CONSTRAINTS:
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-          <ICONS.Sparkles /> Desired Strategic Response Styles
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {ANSWER_STYLES.map(style => (
-            <button
-              key={style}
-              onClick={() => toggleStyle(style)}
-              className={`px-4 py-4 rounded-[1.25rem] text-[9px] font-black uppercase tracking-widest border transition-all leading-tight text-center ${context.answerStyles.includes(style) ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-indigo-200 shadow-sm'}`}
-            >
-              {style}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 space-y-6">
           <h3 className="text-xl font-bold text-slate-800">Opportunity Snapshot</h3>
@@ -538,28 +469,6 @@ OPERATIONAL CONSTRAINTS:
         </div>
       </div>
 
-      <div className="bg-slate-900 rounded-[3rem] p-12 shadow-2xl relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-10 opacity-10 transition-opacity">
-          <ICONS.Brain className="text-indigo-400 w-24 h-24" />
-        </div>
-        <div className="relative z-10 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-indigo-400 text-[11px] font-black uppercase tracking-[0.4em]">Neural Core System Prompt</h3>
-            <button 
-              onClick={savePrompt}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 ${isSaved ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
-            >
-              {isSaved ? 'Prompt Retained' : 'Update & Save Prompt'}
-            </button>
-          </div>
-          <textarea
-            value={localPrompt}
-            onChange={e => handlePromptUpdate(e.target.value)}
-            className="w-full bg-slate-800/40 text-slate-200 border-2 border-slate-700/50 rounded-[2.5rem] p-10 text-sm focus:border-indigo-500 outline-none transition-all h-40 font-mono leading-relaxed shadow-inner"
-            placeholder="AI system prompt..."
-          />
-        </div>
-      </div>
       <style>{`
         @keyframes waveform-sm {
           0%, 100% { transform: scaleY(0.5); }
