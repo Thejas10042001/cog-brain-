@@ -889,47 +889,6 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
   }
 }
 
-/**
- * Generates a realistic professional headshot for the client using gemini-3-pro-image-preview.
- * Uses googleSearch to find context about the person and company to influence the visual result.
- */
-export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-image-preview';
-  
-  try {
-    const prompt = `A realistic, high-fidelity professional headshot of a business executive named ${name} from ${company}. 
-    Style: Corporate portrait, clean background, sharp focus, professional lighting. 
-    Use Google Search to ensure the appearance and clothing style align with the corporate identity and leadership aesthetic of ${company}. 
-    Resolution: 1K. Realistic human features. Highly detailed skin textures and eyes.`;
-
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: {
-        parts: [{ text: prompt }],
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1",
-          imageSize: "1K"
-        },
-        tools: [{googleSearch: {}}],
-      },
-    });
-
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        const base64EncodeString: string = part.inlineData.data;
-        return `data:image/png;base64,${base64EncodeString}`;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error("Client Avatar generation failed:", error);
-    return null;
-  }
-}
-
 // Deep Study: Advanced Reasoning Core upgraded to Pro model
 export async function* streamDeepStudy(prompt: string, history: GPTMessage[], context?: string): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -1161,7 +1120,6 @@ export async function generatePitchAudio(
     model: "gemini-2.5-flash-preview-tts",
     contents: [{ parts: [{ text: contents }] }],
     config: {
-      // Fix typo: responseModalities
       responseModalities: [Modality.AUDIO],
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } },
     },

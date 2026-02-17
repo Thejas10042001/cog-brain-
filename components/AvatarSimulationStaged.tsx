@@ -1,11 +1,11 @@
+
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { ICONS } from '../constants';
 import { 
   streamAvatarStagedSimulation, 
   generatePitchAudio, 
   decodeAudioData,
-  evaluateAvatarSession,
-  generateClientAvatar
+  evaluateAvatarSession 
 } from '../services/geminiService';
 import { GPTMessage, MeetingContext, StagedSimStage, StoredDocument, ComprehensiveAvatarReport } from '../types';
 
@@ -39,10 +39,6 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   
-  // Avatar state
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
-
   // Track ratings for each stage
   const [stageRatings, setStageRatings] = useState<Record<string, number | 'skipped'>>({});
   const [showCelebration, setShowCelebration] = useState(false);
@@ -127,18 +123,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       alert("Please select a KYC Document in Configuration first.");
       return;
     }
-
-    // MANDATORY: Call openSelectKey but do not block the UI progression
-    // Assume success and proceed to prevent race condition or hangs
-    window.aistudio.hasSelectedApiKey().then(hasKey => {
-      if (!hasKey) {
-        window.aistudio.openSelectKey();
-      }
-    });
-
     setSessionActive(true);
     setIsProcessing(true);
-    setIsGeneratingAvatar(true);
     setMessages([]);
     setCurrentCaption("");
     setCoachingFeedback(null);
@@ -148,18 +134,6 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
-
-    // Start avatar generation in background with Google Search Grounding
-    generateClientAvatar(
-      meetingContext.clientNames || "Executive", 
-      meetingContext.clientCompany || "Enterprise"
-    ).then(url => {
-      setAvatarUrl(url);
-      setIsGeneratingAvatar(false);
-    }).catch(err => {
-      console.error("Avatar Synth Failed:", err);
-      setIsGeneratingAvatar(false);
-    });
 
     try {
       const stream = streamAvatarStagedSimulation(`START AT STAGE: ${startStageChoice}`, [], meetingContext, startStageChoice, kycContent);
@@ -173,12 +147,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
-    } catch (e) { 
-      console.error("Sim Start Failed:", e); 
-      setIsProcessing(false);
-    } finally { 
-      setIsProcessing(false); 
-    }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
   const handleCommit = async () => {
@@ -370,24 +339,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
 
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
-           <div className="p-10 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-indigo-600/10 scale-0 group-hover:scale-100 transition-transform duration-1000 rounded-full blur-3xl opacity-50"></div>
-              <div className="relative z-10">
-                 {isGeneratingAvatar ? (
-                    <div className="w-32 h-32 rounded-full border-4 border-indigo-500/20 flex items-center justify-center animate-pulse">
-                       <ICONS.Search className="w-12 h-12 text-indigo-500" />
-                    </div>
-                 ) : avatarUrl ? (
-                    <img src={avatarUrl} className="w-32 h-32 rounded-full object-cover border-4 border-indigo-600 shadow-2xl" alt="Prospect" />
-                 ) : (
-                    <ICONS.Brain className="w-32 h-32 text-indigo-600" />
-                 )}
-              </div>
+           <div className="p-8 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl">
+              <ICONS.Brain className="w-32 h-32 text-indigo-600 animate-pulse" />
            </div>
            <div className="space-y-6">
-              <h2 className="text-6xl font-black tracking-tight">Staged Simulation Hub</h2>
+              <h2 className="text-6xl font-black tracking-tight">Staged Simulation Node</h2>
               <p className="text-slate-400 text-2xl font-medium leading-relaxed max-w-5xl mx-auto">
-                Connect with the AI Presence of {meetingContext.clientNames || 'the Prospect'} at {meetingContext.clientCompany || 'their organization'}.
+                Advance through 6 tactical stages. Select your starting point below to begin the challenge.
               </p>
            </div>
            
@@ -401,7 +359,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                     className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-white/5 border-white/10 hover:border-indigo-400'}`}
                   >
                     <div className="flex items-center justify-between">
-                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Stage 0{i+1}</span>
+                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Node 0{i+1}</span>
                        {isSelected && <div className="w-3 h-3 rounded-full bg-white animate-pulse"></div>}
                     </div>
                     <h4 className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-slate-200'}`}>{s}</h4>
@@ -414,20 +372,15 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
            </div>
 
            <div className="pt-6">
-              <button 
-                onClick={handleInitiate} 
-                className="px-24 py-10 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all"
-              >
-                Start Full Simulation
-              </button>
-              <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-600 mt-8">Grounded Behavioral Engine v3.1 Primed</p>
+              <button onClick={handleInitiate} className="px-24 py-10 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Full Simulation @ {startStageChoice}</button>
+              <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-600 mt-8">Neural Presence Engine: V3.1 Primed for Full-Scale Engagement</p>
            </div>
         </div>
       ) : report ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in px-12">
-           <h3 className="text-5xl font-black">Performance Audit Synthesized</h3>
-           <p className="text-slate-400 text-xl">Overall Deal Readiness Score: {report.deal_readiness_score}/10</p>
-           <button onClick={() => setReport(null)} className="px-12 py-5 bg-indigo-600 rounded-full font-black uppercase tracking-widest text-lg shadow-2xl">Close Strategic Audit</button>
+           <h3 className="text-5xl font-black">Simulation Conclusion</h3>
+           <p className="text-slate-400 text-xl">Total Deal Readiness: {report.deal_readiness_score}/10</p>
+           <button onClick={() => setReport(null)} className="px-12 py-5 bg-indigo-600 rounded-full font-black uppercase tracking-widest text-lg">Close Audit</button>
         </div>
       ) : (
         <div className="flex-1 flex flex-col w-full py-16 px-16 gap-12 justify-center">
@@ -453,48 +406,24 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
              {/* Focus Header */}
              <div className="text-center space-y-4">
                 <span className="px-8 py-3 bg-indigo-600/20 text-indigo-400 text-sm font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
-                   Active Stage: {currentStage.toUpperCase()}
+                   Strategic Stage: {currentStage.toUpperCase()}
                 </span>
                 <h3 className="text-6xl font-black tracking-tight leading-tight">
                    Presence: {meetingContext.clientNames || 'Executive Client'}
                 </h3>
              </div>
 
-             {/* Main Visual Core - Real Human Photo from Search Grounding */}
+             {/* Main Visual Core */}
              <div className="relative flex flex-col items-center">
                 <div className="relative z-20">
-                   {isGeneratingAvatar ? (
-                     <div className="w-80 h-80 rounded-full border-4 border-indigo-500/30 flex flex-col items-center justify-center bg-slate-900 animate-pulse">
-                        <ICONS.Search className="w-16 h-16 text-indigo-500 mb-4" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300">Searching Neural Records...</span>
-                     </div>
-                   ) : avatarUrl ? (
-                     <div className="relative group/avatar">
-                        <div className={`absolute -inset-4 bg-indigo-500/20 rounded-full blur-2xl transition-opacity duration-1000 ${isAISpeaking ? 'opacity-100' : 'opacity-0'}`}></div>
-                        <img 
-                          src={avatarUrl} 
-                          alt="Client" 
-                          className={`w-80 h-80 rounded-full object-cover border-4 transition-all duration-700 relative z-10 ${isAISpeaking ? 'border-indigo-500 shadow-[0_0_80px_rgba(79,70,229,0.7)] scale-105' : 'border-slate-800 shadow-2xl'}`} 
-                        />
-                        {isAISpeaking && (
-                           <div className="absolute inset-0 rounded-full border-4 border-indigo-400 animate-ping opacity-30 z-20"></div>
-                        )}
-                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-8 py-3 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-400 shadow-2xl whitespace-nowrap z-30">
-                           {meetingContext.clientNames || 'Decision Maker'}
-                        </div>
-                     </div>
-                   ) : (
-                     <div className="w-80 h-80 rounded-full bg-slate-900 border-4 border-slate-800 flex items-center justify-center text-slate-700 shadow-2xl">
-                        <ICONS.Brain className="w-32 h-32 opacity-20" />
-                     </div>
-                   )}
+                   <ICONS.Brain className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'text-indigo-500 drop-shadow-[0_0_60px_rgba(79,70,229,0.6)] scale-110' : 'text-slate-800'}`} />
                 </div>
                 
                 {meetingContext.clonedVoiceBase64 && (
-                   <div className="mt-12 flex items-center gap-4 px-8 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
+                   <div className="mt-10 flex items-center gap-4 px-8 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
                       <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
                       <span className="text-[12px] font-black text-emerald-400 uppercase tracking-widest">
-                        Neural Vocal Mirroring Active
+                        Neural Vocal Mimicry Active
                       </span>
                    </div>
                 )}
@@ -504,18 +433,18 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
              <div className="flex flex-col gap-6 w-full items-center">
                 <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-16 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
                    <div className="flex items-center justify-between mb-4">
-                      <h5 className="text-[12px] font-black uppercase tracking-[0.4em] text-indigo-400">Prospect Inquiry</h5>
+                      <h5 className="text-[12px] font-black uppercase tracking-[0.4em] text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry Node</h5>
                       <div className="flex items-center gap-3">
                          <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
-                         <span className="text-[12px] font-black uppercase tracking-widest text-slate-500">{isAISpeaking ? 'Transmitting' : 'Waiting for Logic'}</span>
+                         <span className="text-[12px] font-black uppercase tracking-widest text-slate-500">{isAISpeaking ? 'Transmitting' : 'Awaiting Logic'}</span>
                       </div>
                    </div>
                    <p className="text-5xl font-bold italic leading-[1.4] text-white tracking-tight text-center">
-                      {messages[messages.length - 1]?.content || "Synthesizing behavioral orientation..."}
+                      {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
                    </p>
                 </div>
 
-                {/* Tactical Clue Card */}
+                {/* Tactical Clue Card - Stacked Directly Beneath */}
                 {currentHint && (
                   <div className="w-full max-w-4xl bg-indigo-900/40 border border-indigo-500/30 p-10 rounded-[3.5rem] shadow-2xl flex flex-col justify-center items-center text-center transition-all duration-1000 animate-in slide-in-from-top-4">
                     <div className="flex items-center gap-6">
@@ -528,6 +457,9 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                             {currentHint}
                         </p>
                       </div>
+                      <div className="hidden md:block pl-6 border-l border-indigo-500/20">
+                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Protocol Tip</p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -538,21 +470,21 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                <div className="p-12 bg-rose-950/40 border-2 border-rose-500/30 rounded-[4rem] space-y-10 animate-in slide-in-from-top-4 duration-500 w-full shadow-[0_40px_100px_-20px_rgba(244,63,94,0.3)]">
                   <div className="flex items-center justify-between">
                      <div className="flex items-center gap-6">
-                        <span className="px-6 py-2 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full shadow-lg">Logic Deficit Detected</span>
-                        <h4 className="text-3xl font-black text-rose-100">Performance Correction Protocol</h4>
+                        <span className="px-6 py-2 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full shadow-lg">Strategic Deficit Detected</span>
+                        <h4 className="text-3xl font-black text-rose-100">Neural Performance Correction Protocol</h4>
                      </div>
                      <div className="flex items-center gap-4">
                         <button 
                           onClick={handleProceedDespiteFailure}
                           className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl"
                         >
-                          Manual Proceed
+                          Proceed Despite Deficit
                         </button>
                         <button 
                           onClick={handleTryAgain}
                           className="px-8 py-3 bg-white text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95 shadow-xl"
                         >
-                          Retry Answer
+                          Try Again
                         </button>
                      </div>
                   </div>
@@ -560,13 +492,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                      <div className="space-y-4 p-8 bg-black/20 rounded-[2.5rem] border border-white/5">
                         <h5 className="text-[11px] font-black uppercase text-rose-400 tracking-widest flex items-center gap-2">
-                           <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Gap Identification
+                           <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Deficit Rationale
                         </h5>
                         <p className="text-xl font-medium text-rose-50/80 italic leading-relaxed">{coachingFeedback.failReason}</p>
                      </div>
                      <div className="space-y-4 p-8 bg-black/20 rounded-[2.5rem] border border-white/5">
                         <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-widest flex items-center gap-2">
-                           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Persona Alignment Guide
+                           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Master Protocol Required
                         </h5>
                         <p className="text-xl font-medium text-indigo-50/80 italic leading-relaxed">{coachingFeedback.styleGuide}</p>
                      </div>
@@ -576,11 +508,12 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                     <div className="p-10 bg-indigo-600/10 border-2 border-indigo-500/20 rounded-[3rem] space-y-6">
                        <div className="flex items-center gap-3">
                           <ICONS.Sparkles className="w-6 h-6 text-indigo-400" />
-                          <h5 className="text-[12px] font-black uppercase text-indigo-300 tracking-[0.3em]">Master Logic (Ideal Response)</h5>
+                          <h5 className="text-[12px] font-black uppercase text-indigo-300 tracking-[0.3em]">Correct Answer (Strategic Response for Client)</h5>
                        </div>
                        <p className="text-2xl font-bold text-white leading-relaxed italic">
                           “{coachingFeedback.idealResponse}”
                        </p>
+                       <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Grounded in verified document context and psychological buyer alignment. Replicate this logic to advance.</p>
                     </div>
                   )}
                </div>
@@ -593,13 +526,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                      value={currentCaption} 
                      onChange={(e) => setCurrentCaption(e.target.value)} 
                      className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3.5rem] px-16 py-12 text-3xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-60 resize-none placeholder:text-slate-700 leading-relaxed" 
-                     placeholder={`Provide strategic response for Stage: ${currentStage}...`}
+                     placeholder={`Deploy strategic response for the ${currentStage} stage...`}
                    />
                    <button onClick={() => startListening()} className={`absolute right-12 top-1/2 -translate-y-1/2 p-8 rounded-[2rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-10 h-10" /></button>
                 </div>
                 <div className="flex items-center gap-8">
                    <div className="flex-1 flex items-center gap-6">
-                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-10 bg-indigo-600 text-white rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Logic</button>
+                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-10 bg-indigo-600 text-white rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Answer</button>
                       
                       {currentStage !== 'Closing' && (
                         <button 
