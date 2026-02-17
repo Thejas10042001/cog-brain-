@@ -572,7 +572,7 @@ Focus: ${context.meetingFocus}`;
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction,
         thinkingConfig: { thinkingBudget: 16000 }
       }
     });
@@ -655,6 +655,12 @@ If the response is strong, professional, and well-aligned:
 2. Provide a rating: [RATING: X] where X is 1 to 5 stars based on their performance quality.
 3. Move to the logic for the NEXT STAGE.
 4. If current stage is Closing and they succeed, end with a strong commitment message.
+
+===========================================================
+STRATEGIC LEARNING HINT (NEW PROTOCOL)
+===========================================================
+Every time you ask a question (whether initial or after a turn), you MUST include a hint for the user.
+Format: [HINT: A one-sentence tactical pointer on what this specific persona type (e.g., CIO, CEO) is looking for in a successful answer for this question.]
 
 Always ask exactly one focused question at a time.
 Tone: Executive, firm, and based on the KYC doc.

@@ -37,6 +37,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   const [sessionActive, setSessionActive] = useState(false);
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
+  const [currentHint, setCurrentHint] = useState<string | null>(null);
   
   // Track ratings for each stage
   const [stageRatings, setStageRatings] = useState<Record<string, number | 'skipped'>>({});
@@ -127,6 +128,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     setMessages([]);
     setCurrentCaption("");
     setCoachingFeedback(null);
+    setCurrentHint(null);
     setStageRatings({});
     setCurrentStage(startStageChoice);
 
@@ -138,7 +140,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       let firstMsg = "";
       for await (const chunk of stream) firstMsg += chunk;
       
-      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]/, "").trim();
+      const hintMatch = firstMsg.match(/\[HINT: (.*?)\]/);
+      if (hintMatch) setCurrentHint(hintMatch[1]);
+
+      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
@@ -150,6 +155,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     stopListening();
     setIsProcessing(true);
     setCoachingFeedback(null);
+    setCurrentHint(null);
 
     const userMsg: GPTMessage = { id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' };
     const updatedHistory = [...messages, userMsg];
@@ -166,6 +172,9 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       const isSuccess = response.includes('[RESULT: SUCCESS]');
       const isFail = response.includes('[RESULT: FAIL]');
 
+      const hintMatch = response.match(/\[HINT: (.*?)\]/);
+      if (hintMatch) setCurrentHint(hintMatch[1]);
+
       if (isSuccess) {
         // Extract Rating
         const ratingMatch = response.match(/\[RATING: (\d+)\]/);
@@ -181,7 +190,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         if (nextIdx < STAGES.length) {
           setCurrentStage(STAGES[nextIdx]);
         }
-        const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RATING: \d+\]/, "").trim();
+        const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
         const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
         setMessages([...updatedHistory, aiMsg]);
         setCurrentCaption("");
@@ -205,9 +214,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         setCurrentCaption("");
         playAIQuestion(retryText);
       } else {
-        const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: response, mode: 'standard' };
+        const cleaned = response.replace(/\[HINT: .*?\]/, "").trim();
+        const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
         setMessages([...updatedHistory, aiMsg]);
-        playAIQuestion(response);
+        playAIQuestion(cleaned);
       }
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
@@ -219,6 +229,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     stopListening();
     setIsProcessing(true);
     setCoachingFeedback(null);
+    setCurrentHint(null);
     setCurrentCaption("");
     
     // Mark as skipped in ratings
@@ -235,7 +246,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       let response = "";
       for await (const chunk of stream) response += chunk;
 
-      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]/, "").trim();
+      const hintMatch = response.match(/\[HINT: (.*?)\]/);
+      if (hintMatch) setCurrentHint(hintMatch[1]);
+
+      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages(prev => [...prev, aiMsg]);
       playAIQuestion(cleaned);
@@ -342,7 +356,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         </div>
       ) : (
         <div className="flex-1 flex flex-col w-full py-16 px-16 gap-12 justify-center">
-             {/* Stage Progress Tracker with Ratings above */}
+             {/* Stage Progress Tracker */}
              <div className="grid grid-cols-6 gap-8 w-full">
                 {STAGES.map((s, i) => {
                   const isActive = currentStage === s;
@@ -387,21 +401,37 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                 )}
              </div>
 
-             {/* Cinematic Narrative Display */}
-             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-16 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700 w-full">
-                <div className="flex items-center justify-between mb-4">
-                   <h5 className="text-[12px] font-black uppercase tracking-[0.4em] text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry Node</h5>
-                   <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
-                      <span className="text-[12px] font-black uppercase tracking-widest text-slate-500">{isAISpeaking ? 'Transmitting' : 'Awaiting Logic'}</span>
+             {/* Cinematic Narrative & Hint Display */}
+             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 w-full items-stretch">
+                <div className="lg:col-span-3 bg-white/5 backdrop-blur-3xl border border-white/10 p-16 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+                   <div className="flex items-center justify-between mb-4">
+                      <h5 className="text-[12px] font-black uppercase tracking-[0.4em] text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry Node</h5>
+                      <div className="flex items-center gap-3">
+                         <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
+                         <span className="text-[12px] font-black uppercase tracking-widest text-slate-500">{isAISpeaking ? 'Transmitting' : 'Awaiting Logic'}</span>
+                      </div>
+                   </div>
+                   <p className="text-5xl font-bold italic leading-[1.4] text-white tracking-tight text-center">
+                      {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
+                   </p>
+                </div>
+
+                {/* Tactical Clue Card */}
+                <div className={`bg-indigo-900/40 border border-indigo-500/30 p-10 rounded-[3.5rem] shadow-2xl flex flex-col justify-center items-center text-center transition-all duration-1000 ${currentHint ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}>
+                   <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center mb-6 shadow-xl shadow-indigo-900/50">
+                      <ICONS.Sparkles className="w-8 h-8 text-indigo-200" />
+                   </div>
+                   <h5 className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-4">Strategic Clue</h5>
+                   <p className="text-lg font-bold text-white italic leading-snug">
+                      {currentHint || "Synthesizing guidance..."}
+                   </p>
+                   <div className="mt-6 pt-6 border-t border-indigo-500/20 w-full">
+                      <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Protocol Mastery Tip</p>
                    </div>
                 </div>
-                <p className="text-5xl font-bold italic leading-[1.4] text-white tracking-tight text-center">
-                   {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
-                </p>
              </div>
 
-             {/* Coaching Feedback Overlay - ENHANCED */}
+             {/* Coaching Feedback Overlay */}
              {coachingFeedback && (
                <div className="p-12 bg-rose-950/40 border-2 border-rose-500/30 rounded-[4rem] space-y-10 animate-in slide-in-from-top-4 duration-500 w-full shadow-[0_40px_100px_-20px_rgba(244,63,94,0.3)]">
                   <div className="flex items-center justify-between">
@@ -460,7 +490,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                 </div>
                 <div className="flex items-center gap-8">
                    <div className="flex-1 flex items-center gap-6">
-                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-10 bg-indigo-600 text-white rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Logic Node</button>
+                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-10 bg-indigo-600 text-white rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Answer</button>
                       
                       {currentStage !== 'Closing' && (
                         <button 
