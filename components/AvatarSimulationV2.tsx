@@ -75,7 +75,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
 
       const voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
-      // Fix: Pass the analyzed voice directive string for high-fidelity mimicry instead of the object
       const bytes = await generatePitchAudio(text, voice, meetingContext.vocalPersonaAnalysis?.mimicryDirective);
       if (bytes) {
         lastAudioBytes.current = bytes;

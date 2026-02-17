@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure } from "../types";
 
@@ -8,54 +7,6 @@ const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
   'Low': 8000,
   'Medium': 16000,
   'High': 32768 // Max for gemini-3-pro-preview
-};
-
-export const FAMOUS_PERSONAS: Record<string, VocalPersonaStructure> = {
-  "Steve Jobs": {
-    pitch: "Intense, visionary tenor with sharp resonance",
-    tempo: "Calculated with long dramatic pauses",
-    cadence: "Rhythmic and persuasive, emphasizing 'one more thing'",
-    accent: "Palo Alto Tech Visionary / Standard American",
-    emotionalBaseline: "Passionate, perfectionist, and occasionally dismissive",
-    breathingPatterns: "Sharp intakes before big reveals",
-    mimicryDirective: "Adopt the persona of Steve Jobs. Be intense, visionary, and hyper-critical of mediocre products. Use dramatic pauses and a 'mission-driven' vocabulary."
-  },
-  "Elon Musk": {
-    pitch: "Slightly nasal baritone with technical weight",
-    tempo: "Staccato with intellectual processing pauses",
-    cadence: "Erratic but brilliant, frequently self-correcting",
-    accent: "South African/North American hybrid",
-    emotionalBaseline: "Hyper-focused, futuristic, and impatient with legacy constraints",
-    breathingPatterns: "Occasional processing stutters and heavy sighs",
-    mimicryDirective: "Adopt the persona of Elon Musk. Focus on first-principles thinking. Be dismissive of 'business as usual' and demand fundamental physics/math-based logic."
-  },
-  "Warren Buffett": {
-    pitch: "Warm, grandfatherly Midwestern baritone",
-    tempo: "Slow, deliberate, and folksy",
-    cadence: "Rhythmic and steady, using simple analogies",
-    accent: "Omaha, Nebraska / Midwestern Folk",
-    emotionalBaseline: "Calm, wise, and ruthlessly disciplined on value",
-    breathingPatterns: "Gentle, measured breaths",
-    mimicryDirective: "Adopt the persona of Warren Buffett. Use folksy analogies to explain complex financial concepts. Be ruthless about capital allocation and EBITDA but deliver it with a smile."
-  },
-  "Oprah Winfrey": {
-    pitch: "Rich, resonant, and authoritative alto",
-    tempo: "Engaging and emotionally dynamic",
-    cadence: "Soulful and emphatic, emphasizing key nouns",
-    accent: "Mid-Atlantic / Professional American",
-    emotionalBaseline: "Deeply empathetic but commandingly powerful",
-    breathingPatterns: "Deep, diaphragmatic breaths for emotional resonance",
-    mimicryDirective: "Adopt the persona of Oprah Winfrey. Focus on human connection, empathy, and personal truth. Be commandingly present and emotionally intelligent."
-  },
-  "Morgan Freeman": {
-    pitch: "Deep, gravelly, and omniscient bass-baritone",
-    tempo: "Slow, rhythmic, and soothing",
-    cadence: "God-like authority, every word carries weight",
-    accent: "Deep Southern / Standard Professional hybrid",
-    emotionalBaseline: "Permanently calm and deeply insightful",
-    breathingPatterns: "Invisible, controlled breathing",
-    mimicryDirective: "Adopt the persona of Morgan Freeman. Speak with absolute gravitas and a soothing, rhythmic authority. Make the salesperson feel like they are being mentored by the universe."
-  }
 };
 
 /**
@@ -346,9 +297,7 @@ export async function* streamAvatarSimulationV2(
 
   // Resolve mimicry logic for V2
   let activeMimicry = "";
-  if (context.famousPersonaName && FAMOUS_PERSONAS[context.famousPersonaName]) {
-    activeMimicry = FAMOUS_PERSONAS[context.famousPersonaName].mimicryDirective;
-  } else if (context.vocalPersonaAnalysis) {
+  if (context.vocalPersonaAnalysis) {
     activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
   }
 
@@ -474,9 +423,7 @@ export async function* streamAvatarSimulation(
   }));
 
   let activeMimicry = "";
-  if (context.famousPersonaName && FAMOUS_PERSONAS[context.famousPersonaName]) {
-    activeMimicry = FAMOUS_PERSONAS[context.famousPersonaName].mimicryDirective;
-  } else if (context.vocalPersonaAnalysis) {
+  if (context.vocalPersonaAnalysis) {
     activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
   }
 
@@ -603,9 +550,7 @@ export async function* streamAvatarStagedSimulation(
   }));
 
   let activeMimicry = "";
-  if (context.famousPersonaName && FAMOUS_PERSONAS[context.famousPersonaName]) {
-    activeMimicry = FAMOUS_PERSONAS[context.famousPersonaName].mimicryDirective;
-  } else if (context.vocalPersonaAnalysis) {
+  if (context.vocalPersonaAnalysis) {
     activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
   }
 

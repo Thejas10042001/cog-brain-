@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MeetingContext, CustomerPersonaType, ThinkingLevel, StoredDocument, VocalPersonaStructure } from '../types';
 import { ICONS } from '../constants';
-import { extractMetadataFromDocument, analyzeVocalPersona, FAMOUS_PERSONAS } from '../services/geminiService';
+import { extractMetadataFromDocument, analyzeVocalPersona } from '../services/geminiService';
 
 interface MeetingContextConfigProps {
   context: MeetingContext;
@@ -50,7 +50,6 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [showVocalDirective, setShowVocalDirective] = useState(false);
-  const [voiceMode, setVoiceMode] = useState<'upload' | 'famous'>(context.famousPersonaName ? 'famous' : 'upload');
   const isCustomizedRef = useRef(false);
   const voiceInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -59,7 +58,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
     if (!isCustomizedRef.current) {
       generateBasePrompt();
     }
-  }, [context.persona, context.answerStyles, context.meetingFocus, context.vocalPersonaAnalysis, context.potentialObjections, context.famousPersonaName]);
+  }, [context.persona, context.answerStyles, context.meetingFocus, context.vocalPersonaAnalysis, context.potentialObjections]);
 
   useEffect(() => {
     setLocalPrompt(context.baseSystemPrompt);
@@ -70,9 +69,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
     const personaGuidance = selectedPersona?.strategicGuidance || "";
 
     let activeMimicry = "";
-    if (context.famousPersonaName && FAMOUS_PERSONAS[context.famousPersonaName]) {
-        activeMimicry = FAMOUS_PERSONAS[context.famousPersonaName].mimicryDirective;
-    } else if (context.vocalPersonaAnalysis) {
+    if (context.vocalPersonaAnalysis) {
         activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
     }
 
@@ -129,8 +126,7 @@ OPERATIONAL CONSTRAINTS:
           ...context,
           clonedVoiceBase64: base64,
           clonedVoiceMimeType: file.type,
-          vocalPersonaAnalysis: analysis,
-          famousPersonaName: undefined // Clear famous if uploading
+          vocalPersonaAnalysis: analysis
         });
         setIsAnalyzingVoice(false);
       };
@@ -139,20 +135,6 @@ OPERATIONAL CONSTRAINTS:
       console.error("Voice analysis error:", err);
       setIsAnalyzingVoice(false);
     }
-  };
-
-  const handleFamousPersonaChange = (name: string) => {
-    if (!name) {
-        onContextChange({ ...context, famousPersonaName: undefined });
-        return;
-    }
-    const signature = FAMOUS_PERSONAS[name];
-    onContextChange({ 
-        ...context, 
-        famousPersonaName: name,
-        clonedVoiceBase64: undefined, // Clear upload if using famous
-        vocalPersonaAnalysis: undefined 
-    });
   };
 
   const playVoiceSample = () => {
@@ -288,151 +270,97 @@ OPERATIONAL CONSTRAINTS:
           </div>
 
           <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col gap-6 shadow-2xl relative overflow-hidden h-full text-white transition-all duration-500">
-             <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10">
-                <button 
-                   onClick={() => setVoiceMode('upload')}
-                   className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${voiceMode === 'upload' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                   Neural Upload
-                </button>
-                <button 
-                   onClick={() => setVoiceMode('famous')}
-                   className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${voiceMode === 'famous' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                   Famous Archetype
-                </button>
-             </div>
-
-             {voiceMode === 'upload' ? (
-                <div className="flex flex-col md:flex-row md:items-start gap-8 relative h-full">
-                    {isAnalyzingVoice && (
-                        <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex items-center justify-center z-20">
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="flex gap-1.5 items-end h-8">
-                                    {[...Array(6)].map((_, i) => (
-                                    <div key={i} className="w-1 bg-indigo-500 rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s`, height: `${40 + Math.random() * 60}%` }}></div>
-                                    ))}
-                                </div>
-                                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 animate-pulse">Fingerprinting Voice Signature...</span>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="shrink-0 flex flex-col items-center gap-2">
-                        <div className={`p-4 rounded-2xl shadow-lg transition-colors ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
-                        <ICONS.Speaker />
-                        </div>
-                        <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Voice Identity</span>
-                    </div>
-
-                    <div className="flex-1 space-y-4">
-                        <div className="flex justify-between items-center">
-                        <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-1">Vocal Fingerprint (MP3)</label>
-                        {context.clonedVoiceBase64 && (
-                            <div className="flex gap-2">
-                                <button 
-                                onClick={playVoiceSample}
-                                className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${isPlayingVoice ? 'bg-rose-500 text-white animate-pulse' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
-                                >
-                                {isPlayingVoice ? 'Stop' : 'Play'}
-                                </button>
-                                <button 
-                                onClick={() => onContextChange({...context, clonedVoiceBase64: undefined, vocalPersonaAnalysis: undefined, clonedVoiceMimeType: undefined})}
-                                className="px-3 py-1 bg-slate-700 text-slate-400 hover:text-rose-400 rounded-full text-[8px] font-black uppercase tracking-widest"
-                                >
-                                Clear
-                                </button>
-                            </div>
-                        )}
-                        </div>
-
-                        {!context.clonedVoiceBase64 ? (
-                        <div 
-                            onClick={() => voiceInputRef.current?.click()}
-                            className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl px-6 py-6 cursor-pointer transition-all flex items-center gap-4 group"
-                        >
-                            <input 
-                                type="file" 
-                                ref={voiceInputRef} 
-                                className="hidden" 
-                                accept=".mp3,.wav,.m4a" 
-                                onChange={handleVoiceUpload} 
-                            />
-                            <div className="w-10 h-10 rounded-full bg-slate-700 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <ICONS.Speaker className="w-4 h-4" />
-                            </div>
-                            <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">
-                                Upload prospect voice sample...
-                            </p>
-                        </div>
-                        ) : context.vocalPersonaAnalysis && (
-                        <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
-                            <div className="grid grid-cols-2 gap-2">
-                                <VocalTrait label="Pitch" val={context.vocalPersonaAnalysis.pitch} color="indigo" />
-                                <VocalTrait label="Tempo" val={context.vocalPersonaAnalysis.tempo} color="indigo" />
-                                <VocalTrait label="Cadence" val={context.vocalPersonaAnalysis.cadence} color="indigo" />
-                                <VocalTrait label="Accent" val={context.vocalPersonaAnalysis.accent} color="indigo" />
-                                <VocalTrait label="Baseline" val={context.vocalPersonaAnalysis.emotionalBaseline} color="emerald" />
-                                <VocalTrait label="Patterns" val={context.vocalPersonaAnalysis.breathingPatterns} color="emerald" />
-                            </div>
-                            <div className="pt-2">
-                                <button 
-                                onClick={() => setShowVocalDirective(!showVocalDirective)}
-                                className="w-full flex items-center justify-between px-4 py-2 bg-slate-800/80 rounded-xl border border-slate-700 hover:bg-slate-750 transition-all group"
-                                >
-                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-400">View Neural Directive</span>
-                                <svg className={`w-3 h-3 text-slate-500 transition-transform ${showVocalDirective ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                                </button>
-                                {showVocalDirective && (
-                                <div className="mt-2 p-4 bg-slate-800 border border-slate-700 rounded-xl text-[10px] text-indigo-200 italic leading-relaxed animate-in slide-in-from-top-2">
-                                    "{context.vocalPersonaAnalysis.mimicryDirective}"
-                                </div>
-                                )}
-                            </div>
-                        </div>
-                        )}
-                    </div>
-                </div>
-             ) : (
-                <div className="space-y-6 h-full flex flex-col justify-center py-4">
-                   <div className="space-y-2">
-                      <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-1">Famous Strategic Archetype</label>
-                      <select 
-                         value={context.famousPersonaName || ""}
-                         onChange={(e) => handleFamousPersonaChange(e.target.value)}
-                         className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl px-6 py-4 text-sm font-bold text-white outline-none focus:border-indigo-500 transition-all shadow-xl"
-                      >
-                         <option value="">Select world-class leader...</option>
-                         {Object.keys(FAMOUS_PERSONAS).map(name => (
-                            <option key={name} value={name}>{name}</option>
-                         ))}
-                      </select>
-                   </div>
-                   
-                   {context.famousPersonaName && FAMOUS_PERSONAS[context.famousPersonaName] && (
-                      <div className="p-6 bg-white/5 border border-white/10 rounded-2xl animate-in slide-in-from-bottom-2 duration-500">
-                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-black text-xs">
-                               {context.famousPersonaName[0]}
-                            </div>
-                            <span className="text-sm font-black text-white">{context.famousPersonaName} Protocol</span>
+             <div className="flex flex-col md:flex-row md:items-start gap-8 relative h-full">
+                 {isAnalyzingVoice && (
+                     <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex items-center justify-center z-20">
+                         <div className="flex flex-col items-center gap-3">
+                             <div className="flex gap-1.5 items-end h-8">
+                                 {[...Array(6)].map((_, i) => (
+                                 <div key={i} className="w-1 bg-indigo-500 rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s`, height: `${40 + Math.random() * 60}%` }}></div>
+                                 ))}
+                             </div>
+                             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 animate-pulse">Fingerprinting Voice Signature...</span>
                          </div>
-                         <p className="text-[10px] text-indigo-200 italic leading-relaxed">
-                            "{FAMOUS_PERSONAS[context.famousPersonaName].mimicryDirective}"
-                         </p>
-                      </div>
-                   )}
+                     </div>
+                 )}
 
-                   {!context.famousPersonaName && (
-                      <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 px-10">
-                         <ICONS.Brain className="w-12 h-12 mb-4" />
-                         <p className="text-[10px] font-black uppercase tracking-widest">Select a leader archetype to clone their behavioral logic and vocal tone.</p>
-                      </div>
-                   )}
-                </div>
-             )}
+                 <div className="shrink-0 flex flex-col items-center gap-2">
+                     <div className={`p-4 rounded-2xl shadow-lg transition-colors ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                     <ICONS.Speaker />
+                     </div>
+                     <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Voice Identity</span>
+                 </div>
+
+                 <div className="flex-1 space-y-4">
+                     <div className="flex justify-between items-center">
+                     <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-1">Vocal Fingerprint (MP3)</label>
+                     {context.clonedVoiceBase64 && (
+                         <div className="flex gap-2">
+                             <button 
+                             onClick={playVoiceSample}
+                             className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${isPlayingVoice ? 'bg-rose-500 text-white animate-pulse' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                             >
+                             {isPlayingVoice ? 'Stop' : 'Play'}
+                             </button>
+                             <button 
+                             onClick={() => onContextChange({...context, clonedVoiceBase64: undefined, vocalPersonaAnalysis: undefined, clonedVoiceMimeType: undefined})}
+                             className="px-3 py-1 bg-slate-700 text-slate-400 hover:text-rose-400 rounded-full text-[8px] font-black uppercase tracking-widest"
+                             >
+                             Clear
+                             </button>
+                         </div>
+                     )}
+                     </div>
+
+                     {!context.clonedVoiceBase64 ? (
+                     <div 
+                         onClick={() => voiceInputRef.current?.click()}
+                         className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl px-6 py-6 cursor-pointer transition-all flex items-center gap-4 group"
+                     >
+                         <input 
+                             type="file" 
+                             ref={voiceInputRef} 
+                             className="hidden" 
+                             accept=".mp3,.wav,.m4a" 
+                             onChange={handleVoiceUpload} 
+                         />
+                         <div className="w-10 h-10 rounded-full bg-slate-700 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                             <ICONS.Speaker className="w-4 h-4" />
+                         </div>
+                         <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">
+                             Upload prospect voice sample...
+                         </p>
+                     </div>
+                     ) : context.vocalPersonaAnalysis && (
+                     <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
+                         <div className="grid grid-cols-2 gap-2">
+                             <VocalTrait label="Pitch" val={context.vocalPersonaAnalysis.pitch} color="indigo" />
+                             <VocalTrait label="Tempo" val={context.vocalPersonaAnalysis.tempo} color="indigo" />
+                             <VocalTrait label="Cadence" val={context.vocalPersonaAnalysis.cadence} color="indigo" />
+                             <VocalTrait label="Accent" val={context.vocalPersonaAnalysis.accent} color="indigo" />
+                             <VocalTrait label="Baseline" val={context.vocalPersonaAnalysis.emotionalBaseline} color="emerald" />
+                             <VocalTrait label="Patterns" val={context.vocalPersonaAnalysis.breathingPatterns} color="emerald" />
+                         </div>
+                         <div className="pt-2">
+                             <button 
+                             onClick={() => setShowVocalDirective(!showVocalDirective)}
+                             className="w-full flex items-center justify-between px-4 py-2 bg-slate-800/80 rounded-xl border border-slate-700 hover:bg-slate-750 transition-all group"
+                             >
+                             <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-400">View Neural Directive</span>
+                             <svg className={`w-3 h-3 text-slate-500 transition-transform ${showVocalDirective ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                             </svg>
+                             </button>
+                             {showVocalDirective && (
+                             <div className="mt-2 p-4 bg-slate-800 border border-slate-700 rounded-xl text-[10px] text-indigo-200 italic leading-relaxed animate-in slide-in-from-top-2">
+                                 "{context.vocalPersonaAnalysis.mimicryDirective}"
+                             </div>
+                             )}
+                         </div>
+                     </div>
+                     )}
+                 </div>
+             </div>
           </div>
         </div>
 

@@ -419,11 +419,11 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                    <ICONS.Brain className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'text-indigo-500 drop-shadow-[0_0_60px_rgba(79,70,229,0.6)] scale-110' : 'text-slate-800'}`} />
                 </div>
                 
-                {(meetingContext.clonedVoiceBase64 || meetingContext.famousPersonaName) && (
+                {meetingContext.clonedVoiceBase64 && (
                    <div className="mt-10 flex items-center gap-4 px-8 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
                       <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
                       <span className="text-[12px] font-black text-emerald-400 uppercase tracking-widest">
-                        {meetingContext.famousPersonaName ? `${meetingContext.famousPersonaName} Archetype Active` : 'Neural Vocal Mimicry Active'}
+                        Neural Vocal Mimicry Active
                       </span>
                    </div>
                 )}

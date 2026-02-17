@@ -191,7 +191,6 @@ export interface MeetingContext {
   clonedVoiceBase64?: string;
   clonedVoiceMimeType?: string;
   vocalPersonaAnalysis?: VocalPersonaStructure;
-  famousPersonaName?: string;
 }
 
 export interface ComprehensiveAvatarReport {
