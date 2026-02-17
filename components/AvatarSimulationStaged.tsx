@@ -49,6 +49,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   const [isUserListening, setIsUserListening] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
+  const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   
@@ -172,10 +173,11 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     setStageHistory({});
     setCurrentCaption("");
     setCoachingFeedback(null);
+    setShowCoachingDetails(false);
     setCurrentHint(null);
     setStageRatings({});
-    setCurrentStage(startStageChoice);
-    setExpandedStages(new Set([startStageChoice]));
+    setCurrentStage('Ice Breakers');
+    setExpandedStages(new Set(['Ice Breakers']));
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
@@ -192,7 +194,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     });
 
     try {
-      const stream = streamAvatarStagedSimulation(`START AT STAGE: ${startStageChoice}`, [], meetingContext, startStageChoice, kycContent);
+      const stream = streamAvatarStagedSimulation(`START AT STAGE: Ice Breakers`, [], meetingContext, 'Ice Breakers', kycContent);
       let firstMsg = "";
       for await (const chunk of stream) firstMsg += chunk;
       
@@ -225,6 +227,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     stopListening();
     setIsProcessing(true);
     setCoachingFeedback(null);
+    setShowCoachingDetails(false);
     setCurrentHint(null);
 
     const userMsg: GPTMessage = { id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' };
@@ -289,6 +292,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         };
 
         setCoachingFeedback({ ...feedback, nextTry: retryMatch?.[1] });
+        setShowCoachingDetails(false);
 
         const attempt: StageAttempt = {
           question: currentQuestion,
@@ -325,12 +329,14 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     const originalQuestionMsg = messages[messages.length - 3];
     setMessages(prev => prev.slice(0, -2));
     setCoachingFeedback(null);
+    setShowCoachingDetails(false);
     setCurrentCaption("");
     playAIQuestion(originalQuestionMsg.content);
   };
 
   const handleProceedWithFeedback = () => {
     setCoachingFeedback(null);
+    setShowCoachingDetails(false);
   };
 
   const handleSkip = async () => {
@@ -342,6 +348,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     stopListening();
     setIsProcessing(true);
     setCoachingFeedback(null);
+    setShowCoachingDetails(false);
     setCurrentHint(null);
     setCurrentCaption("");
     
@@ -634,41 +641,59 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                   </div>
                 )}
 
-                {/* Feedback Overlay Area (When visible) */}
+                {/* Enhanced Coaching Feedback Overlay */}
                 {coachingFeedback && (
-                  <div className="p-10 bg-rose-950/60 backdrop-blur-2xl border-2 border-rose-500/40 rounded-[3rem] space-y-10 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-4xl mx-auto shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
+                  <div className="p-10 bg-rose-950/60 backdrop-blur-2xl border-2 border-rose-500/40 rounded-[3rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-4xl mx-auto shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
                       <div className="flex items-center justify-between">
                          <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-5 h-5" /></div>
                             <span className="px-5 py-2 bg-rose-600 text-white text-[11px] font-black uppercase rounded-full tracking-widest">Protocol Blocked: Neural Performance Deficit</span>
                          </div>
-                         <button onClick={() => setCoachingFeedback(null)} className="p-2 text-white/40 hover:text-white transition-colors"><ICONS.X className="w-6 h-6" /></button>
+                         <button onClick={() => {setCoachingFeedback(null); setShowCoachingDetails(false);}} className="p-2 text-white/40 hover:text-white transition-colors"><ICONS.X className="w-6 h-6" /></button>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                         <div className="space-y-4">
-                            <h5 className="text-[10px] font-black uppercase text-rose-400 tracking-[0.2em]">Deficit Rationale</h5>
-                            <p className="text-md font-bold text-rose-50/90 leading-relaxed italic border-l-4 border-rose-500/30 pl-6">{coachingFeedback.failReason}</p>
-                         </div>
-                         <div className="space-y-4">
-                            <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">Strategic Guidance</h5>
-                            <p className="text-md font-bold text-indigo-50/90 leading-relaxed italic border-l-4 border-indigo-500/30 pl-6">{coachingFeedback.styleGuide}</p>
-                         </div>
-                      </div>
+                      {/* Dropdown Toggle Trigger */}
+                      <button 
+                        onClick={() => setShowCoachingDetails(!showCoachingDetails)}
+                        className="w-full group flex items-center justify-between p-8 bg-white/5 hover:bg-white/10 border-2 border-white/10 hover:border-indigo-500/40 rounded-[2rem] transition-all"
+                      >
+                         <span className="text-lg font-black text-indigo-100 italic group-hover:text-white text-left pr-6">
+                           do you want previous answer suggestion and correct answer click here to see it
+                         </span>
+                         <svg className={`w-8 h-8 text-indigo-500 transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                         </svg>
+                      </button>
 
-                      {coachingFeedback.idealResponse && (
-                         <div className="p-10 bg-indigo-600/10 border-2 border-indigo-500/30 rounded-[2.5rem] space-y-4 shadow-inner">
-                            <h5 className="text-[11px] font-black uppercase text-indigo-300 tracking-[0.3em]">Master Logic (Correct Response)</h5>
-                            <p className="text-2xl font-black text-white leading-[1.4] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
-                         </div>
+                      {/* Expandable Results Content */}
+                      {showCoachingDetails && (
+                        <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500 pt-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <div className="space-y-4">
+                                <h5 className="text-[10px] font-black uppercase text-rose-400 tracking-[0.2em]">Deficit Rationale</h5>
+                                <p className="text-md font-bold text-rose-50/90 leading-relaxed italic border-l-4 border-rose-500/30 pl-6">{coachingFeedback.failReason}</p>
+                            </div>
+                            <div className="space-y-4">
+                                <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">Strategic Guidance</h5>
+                                <p className="text-md font-bold text-indigo-50/90 leading-relaxed italic border-l-4 border-indigo-500/30 pl-6">{coachingFeedback.styleGuide}</p>
+                            </div>
+                          </div>
+
+                          {coachingFeedback.idealResponse && (
+                            <div className="p-10 bg-indigo-600/10 border-2 border-indigo-500/30 rounded-[2.5rem] space-y-4 shadow-inner">
+                                <h5 className="text-[11px] font-black uppercase text-indigo-300 tracking-[0.3em]">Master Logic (Correct Response)</h5>
+                                <p className="text-2xl font-black text-white leading-[1.4] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-6 pt-6 border-t border-white/5">
+                            <button onClick={handleTryAgain} className="flex-1 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-lg uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-3">
+                                <ICONS.Efficiency className="w-6 h-6" /> Try Again (Revert Turn)
+                            </button>
+                            <button onClick={handleProceedWithFeedback} className="px-10 py-6 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-700 active:scale-95 transition-all">Proceed with Feedback</button>
+                          </div>
+                        </div>
                       )}
-
-                      <div className="flex items-center gap-6 pt-6 border-t border-white/5">
-                         <button onClick={handleTryAgain} className="flex-1 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-lg uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-3">
-                            <ICONS.Efficiency className="w-6 h-6" /> Try Again (Revert Turn)
-                         </button>
-                         <button onClick={handleProceedWithFeedback} className="px-10 py-6 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-700 active:scale-95 transition-all">Proceed with Feedback</button>
-                      </div>
                   </div>
                 )}
                 <div className="h-10" /> {/* Spacer for scroll padding */}
