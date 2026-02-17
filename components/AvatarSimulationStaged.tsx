@@ -158,9 +158,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       return;
     }
 
-    window.aistudio.hasSelectedApiKey().then(hasKey => {
-      if (!hasKey) window.aistudio.openSelectKey();
-    });
+    // Safety check for window.aistudio
+    if (window.aistudio) {
+      const hasKey = await window.aistudio.hasSelectedApiKey();
+      if (!hasKey) {
+        await window.aistudio.openSelectKey();
+      }
+    }
 
     setSessionActive(true);
     setIsProcessing(true);
@@ -183,7 +187,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     ).then(url => {
       setAvatarUrl(url);
       setIsGeneratingAvatar(false);
-    }).catch(() => setIsGeneratingAvatar(false));
+    }).catch((err) => {
+      console.error("Avatar Gen Failed:", err);
+      setIsGeneratingAvatar(false);
+    });
 
     try {
       const stream = streamAvatarStagedSimulation(`START AT STAGE: ${startStageChoice}`, [], meetingContext, startStageChoice, kycContent);
@@ -199,9 +206,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
-    } catch (e) { 
+    } catch (e: any) { 
       console.error(e);
-      const errorMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: "Neural sync interrupted.", mode: 'standard' };
+      // Handle the "Requested entity was not found" error as per instructions
+      if (e.message?.includes("Requested entity was not found") && window.aistudio) {
+        window.aistudio.openSelectKey();
+      }
+      const errorMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: "Neural sync interrupted. Please ensure your API key is active and correctly configured.", mode: 'standard' };
       setMessages([errorMsg]);
     } finally { 
       setIsProcessing(false); 
@@ -304,7 +315,12 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         setMessages([...updatedHistory, aiMsg]);
         playAIQuestion(cleaned);
       }
-    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+    } catch (e: any) { 
+      console.error(e);
+      if (e.message?.includes("Requested entity was not found") && window.aistudio) {
+        window.aistudio.openSelectKey();
+      }
+    } finally { setIsProcessing(false); }
   };
 
   const handleTryAgain = () => {
@@ -363,7 +379,12 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages(prev => [...prev, aiMsg]);
       playAIQuestion(cleaned);
-    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+    } catch (e: any) { 
+      console.error(e); 
+      if (e.message?.includes("Requested entity was not found") && window.aistudio) {
+        window.aistudio.openSelectKey();
+      }
+    } finally { setIsProcessing(false); }
   };
 
   const handleEndSession = async () => {
@@ -516,7 +537,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
            </div>
 
            <div className="pt-6">
-              <button onClick={handleInitiate} className="px-24 py-10 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Full Simulation</button>
+              <button 
+                onClick={handleInitiate} 
+                disabled={isProcessing}
+                className="px-24 py-10 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? 'Synchronizing...' : 'Start Full Simulation'}
+              </button>
               <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-600 mt-8">Neural Presence Engine: V3.1 Primed</p>
            </div>
         </div>
