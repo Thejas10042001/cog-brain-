@@ -913,13 +913,15 @@ export async function generateClientAvatar(name: string, company: string): Promi
           aspectRatio: "1:1",
           imageSize: "1K"
         },
+        // Fix: Use camelCase 'googleSearch' as per Gemini API guidelines for tool definition.
         tools: [{googleSearch: {}}],
       },
     });
 
     for (const part of response.candidates[0].content.parts) {
       if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
+        const base64EncodeString: string = part.inlineData.data;
+        return `data:image/png;base64,${base64EncodeString}`;
       }
     }
     return null;
@@ -1131,7 +1133,6 @@ export async function generateExplanation(question: string, context: AnalysisRes
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Explain the deep sales strategy behind: "${question}" based on the buyer snapshot: ${JSON.stringify(context.snapshot)}.`,
-    // Fix: thinkingBudget must be wrapped in thinkingConfig per SDK guidelines
     config: { thinkingConfig: { thinkingBudget: 0 } }
   });
   return response.text || "";

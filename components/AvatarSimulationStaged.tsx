@@ -88,6 +88,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   }, [sessionActive, isAISpeaking]);
 
   const playAIQuestion = async (text: string) => {
+    if (!text.trim()) {
+      setIsAISpeaking(false);
+      return;
+    }
     setIsAISpeaking(true);
     setIsPaused(false);
     try {
@@ -107,6 +111,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         };
         activeAudioSource.current = source;
         source.start();
+      } else {
+        setIsAISpeaking(false);
       }
     } catch (e) {
       setIsAISpeaking(false);
@@ -129,10 +135,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       return;
     }
 
-    // High quality generation requires an API key selection
-    if (!(await window.aistudio.hasSelectedApiKey())) {
-      await window.aistudio.openSelectKey();
-    }
+    // Trigger API Key selection but proceed immediately to avoid race conditions or blocking
+    window.aistudio.hasSelectedApiKey().then(hasKey => {
+      if (!hasKey) window.aistudio.openSelectKey();
+    });
 
     setSessionActive(true);
     setIsProcessing(true);
@@ -147,8 +153,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
 
-    // Parallelize Avatar Generation and Simulation Initiation
-    const avatarPromise = generateClientAvatar(
+    // Start avatar generation in background
+    generateClientAvatar(
       meetingContext.clientNames || "Executive", 
       meetingContext.clientCompany || "Enterprise"
     ).then(url => {
@@ -161,6 +167,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       let firstMsg = "";
       for await (const chunk of stream) firstMsg += chunk;
       
+      if (!firstMsg.trim()) {
+        throw new Error("Neural core returned an empty transmission.");
+      }
+
       const hintMatch = firstMsg.match(/\[HINT: (.*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
@@ -168,7 +178,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
-    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+    } catch (e) { 
+      console.error(e);
+      const errorMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: "Neural sync interrupted. Please verify your KYC source and API link.", mode: 'standard' };
+      setMessages([errorMsg]);
+    } finally { 
+      setIsProcessing(false); 
+    }
   };
 
   const handleCommit = async () => {
@@ -485,7 +501,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                       </div>
                    </div>
                    <p className="text-5xl font-bold italic leading-[1.4] text-white tracking-tight text-center">
-                      {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
+                      {messages[messages.length - 1]?.content || (isProcessing ? "Establishing behavioral synchronization..." : "Initializing simulation core...")}
                    </p>
                 </div>
 
