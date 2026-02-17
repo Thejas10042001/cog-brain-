@@ -5,7 +5,8 @@ import {
   streamAvatarStagedSimulation, 
   generatePitchAudio, 
   decodeAudioData,
-  evaluateAvatarSession 
+  evaluateAvatarSession,
+  generateClientAvatar
 } from '../services/geminiService';
 import { GPTMessage, MeetingContext, StagedSimStage, StoredDocument, ComprehensiveAvatarReport } from '../types';
 
@@ -39,6 +40,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   
+  // Avatar state
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
+
   // Track ratings for each stage
   const [stageRatings, setStageRatings] = useState<Record<string, number | 'skipped'>>({});
   const [showCelebration, setShowCelebration] = useState(false);
@@ -123,8 +128,15 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       alert("Please select a KYC Document in Configuration first.");
       return;
     }
+
+    // High quality generation requires an API key selection
+    if (!(await window.aistudio.hasSelectedApiKey())) {
+      await window.aistudio.openSelectKey();
+    }
+
     setSessionActive(true);
     setIsProcessing(true);
+    setIsGeneratingAvatar(true);
     setMessages([]);
     setCurrentCaption("");
     setCoachingFeedback(null);
@@ -134,6 +146,15 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
+
+    // Parallelize Avatar Generation and Simulation Initiation
+    const avatarPromise = generateClientAvatar(
+      meetingContext.clientNames || "Executive", 
+      meetingContext.clientCompany || "Enterprise"
+    ).then(url => {
+      setAvatarUrl(url);
+      setIsGeneratingAvatar(false);
+    }).catch(() => setIsGeneratingAvatar(false));
 
     try {
       const stream = streamAvatarStagedSimulation(`START AT STAGE: ${startStageChoice}`, [], meetingContext, startStageChoice, kycContent);
@@ -339,8 +360,9 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
 
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
-           <div className="p-8 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl">
-              <ICONS.Brain className="w-32 h-32 text-indigo-600 animate-pulse" />
+           <div className="p-10 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-indigo-600/10 scale-0 group-hover:scale-100 transition-transform duration-1000 rounded-full blur-3xl opacity-50"></div>
+              <ICONS.Efficiency className="w-32 h-32 text-indigo-600 relative z-10" />
            </div>
            <div className="space-y-6">
               <h2 className="text-6xl font-black tracking-tight">Staged Simulation Node</h2>
@@ -413,14 +435,37 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                 </h3>
              </div>
 
-             {/* Main Visual Core */}
+             {/* Main Visual Core - Replaced Brain with Client Avatar */}
              <div className="relative flex flex-col items-center">
                 <div className="relative z-20">
-                   <ICONS.Brain className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'text-indigo-500 drop-shadow-[0_0_60px_rgba(79,70,229,0.6)] scale-110' : 'text-slate-800'}`} />
+                   {isGeneratingAvatar ? (
+                     <div className="w-80 h-80 rounded-full border-4 border-indigo-500/30 flex flex-col items-center justify-center bg-slate-900 animate-pulse">
+                        <ICONS.Search className="w-16 h-16 text-indigo-500 mb-4" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300">Searching LinkedIn/Google...</span>
+                     </div>
+                   ) : avatarUrl ? (
+                     <div className="relative">
+                        <img 
+                          src={avatarUrl} 
+                          alt="Client Avatar" 
+                          className={`w-80 h-80 rounded-full object-cover border-4 transition-all duration-700 ${isAISpeaking ? 'border-indigo-500 shadow-[0_0_80px_rgba(79,70,229,0.7)] scale-110' : 'border-slate-800'}`} 
+                        />
+                        {isAISpeaking && (
+                           <div className="absolute inset-0 rounded-full border-4 border-indigo-400 animate-ping opacity-30"></div>
+                        )}
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-6 py-2 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-400 shadow-xl whitespace-nowrap">
+                           {meetingContext.clientNames || 'Executive'}
+                        </div>
+                     </div>
+                   ) : (
+                     <div className="w-80 h-80 rounded-full bg-slate-900 border-4 border-slate-800 flex items-center justify-center text-slate-700">
+                        <ICONS.Document className="w-24 h-24" />
+                     </div>
+                   )}
                 </div>
                 
                 {meetingContext.clonedVoiceBase64 && (
-                   <div className="mt-10 flex items-center gap-4 px-8 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
+                   <div className="mt-12 flex items-center gap-4 px-8 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
                       <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
                       <span className="text-[12px] font-black text-emerald-400 uppercase tracking-widest">
                         Neural Vocal Mimicry Active
