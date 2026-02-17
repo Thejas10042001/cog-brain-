@@ -35,8 +35,12 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   const [isPaused, setIsPaused] = useState(false);
   const [isUserListening, setIsUserListening] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
-  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string } | null>(null);
+  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
+  
+  // Track ratings for each stage
+  const [stageRatings, setStageRatings] = useState<Record<string, number | 'skipped'>>({});
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -103,36 +107,6 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     }
   };
 
-  const handlePauseResume = async () => {
-    if (!audioContextRef.current) return;
-    if (isPaused) {
-      await audioContextRef.current.resume();
-      setIsPaused(false);
-    } else {
-      await audioContextRef.current.suspend();
-      setIsPaused(true);
-    }
-  };
-
-  const handleRepeat = async () => {
-    if (!lastAudioBytes.current || !audioContextRef.current) return;
-    if (activeAudioSource.current) {
-      activeAudioSource.current.stop();
-    }
-    const buffer = await decodeAudioData(lastAudioBytes.current, audioContextRef.current, 24000, 1);
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    source.onended = () => {
-      setIsAISpeaking(false);
-      startListening();
-    };
-    activeAudioSource.current = source;
-    setIsAISpeaking(true);
-    setIsPaused(false);
-    source.start();
-  };
-
   const startListening = () => {
     if (recognitionRef.current && !isAISpeaking) {
       try { recognitionRef.current.start(); setIsUserListening(true); } catch (e) {}
@@ -153,6 +127,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     setMessages([]);
     setCurrentCaption("");
     setCoachingFeedback(null);
+    setStageRatings({});
     setCurrentStage(startStageChoice);
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
@@ -163,7 +138,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       let firstMsg = "";
       for await (const chunk of stream) firstMsg += chunk;
       
-      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]/, "").trim();
+      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
@@ -192,11 +167,21 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       const isFail = response.includes('[RESULT: FAIL]');
 
       if (isSuccess) {
+        // Extract Rating
+        const ratingMatch = response.match(/\[RATING: (\d+)\]/);
+        const rating = ratingMatch ? parseInt(ratingMatch[1]) : 5;
+        
+        setStageRatings(prev => ({ ...prev, [currentStage]: rating }));
+        setShowCelebration(true);
+        
+        // Hide celebration after 3.5 seconds
+        setTimeout(() => setShowCelebration(false), 3500);
+
         const nextIdx = STAGES.indexOf(currentStage) + 1;
         if (nextIdx < STAGES.length) {
           setCurrentStage(STAGES[nextIdx]);
         }
-        const cleaned = response.replace(/\[RESULT: SUCCESS\]/, "").trim();
+        const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RATING: \d+\]/, "").trim();
         const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
         setMessages([...updatedHistory, aiMsg]);
         setCurrentCaption("");
@@ -205,11 +190,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         const coachMatch = response.match(/\[COACHING: (.*?)\]/);
         const styleMatch = response.match(/\[STYLE_GUIDE: (.*?)\]/);
         const retryMatch = response.match(/\[RETRY_PROMPT: (.*?)\]/);
+        const idealMatch = response.match(/\[IDEAL_RESPONSE: (.*?)\]/);
 
         setCoachingFeedback({
           failReason: coachMatch?.[1],
           styleGuide: styleMatch?.[1],
-          nextTry: retryMatch?.[1]
+          nextTry: retryMatch?.[1],
+          idealResponse: idealMatch?.[1]
         });
 
         const retryText = retryMatch?.[1] || "Please try again with a better approach.";
@@ -233,6 +220,9 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     setIsProcessing(true);
     setCoachingFeedback(null);
     setCurrentCaption("");
+    
+    // Mark as skipped in ratings
+    setStageRatings(prev => ({ ...prev, [currentStage]: 'skipped' }));
 
     const nextStage = STAGES[currentIndex + 1];
     setCurrentStage(nextStage);
@@ -245,7 +235,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       let response = "";
       for await (const chunk of stream) response += chunk;
 
-      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]/, "").trim();
+      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]/, "").trim();
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages(prev => [...prev, aiMsg]);
       playAIQuestion(cleaned);
@@ -265,35 +255,73 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
+  const handleTryAgain = () => {
+    setCoachingFeedback(null);
+    setCurrentCaption("");
+    startListening();
+  };
+
+  const StarRating = ({ rating }: { rating: number | 'skipped' }) => {
+    if (rating === 'skipped') return <span className="text-[10px] font-black uppercase text-slate-600">Skipped</span>;
+    return (
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map(star => (
+          <svg key={star} className={`w-3.5 h-3.5 ${star <= rating ? 'text-amber-400 fill-current' : 'text-slate-800'}`} viewBox="0 0 24 24">
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+          </svg>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
+      {/* Celebration Overlay */}
+      {showCelebration && (
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center bg-indigo-600/20 backdrop-blur-[2px] animate-celebrate-bg">
+           <div className="text-center animate-celebrate-text">
+              <div className="flex justify-center mb-6 gap-2">
+                 {[...Array(20)].map((_, i) => (
+                   <div key={i} className="confetti" style={{ 
+                     backgroundColor: ['#4f46e5', '#10b981', '#fbbf24', '#f43f5e'][i % 4],
+                     left: `${Math.random() * 100}%`,
+                     animationDelay: `${Math.random() * 2}s`
+                   }}></div>
+                 ))}
+              </div>
+              <h2 className="text-8xl font-black text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.5)] uppercase">CONGRATULATIONS!</h2>
+              <p className="text-3xl font-black text-indigo-200 mt-4 uppercase tracking-[0.4em]">Stage Mastery Achieved</p>
+           </div>
+        </div>
+      )}
+
       {!sessionActive ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-5xl mx-auto px-12 py-12">
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
            <div className="p-8 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl">
               <ICONS.Brain className="w-32 h-32 text-indigo-600 animate-pulse" />
            </div>
            <div className="space-y-6">
               <h2 className="text-6xl font-black tracking-tight">Staged Simulation Node</h2>
-              <p className="text-slate-400 text-2xl font-medium leading-relaxed max-w-3xl mx-auto">
+              <p className="text-slate-400 text-2xl font-medium leading-relaxed max-w-5xl mx-auto">
                 Advance through 6 tactical stages. Select your starting point below to begin the challenge.
               </p>
            </div>
            
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full px-8">
               {STAGES.map((s, i) => {
                 const isSelected = startStageChoice === s;
                 return (
                   <button 
                     key={s} 
                     onClick={() => setStartStageChoice(s)}
-                    className={`p-6 border-2 rounded-[2rem] text-left transition-all group flex flex-col gap-3 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-white/5 border-white/10 hover:border-indigo-400'}`}
+                    className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-white/5 border-white/10 hover:border-indigo-400'}`}
                   >
                     <div className="flex items-center justify-between">
-                       <span className={`text-[10px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Node 0{i+1}</span>
-                       {isSelected && <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>}
+                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Node 0{i+1}</span>
+                       {isSelected && <div className="w-3 h-3 rounded-full bg-white animate-pulse"></div>}
                     </div>
-                    <h4 className={`text-xl font-black ${isSelected ? 'text-white' : 'text-slate-200'}`}>{s}</h4>
-                    <p className={`text-xs font-medium leading-relaxed ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
+                    <h4 className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-slate-200'}`}>{s}</h4>
+                    <p className={`text-sm font-medium leading-relaxed ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
                       {STAGE_DESCRIPTIONS[s]}
                     </p>
                   </button>
@@ -302,27 +330,32 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
            </div>
 
            <div className="pt-6">
-              <button onClick={handleInitiate} className="px-20 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Simulation @ {startStageChoice}</button>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mt-6">Neural Presence Engine: V3.1 Primed</p>
+              <button onClick={handleInitiate} className="px-24 py-10 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Full Simulation @ {startStageChoice}</button>
+              <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-600 mt-8">Neural Presence Engine: V3.1 Primed for Full-Scale Engagement</p>
            </div>
         </div>
       ) : report ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in">
-           <h3 className="text-4xl font-black">Simulation Conclusion</h3>
-           <p className="text-slate-400">Total Deal Readiness: {report.deal_readiness_score}/10</p>
-           <button onClick={() => setReport(null)} className="px-10 py-4 bg-indigo-600 rounded-full font-black uppercase tracking-widest">Close Audit</button>
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in px-12">
+           <h3 className="text-5xl font-black">Simulation Conclusion</h3>
+           <p className="text-slate-400 text-xl">Total Deal Readiness: {report.deal_readiness_score}/10</p>
+           <button onClick={() => setReport(null)} className="px-12 py-5 bg-indigo-600 rounded-full font-black uppercase tracking-widest text-lg">Close Audit</button>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full py-16 px-12 gap-12 justify-center">
-             {/* Stage Progress Tracker */}
-             <div className="grid grid-cols-6 gap-6">
+        <div className="flex-1 flex flex-col w-full py-16 px-16 gap-12 justify-center">
+             {/* Stage Progress Tracker with Ratings above */}
+             <div className="grid grid-cols-6 gap-8 w-full">
                 {STAGES.map((s, i) => {
                   const isActive = currentStage === s;
                   const isDone = STAGES.indexOf(currentStage) > i;
+                  const rating = stageRatings[s];
+                  
                   return (
-                    <div key={s} className="flex flex-col items-center gap-3 group transition-all">
-                       <div className={`h-2.5 w-full rounded-full transition-all duration-700 ${isDone ? 'bg-emerald-500' : isActive ? 'bg-indigo-500 shadow-[0_0_20px_rgba(79,70,229,0.6)]' : 'bg-slate-800'}`}></div>
-                       <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-400' : isDone ? 'text-emerald-400' : 'text-slate-600'}`}>{s}</span>
+                    <div key={s} className="flex flex-col items-center gap-2 group transition-all">
+                       <div className="h-6 flex items-center justify-center">
+                          {rating !== undefined && <StarRating rating={rating} />}
+                       </div>
+                       <div className={`h-3 w-full rounded-full transition-all duration-700 ${isDone ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : isActive ? 'bg-indigo-500 shadow-[0_0_25px_rgba(79,70,229,0.7)]' : 'bg-slate-800'}`}></div>
+                       <span className={`text-[12px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-400' : isDone ? 'text-emerald-400' : 'text-slate-600'}`}>{s}</span>
                     </div>
                   );
                 })}
@@ -330,10 +363,10 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
 
              {/* Focus Header */}
              <div className="text-center space-y-4">
-                <span className="px-6 py-2 bg-indigo-600/20 text-indigo-400 text-xs font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
-                   Stage: {currentStage.toUpperCase()}
+                <span className="px-8 py-3 bg-indigo-600/20 text-indigo-400 text-sm font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
+                   Strategic Stage: {currentStage.toUpperCase()}
                 </span>
-                <h3 className="text-5xl font-black tracking-tight leading-tight">
+                <h3 className="text-6xl font-black tracking-tight leading-tight">
                    Presence: {meetingContext.clientNames || 'Executive Client'}
                 </h3>
              </div>
@@ -341,82 +374,138 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
              {/* Main Visual Core */}
              <div className="relative flex flex-col items-center">
                 <div className="relative z-20">
-                   <ICONS.Brain className={`w-64 h-64 transition-all duration-700 ${isAISpeaking ? 'text-indigo-500 drop-shadow-[0_0_40px_rgba(79,70,229,0.5)] scale-110' : 'text-slate-800'}`} />
+                   <ICONS.Brain className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'text-indigo-500 drop-shadow-[0_0_60px_rgba(79,70,229,0.6)] scale-110' : 'text-slate-800'}`} />
                 </div>
                 
-                {meetingContext.clonedVoiceBase64 && (
-                   <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span>
+                {(meetingContext.clonedVoiceBase64 || meetingContext.famousPersonaName) && (
+                   <div className="mt-10 flex items-center gap-4 px-8 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
+                      <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
+                      <span className="text-[12px] font-black text-emerald-400 uppercase tracking-widest">
+                        {meetingContext.famousPersonaName ? `${meetingContext.famousPersonaName} Archetype Active` : 'Neural Vocal Mimicry Active'}
+                      </span>
                    </div>
                 )}
              </div>
 
              {/* Cinematic Narrative Display */}
-             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
-                <div className="flex items-center justify-between mb-2">
-                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry</h5>
-                   <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{isAISpeaking ? 'Speaking' : 'Waiting'}</span>
+             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-16 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700 w-full">
+                <div className="flex items-center justify-between mb-4">
+                   <h5 className="text-[12px] font-black uppercase tracking-[0.4em] text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry Node</h5>
+                   <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
+                      <span className="text-[12px] font-black uppercase tracking-widest text-slate-500">{isAISpeaking ? 'Transmitting' : 'Awaiting Logic'}</span>
                    </div>
                 </div>
-                <p className="text-4xl font-bold italic leading-[1.4] text-white tracking-tight">
+                <p className="text-5xl font-bold italic leading-[1.4] text-white tracking-tight text-center">
                    {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
                 </p>
              </div>
 
-             {/* Coaching Feedback Overlay */}
+             {/* Coaching Feedback Overlay - ENHANCED */}
              {coachingFeedback && (
-               <div className="p-10 bg-rose-950/30 border border-rose-500/30 rounded-[3rem] space-y-6 animate-in slide-in-from-top-4 duration-500">
-                  <div className="flex items-center gap-4">
-                     <span className="px-4 py-1.5 bg-rose-600 text-white text-[10px] font-black uppercase rounded-full">Protocol Blocked</span>
-                     <h4 className="text-2xl font-black text-rose-200">Neural Performance Deficit</h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                     <div className="space-y-3">
-                        <h5 className="text-[10px] font-black uppercase text-rose-400 tracking-widest">Deficit Rationale</h5>
-                        <p className="text-lg font-medium text-rose-100 italic leading-relaxed">{coachingFeedback.failReason}</p>
+               <div className="p-12 bg-rose-950/40 border-2 border-rose-500/30 rounded-[4rem] space-y-10 animate-in slide-in-from-top-4 duration-500 w-full shadow-[0_40px_100px_-20px_rgba(244,63,94,0.3)]">
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-6">
+                        <span className="px-6 py-2 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full shadow-lg">Strategic Deficit Detected</span>
+                        <h4 className="text-3xl font-black text-rose-100">Neural Performance Correction Protocol</h4>
                      </div>
-                     <div className="space-y-3">
-                        <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Master Protocol Required</h5>
-                        <p className="text-lg font-medium text-indigo-100 italic leading-relaxed">{coachingFeedback.styleGuide}</p>
+                     <button 
+                       onClick={handleTryAgain}
+                       className="px-8 py-3 bg-white text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95 shadow-xl"
+                     >
+                       Try Again
+                     </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                     <div className="space-y-4 p-8 bg-black/20 rounded-[2.5rem] border border-white/5">
+                        <h5 className="text-[11px] font-black uppercase text-rose-400 tracking-widest flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Deficit Rationale
+                        </h5>
+                        <p className="text-xl font-medium text-rose-50/80 italic leading-relaxed">{coachingFeedback.failReason}</p>
+                     </div>
+                     <div className="space-y-4 p-8 bg-black/20 rounded-[2.5rem] border border-white/5">
+                        <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-widest flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Master Protocol Required
+                        </h5>
+                        <p className="text-xl font-medium text-indigo-50/80 italic leading-relaxed">{coachingFeedback.styleGuide}</p>
                      </div>
                   </div>
+
+                  {coachingFeedback.idealResponse && (
+                    <div className="p-10 bg-indigo-600/10 border-2 border-indigo-500/20 rounded-[3rem] space-y-6">
+                       <div className="flex items-center gap-3">
+                          <ICONS.Sparkles className="w-6 h-6 text-indigo-400" />
+                          <h5 className="text-[12px] font-black uppercase text-indigo-300 tracking-[0.3em]">Optimized Neural Response (Correct logic)</h5>
+                       </div>
+                       <p className="text-2xl font-bold text-white leading-relaxed italic">
+                          “{coachingFeedback.idealResponse}”
+                       </p>
+                       <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Grounded in verified document context and psychological buyer alignment.</p>
+                    </div>
+                  )}
                </div>
              )}
 
              {/* User Interaction Layer */}
-             <div className="space-y-8">
+             <div className="space-y-10 w-full">
                 <div className="relative group">
                    <textarea 
                      value={currentCaption} 
                      onChange={(e) => setCurrentCaption(e.target.value)} 
-                     className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-48 resize-none placeholder:text-slate-800 leading-relaxed" 
-                     placeholder={`Provide strategic response for ${meetingContext.clientNames || 'the client'}...`}
+                     className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3.5rem] px-16 py-12 text-3xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-60 resize-none placeholder:text-slate-700 leading-relaxed" 
+                     placeholder={`Deploy strategic response for the ${currentStage} stage...`}
                    />
-                   <button onClick={() => startListening()} className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-8 h-8" /></button>
+                   <button onClick={() => startListening()} className={`absolute right-12 top-1/2 -translate-y-1/2 p-8 rounded-[2rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-10 h-10" /></button>
                 </div>
-                <div className="flex items-center gap-6">
-                   <div className="flex-1 flex items-center gap-4">
-                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Strategy</button>
+                <div className="flex items-center gap-8">
+                   <div className="flex-1 flex items-center gap-6">
+                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-10 bg-indigo-600 text-white rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Logic Node</button>
                       
                       {currentStage !== 'Closing' && (
                         <button 
                           onClick={handleSkip} 
                           disabled={isProcessing} 
-                          className="px-12 py-8 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
+                          className="px-16 py-10 bg-slate-800 text-slate-300 border border-slate-700 rounded-[3rem] font-black text-sm uppercase tracking-widest hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
                         >
-                          Skip Node
+                          Skip Stage
                         </button>
                       )}
                    </div>
                    
-                   <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:bg-rose-700 transition-all active:scale-95">End Early</button>
+                   <button onClick={handleEndSession} disabled={isProcessing} className="px-16 py-10 bg-rose-600 text-white rounded-[3rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all active:scale-95">Terminate & Audit</button>
                 </div>
              </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes celebrate-bg {
+          0% { opacity: 0; }
+          10%, 90% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes celebrate-text {
+          0% { transform: scale(0.5); opacity: 0; }
+          15%, 85% { transform: scale(1); opacity: 1; }
+          100% { transform: scale(1.2); opacity: 0; }
+        }
+        .animate-celebrate-bg { animation: celebrate-bg 3.5s forwards ease-in-out; }
+        .animate-celebrate-text { animation: celebrate-text 3.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        .confetti {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border-radius: 2px;
+          animation: confetti-fall 3s linear forwards;
+          z-index: 101;
+        }
+        @keyframes confetti-fall {
+          0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 };
