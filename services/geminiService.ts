@@ -572,7 +572,7 @@ Focus: ${context.meetingFocus}`;
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction,
+        systemInstruction: systemInstruction,
         thinkingConfig: { thinkingBudget: 16000 }
       }
     });
@@ -647,7 +647,7 @@ If the response is weak, vague, lacks document grounding, or misses the objectiv
 1. Start your response with: [RESULT: FAIL]
 2. Provide a section: [COACHING: Explain EXACTLY why they failed. Mention what was missing.]
 3. Provide a section: [STYLE_GUIDE: Tell them how they should have presented it - e.g., 'Be more direct', 'Use metrics', 'Show empathy'].
-4. Provide a section: [IDEAL_RESPONSE: Show them exactly what a world-class, persuasive, and grounded response would look like for this specific stage and persona.]
+4. Provide a section: [IDEAL_RESPONSE: Show them exactly what a world-class, persuasive, and grounded response would look like for this specific stage and persona. This must be the 'Correct Answer' to be delivered to the client.]
 5. Provide a section: [RETRY_PROMPT: Repeat your question for the stage ${currentStage} but with a slight twist to push them.]
 
 If the response is strong, professional, and well-aligned:

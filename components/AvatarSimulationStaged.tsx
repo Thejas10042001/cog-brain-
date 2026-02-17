@@ -275,6 +275,34 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     startListening();
   };
 
+  const handleProceedDespiteFailure = async () => {
+    if (isProcessing) return;
+    setCoachingFeedback(null);
+    setIsProcessing(true);
+    setCurrentHint(null);
+
+    const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
+    const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
+
+    try {
+      const stream = streamAvatarStagedSimulation(`Ignore previous failure. Ask me a new specific question for the ${currentStage} stage to move the conversation forward.`, messages, meetingContext, currentStage, kycContent);
+      let response = "";
+      for await (const chunk of stream) response += chunk;
+
+      const hintMatch = response.match(/\[HINT: (.*?)\]/);
+      if (hintMatch) setCurrentHint(hintMatch[1]);
+
+      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
+      const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+      setMessages(prev => [...prev, aiMsg]);
+      playAIQuestion(cleaned);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const StarRating = ({ rating }: { rating: number | 'skipped' }) => {
     if (rating === 'skipped') return <span className="text-[10px] font-black uppercase text-slate-600">Skipped</span>;
     return (
@@ -401,9 +429,9 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                 )}
              </div>
 
-             {/* Cinematic Narrative & Hint Display */}
-             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 w-full items-stretch">
-                <div className="lg:col-span-3 bg-white/5 backdrop-blur-3xl border border-white/10 p-16 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+             {/* Vertical Stack: Cinematic Narrative & Hint Display */}
+             <div className="flex flex-col gap-6 w-full items-center">
+                <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-16 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
                    <div className="flex items-center justify-between mb-4">
                       <h5 className="text-[12px] font-black uppercase tracking-[0.4em] text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry Node</h5>
                       <div className="flex items-center gap-3">
@@ -416,19 +444,25 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                    </p>
                 </div>
 
-                {/* Tactical Clue Card */}
-                <div className={`bg-indigo-900/40 border border-indigo-500/30 p-10 rounded-[3.5rem] shadow-2xl flex flex-col justify-center items-center text-center transition-all duration-1000 ${currentHint ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}>
-                   <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center mb-6 shadow-xl shadow-indigo-900/50">
-                      <ICONS.Sparkles className="w-8 h-8 text-indigo-200" />
-                   </div>
-                   <h5 className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-4">Strategic Clue</h5>
-                   <p className="text-lg font-bold text-white italic leading-snug">
-                      {currentHint || "Synthesizing guidance..."}
-                   </p>
-                   <div className="mt-6 pt-6 border-t border-indigo-500/20 w-full">
-                      <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Protocol Mastery Tip</p>
-                   </div>
-                </div>
+                {/* Tactical Clue Card - Stacked Directly Beneath */}
+                {currentHint && (
+                  <div className="w-full max-w-4xl bg-indigo-900/40 border border-indigo-500/30 p-10 rounded-[3.5rem] shadow-2xl flex flex-col justify-center items-center text-center transition-all duration-1000 animate-in slide-in-from-top-4">
+                    <div className="flex items-center gap-6">
+                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shadow-xl shadow-indigo-900/50">
+                          <ICONS.Sparkles className="w-6 h-6 text-indigo-200" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <h5 className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-1">Strategic Clue</h5>
+                        <p className="text-xl font-bold text-white italic leading-snug">
+                            {currentHint}
+                        </p>
+                      </div>
+                      <div className="hidden md:block pl-6 border-l border-indigo-500/20">
+                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Protocol Tip</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
              </div>
 
              {/* Coaching Feedback Overlay */}
@@ -439,12 +473,20 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                         <span className="px-6 py-2 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full shadow-lg">Strategic Deficit Detected</span>
                         <h4 className="text-3xl font-black text-rose-100">Neural Performance Correction Protocol</h4>
                      </div>
-                     <button 
-                       onClick={handleTryAgain}
-                       className="px-8 py-3 bg-white text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95 shadow-xl"
-                     >
-                       Try Again
-                     </button>
+                     <div className="flex items-center gap-4">
+                        <button 
+                          onClick={handleProceedDespiteFailure}
+                          className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl"
+                        >
+                          Proceed Despite Deficit
+                        </button>
+                        <button 
+                          onClick={handleTryAgain}
+                          className="px-8 py-3 bg-white text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95 shadow-xl"
+                        >
+                          Try Again
+                        </button>
+                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -466,12 +508,12 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                     <div className="p-10 bg-indigo-600/10 border-2 border-indigo-500/20 rounded-[3rem] space-y-6">
                        <div className="flex items-center gap-3">
                           <ICONS.Sparkles className="w-6 h-6 text-indigo-400" />
-                          <h5 className="text-[12px] font-black uppercase text-indigo-300 tracking-[0.3em]">Optimized Neural Response (Correct logic)</h5>
+                          <h5 className="text-[12px] font-black uppercase text-indigo-300 tracking-[0.3em]">Correct Answer (Strategic Response for Client)</h5>
                        </div>
                        <p className="text-2xl font-bold text-white leading-relaxed italic">
                           “{coachingFeedback.idealResponse}”
                        </p>
-                       <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Grounded in verified document context and psychological buyer alignment.</p>
+                       <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Grounded in verified document context and psychological buyer alignment. Replicate this logic to advance.</p>
                     </div>
                   )}
                </div>
