@@ -599,7 +599,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                       {isGeneratingAvatar ? (
                         <div className="w-56 h-56 rounded-full border-4 border-indigo-500/30 flex flex-col items-center justify-center bg-slate-900 animate-pulse">
                            <ICONS.Search className="w-10 h-10 text-indigo-500 mb-4" />
-                           <span className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-300">Scanning Records...</span>
+                           <span className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-300">Scanning Neural Records...</span>
                         </div>
                       ) : avatarUrl ? (
                         <div className="relative group/avatar">
@@ -649,17 +649,19 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                          <button onClick={() => {setCoachingFeedback(null); setShowCoachingDetails(false);}} className="p-2 text-white/40 hover:text-white transition-colors"><ICONS.X className="w-6 h-6" /></button>
                       </div>
 
-                      {/* Dropdown Toggle Trigger */}
+                      {/* Dropdown Toggle Trigger - Framed in Cognitive Sentence */}
                       <button 
                         onClick={() => setShowCoachingDetails(!showCoachingDetails)}
-                        className="w-full group flex items-center justify-between p-8 bg-white/5 hover:bg-white/10 border-2 border-white/10 hover:border-indigo-500/40 rounded-[2rem] transition-all"
+                        className="w-full group flex items-center justify-between p-8 bg-white/5 hover:bg-white/10 border-2 border-white/10 hover:border-indigo-500/40 rounded-[2rem] transition-all shadow-inner"
                       >
                          <span className="text-lg font-black text-indigo-100 italic group-hover:text-white text-left pr-6">
-                           do you want previous answer suggestion and correct answer click here to see it
+                           Initialize Neural Alignment: Access Strategic Correction & Master Logic Node
                          </span>
-                         <svg className={`w-8 h-8 text-indigo-500 transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                         </svg>
+                         <div className={`w-10 h-10 rounded-full bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                            </svg>
+                         </div>
                       </button>
 
                       {/* Expandable Results Content */}
