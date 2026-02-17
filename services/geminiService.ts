@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure } from "../types";
 
@@ -633,6 +634,39 @@ Target Products: ${context.targetProducts}`;
   } catch (error) {
     console.error("Staged stream failed:", error);
     yield "Error: Staged Simulation Engine disconnected.";
+  }
+}
+
+/**
+ * Generates a professional avatar image for the client using nano banana model.
+ */
+// Fix: Added generateClientAvatar to resolve missing export in components/AvatarSimulationStaged.tsx
+export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-2.5-flash-image';
+  try {
+    const strategicPrompt = `A high-quality, professional corporate headshot of a business executive named ${name} from the company ${company}. 
+    Minimalist modern office background, soft cinematic lighting, ultra-detailed, professional attire.`;
+
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: {
+        parts: [{ text: strategicPrompt }],
+      },
+      config: {
+        imageConfig: { aspectRatio: "1:1" }
+      }
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        return `data:image/png;base64,${part.inlineData.data}`;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("Avatar image generation failed:", error);
+    return null;
   }
 }
 

@@ -5,13 +5,26 @@ import {
   streamAvatarStagedSimulation, 
   generatePitchAudio, 
   decodeAudioData,
-  evaluateAvatarSession 
+  evaluateAvatarSession,
+  generateClientAvatar
 } from '../services/geminiService';
 import { GPTMessage, MeetingContext, StagedSimStage, StoredDocument, ComprehensiveAvatarReport } from '../types';
 
 interface AvatarSimulationStagedProps {
   meetingContext: MeetingContext;
   documents: StoredDocument[];
+}
+
+interface StageAttempt {
+  question: string;
+  userAnswer: string;
+  result: 'SUCCESS' | 'FAIL' | 'SKIPPED' | 'INITIAL';
+  rating?: number;
+  feedback?: {
+    failReason?: string;
+    styleGuide?: string;
+    idealResponse?: string;
+  };
 }
 
 const STAGES: StagedSimStage[] = ['Ice Breakers', 'About Business', 'Pricing', 'Technical', 'Legal', 'Closing'];
@@ -31,6 +44,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [currentCaption, setCurrentCaption] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  // Fix: Added isExporting state to resolve Cannot find name 'setIsExporting' error
+  const [isExporting, setIsExporting] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isUserListening, setIsUserListening] = useState(false);
@@ -39,6 +54,14 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   
+  // Staged History Logic
+  const [stageHistory, setStageHistory] = useState<Record<string, StageAttempt[]>>({});
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(['Ice Breakers']));
+
+  // Avatar state
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
+
   // Track ratings for each stage
   const [stageRatings, setStageRatings] = useState<Record<string, number | 'skipped'>>({});
   const [showCelebration, setShowCelebration] = useState(false);
@@ -82,7 +105,18 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     }
   }, [sessionActive, isAISpeaking]);
 
+  const toggleStageExpand = (s: string) => {
+    const next = new Set(expandedStages);
+    if (next.has(s)) next.delete(s);
+    else next.add(s);
+    setExpandedStages(next);
+  };
+
   const playAIQuestion = async (text: string) => {
+    if (!text.trim()) {
+      setIsAISpeaking(false);
+      return;
+    }
     setIsAISpeaking(true);
     setIsPaused(false);
     try {
@@ -102,6 +136,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         };
         activeAudioSource.current = source;
         source.start();
+      } else {
+        setIsAISpeaking(false);
       }
     } catch (e) {
       setIsAISpeaking(false);
@@ -123,23 +159,41 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       alert("Please select a KYC Document in Configuration first.");
       return;
     }
+
+    window.aistudio.hasSelectedApiKey().then(hasKey => {
+      if (!hasKey) window.aistudio.openSelectKey();
+    });
+
     setSessionActive(true);
     setIsProcessing(true);
+    setIsGeneratingAvatar(true);
     setMessages([]);
+    setStageHistory({});
     setCurrentCaption("");
     setCoachingFeedback(null);
     setCurrentHint(null);
     setStageRatings({});
     setCurrentStage(startStageChoice);
+    setExpandedStages(new Set([startStageChoice]));
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
+
+    generateClientAvatar(
+      meetingContext.clientNames || "Executive", 
+      meetingContext.clientCompany || "Enterprise"
+    ).then(url => {
+      setAvatarUrl(url);
+      setIsGeneratingAvatar(false);
+    }).catch(() => setIsGeneratingAvatar(false));
 
     try {
       const stream = streamAvatarStagedSimulation(`START AT STAGE: ${startStageChoice}`, [], meetingContext, startStageChoice, kycContent);
       let firstMsg = "";
       for await (const chunk of stream) firstMsg += chunk;
       
+      if (!firstMsg.trim()) throw new Error("Neural core empty.");
+
       const hintMatch = firstMsg.match(/\[HINT: (.*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
@@ -147,11 +201,20 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
-    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+    } catch (e) { 
+      console.error(e);
+      const errorMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: "Neural sync interrupted.", mode: 'standard' };
+      setMessages([errorMsg]);
+    } finally { 
+      setIsProcessing(false); 
+    }
   };
 
   const handleCommit = async () => {
     if (isProcessing || !currentCaption.trim()) return;
+    const currentQuestion = messages[messages.length - 1]?.content || "";
+    const userResponseText = currentCaption;
+
     stopListening();
     setIsProcessing(true);
     setCoachingFeedback(null);
@@ -176,20 +239,32 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
       if (isSuccess) {
-        // Extract Rating
         const ratingMatch = response.match(/\[RATING: (\d+)\]/);
         const rating = ratingMatch ? parseInt(ratingMatch[1]) : 5;
         
         setStageRatings(prev => ({ ...prev, [currentStage]: rating }));
-        setShowCelebration(true);
         
-        // Hide celebration after 3.5 seconds
+        const attempt: StageAttempt = {
+          question: currentQuestion,
+          userAnswer: userResponseText,
+          result: 'SUCCESS',
+          rating
+        };
+        setStageHistory(prev => ({
+          ...prev,
+          [currentStage]: [...(prev[currentStage] || []), attempt]
+        }));
+
+        setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 3500);
 
         const nextIdx = STAGES.indexOf(currentStage) + 1;
         if (nextIdx < STAGES.length) {
-          setCurrentStage(STAGES[nextIdx]);
+          const nextS = STAGES[nextIdx];
+          setCurrentStage(nextS);
+          setExpandedStages(prev => new Set(prev).add(nextS));
         }
+
         const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
         const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
         setMessages([...updatedHistory, aiMsg]);
@@ -201,12 +276,24 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         const retryMatch = response.match(/\[RETRY_PROMPT: (.*?)\]/);
         const idealMatch = response.match(/\[IDEAL_RESPONSE: (.*?)\]/);
 
-        setCoachingFeedback({
+        const feedback = {
           failReason: coachMatch?.[1],
           styleGuide: styleMatch?.[1],
-          nextTry: retryMatch?.[1],
           idealResponse: idealMatch?.[1]
-        });
+        };
+
+        setCoachingFeedback({ ...feedback, nextTry: retryMatch?.[1] });
+
+        const attempt: StageAttempt = {
+          question: currentQuestion,
+          userAnswer: userResponseText,
+          result: 'FAIL',
+          feedback
+        };
+        setStageHistory(prev => ({
+          ...prev,
+          [currentStage]: [...(prev[currentStage] || []), attempt]
+        }));
 
         const retryText = retryMatch?.[1] || "Please try again with a better approach.";
         const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: retryText, mode: 'standard' };
@@ -226,17 +313,29 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     const currentIndex = STAGES.indexOf(currentStage);
     if (currentIndex >= STAGES.length - 1) return;
 
+    const currentQuestion = messages[messages.length - 1]?.content || "Manual Advance";
+    
     stopListening();
     setIsProcessing(true);
     setCoachingFeedback(null);
     setCurrentHint(null);
     setCurrentCaption("");
     
-    // Mark as skipped in ratings
     setStageRatings(prev => ({ ...prev, [currentStage]: 'skipped' }));
+    
+    const attempt: StageAttempt = {
+      question: currentQuestion,
+      userAnswer: "SKIPPED BY USER",
+      result: 'SKIPPED'
+    };
+    setStageHistory(prev => ({
+      ...prev,
+      [currentStage]: [...(prev[currentStage] || []), attempt]
+    }));
 
     const nextStage = STAGES[currentIndex + 1];
     setCurrentStage(nextStage);
+    setExpandedStages(prev => new Set(prev).add(nextStage));
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
@@ -253,11 +352,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages(prev => [...prev, aiMsg]);
       playAIQuestion(cleaned);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsProcessing(false);
-    }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
   const handleEndSession = async () => {
@@ -269,37 +364,68 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
-  const handleTryAgain = () => {
-    setCoachingFeedback(null);
-    setCurrentCaption("");
-    startListening();
-  };
-
-  const handleProceedDespiteFailure = async () => {
-    if (isProcessing) return;
-    setCoachingFeedback(null);
-    setIsProcessing(true);
-    setCurrentHint(null);
-
-    const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
-    const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
-
+  const exportPDF = async () => {
+    setIsExporting(true);
     try {
-      const stream = streamAvatarStagedSimulation(`Ignore previous failure. Ask me a new specific question for the ${currentStage} stage to move the conversation forward.`, messages, meetingContext, currentStage, kycContent);
-      let response = "";
-      for await (const chunk of stream) response += chunk;
+      const { jsPDF } = (window as any).jspdf;
+      const doc = new jsPDF();
+      let y = 20;
+      const margin = 20;
+      const width = 170;
 
-      const hintMatch = response.match(/\[HINT: (.*?)\]/);
-      if (hintMatch) setCurrentHint(hintMatch[1]);
+      const addHeader = (txt: string, size = 16) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(size);
+        doc.text(txt, margin, y);
+        y += 10;
+      };
 
-      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
-      const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
-      setMessages(prev => [...prev, aiMsg]);
-      playAIQuestion(cleaned);
+      const addLine = (txt: string, size = 10, font = "normal") => {
+        if (y > 275) { doc.addPage(); y = 20; }
+        doc.setFont("helvetica", font);
+        doc.setFontSize(size);
+        const split = doc.splitTextToSize(txt, width);
+        doc.text(split, margin, y);
+        y += (split.length * (size / 2)) + 4;
+      };
+
+      addHeader("Staged Simulation Master Transcript");
+      addLine(`Prospect: ${meetingContext.clientNames} (${meetingContext.clientCompany})`);
+      addLine(`Seller: ${meetingContext.sellerNames} (${meetingContext.sellerCompany})`);
+      addLine(`Date: ${new Date().toLocaleString()}`);
+      y += 5;
+
+      STAGES.forEach(s => {
+        const attempts = stageHistory[s];
+        if (!attempts || attempts.length === 0) return;
+
+        addHeader(`Stage: ${s.toUpperCase()}`, 12);
+        attempts.forEach((at, i) => {
+          addLine(`Attempt ${i + 1} - Result: ${at.result}`, 10, "bold");
+          addLine(`Agent: "${at.question}"`, 9, "italic");
+          addLine(`User: "${at.userAnswer}"`, 9);
+          if (at.feedback) {
+            addLine(`Protocol Deficit: ${at.feedback.failReason}`, 8, "italic");
+            addLine(`Style Guide: ${at.feedback.styleGuide}`, 8, "italic");
+          }
+          if (at.rating) addLine(`Stage Rating: ${at.rating}/5 Stars`, 9, "bold");
+          y += 2;
+        });
+        y += 5;
+      });
+
+      if (report) {
+         addHeader("Final Performance Audit");
+         addLine(`Deal Readiness Score: ${report.deal_readiness_score}/10`);
+         addLine(`Summary: ${report.conversation_summary.main_themes.join(', ')}`);
+      }
+
+      doc.save(`Simulation-History-${meetingContext.clientCompany}.pdf`);
     } catch (e) {
       console.error(e);
     } finally {
-      setIsProcessing(false);
+      setIsExporting(false);
     }
   };
 
@@ -318,7 +444,6 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
 
   return (
     <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
-      {/* Celebration Overlay */}
       {showCelebration && (
         <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center bg-indigo-600/20 backdrop-blur-[2px] animate-celebrate-bg">
            <div className="text-center animate-celebrate-text">
@@ -339,8 +464,9 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
 
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
-           <div className="p-8 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl">
-              <ICONS.Brain className="w-32 h-32 text-indigo-600 animate-pulse" />
+           <div className="p-10 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-indigo-600/10 scale-0 group-hover:scale-100 transition-transform duration-1000 rounded-full blur-3xl opacity-50"></div>
+              <ICONS.Efficiency className="w-32 h-32 text-indigo-600 relative z-10" />
            </div>
            <div className="space-y-6">
               <h2 className="text-6xl font-black tracking-tight">Staged Simulation Node</h2>
@@ -376,16 +502,12 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
               <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-600 mt-8">Neural Presence Engine: V3.1 Primed for Full-Scale Engagement</p>
            </div>
         </div>
-      ) : report ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in px-12">
-           <h3 className="text-5xl font-black">Simulation Conclusion</h3>
-           <p className="text-slate-400 text-xl">Total Deal Readiness: {report.deal_readiness_score}/10</p>
-           <button onClick={() => setReport(null)} className="px-12 py-5 bg-indigo-600 rounded-full font-black uppercase tracking-widest text-lg">Close Audit</button>
-        </div>
       ) : (
-        <div className="flex-1 flex flex-col w-full py-16 px-16 gap-12 justify-center">
+        <div className="flex-1 flex overflow-hidden">
+          {/* Main Simulation Area */}
+          <div className="flex-1 flex flex-col w-full py-12 px-8 gap-8 justify-center overflow-y-auto no-scrollbar">
              {/* Stage Progress Tracker */}
-             <div className="grid grid-cols-6 gap-8 w-full">
+             <div className="grid grid-cols-6 gap-4 w-full">
                 {STAGES.map((s, i) => {
                   const isActive = currentStage === s;
                   const isDone = STAGES.indexOf(currentStage) > i;
@@ -397,18 +519,18 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                           {rating !== undefined && <StarRating rating={rating} />}
                        </div>
                        <div className={`h-3 w-full rounded-full transition-all duration-700 ${isDone ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : isActive ? 'bg-indigo-500 shadow-[0_0_25px_rgba(79,70,229,0.7)]' : 'bg-slate-800'}`}></div>
-                       <span className={`text-[12px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-400' : isDone ? 'text-emerald-400' : 'text-slate-600'}`}>{s}</span>
+                       <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-400' : isDone ? 'text-emerald-400' : 'text-slate-600'}`}>{s}</span>
                     </div>
                   );
                 })}
              </div>
 
              {/* Focus Header */}
-             <div className="text-center space-y-4">
-                <span className="px-8 py-3 bg-indigo-600/20 text-indigo-400 text-sm font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
-                   Strategic Stage: {currentStage.toUpperCase()}
+             <div className="text-center space-y-2">
+                <span className="px-6 py-2 bg-indigo-600/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
+                   Active Strategic Stage: {currentStage.toUpperCase()}
                 </span>
-                <h3 className="text-6xl font-black tracking-tight leading-tight">
+                <h3 className="text-4xl font-black tracking-tight leading-tight">
                    Presence: {meetingContext.clientNames || 'Executive Client'}
                 </h3>
              </div>
@@ -416,167 +538,212 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
              {/* Main Visual Core */}
              <div className="relative flex flex-col items-center">
                 <div className="relative z-20">
-                   <ICONS.Brain className={`w-80 h-80 transition-all duration-700 ${isAISpeaking ? 'text-indigo-500 drop-shadow-[0_0_60px_rgba(79,70,229,0.6)] scale-110' : 'text-slate-800'}`} />
+                   {isGeneratingAvatar ? (
+                     <div className="w-64 h-64 rounded-full border-4 border-indigo-500/30 flex flex-col items-center justify-center bg-slate-900 animate-pulse">
+                        <ICONS.Search className="w-12 h-12 text-indigo-500 mb-4" />
+                        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-300">Searching Records...</span>
+                     </div>
+                   ) : avatarUrl ? (
+                     <div className="relative">
+                        <img 
+                          src={avatarUrl} 
+                          alt="Client Avatar" 
+                          className={`w-64 h-64 rounded-full object-cover border-4 transition-all duration-700 ${isAISpeaking ? 'border-indigo-500 shadow-[0_0_80px_rgba(79,70,229,0.7)] scale-105' : 'border-slate-800'}`} 
+                        />
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 bg-indigo-600 text-white rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-400 shadow-xl whitespace-nowrap">
+                           {meetingContext.clientNames || 'Executive'}
+                        </div>
+                     </div>
+                   ) : (
+                     <div className="w-64 h-64 rounded-full bg-slate-900 border-4 border-slate-800 flex items-center justify-center text-slate-700">
+                        <ICONS.Brain className="w-16 h-16" />
+                     </div>
+                   )}
                 </div>
-                
-                {meetingContext.clonedVoiceBase64 && (
-                   <div className="mt-10 flex items-center gap-4 px-8 py-4 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
-                      <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></div>
-                      <span className="text-[12px] font-black text-emerald-400 uppercase tracking-widest">
-                        Neural Vocal Mimicry Active
-                      </span>
-                   </div>
-                )}
              </div>
 
-             {/* Vertical Stack: Cinematic Narrative & Hint Display */}
-             <div className="flex flex-col gap-6 w-full items-center">
-                <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-16 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
-                   <div className="flex items-center justify-between mb-4">
-                      <h5 className="text-[12px] font-black uppercase tracking-[0.4em] text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry Node</h5>
-                      <div className="flex items-center gap-3">
-                         <div className={`w-3 h-3 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
-                         <span className="text-[12px] font-black uppercase tracking-widest text-slate-500">{isAISpeaking ? 'Transmitting' : 'Awaiting Logic'}</span>
+             {/* Vertical Stack: Narrative & Hints */}
+             <div className="flex flex-col gap-4 w-full items-center">
+                <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[3rem] space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+                   <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">{meetingContext.clientNames || 'Executive'} Inquiry</h5>
+                      <div className="flex items-center gap-2">
+                         <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
+                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{isAISpeaking ? 'Transmitting' : 'Ready'}</span>
                       </div>
                    </div>
-                   <p className="text-5xl font-bold italic leading-[1.4] text-white tracking-tight text-center">
-                      {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
+                   <p className="text-3xl font-bold italic leading-tight text-white tracking-tight text-center">
+                      {messages[messages.length - 1]?.content || (isProcessing ? "Establishing behavioral synchronization..." : "Initializing simulation core...")}
                    </p>
                 </div>
 
-                {/* Tactical Clue Card - Stacked Directly Beneath */}
                 {currentHint && (
-                  <div className="w-full max-w-4xl bg-indigo-900/40 border border-indigo-500/30 p-10 rounded-[3.5rem] shadow-2xl flex flex-col justify-center items-center text-center transition-all duration-1000 animate-in slide-in-from-top-4">
-                    <div className="flex items-center gap-6">
-                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shadow-xl shadow-indigo-900/50">
-                          <ICONS.Sparkles className="w-6 h-6 text-indigo-200" />
+                  <div className="w-full max-w-2xl bg-indigo-900/40 border border-indigo-500/30 p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-4">
+                      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                          <ICONS.Sparkles className="w-5 h-5 text-indigo-200" />
                       </div>
                       <div className="text-left flex-1">
-                        <h5 className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-1">Strategic Clue</h5>
-                        <p className="text-xl font-bold text-white italic leading-snug">
+                        <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-1">Strategic Clue</h5>
+                        <p className="text-sm font-bold text-white italic leading-snug">
                             {currentHint}
                         </p>
                       </div>
-                      <div className="hidden md:block pl-6 border-l border-indigo-500/20">
-                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Protocol Tip</p>
-                      </div>
-                    </div>
                   </div>
                 )}
              </div>
 
-             {/* Coaching Feedback Overlay */}
-             {coachingFeedback && (
-               <div className="p-12 bg-rose-950/40 border-2 border-rose-500/30 rounded-[4rem] space-y-10 animate-in slide-in-from-top-4 duration-500 w-full shadow-[0_40px_100px_-20px_rgba(244,63,94,0.3)]">
-                  <div className="flex items-center justify-between">
-                     <div className="flex items-center gap-6">
-                        <span className="px-6 py-2 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full shadow-lg">Strategic Deficit Detected</span>
-                        <h4 className="text-3xl font-black text-rose-100">Neural Performance Correction Protocol</h4>
-                     </div>
-                     <div className="flex items-center gap-4">
-                        <button 
-                          onClick={handleProceedDespiteFailure}
-                          className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl"
-                        >
-                          Proceed Despite Deficit
-                        </button>
-                        <button 
-                          onClick={handleTryAgain}
-                          className="px-8 py-3 bg-white text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95 shadow-xl"
-                        >
-                          Try Again
-                        </button>
-                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                     <div className="space-y-4 p-8 bg-black/20 rounded-[2.5rem] border border-white/5">
-                        <h5 className="text-[11px] font-black uppercase text-rose-400 tracking-widest flex items-center gap-2">
-                           <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Deficit Rationale
-                        </h5>
-                        <p className="text-xl font-medium text-rose-50/80 italic leading-relaxed">{coachingFeedback.failReason}</p>
-                     </div>
-                     <div className="space-y-4 p-8 bg-black/20 rounded-[2.5rem] border border-white/5">
-                        <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-widest flex items-center gap-2">
-                           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Master Protocol Required
-                        </h5>
-                        <p className="text-xl font-medium text-indigo-50/80 italic leading-relaxed">{coachingFeedback.styleGuide}</p>
-                     </div>
-                  </div>
-
-                  {coachingFeedback.idealResponse && (
-                    <div className="p-10 bg-indigo-600/10 border-2 border-indigo-500/20 rounded-[3rem] space-y-6">
-                       <div className="flex items-center gap-3">
-                          <ICONS.Sparkles className="w-6 h-6 text-indigo-400" />
-                          <h5 className="text-[12px] font-black uppercase text-indigo-300 tracking-[0.3em]">Correct Answer (Strategic Response for Client)</h5>
-                       </div>
-                       <p className="text-2xl font-bold text-white leading-relaxed italic">
-                          “{coachingFeedback.idealResponse}”
-                       </p>
-                       <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Grounded in verified document context and psychological buyer alignment. Replicate this logic to advance.</p>
-                    </div>
-                  )}
-               </div>
-             )}
-
              {/* User Interaction Layer */}
-             <div className="space-y-10 w-full">
+             <div className="space-y-6 w-full max-w-4xl mx-auto">
                 <div className="relative group">
                    <textarea 
                      value={currentCaption} 
                      onChange={(e) => setCurrentCaption(e.target.value)} 
-                     className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3.5rem] px-16 py-12 text-3xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-60 resize-none placeholder:text-slate-700 leading-relaxed" 
+                     className="w-full bg-slate-900 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-40 resize-none placeholder:text-slate-700" 
                      placeholder={`Deploy strategic response for the ${currentStage} stage...`}
                    />
-                   <button onClick={() => startListening()} className={`absolute right-12 top-1/2 -translate-y-1/2 p-8 rounded-[2rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-10 h-10" /></button>
+                   <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-6 rounded-[1.5rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-8 h-8" /></button>
                 </div>
-                <div className="flex items-center gap-8">
-                   <div className="flex-1 flex items-center gap-6">
-                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-10 bg-indigo-600 text-white rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Answer</button>
-                      
-                      {currentStage !== 'Closing' && (
-                        <button 
-                          onClick={handleSkip} 
-                          disabled={isProcessing} 
-                          className="px-16 py-10 bg-slate-800 text-slate-300 border border-slate-700 rounded-[3rem] font-black text-sm uppercase tracking-widest hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                          Skip Stage
-                        </button>
-                      )}
-                   </div>
-                   
-                   <button onClick={handleEndSession} disabled={isProcessing} className="px-16 py-10 bg-rose-600 text-white rounded-[3rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all active:scale-95">Terminate & Audit</button>
+                <div className="flex items-center gap-4">
+                   <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50">Commit Answer</button>
+                   <button onClick={handleSkip} disabled={isProcessing} className="px-10 py-6 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 active:scale-95 transition-all">Skip</button>
+                   <button onClick={handleEndSession} disabled={isProcessing} className="px-10 py-6 bg-rose-600 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-rose-700 active:scale-95 transition-all">Audit</button>
                 </div>
              </div>
+
+             {/* Coaching Feedback Modal-ish Overlay */}
+             {coachingFeedback && (
+                <div className="p-8 bg-rose-950/40 border-2 border-rose-500/30 rounded-[3rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-4xl mx-auto">
+                    <div className="flex items-center justify-between">
+                       <span className="px-4 py-1 bg-rose-600 text-white text-[10px] font-black uppercase rounded-full">Protocol Blocked</span>
+                       <button onClick={() => setCoachingFeedback(null)} className="text-white/40 hover:text-white"><ICONS.X className="w-5 h-5" /></button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-8">
+                       <div className="space-y-2">
+                          <h5 className="text-[9px] font-black uppercase text-rose-400 tracking-widest">Deficit Logic</h5>
+                          <p className="text-sm font-medium text-rose-50/80 leading-relaxed italic">{coachingFeedback.failReason}</p>
+                       </div>
+                       <div className="space-y-2">
+                          <h5 className="text-[9px] font-black uppercase text-indigo-400 tracking-widest">Guidance</h5>
+                          <p className="text-sm font-medium text-indigo-50/80 leading-relaxed italic">{coachingFeedback.styleGuide}</p>
+                       </div>
+                    </div>
+                    {coachingFeedback.idealResponse && (
+                       <div className="p-6 bg-indigo-600/10 border border-indigo-500/20 rounded-[2rem] space-y-2">
+                          <h5 className="text-[9px] font-black uppercase text-indigo-300">Master Logic (Replicate This)</h5>
+                          <p className="text-md font-bold text-white leading-relaxed italic">“{coachingFeedback.idealResponse}”</p>
+                       </div>
+                    )}
+                </div>
+             )}
+          </div>
+
+          {/* Right Sidebar: Neural Audit Log */}
+          <aside className="w-[400px] border-l border-white/5 bg-slate-900/50 backdrop-blur-xl flex flex-col">
+             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-indigo-600/5">
+                <div className="flex items-center gap-3">
+                   <div className="p-2 bg-indigo-600 rounded-lg text-white"><ICONS.Research className="w-4 h-4" /></div>
+                   <div>
+                      <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-white">Neural Audit Log</h4>
+                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Real-time performance trace</p>
+                   </div>
+                </div>
+                <button 
+                  onClick={exportPDF}
+                  className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-indigo-400 transition-all border border-white/5"
+                  title="Export Transcript"
+                >
+                   <ICONS.Document className="w-4 h-4" />
+                </button>
+             </div>
+
+             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
+                {STAGES.map((s, idx) => {
+                   const attempts = stageHistory[s] || [];
+                   const isExpanded = expandedStages.has(s);
+                   const isLocked = !isExpanded && attempts.length === 0 && STAGES.indexOf(currentStage) < idx;
+                   const isSuccess = attempts.some(a => a.result === 'SUCCESS');
+                   const isSkipped = attempts.some(a => a.result === 'SKIPPED');
+
+                   return (
+                     <div key={s} className={`rounded-3xl border transition-all duration-500 ${isExpanded ? 'bg-white/5 border-white/10' : 'bg-transparent border-white/5 opacity-60'}`}>
+                        <button 
+                          onClick={() => !isLocked && toggleStageExpand(s)}
+                          disabled={isLocked}
+                          className="w-full p-5 flex items-center justify-between group"
+                        >
+                           <div className="flex items-center gap-4">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-[10px] ${isSuccess ? 'bg-emerald-500 text-white' : isSkipped ? 'bg-slate-700 text-slate-400' : isExpanded ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                                 0{idx + 1}
+                              </div>
+                              <div className="text-left">
+                                 h5 className={`text-[11px] font-black uppercase tracking-widest ${isSuccess ? 'text-emerald-400' : isExpanded ? 'text-white' : 'text-slate-500'}`}>{s}</h5>
+                                 <p className="text-[8px] font-bold text-slate-500 uppercase">{attempts.length} attempts recorded</p>
+                              </div>
+                           </div>
+                           <div className="flex items-center gap-2">
+                              {isSuccess && <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>}
+                              <svg className={`w-4 h-4 text-slate-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 9l-7 7-7-7" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                           </div>
+                        </button>
+
+                        {isExpanded && (
+                           <div className="px-5 pb-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                              {attempts.length === 0 ? (
+                                 <p className="text-[9px] font-bold text-slate-600 italic border-l-2 border-slate-800 pl-4 py-1">Awaiting interaction node...</p>
+                              ) : (
+                                 attempts.map((at, i) => (
+                                    <div key={i} className={`p-4 rounded-2xl border ${at.result === 'SUCCESS' ? 'bg-emerald-500/5 border-emerald-500/20' : at.result === 'SKIPPED' ? 'bg-slate-800/50 border-white/5' : 'bg-rose-500/5 border-rose-500/20'}`}>
+                                       <div className="flex justify-between items-center mb-3">
+                                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${at.result === 'SUCCESS' ? 'bg-emerald-500 text-white' : at.result === 'SKIPPED' ? 'bg-slate-600 text-slate-200' : 'bg-rose-600 text-white'}`}>
+                                             {at.result === 'FAIL' ? 'Protocol Blocked' : at.result}
+                                          </span>
+                                          {at.rating && <StarRating rating={at.rating} />}
+                                       </div>
+                                       <div className="space-y-3">
+                                          <div className="space-y-1">
+                                             <p className="text-[8px] font-black text-slate-500 uppercase">Agent Inquired:</p>
+                                             <p className="text-[10px] font-bold text-slate-300 leading-snug truncate">"{at.question}"</p>
+                                          </div>
+                                          <div className="space-y-1">
+                                             <p className="text-[8px] font-black text-slate-500 uppercase">Your Answer:</p>
+                                             <p className="text-[10px] font-bold text-white leading-relaxed">"{at.userAnswer}"</p>
+                                          </div>
+                                          {at.feedback && (
+                                             <div className="pt-3 mt-3 border-t border-white/5">
+                                                <p className="text-[8px] font-black text-rose-400 uppercase mb-1">Audit Logic:</p>
+                                                <p className="text-[9px] font-medium text-slate-400 italic leading-snug">{at.feedback.failReason}</p>
+                                             </div>
+                                          )}
+                                       </div>
+                                    </div>
+                                 ))
+                              )}
+                           </div>
+                        )}
+                     </div>
+                   );
+                })}
+             </div>
+
+             <div className="p-6 bg-slate-900 border-t border-white/5">
+                <button 
+                  onClick={handleEndSession}
+                  className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all"
+                >
+                   Final Neural Audit
+                </button>
+             </div>
+          </aside>
         </div>
       )}
 
       <style>{`
-        @keyframes celebrate-bg {
-          0% { opacity: 0; }
-          10%, 90% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        @keyframes celebrate-text {
-          0% { transform: scale(0.5); opacity: 0; }
-          15%, 85% { transform: scale(1); opacity: 1; }
-          100% { transform: scale(1.2); opacity: 0; }
-        }
+        @keyframes celebrate-bg { 0% { opacity: 0; } 10%, 90% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes celebrate-text { 0% { transform: scale(0.5); opacity: 0; } 15%, 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
         .animate-celebrate-bg { animation: celebrate-bg 3.5s forwards ease-in-out; }
         .animate-celebrate-text { animation: celebrate-text 3.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-        .confetti {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          border-radius: 2px;
-          animation: confetti-fall 3s linear forwards;
-          z-index: 101;
-        }
-        @keyframes confetti-fall {
-          0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
+        .confetti { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confetti-fall 3s linear forwards; z-index: 101; }
+        @keyframes confetti-fall { 0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
       `}</style>
     </div>
   );
