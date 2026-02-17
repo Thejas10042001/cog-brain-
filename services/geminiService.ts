@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure } from "../types";
 
@@ -637,39 +636,6 @@ Target Products: ${context.targetProducts}`;
   }
 }
 
-/**
- * Generates a professional avatar image for the client using nano banana model.
- */
-// Fix: Added generateClientAvatar to resolve missing export in components/AvatarSimulationStaged.tsx
-export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-2.5-flash-image';
-  try {
-    const strategicPrompt = `A high-quality, professional corporate headshot of a business executive named ${name} from the company ${company}. 
-    Minimalist modern office background, soft cinematic lighting, ultra-detailed, professional attire.`;
-
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: {
-        parts: [{ text: strategicPrompt }],
-      },
-      config: {
-        imageConfig: { aspectRatio: "1:1" }
-      }
-    });
-
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error("Avatar image generation failed:", error);
-    return null;
-  }
-}
-
 // Generate Assessment Questions
 export async function generateAssessmentQuestions(
   docContent: string, 
@@ -919,6 +885,47 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
     return null;
   } catch (error) {
     console.error("Image generation failed:", error);
+    return null;
+  }
+}
+
+/**
+ * Generates a realistic professional headshot for the client using gemini-3-pro-image-preview.
+ * Uses googleSearch to find context about the person and company to influence the visual result.
+ */
+export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-pro-image-preview';
+  
+  try {
+    const prompt = `A realistic, high-fidelity professional headshot of a business executive named ${name} from ${company}. 
+    Style: Corporate portrait, clean background, sharp focus, professional lighting. 
+    Use Google Search to ensure the appearance and clothing style align with the corporate identity and leadership aesthetic of ${company}. 
+    Resolution: 1K. Realistic human features. Highly detailed skin textures and eyes.`;
+
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: {
+        parts: [{ text: prompt }],
+      },
+      config: {
+        imageConfig: {
+          aspectRatio: "1:1",
+          imageSize: "1K"
+        },
+        tools: [{googleSearch: {}}],
+      },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        const base64EncodeString: string = part.inlineData.data;
+        return `data:image/png;base64,${base64EncodeString}`;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("Client Avatar generation failed:", error);
     return null;
   }
 }

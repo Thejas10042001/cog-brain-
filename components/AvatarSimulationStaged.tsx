@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { ICONS } from '../constants';
 import { 
@@ -44,7 +43,6 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [currentCaption, setCurrentCaption] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  // Fix: Added isExporting state to resolve Cannot find name 'setIsExporting' error
   const [isExporting, setIsExporting] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -309,6 +307,19 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
+  const handleTryAgain = () => {
+    if (messages.length < 3) return;
+    const originalQuestionMsg = messages[messages.length - 3];
+    setMessages(prev => prev.slice(0, -2));
+    setCoachingFeedback(null);
+    setCurrentCaption("");
+    playAIQuestion(originalQuestionMsg.content);
+  };
+
+  const handleProceedWithFeedback = () => {
+    setCoachingFeedback(null);
+  };
+
   const handleSkip = async () => {
     const currentIndex = STAGES.indexOf(currentStage);
     if (currentIndex >= STAGES.length - 1) return;
@@ -381,13 +392,15 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         y += 10;
       };
 
-      const addLine = (txt: string, size = 10, font = "normal") => {
+      const addLine = (txt: string, size = 10, font = "normal", color = [0, 0, 0]) => {
         if (y > 275) { doc.addPage(); y = 20; }
         doc.setFont("helvetica", font);
         doc.setFontSize(size);
+        doc.setTextColor(color[0], color[1], color[2]);
         const split = doc.splitTextToSize(txt, width);
         doc.text(split, margin, y);
         y += (split.length * (size / 2)) + 4;
+        doc.setTextColor(0, 0, 0); // Reset
       };
 
       addHeader("Staged Simulation Master Transcript");
@@ -403,13 +416,16 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
         addHeader(`Stage: ${s.toUpperCase()}`, 12);
         attempts.forEach((at, i) => {
           addLine(`Attempt ${i + 1} - Result: ${at.result}`, 10, "bold");
-          addLine(`Agent: "${at.question}"`, 9, "italic");
-          addLine(`User: "${at.userAnswer}"`, 9);
+          addLine(`Agent Question: "${at.question}"`, 9, "italic");
+          addLine(`User Answer: "${at.userAnswer}"`, 9);
           if (at.feedback) {
-            addLine(`Protocol Deficit: ${at.feedback.failReason}`, 8, "italic");
+            addLine(`Protocol Blocked: ${at.feedback.failReason}`, 8, "italic", [220, 38, 38]);
             addLine(`Style Guide: ${at.feedback.styleGuide}`, 8, "italic");
+            if (at.feedback.idealResponse) {
+                addLine(`Master Response: "${at.feedback.idealResponse}"`, 8, "bold", [79, 70, 229]);
+            }
           }
-          if (at.rating) addLine(`Stage Rating: ${at.rating}/5 Stars`, 9, "bold");
+          if (at.rating) addLine(`Stage Rating: ${at.rating}/5 Stars`, 9, "bold", [245, 158, 11]);
           y += 2;
         });
         y += 5;
@@ -418,12 +434,14 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       if (report) {
          addHeader("Final Performance Audit");
          addLine(`Deal Readiness Score: ${report.deal_readiness_score}/10`);
-         addLine(`Summary: ${report.conversation_summary.main_themes.join(', ')}`);
+         addLine(`Main Themes: ${report.conversation_summary.main_themes.join(', ')}`);
+         addLine(`Executive Summary: ${report.sentiment_analysis.narrative}`);
       }
 
-      doc.save(`Simulation-History-${meetingContext.clientCompany}.pdf`);
+      doc.save(`Simulation-History-${meetingContext.clientCompany.replace(/\s+/g, '-')}.pdf`);
     } catch (e) {
       console.error(e);
+      alert("PDF generation failed. Ensure jsPDF is loaded correctly.");
     } finally {
       setIsExporting(false);
     }
@@ -469,7 +487,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
               <ICONS.Efficiency className="w-32 h-32 text-indigo-600 relative z-10" />
            </div>
            <div className="space-y-6">
-              <h2 className="text-6xl font-black tracking-tight">Staged Simulation Node</h2>
+              <h2 className="text-6xl font-black tracking-tight text-white">Staged Simulation Hub</h2>
               <p className="text-slate-400 text-2xl font-medium leading-relaxed max-w-5xl mx-auto">
                 Advance through 6 tactical stages. Select your starting point below to begin the challenge.
               </p>
@@ -485,7 +503,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                     className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-white/5 border-white/10 hover:border-indigo-400'}`}
                   >
                     <div className="flex items-center justify-between">
-                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Node 0{i+1}</span>
+                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Stage 0{i+1}</span>
                        {isSelected && <div className="w-3 h-3 rounded-full bg-white animate-pulse"></div>}
                     </div>
                     <h4 className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-slate-200'}`}>{s}</h4>
@@ -498,15 +516,15 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
            </div>
 
            <div className="pt-6">
-              <button onClick={handleInitiate} className="px-24 py-10 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Full Simulation @ {startStageChoice}</button>
-              <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-600 mt-8">Neural Presence Engine: V3.1 Primed for Full-Scale Engagement</p>
+              <button onClick={handleInitiate} className="px-24 py-10 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Full Simulation</button>
+              <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-600 mt-8">Neural Presence Engine: V3.1 Primed</p>
            </div>
         </div>
       ) : (
         <div className="flex-1 flex overflow-hidden">
           {/* Main Simulation Area */}
           <div className="flex-1 flex flex-col w-full py-12 px-8 gap-8 justify-center overflow-y-auto no-scrollbar">
-             {/* Stage Progress Tracker */}
+             {/* Stage Progress Tracker with Star Ratings */}
              <div className="grid grid-cols-6 gap-4 w-full">
                 {STAGES.map((s, i) => {
                   const isActive = currentStage === s;
@@ -528,7 +546,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
              {/* Focus Header */}
              <div className="text-center space-y-2">
                 <span className="px-6 py-2 bg-indigo-600/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
-                   Active Strategic Stage: {currentStage.toUpperCase()}
+                   Active Stage: {currentStage.toUpperCase()}
                 </span>
                 <h3 className="text-4xl font-black tracking-tight leading-tight">
                    Presence: {meetingContext.clientNames || 'Executive Client'}
@@ -544,7 +562,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                         <span className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-300">Searching Records...</span>
                      </div>
                    ) : avatarUrl ? (
-                     <div className="relative">
+                     <div className="relative group/avatar">
                         <img 
                           src={avatarUrl} 
                           alt="Client Avatar" 
@@ -610,49 +628,74 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                 </div>
              </div>
 
-             {/* Coaching Feedback Modal-ish Overlay */}
+             {/* Enhanced Coaching Feedback Overlay */}
              {coachingFeedback && (
-                <div className="p-8 bg-rose-950/40 border-2 border-rose-500/30 rounded-[3rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-4xl mx-auto">
+                <div className="p-10 bg-rose-950/60 backdrop-blur-2xl border-2 border-rose-500/40 rounded-[3rem] space-y-10 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-4xl mx-auto shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
                     <div className="flex items-center justify-between">
-                       <span className="px-4 py-1 bg-rose-600 text-white text-[10px] font-black uppercase rounded-full">Protocol Blocked</span>
-                       <button onClick={() => setCoachingFeedback(null)} className="text-white/40 hover:text-white"><ICONS.X className="w-5 h-5" /></button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-8">
-                       <div className="space-y-2">
-                          <h5 className="text-[9px] font-black uppercase text-rose-400 tracking-widest">Deficit Logic</h5>
-                          <p className="text-sm font-medium text-rose-50/80 leading-relaxed italic">{coachingFeedback.failReason}</p>
+                       <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-5 h-5" /></div>
+                          <span className="px-5 py-2 bg-rose-600 text-white text-[11px] font-black uppercase rounded-full tracking-widest">Protocol Blocked: Neural Performance Deficit</span>
                        </div>
-                       <div className="space-y-2">
-                          <h5 className="text-[9px] font-black uppercase text-indigo-400 tracking-widest">Guidance</h5>
-                          <p className="text-sm font-medium text-indigo-50/80 leading-relaxed italic">{coachingFeedback.styleGuide}</p>
+                       <button onClick={() => setCoachingFeedback(null)} className="p-2 text-white/40 hover:text-white transition-colors"><ICONS.X className="w-6 h-6" /></button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                       <div className="space-y-4">
+                          <h5 className="text-[10px] font-black uppercase text-rose-400 tracking-[0.2em]">Deficit Rationale</h5>
+                          <p className="text-md font-bold text-rose-50/90 leading-relaxed italic border-l-4 border-rose-500/30 pl-6">{coachingFeedback.failReason}</p>
+                       </div>
+                       <div className="space-y-4">
+                          <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">Strategic Guidance</h5>
+                          <p className="text-md font-bold text-indigo-50/90 leading-relaxed italic border-l-4 border-indigo-500/30 pl-6">{coachingFeedback.styleGuide}</p>
                        </div>
                     </div>
+
                     {coachingFeedback.idealResponse && (
-                       <div className="p-6 bg-indigo-600/10 border border-indigo-500/20 rounded-[2rem] space-y-2">
-                          <h5 className="text-[9px] font-black uppercase text-indigo-300">Master Logic (Replicate This)</h5>
-                          <p className="text-md font-bold text-white leading-relaxed italic">“{coachingFeedback.idealResponse}”</p>
+                       <div className="p-10 bg-indigo-600/10 border-2 border-indigo-500/30 rounded-[2.5rem] space-y-4 shadow-inner">
+                          <div className="flex items-center justify-between">
+                             <h5 className="text-[11px] font-black uppercase text-indigo-300 tracking-[0.3em]">Master Logic (Correct Response)</h5>
+                             <span className="text-[9px] font-black text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-lg uppercase">Neural Reference</span>
+                          </div>
+                          <p className="text-2xl font-black text-white leading-[1.4] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
                        </div>
                     )}
+
+                    <div className="flex items-center gap-6 pt-6 border-t border-white/5">
+                       <button 
+                         onClick={handleTryAgain}
+                         className="flex-1 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-lg uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-3"
+                       >
+                          <ICONS.Efficiency className="w-6 h-6" /> Try Again (Revert Turn)
+                       </button>
+                       <button 
+                         onClick={handleProceedWithFeedback}
+                         className="px-10 py-6 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-700 active:scale-95 transition-all"
+                       >
+                          Proceed with Feedback
+                       </button>
+                    </div>
                 </div>
              )}
           </div>
 
-          {/* Right Sidebar: Neural Audit Log */}
+          {/* Right Sidebar: Neural Audit Log (Stage History) */}
           <aside className="w-[400px] border-l border-white/5 bg-slate-900/50 backdrop-blur-xl flex flex-col">
              <div className="p-6 border-b border-white/5 flex items-center justify-between bg-indigo-600/5">
                 <div className="flex items-center gap-3">
                    <div className="p-2 bg-indigo-600 rounded-lg text-white"><ICONS.Research className="w-4 h-4" /></div>
                    <div>
-                      <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-white">Neural Audit Log</h4>
-                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Real-time performance trace</p>
+                      <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-white">Simulation History</h4>
+                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Mastery Trace Log</p>
                    </div>
                 </div>
                 <button 
                   onClick={exportPDF}
-                  className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-indigo-400 transition-all border border-white/5"
-                  title="Export Transcript"
+                  disabled={isExporting}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg hover:bg-indigo-700 border border-indigo-500/30"
+                  title="Export Document"
                 >
-                   <ICONS.Document className="w-4 h-4" />
+                   {isExporting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <ICONS.Document className="w-3.5 h-3.5" />}
+                   Export Document
                 </button>
              </div>
 
@@ -676,8 +719,8 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                                  0{idx + 1}
                               </div>
                               <div className="text-left">
-                                 h5 className={`text-[11px] font-black uppercase tracking-widest ${isSuccess ? 'text-emerald-400' : isExpanded ? 'text-white' : 'text-slate-500'}`}>{s}</h5>
-                                 <p className="text-[8px] font-bold text-slate-500 uppercase">{attempts.length} attempts recorded</p>
+                                 <h5 className={`text-[11px] font-black uppercase tracking-widest ${isSuccess ? 'text-emerald-400' : isExpanded ? 'text-white' : 'text-slate-500'}`}>{s}</h5>
+                                 <p className="text-[8px] font-bold text-slate-500 uppercase">{attempts.length} interactions recorded</p>
                               </div>
                            </div>
                            <div className="flex items-center gap-2">
@@ -699,19 +742,32 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                                           </span>
                                           {at.rating && <StarRating rating={at.rating} />}
                                        </div>
-                                       <div className="space-y-3">
-                                          <div className="space-y-1">
-                                             <p className="text-[8px] font-black text-slate-500 uppercase">Agent Inquired:</p>
-                                             <p className="text-[10px] font-bold text-slate-300 leading-snug truncate">"{at.question}"</p>
+                                       <div className="space-y-4">
+                                          <div className="flex items-start gap-3">
+                                             {avatarUrl ? (
+                                                <img src={avatarUrl} alt="Client" className="w-8 h-8 rounded-full object-cover border border-indigo-500/30 shrink-0 mt-1" />
+                                             ) : (
+                                                <div className="w-8 h-8 rounded-full bg-indigo-900/50 flex items-center justify-center shrink-0 mt-1"><ICONS.Brain className="w-4 h-4 text-indigo-400" /></div>
+                                             )}
+                                             <div className="space-y-1 overflow-hidden">
+                                                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Agent Question:</p>
+                                                <p className="text-[10px] font-bold text-slate-300 leading-snug">"{at.question}"</p>
+                                             </div>
                                           </div>
-                                          <div className="space-y-1">
-                                             <p className="text-[8px] font-black text-slate-500 uppercase">Your Answer:</p>
+                                          <div className="space-y-1 border-l-2 border-indigo-600/30 pl-3">
+                                             <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Your Answer:</p>
                                              <p className="text-[10px] font-bold text-white leading-relaxed">"{at.userAnswer}"</p>
                                           </div>
                                           {at.feedback && (
-                                             <div className="pt-3 mt-3 border-t border-white/5">
-                                                <p className="text-[8px] font-black text-rose-400 uppercase mb-1">Audit Logic:</p>
+                                             <div className="pt-3 mt-3 border-t border-white/5 space-y-2">
+                                                <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Protocol Blocked:</p>
                                                 <p className="text-[9px] font-medium text-slate-400 italic leading-snug">{at.feedback.failReason}</p>
+                                                {at.feedback.idealResponse && (
+                                                   <div className="p-2.5 bg-indigo-600/10 border border-indigo-500/20 rounded-xl">
+                                                       <p className="text-[7px] font-black text-indigo-300 uppercase tracking-widest mb-1">Master Answer Reference:</p>
+                                                       <p className="text-[9px] font-bold text-indigo-50 italic">"{at.feedback.idealResponse}"</p>
+                                                   </div>
+                                                )}
                                              </div>
                                           )}
                                        </div>
@@ -730,7 +786,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                   onClick={handleEndSession}
                   className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all"
                 >
-                   Final Neural Audit
+                   Final Session Performance Review
                 </button>
              </div>
           </aside>
@@ -738,12 +794,31 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       )}
 
       <style>{`
-        @keyframes celebrate-bg { 0% { opacity: 0; } 10%, 90% { opacity: 1; } 100% { opacity: 0; } }
-        @keyframes celebrate-text { 0% { transform: scale(0.5); opacity: 0; } 15%, 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
+        @keyframes celebrate-bg { 
+          0% { opacity: 0; } 
+          10%, 90% { opacity: 1; } 
+          100% { opacity: 0; } 
+        }
+        @keyframes celebrate-text { 
+          0% { transform: scale(0.5); opacity: 0; } 
+          15%, 85% { transform: scale(1); opacity: 1; } 
+          100% { transform: scale(1.2); opacity: 0; } 
+        }
         .animate-celebrate-bg { animation: celebrate-bg 3.5s forwards ease-in-out; }
         .animate-celebrate-text { animation: celebrate-text 3.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .confetti { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confetti-fall 3s linear forwards; z-index: 101; }
-        @keyframes confetti-fall { 0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        
+        .confetti { 
+          position: absolute; 
+          width: 10px; 
+          height: 10px; 
+          border-radius: 2px; 
+          animation: confetti-fall 3s linear forwards; 
+          z-index: 101; 
+        }
+        @keyframes confetti-fall { 
+          0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; } 
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } 
+        }
       `}</style>
     </div>
   );
