@@ -898,10 +898,10 @@ export async function generateClientAvatar(name: string, company: string): Promi
   const modelName = 'gemini-3-pro-image-preview';
   
   try {
-    const prompt = `A minimalist, high-fidelity professional corporate logo for the company named "${company}". 
-    Style: Modern tech-forward branding, clean vector-like aesthetic, professional color palette associated with ${company}. 
+    const prompt = `Use Google Search to find the exact visual identity and corporate logo characteristics of the company named "${company}". 
+    Based on that real-world brand data, generate a minimalist, high-fidelity professional corporate logo for "${company}". 
+    Style: Modern tech-forward branding, clean vector-like aesthetic, professional color palette strictly associated with ${company}. 
     The logo should be centered on a clean white or professional soft grey background. 
-    Use Google Search to ensure the visual elements and brand colors align with the actual corporate identity of ${company}. 
     Resolution: 1K. Cinematic studio lighting on a flat surface.`;
 
     const response = await ai.models.generateContent({
