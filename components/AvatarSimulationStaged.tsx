@@ -605,7 +605,7 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
                         <div className="relative group/avatar">
                            <img 
                              src={avatarUrl} 
-                             alt="Client Avatar" 
+                             alt="Company Logo" 
                              className={`w-56 h-56 rounded-full object-cover border-4 transition-all duration-700 ${isAISpeaking ? 'border-indigo-500 shadow-[0_0_80px_rgba(79,70,229,0.7)] scale-105' : 'border-slate-800'}`} 
                            />
                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 bg-indigo-600 text-white rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-400 shadow-xl whitespace-nowrap">

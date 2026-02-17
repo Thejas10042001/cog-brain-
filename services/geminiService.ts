@@ -890,18 +890,19 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
 }
 
 /**
- * Generates a realistic professional headshot for the client using gemini-3-pro-image-preview.
- * Uses googleSearch to find context about the person and company to influence the visual result.
+ * Generates a realistic professional corporate logo for the client's company using gemini-3-pro-image-preview.
+ * Uses googleSearch to find context about the brand identity and corporate aesthetic.
  */
 export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-pro-image-preview';
   
   try {
-    const prompt = `A realistic, high-fidelity professional headshot of a business executive named ${name} from ${company}. 
-    Style: Corporate portrait, clean background, sharp focus, professional lighting. 
-    Use Google Search to ensure the appearance and clothing style align with the corporate identity and leadership aesthetic of ${company}. 
-    Resolution: 1K. Realistic human features. Highly detailed skin textures and eyes.`;
+    const prompt = `A minimalist, high-fidelity professional corporate logo for the company named "${company}". 
+    Style: Modern tech-forward branding, clean vector-like aesthetic, professional color palette associated with ${company}. 
+    The logo should be centered on a clean white or professional soft grey background. 
+    Use Google Search to ensure the visual elements and brand colors align with the actual corporate identity of ${company}. 
+    Resolution: 1K. Cinematic studio lighting on a flat surface.`;
 
     const response = await ai.models.generateContent({
       model: modelName,
@@ -925,7 +926,7 @@ export async function generateClientAvatar(name: string, company: string): Promi
     }
     return null;
   } catch (error) {
-    console.error("Client Avatar generation failed:", error);
+    console.error("Client Logo generation failed:", error);
     return null;
   }
 }
