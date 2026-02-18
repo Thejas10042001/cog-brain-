@@ -49,6 +49,16 @@ const ALL_ANSWER_STYLES = [
   "Decision Matrix"
 ];
 
+// Device simulation configurations
+const DEVICE_MAP: Record<string, { width: string, height: string, ratio: string }> = {
+  'Full': { width: '100%', height: '100%', ratio: 'auto' },
+  'MBP16': { width: '1100px', height: '687px', ratio: '16/10' },
+  'MBA': { width: '900px', height: '562px', ratio: '16/10' },
+  'WinPC': { width: '1200px', height: '675px', ratio: '16/9' },
+  'Tablet': { width: '768px', height: '1024px', ratio: '3/4' },
+  'Mobile': { width: '375px', height: '812px', ratio: '9/19.5' },
+};
+
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -61,6 +71,10 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
+
+  // Neural Magnifier & Viewport States
+  const [zoom, setZoom] = useState(100);
+  const [device, setDevice] = useState('Full');
 
   const lastAnalyzedHash = useRef<string | null>(null);
 
@@ -188,7 +202,7 @@ const App: React.FC = () => {
     if (loadingProgress < 40) return "Context Alignment: Mapping Seller/Prospect Domains...";
     if (loadingProgress < 60) return "Psychological Synthesis: Inferring Buyer Resistance...";
     if (loadingProgress < 80) return "Strategy Extraction: Modeling Competitive Wedge...";
-    if (loadingProgress < 95) return "Refining Intelligence: Calibrating Master Playbook...";
+    if (loadingProgress < 95) return "Finalizing Core Strategy Brief...";
     return "Finalizing Core Strategy Brief...";
   }, [loadingProgress]);
 
@@ -217,114 +231,123 @@ const App: React.FC = () => {
   }
 
   const hasPermissionError = getFirebasePermissionError();
+  const currentDeviceCfg = DEVICE_MAP[device];
 
   return (
-    <div className="min-h-screen bg-slate-50 overflow-x-hidden flex flex-col">
-      <Header user={user} />
+    <div className="min-h-screen bg-slate-100 overflow-hidden flex flex-col transition-all duration-700" style={{ fontSize: `${zoom}%` }}>
+      <Header 
+        user={user} 
+        zoom={zoom} 
+        onZoomChange={setZoom} 
+        device={device} 
+        onDeviceChange={setDevice} 
+      />
       
-      <div className="pt-16 flex flex-1">
-        {analysis && !isAnalyzing && (
-          <aside className="w-72 bg-white border-r border-slate-200 flex flex-col fixed h-[calc(100vh-64px)] overflow-y-auto no-scrollbar z-30">
-            <div className="p-6 space-y-8 flex flex-col h-full">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>
-                <div className="flex flex-col gap-1">
-                  <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Trophy />} label="Staged Simulation" />
-                  <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label="Avatar Simulation 2.0" />
-                  <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label="Avatar Simulation 1.0" />
-                  <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Document />} label="Assignment" />
-                  <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label="Simulation" />
-                  <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label="Coaching Studio" />
-                  <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.Sparkles />} label="Fast Answering" />
-                  <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label="Config" />
-                </div>
-              </div>
-
-              <div className="mt-auto pt-6 border-t border-slate-100 space-y-4">
-                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Strategy Sync</span>
-                  </div>
-                  <p className="text-[10px] font-bold text-emerald-600/80 leading-tight">
-                    Context retained for {meetingContext.clientCompany || 'Prospect'}.
-                  </p>
-                </div>
-                
-                <button 
-                  onClick={reset} 
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200"
-                >
-                  <ICONS.X className="w-3 h-3" /> Wipe Context
-                </button>
-              </div>
+      <div className={`pt-16 flex flex-1 overflow-hidden transition-all duration-500 ${device !== 'Full' ? 'p-10 justify-center items-center bg-slate-200' : ''}`}>
+        
+        {/* Device Chassis Frame */}
+        <div 
+          className={`flex flex-1 overflow-hidden transition-all duration-700 relative ${device !== 'Full' ? 'border-[14px] border-slate-900 rounded-[3.5rem] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.5)] bg-slate-50' : ''}`}
+          style={device !== 'Full' ? { maxWidth: currentDeviceCfg.width, height: currentDeviceCfg.height, aspectRatio: currentDeviceCfg.ratio } : {}}
+        >
+          {/* Status Bar for Simulated Mobile/Tablet */}
+          {device === 'Mobile' && (
+            <div className="absolute top-0 left-0 right-0 h-6 bg-slate-900 z-[60] flex items-center justify-between px-8 text-[8px] text-white/40 font-black">
+               <span>9:41</span>
+               <div className="flex gap-1.5">
+                  <div className="w-2 h-2 rounded-full border border-white/20"></div>
+                  <div className="w-4 h-2 bg-white/20 rounded-sm"></div>
+               </div>
             </div>
-          </aside>
-        )}
+          )}
 
-        <main className={`flex-1 transition-all duration-300 ${analysis && !isAnalyzing ? 'ml-72' : ''}`}>
-          <div className="w-full h-full">
-            {!analysis && !isAnalyzing ? (
-              <div className="p-8 md:p-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
-                <div className="text-center space-y-4">
-                  <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
-                    SPIKED<span className="text-red-600">AI</span> Hub
-                  </h1>
-                  <p className="text-xl text-slate-400 font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto">
-                    Cognitive Intelligence Brain Simulation
-                  </p>
+          {analysis && !isAnalyzing && (
+            <aside className={`${device === 'Mobile' ? 'w-20' : 'w-72'} bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all`}>
+              <div className={`${device === 'Mobile' ? 'p-2' : 'p-6'} space-y-8 flex flex-col h-full`}>
+                <div className="space-y-1">
+                  <p className={`text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2 ${device === 'Mobile' ? 'hidden' : ''}`}>Intelligence Nodes</p>
+                  <div className="flex flex-col gap-1">
+                    <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Trophy />} label={device === 'Mobile' ? '' : "Staged Sim"} />
+                    <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label={device === 'Mobile' ? '' : "Avatar 2.0"} />
+                    <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label={device === 'Mobile' ? '' : "Avatar 1.0"} />
+                    <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Document />} label={device === 'Mobile' ? '' : "Assignment"} />
+                    <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label={device === 'Mobile' ? '' : "Simulation"} />
+                    <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label={device === 'Mobile' ? '' : "Studio"} />
+                    <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.Sparkles />} label={device === 'Mobile' ? '' : "Fast Ans"} />
+                    <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label={device === 'Mobile' ? '' : "Config"} />
+                  </div>
                 </div>
 
-                <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
-                   <div className="flex items-center justify-between mb-8">
-                      <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <ICONS.Research /> Cognitive Library Hub
-                      </h3>
-                      {(!isFirebaseActive() || hasPermissionError) && (
-                        <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg border ${hasPermissionError ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                          {hasPermissionError ? 'Permission Interrupted' : 'Firebase Offline'}
-                        </span>
+                <div className={`mt-auto pt-6 border-t border-slate-100 space-y-4 ${device === 'Mobile' ? 'hidden' : ''}`}>
+                  <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Strategy Sync</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-emerald-600/80 leading-tight">
+                      Context retained for {meetingContext.clientCompany || 'Prospect'}.
+                    </p>
+                  </div>
+                  <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200">
+                    <ICONS.X className="w-3 h-3" /> Wipe
+                  </button>
+                </div>
+              </div>
+            </aside>
+          )}
+
+          <main className={`flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-slate-50`}>
+            <div className="w-full min-h-full">
+              {!analysis && !isAnalyzing ? (
+                <div className="p-8 md:p-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
+                  <div className="text-center space-y-4">
+                    <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
+                      SPIKED<span className="text-red-600">AI</span> Hub
+                    </h1>
+                    <p className="text-xl text-slate-400 font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto">
+                      Cognitive Intelligence Brain Simulation
+                    </p>
+                  </div>
+
+                  <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
+                    <div className="flex items-center justify-between mb-8">
+                        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                          <ICONS.Research /> Cognitive Library Hub
+                        </h3>
+                    </div>
+                    <DocumentGallery 
+                      documents={history} 
+                      onRefresh={loadHistory} 
+                      selectedIds={selectedLibraryDocIds}
+                      onToggleSelect={toggleLibraryDoc}
+                      onSynthesize={runAnalysis}
+                      isAnalyzing={isAnalyzing}
+                    />
+                  </div>
+
+                  <MeetingContextConfig 
+                    context={meetingContext} 
+                    onContextChange={setMeetingContext} 
+                    documents={history}
+                  />
+
+                  <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
+                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-8">
+                      <ICONS.Document /> Documentary Memory Store
+                    </h3>
+                    <FileUpload files={files} onFilesChange={setFiles} onUploadSuccess={loadHistory} />
+                    
+                    <div className="mt-12 flex flex-col items-center gap-6">
+                      {error && (
+                        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-6 mb-8 max-w-xl text-center">
+                          <p className="text-rose-600 font-bold mb-2">⚠️ Analysis Interrupted</p>
+                          <p className="text-rose-500 text-sm">{error}</p>
+                        </div>
                       )}
-                   </div>
-                   <DocumentGallery 
-                     documents={history} 
-                     onRefresh={loadHistory} 
-                     selectedIds={selectedLibraryDocIds}
-                     onToggleSelect={toggleLibraryDoc}
-                     onSynthesize={runAnalysis}
-                     isAnalyzing={isAnalyzing}
-                   />
-                </div>
-
-                <MeetingContextConfig 
-                  context={meetingContext} 
-                  onContextChange={setMeetingContext} 
-                  documents={history}
-                />
-
-                <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
-                  <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-8">
-                    <ICONS.Document /> Documentary Memory Store
-                  </h3>
-                  <FileUpload files={files} onFilesChange={setFiles} onUploadSuccess={loadHistory} />
-                  
-                  <div className="mt-12 flex flex-col items-center gap-6">
-                    {error && (
-                      <div className="bg-rose-50 border border-rose-100 rounded-2xl p-6 mb-8 max-w-xl text-center">
-                        <p className="text-rose-600 font-bold mb-2">⚠️ Analysis Interrupted</p>
-                        <p className="text-rose-500 text-sm">{error}</p>
-                      </div>
-                    )}
-                    <div className="flex flex-col items-center gap-4">
                       <button
                         onClick={runAnalysis}
                         disabled={activeDocuments.length === 0 || isAnyFileProcessing}
-                        className={`
-                          flex items-center gap-3 px-16 py-6 rounded-full font-black text-xl shadow-2xl transition-all
-                          ${(activeDocuments.length > 0 && !isAnyFileProcessing)
-                            ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105 active:scale-95 cursor-pointer shadow-indigo-200' 
-                            : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}
-                        `}
+                        className={`flex items-center gap-3 px-16 py-6 rounded-full font-black text-xl shadow-2xl transition-all ${(activeDocuments.length > 0 && !isAnyFileProcessing) ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105 shadow-indigo-200' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
                       >
                         <ICONS.Brain />
                         {isAnyFileProcessing ? 'Retaining Documents...' : 'Synthesize Strategy Core'}
@@ -332,109 +355,51 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center space-y-12 h-[calc(100vh-64px)]">
-                <div className="relative">
-                  <div 
-                    className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out"
-                    style={{ 
-                      transform: `scale(${1 + (loadingProgress / 100)})`,
-                      opacity: 0.2 + (loadingProgress / 100)
-                    }}
-                  ></div>
-                  
-                  <div className="relative w-32 h-32 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
-                  
-                  <div 
-                    className="absolute inset-0 flex items-center justify-center text-indigo-600 transition-all duration-700"
-                    style={{
-                      transform: `scale(${1.2 + (loadingProgress / 200)})`,
-                      filter: `drop-shadow(0 0 ${loadingProgress / 5}px rgba(79, 70, 229, ${loadingProgress / 100}))`
-                    }}
-                  >
-                    <ICONS.Brain className="w-10 h-10" />
-                  </div>
-
-                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-                    <span className="text-3xl font-black text-slate-800 tracking-tighter">
-                      {Math.floor(loadingProgress)}<span className="text-indigo-500 text-sm ml-0.5">%</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-center space-y-6 max-w-md">
-                  <div className="space-y-2">
-                    <p className="text-2xl font-black text-slate-800 tracking-tight transition-all">
-                      {loadingStatusText}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] animate-pulse">
-                      Synthesizing intelligence core...
-                    </p>
-                  </div>
-                  
-                  <div className="w-64 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden shadow-inner">
-                    <div 
-                      className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(79,70,229,0.4)]"
-                      style={{ width: `${loadingProgress}%` }}
-                    ></div>
-                  </div>
-
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pt-2">
-                    Cross-referencing {activeDocuments.length} document nodes...
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="animate-in fade-in duration-500 h-full flex flex-col">
-                {activeTab === 'context' && (
-                  <div className="p-8 md:p-12 space-y-12 max-w-7xl mx-auto">
-                    <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
-                      <div className="flex items-center justify-between mb-8">
-                          <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <ICONS.Research /> Cognitive Library Management
-                          </h3>
-                      </div>
-                      <DocumentGallery 
-                        documents={history} 
-                        onRefresh={loadHistory} 
-                        selectedIds={selectedLibraryDocIds}
-                        onToggleSelect={toggleLibraryDoc}
-                        onSynthesize={runAnalysis}
-                        isAnalyzing={isAnalyzing}
-                      />
-                      <div className="mt-10 pt-8 border-t border-slate-100">
-                         <FileUpload files={files} onFilesChange={setFiles} onUploadSuccess={loadHistory} />
-                      </div>
-                    </div>
-                    <MeetingContextConfig 
-                      context={meetingContext} 
-                      onContextChange={setMeetingContext} 
-                      documents={history}
-                    />
-                    <div className="flex justify-center pb-10">
-                      <button 
-                        onClick={runAnalysis}
-                        disabled={isAnalyzing}
-                        className="px-12 py-5 bg-indigo-600 text-white rounded-full font-black text-lg shadow-2xl hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
-                      >
-                        <ICONS.Brain />
-                        {isAnalyzing ? 'Re-Synthesizing...' : 'Update & Re-Synthesize Strategy'}
-                      </button>
+              ) : isAnalyzing ? (
+                <div className="flex flex-col items-center justify-center space-y-12 h-full min-h-[600px]">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out" style={{ transform: `scale(${1 + (loadingProgress / 100)})`, opacity: 0.2 + (loadingProgress / 100) }}></div>
+                    <div className="relative w-32 h-32 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center text-indigo-600 transition-all duration-700" style={{ transform: `scale(${1.2 + (loadingProgress / 200)})`, filter: `drop-shadow(0 0 ${loadingProgress / 5}px rgba(79, 70, 229, ${loadingProgress / 100}))` }}><ICONS.Brain className="w-10 h-10" /></div>
+                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                      <span className="text-3xl font-black text-slate-800 tracking-tighter">{Math.floor(loadingProgress)}<span className="text-indigo-500 text-sm ml-0.5">%</span></span>
                     </div>
                   </div>
-                )}
-                {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}
-                {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
-                {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
-                {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                {activeTab === 'audio' && <div className="p-8 md:p-12 max-w-7xl mx-auto flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
-                {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
-                {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
-              </div>
-            )}
-          </div>
-        </main>
+                  <div className="text-center space-y-6 max-w-md">
+                    <p className="text-2xl font-black text-slate-800 tracking-tight">{loadingStatusText}</p>
+                    <div className="w-64 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden shadow-inner">
+                      <div className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full" style={{ width: `${loadingProgress}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="animate-in fade-in duration-500 h-full flex flex-col">
+                  {activeTab === 'context' && (
+                    <div className="p-8 md:p-12 space-y-12 max-w-7xl mx-auto">
+                      <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
+                        <DocumentGallery documents={history} onRefresh={loadHistory} selectedIds={selectedLibraryDocIds} onToggleSelect={toggleLibraryDoc} onSynthesize={runAnalysis} isAnalyzing={isAnalyzing} />
+                        <div className="mt-10 pt-8 border-t border-slate-100">
+                           <FileUpload files={files} onFilesChange={setFiles} onUploadSuccess={loadHistory} />
+                        </div>
+                      </div>
+                      <MeetingContextConfig context={meetingContext} onContextChange={setMeetingContext} documents={history} />
+                      <div className="flex justify-center pb-10">
+                        <button onClick={runAnalysis} disabled={isAnalyzing} className="px-12 py-5 bg-indigo-600 text-white rounded-full font-black text-lg shadow-2xl hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"><ICONS.Brain />Update Strategy</button>
+                      </div>
+                    </div>
+                  )}
+                  {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}
+                  {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
+                  {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
+                  {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
+                  {activeTab === 'audio' && <div className="p-8 md:p-12 max-w-7xl mx-auto flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
+                  {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
+                  {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );
@@ -452,7 +417,7 @@ const SidebarBtn = ({ active, onClick, icon, label }: { active: boolean; onClick
     <div className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`}>
       {icon}
     </div>
-    <span className="tracking-tight">{label}</span>
+    {label && <span className="tracking-tight">{label}</span>}
   </button>
 );
 

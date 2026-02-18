@@ -1,17 +1,42 @@
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ICONS } from '../constants';
-// Fix: Import logoutUser and User from local firebaseService to resolve missing export in firebase/auth.
 import { logoutUser, User } from '../services/firebaseService';
 
 interface HeaderProps {
   user?: User | null;
+  zoom: number;
+  onZoomChange: (newZoom: number) => void;
+  device: string;
+  onDeviceChange: (newDevice: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user }) => {
+const DEVICE_OPTIONS = [
+  { id: 'Full', label: 'Full Viewport', icon: <ICONS.Monitor className="w-4 h-4" /> },
+  { id: 'MBP16', label: 'MacBook Pro 16"', icon: <ICONS.Laptop className="w-4 h-4" /> },
+  { id: 'MBA', label: 'MacBook Air', icon: <ICONS.Laptop className="w-4 h-4" /> },
+  { id: 'WinPC', label: 'Windows PC', icon: <ICONS.Monitor className="w-4 h-4" /> },
+  { id: 'Tablet', label: 'iPad Pro', icon: <ICONS.Monitor className="w-4 h-4" /> },
+  { id: 'Mobile', label: 'Mobile Hub', icon: <ICONS.Smartphone className="w-4 h-4" /> },
+];
+
+export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, device, onDeviceChange }) => {
+  const [showUtility, setShowUtility] = useState(false);
+  const utilityRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (utilityRef.current && !utilityRef.current.contains(event.target as Node)) {
+        setShowUtility(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-slate-200 h-16">
+      <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
         <div className="flex flex-col items-start leading-none">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-red-600 text-white rounded flex items-center justify-center font-black text-xl shadow-md">
@@ -28,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
 
         <div className="flex items-center gap-4">
           {user && (
-            <div className="flex items-center gap-4 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
+            <div className="hidden lg:flex items-center gap-4 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
               <div className="flex flex-col items-end">
                 <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Active Link</span>
                 <span className="text-[10px] font-bold text-slate-700 truncate max-w-[120px]">{user.email}</span>
@@ -44,10 +69,76 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
               </button>
             </div>
           )}
-          <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-600">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+
+          {/* Neural Viewport & Magnifier Controls */}
+          <div className="relative" ref={utilityRef}>
+            <button 
+              onClick={() => setShowUtility(!showUtility)}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-sm ${showUtility ? 'bg-indigo-600 border-indigo-700 text-white shadow-indigo-200' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              {device !== 'Full' && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse"></div>
+              )}
+            </button>
+
+            {showUtility && (
+              <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className="p-6 space-y-6">
+                  {/* Cognitive Magnifier */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                       <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Cognitive Magnifier</h5>
+                       <span className="text-xs font-black text-indigo-600">{zoom}%</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                       <button 
+                         onClick={() => onZoomChange(Math.max(50, zoom - 10))}
+                         className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                       >
+                         <ICONS.ZoomOut className="w-4 h-4 text-slate-600" />
+                       </button>
+                       <button 
+                         onClick={() => onZoomChange(100)}
+                         className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[10px] font-black text-slate-400 rounded-xl"
+                       >
+                         RESET
+                       </button>
+                       <button 
+                         onClick={() => onZoomChange(Math.min(200, zoom + 10))}
+                         className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                       >
+                         <ICONS.ZoomIn className="w-4 h-4 text-slate-600" />
+                       </button>
+                    </div>
+                  </div>
+
+                  {/* Neural Viewport */}
+                  <div className="space-y-4 pt-6 border-t border-slate-100">
+                    <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Neural Viewport Context</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                       {DEVICE_OPTIONS.map((opt) => (
+                         <button 
+                           key={opt.id}
+                           onClick={() => { onDeviceChange(opt.id); setShowUtility(false); }}
+                           className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all group ${device === opt.id ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-50 border-transparent text-slate-500 hover:border-indigo-100 hover:bg-white'}`}
+                         >
+                           <div className={`p-2 rounded-lg transition-colors ${device === opt.id ? 'bg-white/20' : 'bg-white group-hover:bg-indigo-50'}`}>
+                             {opt.icon}
+                           </div>
+                           <span className={`text-[8px] font-black uppercase tracking-widest ${device === opt.id ? 'text-white' : 'text-slate-400'}`}>{opt.label}</span>
+                         </button>
+                       ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 bg-slate-50 text-center border-t border-slate-100">
+                   <p className="text-[8px] font-black uppercase text-slate-400 tracking-[0.3em]">Environment Protocol v3.1</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
