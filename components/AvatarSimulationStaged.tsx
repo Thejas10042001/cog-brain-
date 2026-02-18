@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, FC, useCallback } from 'react';
 import { ICONS } from '../constants';
 import { 
@@ -671,9 +670,9 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
               <div className="absolute inset-0 bg-indigo-600/10 scale-0 group-hover:scale-100 transition-transform duration-1000 rounded-full blur-3xl opacity-50"></div>
               <ICONS.Efficiency className="w-32 h-32 text-indigo-600 relative z-10" />
            </div>
-           <div className="space-y-6">
+           <div className="space-y-6 w-full">
               <h2 className="text-6xl font-black tracking-tight text-white">Staged Simulation Hub</h2>
-              <p className="text-slate-400 text-2xl font-medium leading-relaxed max-w-5xl mx-auto">
+              <p className="text-slate-400 text-2xl font-medium leading-relaxed w-full">
                 Advance through 6 tactical stages. Select your starting point below to begin the challenge.
               </p>
            </div>
@@ -719,7 +718,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
              {/* Header Layer (Fixed) */}
              <div className="p-8 border-b border-white/5 bg-slate-900/20 backdrop-blur-md">
                 {/* Stage Progress Tracker */}
-                <div className="grid grid-cols-6 gap-4 w-full mb-6">
+                <div className="grid grid-cols-6 gap-4 w-full mb-8">
                    {STAGES.map((s, i) => {
                      const isActive = currentStage === s;
                      const isDone = STAGES.indexOf(currentStage) > i;
@@ -738,56 +737,53 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                 </div>
 
                 <div className="flex items-center justify-between">
-                   <div className="flex items-center gap-4">
-                      <div className="px-4 py-1.5 bg-indigo-600/20 text-indigo-400 text-[9px] font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
-                        {currentStage} Stage Active
+                   <div className="flex items-center gap-6">
+                      <div className="p-3 bg-slate-900 border border-white/5 rounded-2xl">
+                         {isGeneratingAvatar ? (
+                           <div className="w-10 h-10 rounded-lg bg-indigo-600/20 flex items-center justify-center animate-pulse">
+                              <ICONS.Efficiency className="w-5 h-5 text-indigo-500" />
+                           </div>
+                         ) : avatarUrl ? (
+                           <img src={avatarUrl} alt="Client" className="w-10 h-10 rounded-lg object-cover" />
+                         ) : (
+                           <ICONS.Brain className="w-10 h-10 text-slate-500" />
+                         )}
                       </div>
-                      <h3 className="text-2xl font-black tracking-tight">Presence: {meetingContext.clientNames || 'Executive Client'}</h3>
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.8)]' : 'bg-slate-700'}`}></div>
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isAISpeaking ? 'Synchronizing Neural Link' : 'Awaiting Input'}</span>
+                      <div className="space-y-1">
+                         <div className="flex items-center gap-4">
+                            <div className="px-3 py-1 bg-indigo-600/20 text-indigo-400 text-[8px] font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
+                              {currentStage} Stage Active
+                            </div>
+                            <h3 className="text-2xl font-black tracking-tight">Presence: {meetingContext.clientNames || 'Executive Client'}</h3>
+                         </div>
+                         <div className="flex items-center gap-3">
+                            <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.8)]' : 'bg-slate-700'}`}></div>
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{isAISpeaking ? 'Synchronizing Neural Link' : 'Awaiting Input'}</span>
+                         </div>
+                      </div>
                    </div>
                 </div>
              </div>
 
              {/* Core Narrative Core (Scrollable) */}
              <div className="flex-1 overflow-y-auto custom-scrollbar p-12 space-y-12">
-                {/* Visual Core */}
-                <div className="relative flex flex-col items-center">
-                   <div className="relative z-20">
-                      {isGeneratingAvatar ? (
-                        <div className="w-56 h-56 rounded-full border-4 border-indigo-500/30 flex flex-col items-center justify-center bg-slate-900 animate-pulse">
-                           <ICONS.Search className="w-10 h-10 text-indigo-500 mb-4" />
-                           <span className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-300">Scanning Neural Records...</span>
-                        </div>
-                      ) : avatarUrl ? (
-                        <div className="relative group/avatar">
-                           <img 
-                             src={avatarUrl} 
-                             alt="Company Logo" 
-                             className={`w-56 h-56 rounded-full object-cover border-4 transition-all duration-700 ${isAISpeaking ? 'border-indigo-500 shadow-[0_0_80px_rgba(79,70,229,0.7)] scale-105' : 'border-slate-800'}`} 
-                           />
-                        </div>
-                      ) : (
-                        <div className="w-56 h-56 rounded-full bg-slate-900 border-4 border-slate-800 flex items-center justify-center text-slate-700">
-                           <ICONS.Brain className="w-14 h-14" />
-                        </div>
-                      )}
+                
+                {/* Question Area - FULL WIDTH */}
+                <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+                   <div className="flex justify-center mb-6">
+                      <div className="w-1.5 h-10 bg-indigo-600/20 rounded-full flex flex-col justify-end">
+                         <div className={`w-full bg-indigo-500 rounded-full transition-all duration-300 ${isAISpeaking ? 'h-full' : 'h-2'}`}></div>
+                      </div>
                    </div>
-                </div>
-
-                {/* Question Area */}
-                <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-10 rounded-[3rem] space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-700 max-w-4xl mx-auto">
-                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2">Cognitive Inquiry</h5>
-                   <p className="text-3xl font-bold italic leading-tight text-white tracking-tight text-center">
+                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2 text-center">Cognitive Inquiry</h5>
+                   <p className="text-4xl font-bold italic leading-[1.3] text-white tracking-tight text-center">
                       {messages[messages.length - 1]?.content || (isProcessing ? "Establishing behavioral synchronization..." : "Initializing simulation core...")}
                    </p>
                 </div>
 
-                {/* Hint Area */}
+                {/* Hint Area - FULL WIDTH */}
                 {currentHint && (
-                  <div className="w-full max-w-2xl bg-indigo-900/40 border border-indigo-500/30 p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-4 mx-auto">
+                  <div className="w-full bg-indigo-900/40 border border-indigo-500/30 p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-4">
                       <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
                           <ICONS.Sparkles className="w-5 h-5 text-indigo-200" />
                       </div>
@@ -798,15 +794,15 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                   </div>
                 )}
 
-                {/* Enhanced Coaching Feedback Overlay */}
+                {/* Enhanced Coaching Feedback Overlay - FULL WIDTH & NO CLOSE BUTTON */}
                 {coachingFeedback && (
-                  <div className="p-10 bg-rose-950/60 backdrop-blur-2xl border-2 border-rose-500/40 rounded-[3rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500 w-full max-w-4xl mx-auto shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
+                  <div className="p-10 bg-rose-950/60 backdrop-blur-2xl border-2 border-rose-500/40 rounded-[3rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
                       <div className="flex items-center justify-between">
                          <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-5 h-5" /></div>
                             <span className="px-5 py-2 bg-rose-600 text-white text-[11px] font-black uppercase rounded-full tracking-widest">Protocol Blocked: Neural Performance Deficit</span>
                          </div>
-                         <button onClick={() => {setCoachingFeedback(null); setShowCoachingDetails(false);}} className="p-2 text-white/40 hover:text-white transition-colors"><ICONS.X className="w-6 h-6" /></button>
+                         {/* Close button removed per request to ensure user follows correction logic */}
                       </div>
 
                       <button 
@@ -856,8 +852,9 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                 <div className="h-10" />
              </div>
 
+             {/* Input Area - FULL WIDTH */}
              <div className="p-8 border-t border-white/5 bg-slate-900/40 backdrop-blur-2xl space-y-6">
-                <div className="max-w-4xl mx-auto w-full space-y-6">
+                <div className="w-full space-y-6">
                    <div className="relative group">
                       <textarea 
                         value={currentCaption} 
