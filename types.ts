@@ -171,6 +171,8 @@ export interface VocalPersonaStructure {
   mimicryDirective: string;
 }
 
+export type VoiceMode = 'upload' | 'persona' | 'personality';
+
 export interface MeetingContext {
   sellerCompany: string;
   sellerNames: string;
@@ -188,6 +190,9 @@ export interface MeetingContext {
   thinkingLevel: ThinkingLevel;
   temperature: number;
   kycDocId?: string;
+  voiceMode: VoiceMode;
+  selectedPersonaId?: string;
+  selectedPersonalityId?: string;
   clonedVoiceBase64?: string;
   clonedVoiceMimeType?: string;
   vocalPersonaAnalysis?: VocalPersonaStructure;

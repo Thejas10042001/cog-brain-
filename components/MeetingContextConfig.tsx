@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MeetingContext, CustomerPersonaType, ThinkingLevel, StoredDocument, VocalPersonaStructure } from '../types';
+import { MeetingContext, CustomerPersonaType, VoiceMode, StoredDocument, VocalPersonaStructure } from '../types';
 import { ICONS } from '../constants';
 import { extractMetadataFromDocument, analyzeVocalPersona } from '../services/geminiService';
 
@@ -41,6 +41,20 @@ const PERSONAS: { type: CustomerPersonaType; label: string; desc: string; icon: 
   },
 ];
 
+const AI_VOICE_PERSONAS = [
+  { id: 'pro-male', label: 'Pro Male', desc: 'Direct, authoritative, business-first.', directive: 'A professional male voice with deep resonance, steady pacing, and clear articulation. Authoritative yet collaborative.' },
+  { id: 'high-energy', label: 'High Energy', desc: 'Enthusiastic, engaging, persuasive.', directive: 'Rapid tempo, upward inflections, and high vocal energy. Excitement-driven and highly persuasive.' },
+  { id: 'deep-authority', label: 'Deep Authority', desc: 'Serious, steady, risk-conscious.', directive: 'Low register baritone, slow and deliberate pacing with significant weight behind every word. Projects absolute certainty and risk-awareness.' },
+  { id: 'calm-strategist', label: 'Calm Strategist', desc: 'Consultative, soft, trusted advisor.', directive: 'Soft-spoken, melodic cadence with consultative warmth. Thoughtful pauses and gentle inflections to project trust.' },
+];
+
+const PUBLIC_PERSONALITIES = [
+  { id: 'jobs', label: 'Visionary Founder', desc: 'Inspired by Steve Jobs', directive: 'Minimalist, rhythmic pacing. Uses hyperbole effectively. Deep pauses for dramatic effect and high visionary energy.' },
+  { id: 'altman', label: 'AI Strategist', desc: 'Inspired by Sam Altman', directive: 'Fast-paced but steady, neutral accent, technical yet accessible vocabulary. Flat but intelligent prosody.' },
+  { id: 'huang', label: 'Hardware Titan', desc: 'Inspired by Jensen Huang', directive: 'High confidence, emphasis on architectural scale, energetic storytelling, and authoritative technical grounding.' },
+  { id: 'benioff', label: 'SaaS Pioneer', desc: 'Inspired by Marc Benioff', directive: 'Deep baritone, high philanthropic warmth, energetic customer-centric storytelling, and booming executive presence.' },
+];
+
 export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ context, onContextChange, documents = [] }) => {
   const [keywordInput, setKeywordInput] = useState("");
   const [objectionInput, setObjectionInput] = useState("");
@@ -58,7 +72,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ cont
     if (!isCustomizedRef.current) {
       generateBasePrompt();
     }
-  }, [context.persona, context.answerStyles, context.meetingFocus, context.vocalPersonaAnalysis, context.potentialObjections]);
+  }, [context.persona, context.answerStyles, context.meetingFocus, context.vocalPersonaAnalysis, context.potentialObjections, context.voiceMode]);
 
   useEffect(() => {
     setLocalPrompt(context.baseSystemPrompt);
@@ -88,7 +102,7 @@ ${context.potentialObjections.length > 0 ? `PREDICTED RESISTANCE NODES:
 ${context.potentialObjections.map(o => `- ${o}`).join('\n')}
 Proactively neutralize these objections in your reasoning.` : ''}
 
-${activeMimicry ? `BEHAVIORAL IDENTITY MIMICRY ACTIVE:
+${activeMimicry ? `BEHAVIORAL IDENTITY MIMICRY ACTIVE (PROTOCOL: ${context.voiceMode.toUpperCase()}):
 You must mirror the following signature in your behavioral logic, emotional subtext, and linguistic pacing:
 "${activeMimicry}"` : ''}
 
@@ -124,6 +138,7 @@ OPERATIONAL CONSTRAINTS:
         const analysis = await analyzeVocalPersona(base64, file.type);
         onContextChange({
           ...context,
+          voiceMode: 'upload',
           clonedVoiceBase64: base64,
           clonedVoiceMimeType: file.type,
           vocalPersonaAnalysis: analysis
@@ -135,6 +150,44 @@ OPERATIONAL CONSTRAINTS:
       console.error("Voice analysis error:", err);
       setIsAnalyzingVoice(false);
     }
+  };
+
+  const selectAIPersona = (p: typeof AI_VOICE_PERSONAS[0]) => {
+    onContextChange({
+      ...context,
+      voiceMode: 'persona',
+      selectedPersonaId: p.id,
+      selectedPersonalityId: undefined,
+      clonedVoiceBase64: undefined,
+      vocalPersonaAnalysis: {
+        pitch: p.id === 'pro-male' ? 'Deep' : 'Moderate',
+        tempo: p.id === 'high-energy' ? 'Fast' : 'Balanced',
+        cadence: 'Strategic',
+        accent: 'Global',
+        emotionalBaseline: 'Neutral',
+        breathingPatterns: 'Steady',
+        mimicryDirective: p.directive
+      }
+    });
+  };
+
+  const selectPersonality = (p: typeof PUBLIC_PERSONALITIES[0]) => {
+    onContextChange({
+      ...context,
+      voiceMode: 'personality',
+      selectedPersonalityId: p.id,
+      selectedPersonaId: undefined,
+      clonedVoiceBase64: undefined,
+      vocalPersonaAnalysis: {
+        pitch: 'Characteristic',
+        tempo: 'Signature',
+        cadence: 'Characteristic',
+        accent: 'Characteristic',
+        emotionalBaseline: 'Characteristic',
+        breathingPatterns: 'Signature',
+        mimicryDirective: p.directive
+      }
+    });
   };
 
   const playVoiceSample = () => {
@@ -269,8 +322,33 @@ OPERATIONAL CONSTRAINTS:
              </div>
           </div>
 
-          <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col gap-6 shadow-2xl relative overflow-hidden h-full text-white transition-all duration-500">
-             <div className="flex flex-col md:flex-row md:items-start gap-8 relative h-full">
+          <div className="bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col shadow-2xl relative overflow-hidden h-full text-white transition-all duration-500">
+             {/* Voice Mode Selector Header */}
+             <div className="flex border-b border-white/5 p-1">
+                <button 
+                  onClick={() => handleChange('voiceMode', 'upload')}
+                  className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'upload' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                   <ICONS.Document className="w-3 h-3 mb-1" />
+                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Trace</span>
+                </button>
+                <button 
+                  onClick={() => handleChange('voiceMode', 'persona')}
+                  className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'persona' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                   <ICONS.Brain className="w-3 h-3 mb-1" />
+                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Persona</span>
+                </button>
+                <button 
+                  onClick={() => handleChange('voiceMode', 'personality')}
+                  className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'personality' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                   <ICONS.Trophy className="w-3 h-3 mb-1" />
+                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Elite</span>
+                </button>
+             </div>
+
+             <div className="p-6 relative flex-1">
                  {isAnalyzingVoice && (
                      <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex items-center justify-center z-20">
                          <div className="flex flex-col items-center gap-3">
@@ -284,83 +362,99 @@ OPERATIONAL CONSTRAINTS:
                      </div>
                  )}
 
-                 <div className="shrink-0 flex flex-col items-center gap-2">
-                     <div className={`p-4 rounded-2xl shadow-lg transition-colors ${context.clonedVoiceBase64 ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
-                     <ICONS.Speaker />
-                     </div>
-                     <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Voice Identity</span>
-                 </div>
+                 {/* UPLOAD MODE CONTENT */}
+                 {context.voiceMode === 'upload' && (
+                    <div className="space-y-4 animate-in fade-in duration-300">
+                        {!context.clonedVoiceBase64 ? (
+                        <div 
+                            onClick={() => voiceInputRef.current?.click()}
+                            className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl px-6 py-8 cursor-pointer transition-all flex flex-col items-center gap-4 group"
+                        >
+                            <input type="file" ref={voiceInputRef} className="hidden" accept=".mp3,.wav,.m4a" onChange={handleVoiceUpload} />
+                            <div className="w-12 h-12 rounded-full bg-slate-700 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <ICONS.Speaker className="w-5 h-5" />
+                            </div>
+                            <div className="text-center">
+                               <p className="text-[10px] font-black uppercase text-slate-300 tracking-widest">Biological Trace Upload</p>
+                               <p className="text-[8px] font-bold text-slate-500 group-hover:text-slate-400 mt-1">Accepts MP3/WAV/M4A (Max 10MB)</p>
+                            </div>
+                        </div>
+                        ) : (
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                <div className="flex items-center gap-3">
+                                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                   <span className="text-[9px] font-black uppercase text-slate-300 tracking-widest">Trace Synced</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={playVoiceSample} className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${isPlayingVoice ? 'bg-rose-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}>
+                                        {isPlayingVoice ? 'Stop' : 'Play'}
+                                    </button>
+                                    <button onClick={() => onContextChange({...context, clonedVoiceBase64: undefined, vocalPersonaAnalysis: undefined})} className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"><ICONS.Trash className="w-3.5 h-3.5" /></button>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <VocalTrait label="Pitch" val={context.vocalPersonaAnalysis?.pitch || '...'} color="indigo" />
+                                <VocalTrait label="Tempo" val={context.vocalPersonaAnalysis?.tempo || '...'} color="indigo" />
+                            </div>
+                        </div>
+                        )}
+                    </div>
+                 )}
 
-                 <div className="flex-1 space-y-4">
-                     <div className="flex justify-between items-center">
-                     <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-1">Vocal Fingerprint (MP3)</label>
-                     {context.clonedVoiceBase64 && (
-                         <div className="flex gap-2">
-                             <button 
-                             onClick={playVoiceSample}
-                             className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${isPlayingVoice ? 'bg-rose-500 text-white animate-pulse' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
-                             >
-                             {isPlayingVoice ? 'Stop' : 'Play'}
-                             </button>
-                             <button 
-                             onClick={() => onContextChange({...context, clonedVoiceBase64: undefined, vocalPersonaAnalysis: undefined, clonedVoiceMimeType: undefined})}
-                             className="px-3 py-1 bg-slate-700 text-slate-400 hover:text-rose-400 rounded-full text-[8px] font-black uppercase tracking-widest"
-                             >
-                             Clear
-                             </button>
-                         </div>
-                     )}
-                     </div>
+                 {/* PERSONA MODE CONTENT */}
+                 {context.voiceMode === 'persona' && (
+                    <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-300 h-full overflow-y-auto no-scrollbar pb-4">
+                        {AI_VOICE_PERSONAS.map(p => (
+                            <button 
+                                key={p.id}
+                                onClick={() => selectAIPersona(p)}
+                                className={`p-4 rounded-2xl border-2 text-left transition-all ${context.selectedPersonaId === p.id ? 'bg-indigo-600 border-indigo-500 shadow-lg' : 'bg-slate-800/50 border-white/5 hover:border-indigo-400/50'}`}
+                            >
+                                <h5 className={`text-[10px] font-black uppercase tracking-widest mb-1 ${context.selectedPersonaId === p.id ? 'text-white' : 'text-indigo-400'}`}>{p.label}</h5>
+                                <p className={`text-[8px] font-bold leading-relaxed ${context.selectedPersonaId === p.id ? 'text-indigo-100' : 'text-slate-500'}`}>{p.desc}</p>
+                            </button>
+                        ))}
+                    </div>
+                 )}
 
-                     {!context.clonedVoiceBase64 ? (
-                     <div 
-                         onClick={() => voiceInputRef.current?.click()}
-                         className="w-full bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl px-6 py-6 cursor-pointer transition-all flex items-center gap-4 group"
-                     >
-                         <input 
-                             type="file" 
-                             ref={voiceInputRef} 
-                             className="hidden" 
-                             accept=".mp3,.wav,.m4a" 
-                             onChange={handleVoiceUpload} 
-                         />
-                         <div className="w-10 h-10 rounded-full bg-slate-700 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                             <ICONS.Speaker className="w-4 h-4" />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">
-                             Upload prospect voice sample...
-                         </p>
-                     </div>
-                     ) : context.vocalPersonaAnalysis && (
-                     <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
-                         <div className="grid grid-cols-2 gap-2">
-                             <VocalTrait label="Pitch" val={context.vocalPersonaAnalysis.pitch} color="indigo" />
-                             <VocalTrait label="Tempo" val={context.vocalPersonaAnalysis.tempo} color="indigo" />
-                             <VocalTrait label="Cadence" val={context.vocalPersonaAnalysis.cadence} color="indigo" />
-                             <VocalTrait label="Accent" val={context.vocalPersonaAnalysis.accent} color="indigo" />
-                             <VocalTrait label="Baseline" val={context.vocalPersonaAnalysis.emotionalBaseline} color="emerald" />
-                             <VocalTrait label="Patterns" val={context.vocalPersonaAnalysis.breathingPatterns} color="emerald" />
-                         </div>
-                         <div className="pt-2">
-                             <button 
-                             onClick={() => setShowVocalDirective(!showVocalDirective)}
-                             className="w-full flex items-center justify-between px-4 py-2 bg-slate-800/80 rounded-xl border border-slate-700 hover:bg-slate-750 transition-all group"
-                             >
-                             <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-400">View Neural Directive</span>
-                             <svg className={`w-3 h-3 text-slate-500 transition-transform ${showVocalDirective ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                             </svg>
-                             </button>
-                             {showVocalDirective && (
-                             <div className="mt-2 p-4 bg-slate-800 border border-slate-700 rounded-xl text-[10px] text-indigo-200 italic leading-relaxed animate-in slide-in-from-top-2">
-                                 "{context.vocalPersonaAnalysis.mimicryDirective}"
-                             </div>
-                             )}
-                         </div>
-                     </div>
-                     )}
-                 </div>
+                 {/* PERSONALITY MODE CONTENT */}
+                 {context.voiceMode === 'personality' && (
+                    <div className="grid grid-cols-1 gap-2 animate-in fade-in duration-300 h-full overflow-y-auto no-scrollbar pb-4 pr-1">
+                        {PUBLIC_PERSONALITIES.map(p => (
+                            <button 
+                                key={p.id}
+                                onClick={() => selectPersonality(p)}
+                                className={`p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${context.selectedPersonalityId === p.id ? 'bg-emerald-600 border-emerald-500 shadow-lg' : 'bg-slate-800/50 border-white/5 hover:border-emerald-400/50'}`}
+                            >
+                                <div>
+                                    <h5 className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${context.selectedPersonalityId === p.id ? 'text-white' : 'text-emerald-400'}`}>{p.label}</h5>
+                                    <p className={`text-[8px] font-bold ${context.selectedPersonalityId === p.id ? 'text-emerald-100' : 'text-slate-500'}`}>{p.desc}</p>
+                                </div>
+                                {context.selectedPersonalityId === p.id && <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>}
+                            </button>
+                        ))}
+                    </div>
+                 )}
              </div>
+
+             {/* Footer Info */}
+             <div className="px-6 py-3 bg-white/5 border-t border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                   <div className={`w-1.5 h-1.5 rounded-full ${context.vocalPersonaAnalysis ? 'bg-emerald-500' : 'bg-slate-600'}`}></div>
+                   <span className="text-[7px] font-black uppercase text-slate-500 tracking-widest">
+                     {context.vocalPersonaAnalysis ? 'Neural Link Grounded' : 'Neural Link Required'}
+                   </span>
+                </div>
+                <button onClick={() => setShowVocalDirective(!showVocalDirective)} className="text-[7px] font-black uppercase text-indigo-400 hover:text-indigo-300 tracking-widest transition-colors">
+                  Directive Logic
+                </button>
+             </div>
+             {showVocalDirective && context.vocalPersonaAnalysis && (
+                 <div className="p-4 bg-slate-950 border-t border-white/10 text-[9px] text-indigo-300 italic leading-relaxed animate-in slide-in-from-top-2">
+                     "{context.vocalPersonaAnalysis.mimicryDirective}"
+                 </div>
+             )}
           </div>
         </div>
 
@@ -490,7 +584,7 @@ OPERATIONAL CONSTRAINTS:
 };
 
 const VocalTrait = ({ label, val, color }: { label: string, val: string, color: string }) => (
-  <div className={`p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:border-${color}-500/50 transition-all`}>
+  <div className={`p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:border-${color}-500/50 transition-all w-full`}>
     <span className="text-[7px] font-black uppercase text-slate-500 tracking-widest">{label}</span>
     <span className="text-[10px] font-bold text-white truncate">{val}</span>
   </div>

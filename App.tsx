@@ -80,7 +80,8 @@ const App: React.FC = () => {
     strategicKeywords: [],
     potentialObjections: [],
     baseSystemPrompt: "",
-    kycDocId: ""
+    kycDocId: "",
+    voiceMode: 'upload'
   });
 
   const loadHistory = useCallback(async () => {
