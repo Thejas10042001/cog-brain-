@@ -683,8 +683,12 @@ export async function generateAssessmentQuestions(
     "text": "The question text",
     "options": ["A", "B", "C", "D"], // ONLY for mcq
     "correctAnswer": "The exact correct option or ideal response",
-    "explanation": "Brief coaching explanation explaining the strategic significance of this question.",
-    "citation": { "snippet": "exact quote from text or derived context", "sourceFile": "filename or 'Document Context'" }
+    "explanation": "Brief coaching explanation explaining the strategic significance of this question. This must be an in-depth depth explain of the winning logic.",
+    "citation": { 
+      "snippet": "exact quote from text or derived context", 
+      "sourceFile": "filename or 'Document Context'",
+      "pageNumber": "Exact page number where the information was found if available (e.g., 5 or 'Page 12')"
+    }
   }
   
   CONTENT SOURCE:

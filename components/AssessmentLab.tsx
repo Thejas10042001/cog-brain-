@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ICONS } from '../constants';
 import { generateAssessmentQuestions, evaluateAssessment } from '../services/geminiService';
@@ -117,7 +116,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
     setIsGenerating(true);
     const activeConfig = customConfig || config;
     try {
-      const combined = activeDocuments.map(d => d.content).join('\n');
+      const combined = activeDocuments.map(d => `SOURCE PDF: ${d.name}\n${d.content}`).join('\n');
       const qSet = await generateAssessmentQuestions(combined, activeConfig, perspective);
       setQuestions(qSet);
       
@@ -446,39 +445,87 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
     const totalScore = Math.round(results.reduce((acc, r) => acc + r.evaluation.score, 0) / (results.length || 1));
     return (
       <div className="animate-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] flex flex-col bg-slate-900 text-white">
-        <div className="p-16 flex flex-col md:flex-row items-center justify-between gap-12 text-left flex-1">
+        <div className="p-16 flex flex-col md:flex-row items-center justify-between gap-12 text-left">
            <div className="space-y-8 flex-1">
-              <h2 className="text-5xl font-black tracking-tight">Readiness Report</h2>
+              <h2 className="text-5xl font-black tracking-tight">Intelligence Audit Result</h2>
               <p className="text-indigo-200/70 font-medium text-xl max-w-xl">
-                 Logic validated against intelligence core. Master assessment complete.
+                 Neural logic benchmark completed. Your answers have been cross-referenced with the grounded document core.
               </p>
               <div className="flex gap-4">
-                 <button onClick={exportPDF} className="px-8 py-3.5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest">
-                   Export PDF
+                 <button onClick={exportPDF} className="px-8 py-3.5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">
+                   Export Strategy Report
                  </button>
                  <button onClick={() => setStage('config')} className="px-8 py-3.5 bg-white/10 text-white border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest">
-                   Retake
+                   Restart Lab
                  </button>
               </div>
            </div>
-           <div className="w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10">
-              <span className="text-[12px] font-black uppercase text-indigo-200 mb-2">Score</span>
+           <div className="w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10 shadow-2xl">
+              <span className="text-[12px] font-black uppercase text-indigo-200 mb-2 tracking-widest">Audit Score</span>
               <span className="text-7xl font-black">{totalScore}%</span>
            </div>
         </div>
-        <div className="bg-white p-12 space-y-10">
+        <div className="bg-slate-50 p-12 space-y-12">
            {questions.map((q, idx) => {
              const res = results.find(r => r.questionId === q.id);
              return (
-               <div key={q.id} className="p-10 border border-slate-100 rounded-[3rem] text-slate-900 flex flex-col gap-6">
-                  <div className="flex justify-between items-start">
-                     <h4 className="text-2xl font-black">{idx + 1}. {q.text}</h4>
-                     <span className={`px-6 py-2 rounded-full font-black ${res?.evaluation.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{res?.evaluation.score}%</span>
+               <div key={q.id} className="bg-white p-12 border border-slate-200 rounded-[3.5rem] text-slate-900 flex flex-col gap-10 shadow-sm relative overflow-hidden group">
+                  {/* Source Attribution Badge */}
+                  <div className="flex items-center gap-3 px-6 py-2 bg-indigo-50 border border-indigo-100 rounded-full w-fit">
+                     <ICONS.Document className="w-3.5 h-3.5 text-indigo-600" />
+                     <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">
+                       Source Node: {q.citation?.sourceFile || 'Grounded Core'} 
+                       {q.citation?.pageNumber ? ` • Page ${q.citation.pageNumber}` : ''}
+                     </span>
                   </div>
-                  <p className="italic text-slate-500">“{res?.userAnswer || "N/A"}”</p>
-                  <div className="p-6 bg-slate-50 rounded-2xl">
-                     <p className="text-xs font-black text-indigo-600 uppercase mb-2">Strategic Insight</p>
-                     <p className="text-sm">{res?.evaluation.feedback}</p>
+
+                  <div className="space-y-4">
+                     <div className="flex justify-between items-start">
+                        <h4 className="text-3xl font-black tracking-tight text-slate-900 max-w-4xl">{idx + 1}. {q.text}</h4>
+                        <div className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${res?.evaluation.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                           {res?.evaluation.isCorrect ? 'Logic Match' : 'Logic Deficit'} • {res?.evaluation.score}%
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                     {/* User Answer Column */}
+                     <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                           <ICONS.Chat className="w-4 h-4 text-slate-400" />
+                           <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Your Protocol Delivery</h5>
+                        </div>
+                        <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 italic text-slate-600 leading-relaxed font-medium">
+                           “{res?.userAnswer || "System encountered a null response node."}”
+                        </div>
+                     </div>
+
+                     {/* Correct Answer Column */}
+                     <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                           <ICONS.Shield className="w-4 h-4 text-indigo-600" />
+                           <h5 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Master Logic Node</h5>
+                        </div>
+                        <div className="p-8 bg-indigo-600 text-white rounded-[2.5rem] shadow-xl shadow-indigo-100 leading-relaxed">
+                           <p className="text-[11px] font-black uppercase tracking-widest opacity-60 mb-3">Protocol Blocked: That was not the target answer. The master logic is as follows:</p>
+                           <p className="text-xl font-bold">“{q.correctAnswer}”</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Strategic Insight Full Width */}
+                  <div className="p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100 space-y-4">
+                     <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-lg"><ICONS.Brain className="w-4 h-4" /></div>
+                        <h5 className="text-[11px] font-black uppercase text-emerald-800 tracking-[0.2em]">Cognitive Strategic Insight</h5>
+                     </div>
+                     <p className="text-md font-bold text-emerald-900 leading-relaxed italic">
+                        {q.explanation}
+                     </p>
+                     <div className="pt-4 border-t border-emerald-100 flex items-center gap-3">
+                        <span className="text-[9px] font-black uppercase text-emerald-600 tracking-widest">Coach Assessment:</span>
+                        <p className="text-sm font-medium text-emerald-700">{res?.evaluation.feedback}</p>
+                     </div>
                   </div>
                </div>
              );
@@ -495,12 +542,12 @@ const ConfigRow = ({ label, val, set, icon }: { label: string; val: number; set:
   <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-transparent group">
     <div className="flex items-center gap-4">
       <div className="text-slate-400 group-hover:text-indigo-600 transition-colors">{icon}</div>
-      <span className="text-[11px] font-black uppercase text-slate-500">{label}</span>
+      <span className="text-[11px] font-black uppercase text-slate-500 tracking-tight">{label}</span>
     </div>
     <div className="flex items-center gap-4">
-       <button onClick={() => set(Math.max(0, val - 1))} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center">-</button>
+       <button onClick={() => set(Math.max(0, val - 1))} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center hover:bg-indigo-50 transition-colors font-black text-slate-400">-</button>
        <span className="w-8 text-center font-black text-indigo-600">{val}</span>
-       <button onClick={() => set(val + 1)} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center">+</button>
+       <button onClick={() => set(val + 1)} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center hover:bg-indigo-50 transition-colors font-black text-slate-400">+</button>
     </div>
   </div>
 );

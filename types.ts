@@ -1,6 +1,7 @@
 export interface Citation {
   snippet: string;
   sourceFile: string;
+  pageNumber?: number | string;
 }
 
 export interface PriorityItem {
