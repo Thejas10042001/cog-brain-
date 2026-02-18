@@ -279,7 +279,7 @@ const App: React.FC = () => {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>
                     <div className="flex flex-col gap-1">
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Trophy />} label="Challenge" scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged'} icon={<ICONS.Trophy />} label="Challenge" scale={sidebarFontScale} />
                       <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label="Avatar 2.0" scale={sidebarFontScale} />
                       <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Document />} label="Assessment" scale={sidebarFontScale} />
                       <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label="Simulation" scale={sidebarFontScale} />
@@ -308,16 +308,15 @@ const App: React.FC = () => {
             <div className="w-full min-h-full">
               {!analysis && !isAnalyzing ? (
                 <div className="p-8 md:p-12 space-y-16 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
-                  <div className="text-center space-y-4 py-6">
-                    {/* BIG HERO TITLE */}
-                    <h1 className="text-8xl md:text-9xl font-black text-slate-900 tracking-tighter leading-[0.9]">
-                      SPIKED<span className="text-red-600">AI</span> Hub
-                    </h1>
-
-                    {/* SMALL SUBTITLE */}
-                    <p className="text-sm md:text-base text-slate-400 font-semibold uppercase tracking-[0.35em] max-w-2xl mx-auto">
-                      Cognitive Intelligence Brain Simulation
-                    </p>
+                  <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 pb-8 gap-6">
+                    <div>
+                      <h1 className="text-4xl font-black text-slate-900 tracking-tight uppercase">Meeting Architecture</h1>
+                      <p className="text-sm text-slate-500 font-medium mt-1">Configure your tactical strategy core.</p>
+                    </div>
+                    <div className="flex items-center gap-3 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-full">
+                      <div className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700">Cognitive Hub Active</span>
+                    </div>
                   </div>
 
                   <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
