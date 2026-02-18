@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Auth } from './components/Auth';
@@ -12,7 +13,7 @@ import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { analyzeSalesContext } from './services/geminiService';
-import { fetchDocumentsFromFirebase, isFirebaseActive, getFirebasePermissionError, subscribeToAuth, User } from './services/firebaseService';
+import { fetchDocumentsFromFirebase, subscribeToAuth, User } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
 
@@ -48,16 +49,6 @@ const ALL_ANSWER_STYLES = [
   "Decision Matrix"
 ];
 
-// Device simulation configurations - Pure Ratio/Fit without decorative borders
-const DEVICE_MAP: Record<string, { width: string, height: string, ratio: string }> = {
-  'Full': { width: '100vw', height: '100vh', ratio: 'auto' },
-  'MBP16': { width: '100vw', height: 'auto', ratio: '16/10' }, // Standard MacBook Pro aspect
-  'MBA': { width: '100vw', height: 'auto', ratio: '16/10' },   // MacBook Air aspect
-  'WinPC': { width: '100vw', height: 'auto', ratio: '16/9' },    // Standard Widescreen
-  'Tablet': { width: 'min(1024px, 100%)', height: 'auto', ratio: '3/4' }, // iPad Vertical
-  'Mobile': { width: 'min(390px, 100%)', height: 'auto', ratio: '9/19.5' }, // Modern Mobile
-};
-
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -68,12 +59,14 @@ const App: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState("");
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
 
-  // Cognitive Magnifier & Neural Viewport States
+  // Cognitive Magnifier State
   const [zoom, setZoom] = useState(100);
-  const [device, setDevice] = useState('Full');
+
+  // Partition Resizer State
+  const [sidebarWidth, setSidebarWidth] = useState(280);
+  const [isResizing, setIsResizing] = useState(false);
 
   const lastAnalyzedHash = useRef<string | null>(null);
 
@@ -96,6 +89,34 @@ const App: React.FC = () => {
     kycDocId: "",
     voiceMode: 'upload'
   });
+
+  const startResizing = useCallback(() => setIsResizing(true), []);
+  const stopResizing = useCallback(() => setIsResizing(false), []);
+
+  const resize = useCallback((e: MouseEvent) => {
+    if (isResizing) {
+      // Adjust width based on mouse X position, respecting zoom factor
+      const zoomFactor = zoom / 100;
+      const newWidth = e.clientX / zoomFactor;
+      if (newWidth > 64 && newWidth < 600) {
+        setSidebarWidth(newWidth);
+      }
+    }
+  }, [isResizing, zoom]);
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    } else {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing, resize, stopResizing]);
 
   const loadHistory = useCallback(async () => {
     if (!user) return;
@@ -160,7 +181,6 @@ const App: React.FC = () => {
     setIsAnalyzing(true);
     setLoadingProgress(0);
     setError(null);
-    setStatusMessage("Synthesizing Intelligence Core...");
 
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
@@ -190,8 +210,6 @@ const App: React.FC = () => {
       console.error(err);
       setError(err.message || "An unexpected error occurred during analysis.");
       setIsAnalyzing(false);
-    } finally {
-      setStatusMessage("");
     }
   }, [activeDocuments, meetingContext, analysis, generateStateHash]);
 
@@ -227,16 +245,11 @@ const App: React.FC = () => {
     return <Auth />;
   }
 
-  const currentDeviceCfg = DEVICE_MAP[device];
-
   return (
     <div 
       className="min-h-screen bg-slate-100 flex flex-col transition-all duration-300 ease-in-out origin-top-left"
       style={{ 
-        // WHOLE SCREEN MAGNIFICATION:
-        // Use zoom property for scaling everything including layout flow
         zoom: zoom / 100,
-        // Firefox compatibility (CSS zoom is standard in Chromium/Safari/Edge)
         // @ts-ignore
         MozZoom: zoom / 100,
       } as React.CSSProperties}
@@ -245,48 +258,52 @@ const App: React.FC = () => {
         user={user} 
         zoom={zoom} 
         onZoomChange={setZoom} 
-        device={device} 
-        onDeviceChange={setDevice} 
       />
       
-      <div className={`pt-16 flex flex-1 overflow-hidden transition-all duration-500 ${device !== 'Full' ? 'bg-slate-200 justify-center items-center overflow-auto p-4 md:p-12' : ''}`}>
+      <div className="pt-16 flex flex-1 overflow-hidden">
         
-        {/* BORDERLESS NEURAL VIEWPORT */}
-        {/* We use width/aspect-ratio for fitting the chosen screen without artificial borders */}
-        <div 
-          className={`flex flex-1 overflow-hidden transition-all duration-700 bg-white relative ${device !== 'Full' ? 'shadow-2xl' : ''}`}
-          style={device !== 'Full' ? { 
-            width: currentDeviceCfg.width, 
-            maxWidth: '100%',
-            height: 'fit-content',
-            minHeight: '80vh',
-            aspectRatio: currentDeviceCfg.ratio,
-          } : {}}
-        >
+        {/* Natural Viewport Layout */}
+        <div className="flex flex-1 overflow-hidden bg-white relative">
           {analysis && !isAnalyzing && (
-            <aside className={`${device === 'Mobile' ? 'w-16' : 'w-72'} bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all`}>
-              <div className={`${device === 'Mobile' ? 'p-2' : 'p-6'} space-y-8 flex flex-col h-full`}>
-                <div className="space-y-1">
-                  <p className={`text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2 ${device === 'Mobile' ? 'hidden' : ''}`}>Intelligence Nodes</p>
-                  <div className="flex flex-col gap-1">
-                    <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Trophy />} label={device === 'Mobile' ? '' : "Staged Sim"} />
-                    <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label={device === 'Mobile' ? '' : "Avatar 2.0"} />
-                    <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label={device === 'Mobile' ? '' : "Avatar 1.0"} />
-                    <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Document />} label={device === 'Mobile' ? '' : "Assignment"} />
-                    <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label={device === 'Mobile' ? '' : "Simulation"} />
-                    <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label={device === 'Mobile' ? '' : "Studio"} />
-                    <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.Sparkles />} label={device === 'Mobile' ? '' : "Fast Ans"} />
-                    <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label={device === 'Mobile' ? '' : "Config"} />
+            <>
+              <aside 
+                style={{ width: sidebarWidth }}
+                className="bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all"
+              >
+                <div className={`p-2 ${sidebarWidth > 120 ? 'lg:p-6' : 'p-2'} space-y-8 flex flex-col h-full`}>
+                  <div className="space-y-1">
+                    {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
+                    <div className="flex flex-col gap-1">
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Trophy />} label={sidebarWidth > 180 ? "Staged Sim" : ""} />
+                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} />
+                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} />
+                      <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Document />} label={sidebarWidth > 180 ? "Assignment" : ""} />
+                      <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Simulation" : ""} />
+                      <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} />
+                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Fast Ans" : ""} />
+                      <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Config" : ""} />
+                    </div>
                   </div>
-                </div>
 
-                <div className={`mt-auto pt-6 border-t border-slate-100 space-y-4 ${device === 'Mobile' ? 'hidden' : ''}`}>
-                   <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200">
-                    <ICONS.X className="w-3 h-3" /> Wipe Strategy
-                  </button>
+                  {sidebarWidth > 180 && (
+                    <div className="mt-auto pt-6 border-t border-slate-100 space-y-4">
+                      <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200">
+                        <ICONS.X className="w-3 h-3" /> Wipe Strategy
+                      </button>
+                    </div>
+                  )}
                 </div>
+              </aside>
+              
+              {/* Sidebar Draggable Resize Partition */}
+              <div 
+                onMouseDown={startResizing}
+                className="w-1.5 h-full cursor-col-resize hover:bg-indigo-400 active:bg-indigo-600 z-40 relative group transition-colors"
+                title="Drag to adjust node partition"
+              >
+                <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-indigo-400/10"></div>
               </div>
-            </aside>
+            </>
           )}
 
           <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-slate-50 relative">
@@ -407,10 +424,10 @@ const SidebarBtn = ({ active, onClick, icon, label }: { active: boolean; onClick
       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
     }`}
   >
-    <div className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors`}>
+    <div className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors shrink-0`}>
       {icon}
     </div>
-    {label && <span className="tracking-tight">{label}</span>}
+    {label && <span className="tracking-tight truncate">{label}</span>}
   </button>
 );
 
