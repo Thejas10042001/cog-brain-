@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Auth } from './components/Auth';
@@ -49,14 +48,14 @@ const ALL_ANSWER_STYLES = [
   "Decision Matrix"
 ];
 
-// Device simulation configurations
+// Device simulation configurations - Borderless ratios
 const DEVICE_MAP: Record<string, { width: string, height: string, ratio: string }> = {
   'Full': { width: '100%', height: '100%', ratio: 'auto' },
-  'MBP16': { width: '1100px', height: '687px', ratio: '16/10' },
-  'MBA': { width: '900px', height: '562px', ratio: '16/10' },
-  'WinPC': { width: '1200px', height: '675px', ratio: '16/9' },
-  'Tablet': { width: '768px', height: '1024px', ratio: '3/4' },
-  'Mobile': { width: '375px', height: '812px', ratio: '9/19.5' },
+  'MBP16': { width: '1728px', height: '1117px', ratio: '16/10.3' }, // Retina Resolution for MBP 16
+  'MBA': { width: '1440px', height: '900px', ratio: '16/10' },     // Standard Air Ratio
+  'WinPC': { width: '1920px', height: '1080px', ratio: '16/9' },   // Standard 1080p
+  'Tablet': { width: '1024px', height: '1366px', ratio: '3/4' },   // iPad Pro Vertical
+  'Mobile': { width: '390px', height: '844px', ratio: '9/19.5' },  // iPhone 14-style
 };
 
 const App: React.FC = () => {
@@ -131,8 +130,7 @@ const App: React.FC = () => {
   };
 
   const isAnyFileProcessing = useMemo(() => files.some(f => f.status === 'processing'), [files]);
-  const readyFilesCount = useMemo(() => files.filter(f => f.status === 'ready').length, [files]);
-
+  
   const activeDocuments = useMemo(() => {
     const sessionDocs = files.filter(f => f.status === 'ready').map(f => ({ name: f.name, content: f.content }));
     const libDocs = history.filter(d => selectedLibraryDocIds.includes(d.id)).map(d => ({ name: d.name, content: d.content }));
@@ -230,11 +228,17 @@ const App: React.FC = () => {
     return <Auth />;
   }
 
-  const hasPermissionError = getFirebasePermissionError();
   const currentDeviceCfg = DEVICE_MAP[device];
 
   return (
-    <div className="min-h-screen bg-slate-100 overflow-hidden flex flex-col transition-all duration-700" style={{ fontSize: `${zoom}%` }}>
+    <div 
+      className="min-h-screen bg-slate-100 flex flex-col transition-all duration-300 ease-in-out"
+      style={{ 
+        // Applying whole-screen magnification
+        zoom: zoom / 100,
+        // For Firefox compatibility where zoom isn't standard, we'd use transform, but zoom is cleaner for this use case
+      } as React.CSSProperties}
+    >
       <Header 
         user={user} 
         zoom={zoom} 
@@ -243,26 +247,19 @@ const App: React.FC = () => {
         onDeviceChange={setDevice} 
       />
       
-      <div className={`pt-16 flex flex-1 overflow-hidden transition-all duration-500 ${device !== 'Full' ? 'p-10 justify-center items-center bg-slate-200' : ''}`}>
+      <div className={`pt-16 flex flex-1 overflow-hidden transition-all duration-500 ${device !== 'Full' ? 'bg-slate-200 justify-center items-center p-8' : ''}`}>
         
-        {/* Device Chassis Frame */}
+        {/* Borderless Neural Viewport Container */}
         <div 
-          className={`flex flex-1 overflow-hidden transition-all duration-700 relative ${device !== 'Full' ? 'border-[14px] border-slate-900 rounded-[3.5rem] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.5)] bg-slate-50' : ''}`}
-          style={device !== 'Full' ? { maxWidth: currentDeviceCfg.width, height: currentDeviceCfg.height, aspectRatio: currentDeviceCfg.ratio } : {}}
+          className={`flex flex-1 overflow-hidden transition-all duration-700 bg-white shadow-2xl relative ${device !== 'Full' ? 'rounded-[2rem] max-w-full max-h-full' : ''}`}
+          style={device !== 'Full' ? { 
+            width: `min(${currentDeviceCfg.width}, 100%)`, 
+            height: `min(${currentDeviceCfg.height}, 100%)`, 
+            aspectRatio: currentDeviceCfg.ratio 
+          } : {}}
         >
-          {/* Status Bar for Simulated Mobile/Tablet */}
-          {device === 'Mobile' && (
-            <div className="absolute top-0 left-0 right-0 h-6 bg-slate-900 z-[60] flex items-center justify-between px-8 text-[8px] text-white/40 font-black">
-               <span>9:41</span>
-               <div className="flex gap-1.5">
-                  <div className="w-2 h-2 rounded-full border border-white/20"></div>
-                  <div className="w-4 h-2 bg-white/20 rounded-sm"></div>
-               </div>
-            </div>
-          )}
-
           {analysis && !isAnalyzing && (
-            <aside className={`${device === 'Mobile' ? 'w-20' : 'w-72'} bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all`}>
+            <aside className={`${device === 'Mobile' ? 'w-16' : 'w-72'} bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all`}>
               <div className={`${device === 'Mobile' ? 'p-2' : 'p-6'} space-y-8 flex flex-col h-full`}>
                 <div className="space-y-1">
                   <p className={`text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2 ${device === 'Mobile' ? 'hidden' : ''}`}>Intelligence Nodes</p>
@@ -279,24 +276,15 @@ const App: React.FC = () => {
                 </div>
 
                 <div className={`mt-auto pt-6 border-t border-slate-100 space-y-4 ${device === 'Mobile' ? 'hidden' : ''}`}>
-                  <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                      <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Strategy Sync</span>
-                    </div>
-                    <p className="text-[10px] font-bold text-emerald-600/80 leading-tight">
-                      Context retained for {meetingContext.clientCompany || 'Prospect'}.
-                    </p>
-                  </div>
                   <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200">
-                    <ICONS.X className="w-3 h-3" /> Wipe
+                    <ICONS.X className="w-3 h-3" /> Wipe Strategy
                   </button>
                 </div>
               </div>
             </aside>
           )}
 
-          <main className={`flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-slate-50`}>
+          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-slate-50 relative">
             <div className="w-full min-h-full">
               {!analysis && !isAnalyzing ? (
                 <div className="p-8 md:p-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
