@@ -36,7 +36,9 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
             <div className="w-8 h-8 bg-red-600 text-white rounded flex items-center justify-center font-black text-xl shadow-md">
               !
             </div>
-
+            <span className="font-black text-2xl tracking-tighter text-slate-900">
+              SPIKED<span className="text-red-600">AI</span>
+            </span>
           </div>
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 ml-1 hidden md:block">
             {/* Fix: Optionally display companyName if provided */}
