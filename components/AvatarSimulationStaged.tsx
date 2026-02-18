@@ -49,6 +49,13 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   
+  // Transition Flow State
+  const [showTransitionModal, setShowTransitionModal] = useState(false);
+  const [transitionChoice, setTransitionChoice] = useState<'same' | 'next'>('next');
+  const [questionCount, setQuestionCount] = useState(1);
+  const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
+  const [remainingQuestionsInLoop, setRemainingQuestionsInLoop] = useState(0);
+
   // Resizable Logic for Sidebar
   const [historyWidth, setHistoryWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
@@ -244,8 +251,6 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       if (e.message?.includes("Requested entity was not found") && window.aistudio) {
         window.aistudio.openSelectKey();
       }
-      const errorMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: "Neural sync interrupted. Please ensure your API key is active.", mode: 'standard' };
-      setMessages([errorMsg]);
     } finally { 
       setIsProcessing(false); 
     }
@@ -297,20 +302,25 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
         }));
 
         setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 3500);
-
-        const nextIdx = STAGES.indexOf(currentStage) + 1;
-        if (nextIdx < STAGES.length) {
-          const nextS = STAGES[nextIdx];
-          setCurrentStage(nextS);
-          setExpandedStages(prev => new Set(prev).add(nextS));
+        
+        // Logic check: are we in a reinforced loop?
+        if (remainingQuestionsInLoop > 1) {
+            setRemainingQuestionsInLoop(prev => prev - 1);
+            const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
+            const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+            setMessages([...updatedHistory, aiMsg]);
+            setCurrentCaption("");
+            playAIQuestion(cleaned);
+            setTimeout(() => setShowCelebration(false), 2000);
+        } else {
+            // End of loop or initial success -> Show Config Modal
+            setRemainingQuestionsInLoop(0);
+            setTimeout(() => {
+                setShowCelebration(false);
+                setShowTransitionModal(true);
+            }, 3000);
         }
 
-        const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
-        const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
-        setMessages([...updatedHistory, aiMsg]);
-        setCurrentCaption("");
-        playAIQuestion(cleaned);
       } else if (isFail) {
         const coachMatch = response.match(/\[COACHING: (.*?)\]/);
         const styleMatch = response.match(/\[STYLE_GUIDE: (.*?)\]/);
@@ -354,6 +364,52 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
         window.aistudio.openSelectKey();
       }
     } finally { setIsProcessing(false); }
+  };
+
+  const handleTransitionProceed = async () => {
+    setShowTransitionModal(false);
+    setIsProcessing(true);
+
+    let nextS = currentStage;
+    if (transitionChoice === 'next') {
+        const nextIdx = STAGES.indexOf(currentStage) + 1;
+        if (nextIdx < STAGES.length) {
+            nextS = STAGES[nextIdx];
+            setCurrentStage(nextS);
+            setExpandedStages(prev => new Set(prev).add(nextS));
+        }
+    }
+
+    setRemainingQuestionsInLoop(questionCount);
+
+    const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
+    const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
+
+    const directive = `System Directive: User has opted to ${transitionChoice === 'next' ? 'advance to ' + nextS : 'stay in ' + currentStage} for a sequence of ${questionCount} questions. 
+    Set the cognitive difficulty to: ${difficulty}. 
+    Difficulty definitions:
+    - Easy: Surface level, common business questions.
+    - Medium: Probing deeper into integration and ROI.
+    - Hard: High-pressure skepticism, complex objections, challenging the seller's authority.
+    Ask the first question now.`;
+
+    try {
+      const stream = streamAvatarStagedSimulation(directive, messages, meetingContext, nextS, kycContent);
+      let response = "";
+      for await (const chunk of stream) response += chunk;
+
+      const hintMatch = response.match(/\[HINT: (.*?)\]/);
+      if (hintMatch) setCurrentHint(hintMatch[1]);
+
+      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
+      const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+      setMessages(prev => [...prev, aiMsg]);
+      playAIQuestion(cleaned);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleTryAgain = () => {
@@ -518,7 +574,6 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
   };
 
   // Calculate dynamic font scale for history sidebar content
-  // Baseline width is 400px.
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
   return (
@@ -539,6 +594,75 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
               <p className="text-3xl font-black text-indigo-200 mt-4 uppercase tracking-[0.4em]">Stage Mastery Achieved</p>
            </div>
         </div>
+      )}
+
+      {showTransitionModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-500">
+              <div className="bg-slate-900 border border-white/10 rounded-[3rem] p-12 max-w-2xl w-full shadow-2xl space-y-10 animate-in zoom-in-95 duration-300">
+                  <div className="text-center space-y-4">
+                      <div className="w-20 h-20 bg-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto shadow-xl">
+                          <ICONS.Sparkles className="w-10 h-10" />
+                      </div>
+                      <h3 className="text-3xl font-black tracking-tight text-white">Neural Transition Control</h3>
+                      <p className="text-slate-400 font-medium">Stage Mastery confirmed. Configure the next tactical sequence.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                      <button 
+                        onClick={() => setTransitionChoice('same')}
+                        className={`p-8 rounded-[2rem] border-2 text-left transition-all ${transitionChoice === 'same' ? 'bg-indigo-600 border-indigo-500 shadow-xl' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+                      >
+                          <h5 className="font-black uppercase tracking-widest text-[11px] mb-2 text-indigo-300">Option A</h5>
+                          <p className="text-lg font-bold text-white">Reinforce Current Stage</p>
+                          <p className="text-[10px] text-slate-500 mt-2">Deeper inquiry into {currentStage} specifics.</p>
+                      </button>
+                      <button 
+                        onClick={() => setTransitionChoice('next')}
+                        className={`p-8 rounded-[2rem] border-2 text-left transition-all ${transitionChoice === 'next' ? 'bg-emerald-600 border-emerald-500 shadow-xl' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+                      >
+                          <h5 className="font-black uppercase tracking-widest text-[11px] mb-2 text-emerald-300">Option B</h5>
+                          <p className="text-lg font-bold text-white">Advance Protocol</p>
+                          <p className="text-[10px] text-slate-500 mt-2">Move to the next tactical stage.</p>
+                      </button>
+                  </div>
+
+                  <div className="space-y-8 p-8 bg-black/30 rounded-[2.5rem]">
+                      <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                              <h5 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Inquiry Density</h5>
+                              <p className="text-xs font-bold text-white">{questionCount} questions to ask</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                              <button onClick={() => setQuestionCount(Math.max(1, questionCount - 1))} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-black text-white hover:bg-slate-700">-</button>
+                              <span className="text-2xl font-black text-indigo-400">{questionCount}</span>
+                              <button onClick={() => setQuestionCount(Math.min(5, questionCount + 1))} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-black text-white hover:bg-slate-700">+</button>
+                          </div>
+                      </div>
+
+                      <div className="space-y-3">
+                          <h5 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Cognitive Difficulty</h5>
+                          <div className="grid grid-cols-3 gap-3">
+                              {(['Easy', 'Medium', 'Hard'] as const).map((lvl) => (
+                                  <button 
+                                    key={lvl}
+                                    onClick={() => setDifficulty(lvl)}
+                                    className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${difficulty === lvl ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500 hover:text-slate-300'}`}
+                                  >
+                                      {lvl}
+                                  </button>
+                              ))}
+                          </div>
+                      </div>
+                  </div>
+
+                  <button 
+                    onClick={handleTransitionProceed}
+                    className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-xl uppercase tracking-widest shadow-2xl hover:bg-indigo-700 active:scale-[0.98] transition-all"
+                  >
+                      Initiate Re-engagement
+                  </button>
+              </div>
+          </div>
       )}
 
       {!sessionActive ? (
@@ -685,7 +809,6 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                          <button onClick={() => {setCoachingFeedback(null); setShowCoachingDetails(false);}} className="p-2 text-white/40 hover:text-white transition-colors"><ICONS.X className="w-6 h-6" /></button>
                       </div>
 
-                      {/* Dropdown Toggle Trigger - Framed in Cognitive Sentence */}
                       <button 
                         onClick={() => setShowCoachingDetails(!showCoachingDetails)}
                         className="w-full group flex items-center justify-between p-8 bg-white/5 hover:bg-white/10 border-2 border-white/10 hover:border-indigo-500/40 rounded-[2rem] transition-all shadow-inner"
@@ -700,7 +823,6 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                          </div>
                       </button>
 
-                      {/* Expandable Results Content */}
                       {showCoachingDetails && (
                         <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500 pt-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -731,10 +853,9 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                       )}
                   </div>
                 )}
-                <div className="h-10" /> {/* Spacer for scroll padding */}
+                <div className="h-10" />
              </div>
 
-             {/* Command Center (Fixed Bottom) */}
              <div className="p-8 border-t border-white/5 bg-slate-900/40 backdrop-blur-2xl space-y-6">
                 <div className="max-w-4xl mx-auto w-full space-y-6">
                    <div className="relative group">
