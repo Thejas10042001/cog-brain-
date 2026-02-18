@@ -351,17 +351,17 @@ const App: React.FC = () => {
               {!analysis && !isAnalyzing ? (
                 <div className="p-8 md:p-12 space-y-16 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
                   <div className="text-center space-y-2">
-                    <h1 className="text-[120px] leading-[0.8] font-black text-slate-900 tracking-tighter uppercase mb-6">
+                    <h1 className="text-[12rem] leading-[0.8] font-black text-slate-900 tracking-tighter uppercase mb-8">
                       {meetingContext.sellerCompany ? (
                         <>
-                          <span className="block text-[40px] font-black text-indigo-600 tracking-[0.2em] mb-4">IDENTITY:</span>
+                          <span className="block text-[32px] font-black text-indigo-600 tracking-[0.3em] mb-4">IDENTITY:</span>
                           {meetingContext.sellerCompany}
                         </>
                       ) : (
                         <>SPIKED<span className="text-red-600">AI</span> HUB</>
                       )}
                     </h1>
-                    <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.5em] max-w-2xl mx-auto border-t border-slate-200 pt-6">
+                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.6em] max-w-2xl mx-auto border-t border-slate-200 pt-8">
                       Cognitive Intelligence Brain Simulation
                     </p>
                   </div>
