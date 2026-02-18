@@ -48,14 +48,14 @@ const ALL_ANSWER_STYLES = [
   "Decision Matrix"
 ];
 
-// Device simulation configurations - Borderless ratios
+// Device simulation configurations - Pure Ratio/Fit without decorative borders
 const DEVICE_MAP: Record<string, { width: string, height: string, ratio: string }> = {
-  'Full': { width: '100%', height: '100%', ratio: 'auto' },
-  'MBP16': { width: '1728px', height: '1117px', ratio: '16/10.3' }, // Retina Resolution for MBP 16
-  'MBA': { width: '1440px', height: '900px', ratio: '16/10' },     // Standard Air Ratio
-  'WinPC': { width: '1920px', height: '1080px', ratio: '16/9' },   // Standard 1080p
-  'Tablet': { width: '1024px', height: '1366px', ratio: '3/4' },   // iPad Pro Vertical
-  'Mobile': { width: '390px', height: '844px', ratio: '9/19.5' },  // iPhone 14-style
+  'Full': { width: '100vw', height: '100vh', ratio: 'auto' },
+  'MBP16': { width: '100vw', height: 'auto', ratio: '16/10' }, // Standard MacBook Pro aspect
+  'MBA': { width: '100vw', height: 'auto', ratio: '16/10' },   // MacBook Air aspect
+  'WinPC': { width: '100vw', height: 'auto', ratio: '16/9' },    // Standard Widescreen
+  'Tablet': { width: 'min(1024px, 100%)', height: 'auto', ratio: '3/4' }, // iPad Vertical
+  'Mobile': { width: 'min(390px, 100%)', height: 'auto', ratio: '9/19.5' }, // Modern Mobile
 };
 
 const App: React.FC = () => {
@@ -71,7 +71,7 @@ const App: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState("");
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
 
-  // Neural Magnifier & Viewport States
+  // Cognitive Magnifier & Neural Viewport States
   const [zoom, setZoom] = useState(100);
   const [device, setDevice] = useState('Full');
 
@@ -200,7 +200,6 @@ const App: React.FC = () => {
     if (loadingProgress < 40) return "Context Alignment: Mapping Seller/Prospect Domains...";
     if (loadingProgress < 60) return "Psychological Synthesis: Inferring Buyer Resistance...";
     if (loadingProgress < 80) return "Strategy Extraction: Modeling Competitive Wedge...";
-    if (loadingProgress < 95) return "Finalizing Core Strategy Brief...";
     return "Finalizing Core Strategy Brief...";
   }, [loadingProgress]);
 
@@ -232,11 +231,14 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-slate-100 flex flex-col transition-all duration-300 ease-in-out"
+      className="min-h-screen bg-slate-100 flex flex-col transition-all duration-300 ease-in-out origin-top-left"
       style={{ 
-        // Applying whole-screen magnification
+        // WHOLE SCREEN MAGNIFICATION:
+        // Use zoom property for scaling everything including layout flow
         zoom: zoom / 100,
-        // For Firefox compatibility where zoom isn't standard, we'd use transform, but zoom is cleaner for this use case
+        // Firefox compatibility (CSS zoom is standard in Chromium/Safari/Edge)
+        // @ts-ignore
+        MozZoom: zoom / 100,
       } as React.CSSProperties}
     >
       <Header 
@@ -247,15 +249,18 @@ const App: React.FC = () => {
         onDeviceChange={setDevice} 
       />
       
-      <div className={`pt-16 flex flex-1 overflow-hidden transition-all duration-500 ${device !== 'Full' ? 'bg-slate-200 justify-center items-center p-8' : ''}`}>
+      <div className={`pt-16 flex flex-1 overflow-hidden transition-all duration-500 ${device !== 'Full' ? 'bg-slate-200 justify-center items-center overflow-auto p-4 md:p-12' : ''}`}>
         
-        {/* Borderless Neural Viewport Container */}
+        {/* BORDERLESS NEURAL VIEWPORT */}
+        {/* We use width/aspect-ratio for fitting the chosen screen without artificial borders */}
         <div 
-          className={`flex flex-1 overflow-hidden transition-all duration-700 bg-white shadow-2xl relative ${device !== 'Full' ? 'rounded-[2rem] max-w-full max-h-full' : ''}`}
+          className={`flex flex-1 overflow-hidden transition-all duration-700 bg-white relative ${device !== 'Full' ? 'shadow-2xl' : ''}`}
           style={device !== 'Full' ? { 
-            width: `min(${currentDeviceCfg.width}, 100%)`, 
-            height: `min(${currentDeviceCfg.height}, 100%)`, 
-            aspectRatio: currentDeviceCfg.ratio 
+            width: currentDeviceCfg.width, 
+            maxWidth: '100%',
+            height: 'fit-content',
+            minHeight: '80vh',
+            aspectRatio: currentDeviceCfg.ratio,
           } : {}}
         >
           {analysis && !isAnalyzing && (
@@ -276,7 +281,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div className={`mt-auto pt-6 border-t border-slate-100 space-y-4 ${device === 'Mobile' ? 'hidden' : ''}`}>
-                  <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200">
+                   <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200">
                     <ICONS.X className="w-3 h-3" /> Wipe Strategy
                   </button>
                 </div>
