@@ -61,8 +61,10 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
 
-  // Cognitive Magnifier State
+  // Whole Screen Magnifier State
   const [zoom, setZoom] = useState(100);
+  // Text-Only Magnifier State
+  const [textZoom, setTextZoom] = useState(100);
 
   // Partition Resizer State
   const [sidebarWidth, setSidebarWidth] = useState(280);
@@ -95,7 +97,6 @@ const App: React.FC = () => {
 
   const resize = useCallback((e: MouseEvent) => {
     if (isResizing) {
-      // Adjust width based on mouse X position, respecting zoom factor
       const zoomFactor = zoom / 100;
       const newWidth = e.clientX / zoomFactor;
       if (newWidth > 64 && newWidth < 600) {
@@ -245,6 +246,9 @@ const App: React.FC = () => {
     return <Auth />;
   }
 
+  // Calculate dynamic font scale for the sidebar based on its width
+  const sidebarFontScale = Math.max(0.75, Math.min(1.5, sidebarWidth / 280));
+
   return (
     <div 
       className="min-h-screen bg-slate-100 flex flex-col transition-all duration-300 ease-in-out origin-top-left"
@@ -254,34 +258,72 @@ const App: React.FC = () => {
         MozZoom: zoom / 100,
       } as React.CSSProperties}
     >
+      {/* Dynamic Text-Only Magnifier Style Injection */}
+      <style>{`
+        :root {
+          --text-zoom-multiplier: ${textZoom / 100};
+        }
+        /* Target common text containers to scale only typography */
+        .text-magnifier p, 
+        .text-magnifier span:not(.no-zoom), 
+        .text-magnifier h1, 
+        .text-magnifier h2, 
+        .text-magnifier h3, 
+        .text-magnifier h4, 
+        .text-magnifier h5, 
+        .text-magnifier h6, 
+        .text-magnifier li, 
+        .text-magnifier button:not(.no-zoom), 
+        .text-magnifier input, 
+        .text-magnifier textarea,
+        .text-magnifier .text-xs,
+        .text-magnifier .text-sm,
+        .text-magnifier .text-base,
+        .text-magnifier .text-lg,
+        .text-magnifier .text-xl,
+        .text-magnifier .text-2xl,
+        .text-magnifier .text-3xl,
+        .text-magnifier .text-4xl,
+        .text-magnifier .text-5xl,
+        .text-magnifier .text-6xl {
+           font-size: calc(1em * var(--text-zoom-multiplier));
+        }
+        /* Specific override for explicit tailwind font size classes to handle rem behavior */
+        .text-magnifier .text-[9px] { font-size: calc(9px * var(--text-zoom-multiplier)); }
+        .text-magnifier .text-[10px] { font-size: calc(10px * var(--text-zoom-multiplier)); }
+        .text-magnifier .text-[11px] { font-size: calc(11px * var(--text-zoom-multiplier)); }
+        .text-magnifier .text-[12px] { font-size: calc(12px * var(--text-zoom-multiplier)); }
+      `}</style>
+
       <Header 
         user={user} 
         zoom={zoom} 
-        onZoomChange={setZoom} 
+        onZoomChange={setZoom}
+        textZoom={textZoom}
+        onTextZoomChange={setTextZoom}
       />
       
-      <div className="pt-16 flex flex-1 overflow-hidden">
+      <div className="pt-16 flex flex-1 overflow-hidden text-magnifier">
         
-        {/* Natural Viewport Layout */}
         <div className="flex flex-1 overflow-hidden bg-white relative">
           {analysis && !isAnalyzing && (
             <>
               <aside 
-                style={{ width: sidebarWidth }}
+                style={{ width: sidebarWidth, fontSize: `${sidebarFontScale}rem` }}
                 className="bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all"
               >
                 <div className={`p-2 ${sidebarWidth > 120 ? 'lg:p-6' : 'p-2'} space-y-8 flex flex-col h-full`}>
                   <div className="space-y-1">
                     {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
                     <div className="flex flex-col gap-1">
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Trophy />} label={sidebarWidth > 180 ? "Staged Sim" : ""} />
-                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} />
-                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} />
-                      <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Document />} label={sidebarWidth > 180 ? "Assignment" : ""} />
-                      <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Simulation" : ""} />
-                      <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} />
-                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Fast Ans" : ""} />
-                      <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Config" : ""} />
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Trophy />} label={sidebarWidth > 180 ? "Staged Sim" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.Document />} label={sidebarWidth > 180 ? "Assignment" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Simulation" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Fast Ans" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Config" : ""} scale={sidebarFontScale} />
                     </div>
                   </div>
 
@@ -295,7 +337,6 @@ const App: React.FC = () => {
                 </div>
               </aside>
               
-              {/* Sidebar Draggable Resize Partition */}
               <div 
                 onMouseDown={startResizing}
                 className="w-1.5 h-full cursor-col-resize hover:bg-indigo-400 active:bg-indigo-600 z-40 relative group transition-colors"
@@ -415,7 +456,7 @@ const App: React.FC = () => {
   );
 };
 
-const SidebarBtn = ({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) => (
+const SidebarBtn = ({ active, onClick, icon, label, scale = 1 }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string, scale?: number }) => (
   <button 
     onClick={onClick}
     className={`w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl font-bold transition-all text-sm group ${
@@ -423,11 +464,22 @@ const SidebarBtn = ({ active, onClick, icon, label }: { active: boolean; onClick
       ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02]' 
       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
     }`}
+    style={{ transform: active ? `scale(${1.02 * (scale > 1 ? 1 : scale)})` : 'none' }}
   >
-    <div className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors shrink-0`}>
+    <div 
+      className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors shrink-0`}
+      style={{ transform: `scale(${scale})` }}
+    >
       {icon}
     </div>
-    {label && <span className="tracking-tight truncate">{label}</span>}
+    {label && (
+      <span 
+        className="tracking-tight truncate"
+        style={{ fontSize: `${scale * 0.875}rem` }}
+      >
+        {label}
+      </span>
+    )}
   </button>
 );
 

@@ -7,10 +7,13 @@ interface HeaderProps {
   user?: User | null;
   zoom: number;
   onZoomChange: (newZoom: number) => void;
+  textZoom: number;
+  onTextZoomChange: (newZoom: number) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange }) => {
+export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZoom, onTextZoomChange }) => {
   const [showUtility, setShowUtility] = useState(false);
+  const [activeMagnifierTab, setActiveMagnifierTab] = useState<'simulation' | 'typography'>('simulation');
   const utilityRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,36 +75,81 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange }) => {
             </button>
 
             {showUtility && (
-              <div className="absolute right-0 mt-3 w-72 bg-white border border-slate-200 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                {/* Tab Switcher */}
+                <div className="flex border-b border-slate-100 p-2 gap-2 bg-slate-50/50">
+                  <button 
+                    onClick={() => setActiveMagnifierTab('simulation')}
+                    className={`flex-1 py-2 px-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${activeMagnifierTab === 'simulation' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    Simulation Scale
+                  </button>
+                  <button 
+                    onClick={() => setActiveMagnifierTab('typography')}
+                    className={`flex-1 py-2 px-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${activeMagnifierTab === 'typography' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    Text Intelligence
+                  </button>
+                </div>
+
                 <div className="p-6 space-y-6">
-                  {/* Cognitive Magnifier */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                       <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Cognitive Magnifier</h5>
-                       <span className="text-xs font-black text-indigo-600">{zoom}%</span>
+                  {activeMagnifierTab === 'simulation' ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                         <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Viewport Magnifier</h5>
+                         <span className="text-xs font-black text-indigo-600">{zoom}%</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                         <button 
+                           onClick={() => onZoomChange(Math.max(50, zoom - 10))}
+                           className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                         >
+                           <ICONS.ZoomOut className="w-4 h-4 text-slate-600" />
+                         </button>
+                         <button 
+                           onClick={() => onZoomChange(100)}
+                           className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[10px] font-black text-slate-400 rounded-xl"
+                         >
+                           RESET
+                         </button>
+                         <button 
+                           onClick={() => onZoomChange(Math.min(200, zoom + 10))}
+                           className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                         >
+                           <ICONS.ZoomIn className="w-4 h-4 text-slate-600" />
+                         </button>
+                      </div>
+                      <p className="text-[9px] text-slate-400 font-medium italic text-center leading-relaxed">Scales the <strong>entire brain simulation</strong> viewport including layout and assets.</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                       <button 
-                         onClick={() => onZoomChange(Math.max(50, zoom - 10))}
-                         className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
-                       >
-                         <ICONS.ZoomOut className="w-4 h-4 text-slate-600" />
-                       </button>
-                       <button 
-                         onClick={() => onZoomChange(100)}
-                         className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[10px] font-black text-slate-400 rounded-xl"
-                       >
-                         RESET
-                       </button>
-                       <button 
-                         onClick={() => onZoomChange(Math.min(200, zoom + 10))}
-                         className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
-                       >
-                         <ICONS.ZoomIn className="w-4 h-4 text-slate-600" />
-                       </button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                         <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Text Intelligence Focus</h5>
+                         <span className="text-xs font-black text-indigo-600">{textZoom}%</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                         <button 
+                           onClick={() => onTextZoomChange(Math.max(80, textZoom - 10))}
+                           className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                         >
+                           <ICONS.ZoomOut className="w-4 h-4 text-slate-600" />
+                         </button>
+                         <button 
+                           onClick={() => onTextZoomChange(100)}
+                           className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[10px] font-black text-slate-400 rounded-xl"
+                         >
+                           RESET
+                         </button>
+                         <button 
+                           onClick={() => onTextZoomChange(Math.min(250, textZoom + 10))}
+                           className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                         >
+                           <ICONS.ZoomIn className="w-4 h-4 text-slate-600" />
+                         </button>
+                      </div>
+                      <p className="text-[9px] text-slate-400 font-medium italic text-center leading-relaxed">Increases <strong>typography readability</strong> only. UI containers and layout remain static.</p>
                     </div>
-                    <p className="text-[9px] text-slate-400 font-medium italic text-center">Scales the entire brain simulation viewport.</p>
-                  </div>
+                  )}
                 </div>
                 <div className="p-4 bg-slate-50 text-center border-t border-slate-100">
                    <p className="text-[8px] font-black uppercase text-slate-400 tracking-[0.3em]">Neural Interface v3.1</p>
