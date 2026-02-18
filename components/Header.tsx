@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ICONS } from '../constants';
 import { logoutUser, User } from '../services/firebaseService';
@@ -8,10 +9,9 @@ interface HeaderProps {
   onZoomChange: (newZoom: number) => void;
   textZoom: number;
   onTextZoomChange: (newZoom: number) => void;
-  companyName?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZoom, onTextZoomChange, companyName }) => {
+export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZoom, onTextZoomChange }) => {
   const [showUtility, setShowUtility] = useState(false);
   const [activeMagnifierTab, setActiveMagnifierTab] = useState<'simulation' | 'typography'>('simulation');
   const utilityRef = useRef<HTMLDivElement>(null);
@@ -31,13 +31,16 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
         <div className="flex flex-col items-start leading-none">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 text-white rounded flex items-center justify-center font-black text-xl shadow-md">
-              <ICONS.Shield className="w-4 h-4" />
+            <div className="w-8 h-8 bg-red-600 text-white rounded flex items-center justify-center font-black text-xl shadow-md">
+              !
             </div>
-            <span className="font-black text-xl tracking-tight text-slate-900 uppercase">
-              {companyName ? `${companyName}` : 'STRATEGIC HUB'}
+            <span className="font-black text-2xl tracking-tighter text-slate-900">
+              SPIKED<span className="text-red-600">AI</span>
             </span>
           </div>
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 ml-1 hidden md:block">
+            Cognitive Intelligence Brain Simulation
+          </span>
         </div>
 
         <div className="flex items-center gap-4">
@@ -50,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
               <button 
                 onClick={() => logoutUser()}
                 className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                title="Disconnect Link"
+                title="Disconnect Neural Link"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -59,11 +62,12 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
             </div>
           )}
 
+          {/* Cognitive Magnifier Utility Hub */}
           <div className="relative" ref={utilityRef}>
             <button 
               onClick={() => setShowUtility(!showUtility)}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-sm ${showUtility ? 'bg-indigo-600 border-indigo-700 text-white shadow-indigo-200' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-              title="View Magnifier"
+              title="Cognitive Magnifier"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -72,18 +76,19 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
 
             {showUtility && (
               <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                {/* Tab Switcher */}
                 <div className="flex border-b border-slate-100 p-2 gap-2 bg-slate-50/50">
                   <button 
                     onClick={() => setActiveMagnifierTab('simulation')}
                     className={`flex-1 py-2 px-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${activeMagnifierTab === 'simulation' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                   >
-                    Display Scale
+                    Simulation Scale
                   </button>
                   <button 
                     onClick={() => setActiveMagnifierTab('typography')}
                     className={`flex-1 py-2 px-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${activeMagnifierTab === 'typography' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                   >
-                    Text Density
+                    Text Intelligence
                   </button>
                 </div>
 
@@ -91,26 +96,58 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
                   {activeMagnifierTab === 'simulation' ? (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                         <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Full Scale</h5>
+                         <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Viewport Magnifier</h5>
                          <span className="text-xs font-black text-indigo-600">{zoom}%</span>
                       </div>
                       <div className="flex items-center gap-3">
-                         <button onClick={() => onZoomChange(Math.max(50, zoom - 10))} className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"><ICONS.ZoomOut className="w-4 h-4 text-slate-600" /></button>
-                         <button onClick={() => onZoomChange(100)} className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[10px] font-black text-slate-400 rounded-xl">RESET</button>
-                         <button onClick={() => onZoomChange(Math.min(200, zoom + 10))} className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"><ICONS.ZoomIn className="w-4 h-4 text-slate-600" /></button>
+                         <button 
+                           onClick={() => onZoomChange(Math.max(50, zoom - 10))}
+                           className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                         >
+                           <ICONS.ZoomOut className="w-4 h-4 text-slate-600" />
+                         </button>
+                         <button 
+                           onClick={() => onZoomChange(100)}
+                           className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[10px] font-black text-slate-400 rounded-xl"
+                         >
+                           RESET
+                         </button>
+                         <button 
+                           onClick={() => onZoomChange(Math.min(200, zoom + 10))}
+                           className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                         >
+                           <ICONS.ZoomIn className="w-4 h-4 text-slate-600" />
+                         </button>
                       </div>
+                      <p className="text-[9px] text-slate-400 font-medium italic text-center leading-relaxed">Scales the <strong>entire brain simulation</strong> viewport including layout and assets.</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                         <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Readability</h5>
+                         <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Text Intelligence Focus</h5>
                          <span className="text-xs font-black text-indigo-600">{textZoom}%</span>
                       </div>
                       <div className="flex items-center gap-3">
-                         <button onClick={() => onTextZoomChange(Math.max(80, textZoom - 10))} className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"><ICONS.ZoomOut className="w-4 h-4 text-slate-600" /></button>
-                         <button onClick={() => onTextZoomChange(100)} className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[10px] font-black text-slate-400 rounded-xl">RESET</button>
-                         <button onClick={() => onTextZoomChange(Math.min(250, textZoom + 10))} className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"><ICONS.ZoomIn className="w-4 h-4 text-slate-600" /></button>
+                         <button 
+                           onClick={() => onTextZoomChange(Math.max(80, textZoom - 10))}
+                           className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                         >
+                           <ICONS.ZoomOut className="w-4 h-4 text-slate-600" />
+                         </button>
+                         <button 
+                           onClick={() => onTextZoomChange(100)}
+                           className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[10px] font-black text-slate-400 rounded-xl"
+                         >
+                           RESET
+                         </button>
+                         <button 
+                           onClick={() => onTextZoomChange(Math.min(250, textZoom + 10))}
+                           className="flex-1 flex items-center justify-center py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                         >
+                           <ICONS.ZoomIn className="w-4 h-4 text-slate-600" />
+                         </button>
                       </div>
+                      <p className="text-[9px] text-slate-400 font-medium italic text-center leading-relaxed">Increases <strong>typography readability</strong> only. UI containers and layout remain static.</p>
                     </div>
                   )}
                 </div>
