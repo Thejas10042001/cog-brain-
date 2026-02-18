@@ -191,6 +191,16 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
     if (recognitionRef.current) { recognitionRef.current.stop(); setIsUserListening(false); }
   };
 
+  const handleRehear = () => {
+    const lastAI = messages.filter(m => m.role === 'assistant').pop();
+    if (lastAI) {
+      if (activeAudioSource.current) {
+        try { activeAudioSource.current.stop(); } catch(e) {}
+      }
+      playAIQuestion(lastAI.content);
+    }
+  };
+
   const handleInitiate = async () => {
     if (!meetingContext.kycDocId) {
       alert("Please select a KYC Document in Configuration first.");
@@ -769,16 +779,36 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
              <div className="flex-1 overflow-y-auto custom-scrollbar p-12 space-y-12">
                 
                 {/* Question Area - FULL WIDTH */}
-                <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
-                   <div className="flex justify-center mb-6">
+                <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700 relative group/qarea">
+                   <div className="flex justify-center">
                       <div className="w-1.5 h-10 bg-indigo-600/20 rounded-full flex flex-col justify-end">
                          <div className={`w-full bg-indigo-500 rounded-full transition-all duration-300 ${isAISpeaking ? 'h-full' : 'h-2'}`}></div>
                       </div>
                    </div>
-                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2 text-center">Cognitive Strategic Inquiry</h5>
-                   <p className="text-4xl font-bold italic leading-[1.3] text-white tracking-tight text-center">
-                      {messages[messages.length - 1]?.content || (isProcessing ? "Establishing behavioral synchronization..." : "Initializing simulation core...")}
-                   </p>
+                   <div className="space-y-2 text-center">
+                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Cognitive Strategic Inquiry</h5>
+                      <p className="text-4xl font-bold italic leading-[1.3] text-white tracking-tight">
+                         {messages[messages.length - 1]?.content || (isProcessing ? "Establishing behavioral synchronization..." : "Initializing simulation core...")}
+                      </p>
+                   </div>
+
+                   {/* Strategic Controls Inside Question Area */}
+                   <div className="flex items-center justify-center gap-4 mt-4">
+                      <button 
+                        onClick={handleRehear}
+                        disabled={isProcessing || messages.length === 0}
+                        className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[9px] font-black uppercase tracking-widest text-indigo-300 transition-all active:scale-95"
+                      >
+                         <ICONS.Speaker className="w-3.5 h-3.5" /> Re-hear Agent
+                      </button>
+                      <button 
+                        onClick={handleSkip}
+                        disabled={isProcessing || STAGES.indexOf(currentStage) >= STAGES.length - 1}
+                        className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all active:scale-95"
+                      >
+                         <ICONS.Play className="w-3.5 h-3.5" /> Pass & Play Next
+                      </button>
+                   </div>
                 </div>
 
                 {/* Hint Area - FULL WIDTH */}
