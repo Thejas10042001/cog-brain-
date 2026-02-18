@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Auth } from './components/Auth';
@@ -350,12 +349,19 @@ const App: React.FC = () => {
           <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-slate-50 relative">
             <div className="w-full min-h-full">
               {!analysis && !isAnalyzing ? (
-                <div className="p-8 md:p-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
-                  <div className="text-center space-y-4">
-                    <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
-                      SPIKED<span className="text-red-600">AI</span> Hub
+                <div className="p-8 md:p-12 space-y-16 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
+                  <div className="text-center space-y-2">
+                    <h1 className="text-[120px] leading-[0.8] font-black text-slate-900 tracking-tighter uppercase mb-6">
+                      {meetingContext.sellerCompany ? (
+                        <>
+                          <span className="block text-[40px] font-black text-indigo-600 tracking-[0.2em] mb-4">IDENTITY:</span>
+                          {meetingContext.sellerCompany}
+                        </>
+                      ) : (
+                        <>SPIKED<span className="text-red-600">AI</span> HUB</>
+                      )}
                     </h1>
-                    <p className="text-xl text-slate-400 font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto">
+                    <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.5em] max-w-2xl mx-auto border-t border-slate-200 pt-6">
                       Cognitive Intelligence Brain Simulation
                     </p>
                   </div>
