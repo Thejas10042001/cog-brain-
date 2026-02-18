@@ -238,10 +238,11 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       
       if (!firstMsg.trim()) throw new Error("Neural core empty.");
 
-      const hintMatch = firstMsg.match(/\[HINT: (.*?)\]/);
+      // Robust extraction for hint
+      const hintMatch = firstMsg.match(/\[HINT: ([\s\S]*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
-      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
+      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
@@ -281,7 +282,8 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       const isSuccess = response.includes('[RESULT: SUCCESS]');
       const isFail = response.includes('[RESULT: FAIL]');
 
-      const hintMatch = response.match(/\[HINT: (.*?)\]/);
+      // Robust extraction for hint
+      const hintMatch = response.match(/\[HINT: ([\s\S]*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
       if (isSuccess) {
@@ -302,17 +304,15 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
 
         setShowCelebration(true);
         
-        // Logic check: are we in a reinforced loop?
         if (remainingQuestionsInLoop > 1) {
             setRemainingQuestionsInLoop(prev => prev - 1);
-            const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
+            const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
             const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
             setMessages([...updatedHistory, aiMsg]);
             setCurrentCaption("");
             playAIQuestion(cleaned);
             setTimeout(() => setShowCelebration(false), 2000);
         } else {
-            // End of loop or initial success -> Show Config Modal
             setRemainingQuestionsInLoop(0);
             setTimeout(() => {
                 setShowCelebration(false);
@@ -321,18 +321,19 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
         }
 
       } else if (isFail) {
-        const coachMatch = response.match(/\[COACHING: (.*?)\]/);
-        const styleMatch = response.match(/\[STYLE_GUIDE: (.*?)\]/);
-        const retryMatch = response.match(/\[RETRY_PROMPT: (.*?)\]/);
-        const idealMatch = response.match(/\[IDEAL_RESPONSE: (.*?)\]/);
+        // High-precision multi-line extraction for feedback fields
+        const coachMatch = response.match(/\[COACHING: ([\s\S]*?)\]/);
+        const styleMatch = response.match(/\[STYLE_GUIDE: ([\s\S]*?)\]/);
+        const retryMatch = response.match(/\[RETRY_PROMPT: ([\s\S]*?)\]/);
+        const idealMatch = response.match(/\[IDEAL_RESPONSE: ([\s\S]*?)\]/);
 
         const feedback = {
-          failReason: coachMatch?.[1],
-          styleGuide: styleMatch?.[1],
-          idealResponse: idealMatch?.[1]
+          failReason: coachMatch?.[1]?.trim(),
+          styleGuide: styleMatch?.[1]?.trim(),
+          idealResponse: idealMatch?.[1]?.trim()
         };
 
-        setCoachingFeedback({ ...feedback, nextTry: retryMatch?.[1] });
+        setCoachingFeedback({ ...feedback, nextTry: retryMatch?.[1]?.trim() });
         setShowCoachingDetails(false);
 
         const attempt: StageAttempt = {
@@ -346,13 +347,13 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
           [currentStage]: [...(prev[currentStage] || []), attempt]
         }));
 
-        const retryText = retryMatch?.[1] || "Please try again with a better approach.";
+        const retryText = retryMatch?.[1]?.trim() || "Protocol performance deficit detected. Please refine your logic and try again.";
         const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: retryText, mode: 'standard' };
         setMessages([...updatedHistory, aiMsg]);
         setCurrentCaption("");
         playAIQuestion(retryText);
       } else {
-        const cleaned = response.replace(/\[HINT: .*?\]/, "").trim();
+        const cleaned = response.replace(/\[HINT: [\s\S]*?\]/, "").trim();
         const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
         setMessages([...updatedHistory, aiMsg]);
         playAIQuestion(cleaned);
@@ -397,10 +398,10 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       let response = "";
       for await (const chunk of stream) response += chunk;
 
-      const hintMatch = response.match(/\[HINT: (.*?)\]/);
+      const hintMatch = response.match(/\[HINT: ([\s\S]*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
-      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
+      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages(prev => [...prev, aiMsg]);
       playAIQuestion(cleaned);
@@ -463,10 +464,10 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       let response = "";
       for await (const chunk of stream) response += chunk;
 
-      const hintMatch = response.match(/\[HINT: (.*?)\]/);
+      const hintMatch = response.match(/\[HINT: ([\s\S]*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
-      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: .*?\]/, "").trim();
+      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages(prev => [...prev, aiMsg]);
       playAIQuestion(cleaned);
@@ -531,10 +532,10 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
           addLine(`Agent Question: "${at.question}"`, 9, "italic");
           addLine(`User Answer: "${at.userAnswer}"`, 9);
           if (at.feedback) {
-            addLine(`Protocol Blocked: ${at.feedback.failReason}`, 8, "italic", [220, 38, 38]);
-            addLine(`Style Guide: ${at.feedback.styleGuide}`, 8, "italic");
+            addLine(`Deficit Rationale: ${at.feedback.failReason}`, 8, "italic", [220, 38, 38]);
+            addLine(`Strategic Guidance: ${at.feedback.styleGuide}`, 8, "italic");
             if (at.feedback.idealResponse) {
-                addLine(`Master Response: "${at.feedback.idealResponse}"`, 8, "bold", [79, 70, 229]);
+                addLine(`Master Logic: "${at.feedback.idealResponse}"`, 8, "bold", [79, 70, 229]);
             }
           }
           if (at.rating) addLine(`Stage Rating: ${at.rating}/5 Stars`, 9, "bold", [245, 158, 11]);
@@ -572,7 +573,6 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
     );
   };
 
-  // Calculate dynamic font scale for history sidebar content
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
   return (
@@ -712,7 +712,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
         </div>
       ) : (
         <div className="flex-1 flex overflow-hidden">
-          {/* Main Dashboard Panel */}
+          {/* Main Dashboard Panel - EDGE TO EDGE */}
           <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
              
              {/* Header Layer (Fixed) */}
@@ -775,7 +775,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                          <div className={`w-full bg-indigo-500 rounded-full transition-all duration-300 ${isAISpeaking ? 'h-full' : 'h-2'}`}></div>
                       </div>
                    </div>
-                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2 text-center">Cognitive Inquiry</h5>
+                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2 text-center">Cognitive Strategic Inquiry</h5>
                    <p className="text-4xl font-bold italic leading-[1.3] text-white tracking-tight text-center">
                       {messages[messages.length - 1]?.content || (isProcessing ? "Establishing behavioral synchronization..." : "Initializing simulation core...")}
                    </p>
@@ -783,37 +783,36 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
 
                 {/* Hint Area - FULL WIDTH */}
                 {currentHint && (
-                  <div className="w-full bg-indigo-900/40 border border-indigo-500/30 p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in slide-in-from-top-4">
-                      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
-                          <ICONS.Sparkles className="w-5 h-5 text-indigo-200" />
+                  <div className="w-full bg-indigo-900/40 border border-indigo-500/30 p-8 rounded-[2.5rem] shadow-2xl flex items-center gap-6 animate-in slide-in-from-top-4">
+                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                          <ICONS.Sparkles className="w-6 h-6 text-indigo-200" />
                       </div>
                       <div className="text-left flex-1">
-                        <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-1">Strategic Clue</h5>
-                        <p className="text-sm font-bold text-white italic leading-snug">{currentHint}</p>
+                        <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-1">Neural Strategic Hint</h5>
+                        <p className="text-lg font-bold text-white italic leading-snug">{currentHint}</p>
                       </div>
                   </div>
                 )}
 
                 {/* Enhanced Coaching Feedback Overlay - FULL WIDTH & NO CLOSE BUTTON */}
                 {coachingFeedback && (
-                  <div className="p-10 bg-rose-950/60 backdrop-blur-2xl border-2 border-rose-500/40 rounded-[3rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
+                  <div className="p-12 bg-rose-950/60 backdrop-blur-2xl border-2 border-rose-500/40 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
                       <div className="flex items-center justify-between">
                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-5 h-5" /></div>
-                            <span className="px-5 py-2 bg-rose-600 text-white text-[11px] font-black uppercase rounded-full tracking-widest">Protocol Blocked: Neural Performance Deficit</span>
+                            <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
+                            <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
                          </div>
-                         {/* Close button removed per request to ensure user follows correction logic */}
                       </div>
 
                       <button 
                         onClick={() => setShowCoachingDetails(!showCoachingDetails)}
-                        className="w-full group flex items-center justify-between p-8 bg-white/5 hover:bg-white/10 border-2 border-white/10 hover:border-indigo-500/40 rounded-[2rem] transition-all shadow-inner"
+                        className="w-full group flex items-center justify-between p-10 bg-white/5 hover:bg-white/10 border-2 border-white/10 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
                       >
-                         <span className="text-lg font-black text-indigo-100 italic group-hover:text-white text-left pr-6">
+                         <span className="text-xl font-black text-indigo-100 italic group-hover:text-white text-left pr-6">
                            Initialize Neural Alignment: Access Strategic Correction & Master Logic Node
                          </span>
-                         <div className={`w-10 h-10 rounded-full bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`}>
-                            <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <div className={`w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`}>
+                            <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                             </svg>
                          </div>
@@ -823,27 +822,31 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                         <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500 pt-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-4">
-                                <h5 className="text-[10px] font-black uppercase text-rose-400 tracking-[0.2em]">Deficit Rationale</h5>
-                                <p className="text-md font-bold text-rose-50/90 leading-relaxed italic border-l-4 border-rose-500/30 pl-6">{coachingFeedback.failReason}</p>
+                                <h5 className="text-[11px] font-black uppercase text-rose-400 tracking-[0.3em]">Deficit Rationale</h5>
+                                <div className="text-lg font-bold text-rose-50/90 leading-relaxed italic border-l-4 border-rose-500/30 pl-8 py-2">
+                                  {coachingFeedback.failReason || "Incongruent logic detected in current stage response."}
+                                </div>
                             </div>
                             <div className="space-y-4">
-                                <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">Strategic Guidance</h5>
-                                <p className="text-md font-bold text-indigo-50/90 leading-relaxed italic border-l-4 border-indigo-500/30 pl-6">{coachingFeedback.styleGuide}</p>
+                                <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-[0.3em]">Strategic Guidance</h5>
+                                <div className="text-lg font-bold text-indigo-50/90 leading-relaxed italic border-l-4 border-indigo-500/30 pl-8 py-2">
+                                  {coachingFeedback.styleGuide || "Adopt a higher-authority executive stance with grounded metrics."}
+                                </div>
                             </div>
                           </div>
 
                           {coachingFeedback.idealResponse && (
-                            <div className="p-10 bg-indigo-600/10 border-2 border-indigo-500/30 rounded-[2.5rem] space-y-4 shadow-inner">
-                                <h5 className="text-[11px] font-black uppercase text-indigo-300 tracking-[0.3em]">Master Logic (Correct Response)</h5>
-                                <p className="text-2xl font-black text-white leading-[1.4] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
+                            <div className="p-12 bg-indigo-600/10 border-2 border-indigo-500/30 rounded-[3rem] space-y-6 shadow-inner">
+                                <h5 className="text-[12px] font-black uppercase text-indigo-300 tracking-[0.4em]">Master Logic Protocol</h5>
+                                <p className="text-3xl font-black text-white leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
                             </div>
                           )}
 
-                          <div className="flex items-center gap-6 pt-6 border-t border-white/5">
-                            <button onClick={handleTryAgain} className="flex-1 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-lg uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-3">
-                                <ICONS.Efficiency className="w-6 h-6" /> Try Again (Revert Turn)
+                          <div className="flex items-center gap-6 pt-8 border-t border-white/5">
+                            <button onClick={handleTryAgain} className="flex-1 py-7 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-4">
+                                <ICONS.Efficiency className="w-8 h-8" /> Try Again (Revert Turn)
                             </button>
-                            <button onClick={handleProceedWithFeedback} className="px-10 py-6 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-700 active:scale-95 transition-all">Proceed with Feedback</button>
+                            <button onClick={handleProceedWithFeedback} className="px-12 py-7 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.2em] hover:bg-slate-700 active:scale-95 transition-all">Proceed with Feedback</button>
                           </div>
                         </div>
                       )}
@@ -859,15 +862,15 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                       <textarea 
                         value={currentCaption} 
                         onChange={(e) => setCurrentCaption(e.target.value)} 
-                        className="w-full bg-slate-900/80 border-2 border-slate-800 rounded-[2.5rem] px-10 py-8 text-xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-32 resize-none placeholder:text-slate-700" 
-                        placeholder={`Deploy strategic response for the ${currentStage} stage...`}
+                        className="w-full bg-slate-900/80 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-40 resize-none placeholder:text-slate-700" 
+                        placeholder={`Deploy tactical response for the ${currentStage} stage...`}
                       />
-                      <button onClick={() => startListening()} className={`absolute right-8 top-1/2 -translate-y-1/2 p-6 rounded-[1.5rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-8 h-8" /></button>
+                      <button onClick={() => startListening()} className={`absolute right-12 top-1/2 -translate-y-1/2 p-7 rounded-[2rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-10 h-10" /></button>
                    </div>
-                   <div className="flex items-center gap-4">
-                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50">Commit Answer</button>
-                      <button onClick={handleSkip} disabled={isProcessing} className="px-10 py-6 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 active:scale-95 transition-all">Skip</button>
-                      <button onClick={handleEndSession} disabled={isProcessing} className="px-10 py-6 bg-rose-600 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-rose-700 active:scale-95 transition-all">Audit</button>
+                   <div className="flex items-center gap-6">
+                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50">Commit Answer</button>
+                      <button onClick={handleSkip} disabled={isProcessing} className="px-12 py-8 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-700 active:scale-95 transition-all">Skip</button>
+                      <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest hover:bg-rose-700 active:scale-95 transition-all">Audit</button>
                    </div>
                 </div>
              </div>
@@ -976,7 +979,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                                           </div>
                                           {at.feedback && historyWidth > 250 && (
                                              <div className="pt-3 mt-3 border-t border-white/5 space-y-2">
-                                                <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Blocked Logic:</p>
+                                                <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Deficit Rationale:</p>
                                                 <p className="text-[9px] font-medium text-slate-400 italic leading-snug" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>{at.feedback.failReason}</p>
                                              </div>
                                           )}
