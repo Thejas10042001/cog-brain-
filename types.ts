@@ -1,4 +1,3 @@
-
 export interface Citation {
   snippet: string;
   sourceFile: string;
@@ -169,6 +168,7 @@ export interface VocalPersonaStructure {
   emotionalBaseline: string;
   breathingPatterns: string;
   mimicryDirective: string;
+  baseVoice?: string;
 }
 
 export type VoiceMode = 'upload' | 'persona' | 'personality';

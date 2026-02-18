@@ -9,11 +9,6 @@ import {
 } from '../services/geminiService';
 import { GPTMessage, MeetingContext, StagedSimStage, StoredDocument, ComprehensiveAvatarReport } from '../types';
 
-interface AvatarSimulationStagedProps {
-  meetingContext: MeetingContext;
-  documents: StoredDocument[];
-}
-
 interface StageAttempt {
   question: string;
   userAnswer: string;
@@ -37,7 +32,7 @@ const STAGE_DESCRIPTIONS: Record<StagedSimStage, string> = {
   'Closing': 'Secure final commitment and define next tactical steps.'
 };
 
-export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetingContext, documents }) => {
+export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; documents: StoredDocument[] }> = ({ meetingContext, documents }) => {
   const [currentStage, setCurrentStage] = useState<StagedSimStage>('Ice Breakers');
   const [startStageChoice, setStartStageChoice] = useState<StagedSimStage>('Ice Breakers');
   const [messages, setMessages] = useState<GPTMessage[]>([]);
@@ -122,7 +117,13 @@ export const AvatarSimulationStaged: FC<AvatarSimulationStagedProps> = ({ meetin
       if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      const bytes = await generatePitchAudio(text, 'Charon', meetingContext.vocalPersonaAnalysis?.mimicryDirective);
+      let voice = "Charon";
+      let directive = meetingContext.vocalPersonaAnalysis?.mimicryDirective || "";
+      if (meetingContext.vocalPersonaAnalysis?.baseVoice) {
+        voice = meetingContext.vocalPersonaAnalysis.baseVoice;
+      }
+
+      const bytes = await generatePitchAudio(text, voice, directive);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);

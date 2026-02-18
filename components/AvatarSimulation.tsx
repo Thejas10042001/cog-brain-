@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { ICONS } from '../constants';
 import { 
@@ -68,11 +67,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
       let activeDirective = "";
+      let baseVoice = "Charon";
       if (meetingContext.vocalPersonaAnalysis) {
           activeDirective = meetingContext.vocalPersonaAnalysis.mimicryDirective;
+          if (meetingContext.vocalPersonaAnalysis.baseVoice) {
+            baseVoice = meetingContext.vocalPersonaAnalysis.baseVoice;
+          }
       }
 
-      const bytes = await generatePitchAudio(text, 'Charon', activeDirective);
+      const bytes = await generatePitchAudio(text, baseVoice, activeDirective);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -326,118 +329,6 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
     </svg>
   );
 
-  if (report) {
-    return (
-      <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] bg-slate-900 text-white">
-        <div className="p-16 shadow-2xl relative overflow-hidden flex flex-col items-start gap-12 text-left">
-          <div className="absolute top-0 right-0 p-16 opacity-5"><ICONS.Trophy className="w-96 h-96" /></div>
-          
-          <div className="w-full flex justify-between items-center relative z-10">
-             <div className="space-y-2">
-                <h2 className="text-4xl font-black tracking-tight">Cognitive Performance Synthesis</h2>
-                <p className="text-indigo-400 font-bold uppercase tracking-widest text-xs">Audited Persona: {report.persona_used}</p>
-             </div>
-             <div className="flex gap-4">
-                <button onClick={exportPDF} disabled={isExporting} className="px-6 py-3 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 shadow-xl">
-                  {isExporting ? 'Synthesizing...' : <><ICONS.Document className="w-4 h-4" /> Download Branded Audit PDF</>}
-                </button>
-                <button onClick={handleInitiate} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">Restart Simulation</button>
-             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full relative z-10">
-             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
-                <span className="text-6xl font-black text-white">{report.deal_readiness_score}<span className="text-xl text-slate-500">/10</span></span>
-                <span className="block text-[10px] font-black uppercase text-indigo-400 tracking-widest mt-2">Deal Readiness</span>
-             </div>
-             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
-                <span className="text-4xl font-black text-emerald-400 uppercase">{report.next_step_likelihood}</span>
-                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Next Step Odds</span>
-             </div>
-             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
-                <span className="text-4xl font-black text-indigo-300">{report.value_alignment_score}/10</span>
-                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Value Align</span>
-             </div>
-             <div className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] text-center">
-                <span className="text-4xl font-black text-rose-300">{report.confidence_clarity_analysis.score}/10</span>
-                <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mt-2">Confidence</span>
-             </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full relative z-10">
-             <div className="space-y-8">
-                <div className="p-10 bg-indigo-600/10 border border-indigo-500/20 rounded-[3rem]">
-                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Sentiment Mapping & Emotional Shifts</h4>
-                   <p className="text-lg font-medium italic text-indigo-50 leading-relaxed mb-6">"{report.sentiment_analysis.narrative}"</p>
-                   <div className="space-y-3">
-                      {report.sentiment_analysis.emotional_shifts.map((s, i) => (
-                        <div key={i} className="flex items-center gap-3 text-xs font-bold text-slate-400">
-                           <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
-                           <span>{s.point}:</span> <span className="text-indigo-200">{s.shift}</span>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-
-                <div className="p-10 bg-slate-800/40 border border-white/5 rounded-[3rem]">
-                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Confidence & Clarity Analysis</h4>
-                   <p className="text-sm font-medium text-slate-300 leading-relaxed">{report.confidence_clarity_analysis.narrative}</p>
-                </div>
-
-                <div className="space-y-4">
-                   <h4 className="text-[10px] font-black uppercase text-rose-400 tracking-widest">Risk & Trust Indicators</h4>
-                   <div className="grid grid-cols-2 gap-4">
-                      {report.risk_signals.map((f, i) => (
-                        <div key={i} className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-[11px] font-bold text-rose-200">⚠️ {f}</div>
-                      ))}
-                      {report.trust_signals.map((s, i) => (
-                        <div key={i} className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-[11px] font-bold text-emerald-200">🛡️ {s}</div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-
-             <div className="space-y-8">
-                <div className="p-10 bg-indigo-950 border border-indigo-500/30 rounded-[3rem]">
-                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Themes & Inflection Points</h4>
-                   <ul className="space-y-4">
-                      {report.conversation_summary.inflection_points.map((p, i) => (
-                        <li key={i} className="flex gap-4 text-sm font-medium text-slate-300 leading-relaxed">
-                           <span className="text-indigo-500 font-black">NODE 0{i+1}</span>
-                           {p}
-                        </li>
-                      ))}
-                   </ul>
-                </div>
-
-                <div className="p-10 bg-rose-950/20 border border-rose-500/20 rounded-[3rem]">
-                   <h4 className="text-[10px] font-black uppercase text-rose-400 tracking-widest mb-4">Missed Strategic Opportunities</h4>
-                   <ul className="space-y-3">
-                      {report.missed_opportunities.map((o, i) => (
-                        <li key={i} className="flex items-center gap-3 text-xs font-bold text-rose-200">
-                           <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div> {o}
-                        </li>
-                      ))}
-                   </ul>
-                </div>
-
-                <div className="p-10 bg-indigo-950 border border-indigo-500/30 rounded-[3rem]">
-                   <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Tactical Performance Directives</h4>
-                   <ul className="space-y-3">
-                      {report.coaching_recommendations.map((r, i) => (
-                        <li key={i} className="flex items-center gap-3 text-sm font-bold text-white">
-                           <ICONS.Sparkles className="w-4 h-4 text-indigo-400" /> {r}
-                        </li>
-                      ))}
-                   </ul>
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
@@ -470,7 +361,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                 </div>
                 
                 {/* Minimalized Voice Protocol Badge */}
-                {meetingContext.clonedVoiceBase64 && (
+                {meetingContext.vocalPersonaAnalysis && (
                    <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
                       <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
                       <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">

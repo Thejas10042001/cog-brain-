@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { ICONS } from '../constants';
 import { 
@@ -74,8 +73,14 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
 
-      const voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
-      const bytes = await generatePitchAudio(text, voice, meetingContext.vocalPersonaAnalysis?.mimicryDirective);
+      let voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
+      let directive = meetingContext.vocalPersonaAnalysis?.mimicryDirective || "";
+      
+      if (meetingContext.vocalPersonaAnalysis?.baseVoice) {
+        voice = meetingContext.vocalPersonaAnalysis.baseVoice;
+      }
+
+      const bytes = await generatePitchAudio(text, voice, directive);
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -337,7 +342,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                    {persona && <AnimatedBotV2 type={persona} />}
                 </div>
                 
-                {meetingContext.clonedVoiceBase64 && (
+                {meetingContext.vocalPersonaAnalysis && (
                    <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
                       <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
                       <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span>

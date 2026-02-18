@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { MeetingContext, CustomerPersonaType, VoiceMode, StoredDocument, VocalPersonaStructure } from '../types';
 import { ICONS } from '../constants';
@@ -42,17 +41,19 @@ const PERSONAS: { type: CustomerPersonaType; label: string; desc: string; icon: 
 ];
 
 const AI_VOICE_PERSONAS = [
-  { id: 'pro-male', label: 'Pro Male', desc: 'Direct, authoritative, business-first.', directive: 'A professional male voice with deep resonance, steady pacing, and clear articulation. Authoritative yet collaborative.' },
-  { id: 'high-energy', label: 'High Energy', desc: 'Enthusiastic, engaging, persuasive.', directive: 'Rapid tempo, upward inflections, and high vocal energy. Excitement-driven and highly persuasive.' },
-  { id: 'deep-authority', label: 'Deep Authority', desc: 'Serious, steady, risk-conscious.', directive: 'Low register baritone, slow and deliberate pacing with significant weight behind every word. Projects absolute certainty and risk-awareness.' },
-  { id: 'calm-strategist', label: 'Calm Strategist', desc: 'Consultative, soft, trusted advisor.', directive: 'Soft-spoken, melodic cadence with consultative warmth. Thoughtful pauses and gentle inflections to project trust.' },
+  { id: 'pro-male', label: 'Pro Male', desc: 'Direct, authoritative, business-first.', baseVoice: 'Kore', directive: 'Adopt a professional male resonance. Pacing should be steady and deliberate. Articulation must be crisp. Project absolute authority and business-first logic.' },
+  { id: 'high-energy', label: 'High Energy', desc: 'Enthusiastic, engaging, persuasive.', baseVoice: 'Puck', directive: 'Adopt a high-energy, upward-inflecting tone. Rapid tempo but controlled. Infuse every sentence with enthusiasm and persuasive conviction.' },
+  { id: 'deep-authority', label: 'Deep Authority', desc: 'Serious, steady, risk-conscious.', baseVoice: 'Charon', directive: 'A deep, heavy baritone. Pacing is slow and weight-bearing. This voice should project risk-consciousness and the gravity of board-level decisions.' },
+  { id: 'calm-strategist', label: 'Calm Strategist', desc: 'Consultative, soft, trusted advisor.', baseVoice: 'Zephyr', directive: 'Soft-spoken, melodic, and consultative. Use thoughtful pauses. This voice is designed to project the calm of a trusted strategic advisor.' },
 ];
 
 const PUBLIC_PERSONALITIES = [
-  { id: 'jobs', label: 'Visionary Founder', desc: 'Inspired by Steve Jobs', directive: 'Minimalist, rhythmic pacing. Uses hyperbole effectively. Deep pauses for dramatic effect and high visionary energy.' },
-  { id: 'altman', label: 'AI Strategist', desc: 'Inspired by Sam Altman', directive: 'Fast-paced but steady, neutral accent, technical yet accessible vocabulary. Flat but intelligent prosody.' },
-  { id: 'huang', label: 'Hardware Titan', desc: 'Inspired by Jensen Huang', directive: 'High confidence, emphasis on architectural scale, energetic storytelling, and authoritative technical grounding.' },
-  { id: 'benioff', label: 'SaaS Pioneer', desc: 'Inspired by Marc Benioff', directive: 'Deep baritone, high philanthropic warmth, energetic customer-centric storytelling, and booming executive presence.' },
+  { id: 'jobs', label: 'The Visionary', desc: 'Steve Jobs style', baseVoice: 'Kore', directive: 'Minimalist, rhythmic pacing. Uses dramatic pauses and hyperbole. High visionary energy that demands the future.' },
+  { id: 'altman', label: 'The AI Architect', desc: 'Sam Altman style', baseVoice: 'Zephyr', directive: 'Neutral, fast-paced, highly articulate and logic-dense. Calm but intense intellectual speed.' },
+  { id: 'huang', label: 'The Growth Titan', desc: 'Jensen Huang style', baseVoice: 'Charon', directive: 'High confidence, enthusiastic storytelling about architectural scale and the compounding of technology.' },
+  { id: 'musk', label: 'The Disruptor', desc: 'Elon Musk style', baseVoice: 'Kore', directive: 'Abrupt pacing, thoughtful mid-sentence pauses, focusing on first-principles and mission urgency.' },
+  { id: 'perkins', label: 'The Unicorn Founder', desc: 'Melanie Perkins style', baseVoice: 'Puck', directive: 'Highly energetic, design-focused, optimistic, and articulate with a focus on creative empowerment.' },
+  { id: 'benioff', label: 'The SaaS Pioneer', desc: 'Marc Benioff style', baseVoice: 'Charon', directive: 'Deep baritone, booming executive presence, high warmth, focusing on customer success and values.' },
 ];
 
 export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ context, onContextChange, documents = [] }) => {
@@ -141,7 +142,10 @@ OPERATIONAL CONSTRAINTS:
           voiceMode: 'upload',
           clonedVoiceBase64: base64,
           clonedVoiceMimeType: file.type,
-          vocalPersonaAnalysis: analysis
+          vocalPersonaAnalysis: {
+            ...analysis,
+            baseVoice: 'Charon' // Default base for user clones
+          }
         });
         setIsAnalyzingVoice(false);
       };
@@ -160,13 +164,14 @@ OPERATIONAL CONSTRAINTS:
       selectedPersonalityId: undefined,
       clonedVoiceBase64: undefined,
       vocalPersonaAnalysis: {
-        pitch: p.id === 'pro-male' ? 'Deep' : 'Moderate',
-        tempo: p.id === 'high-energy' ? 'Fast' : 'Balanced',
+        pitch: p.id === 'pro-male' || p.id === 'deep-authority' ? 'Lower' : 'Moderate',
+        tempo: p.id === 'high-energy' ? 'Fast' : 'Controlled',
         cadence: 'Strategic',
-        accent: 'Global',
-        emotionalBaseline: 'Neutral',
-        breathingPatterns: 'Steady',
-        mimicryDirective: p.directive
+        accent: 'Neutral',
+        emotionalBaseline: 'Steady',
+        breathingPatterns: 'Regulated',
+        mimicryDirective: p.directive,
+        baseVoice: p.baseVoice
       }
     });
   };
@@ -185,7 +190,8 @@ OPERATIONAL CONSTRAINTS:
         accent: 'Characteristic',
         emotionalBaseline: 'Characteristic',
         breathingPatterns: 'Signature',
-        mimicryDirective: p.directive
+        mimicryDirective: p.directive,
+        baseVoice: p.baseVoice
       }
     });
   };
@@ -330,21 +336,21 @@ OPERATIONAL CONSTRAINTS:
                   className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'upload' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                    <ICONS.Document className="w-3 h-3 mb-1" />
-                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Trace</span>
+                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Biological Trace</span>
                 </button>
                 <button 
                   onClick={() => handleChange('voiceMode', 'persona')}
                   className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'persona' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                    <ICONS.Brain className="w-3 h-3 mb-1" />
-                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Persona</span>
+                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Neural Presets</span>
                 </button>
                 <button 
                   onClick={() => handleChange('voiceMode', 'personality')}
                   className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'personality' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                    <ICONS.Trophy className="w-3 h-3 mb-1" />
-                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Elite</span>
+                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Elite Icons</span>
                 </button>
              </div>
 
@@ -420,18 +426,18 @@ OPERATIONAL CONSTRAINTS:
 
                  {/* PERSONALITY MODE CONTENT */}
                  {context.voiceMode === 'personality' && (
-                    <div className="grid grid-cols-1 gap-2 animate-in fade-in duration-300 h-full overflow-y-auto no-scrollbar pb-4 pr-1">
+                    <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-300 h-full overflow-y-auto no-scrollbar pb-4 pr-1">
                         {PUBLIC_PERSONALITIES.map(p => (
                             <button 
                                 key={p.id}
                                 onClick={() => selectPersonality(p)}
-                                className={`p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${context.selectedPersonalityId === p.id ? 'bg-emerald-600 border-emerald-500 shadow-lg' : 'bg-slate-800/50 border-white/5 hover:border-emerald-400/50'}`}
+                                className={`p-4 rounded-xl border-2 text-left transition-all flex flex-col justify-between ${context.selectedPersonalityId === p.id ? 'bg-emerald-600 border-emerald-500 shadow-lg' : 'bg-slate-800/50 border-white/5 hover:border-emerald-400/50'}`}
                             >
-                                <div>
-                                    <h5 className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${context.selectedPersonalityId === p.id ? 'text-white' : 'text-emerald-400'}`}>{p.label}</h5>
-                                    <p className={`text-[8px] font-bold ${context.selectedPersonalityId === p.id ? 'text-emerald-100' : 'text-slate-500'}`}>{p.desc}</p>
+                                <div className="flex justify-between items-start mb-2">
+                                    <h5 className={`text-[10px] font-black uppercase tracking-widest ${context.selectedPersonalityId === p.id ? 'text-white' : 'text-emerald-400'}`}>{p.label}</h5>
+                                    {context.selectedPersonalityId === p.id && <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>}
                                 </div>
-                                {context.selectedPersonalityId === p.id && <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>}
+                                <p className={`text-[8px] font-bold leading-tight ${context.selectedPersonalityId === p.id ? 'text-emerald-100' : 'text-slate-500'}`}>{p.desc}</p>
                             </button>
                         ))}
                     </div>
