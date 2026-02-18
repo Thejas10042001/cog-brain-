@@ -1,8 +1,7 @@
-
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+// Fix: Changed to named import because App component is exported as a constant in App.tsx
+import { App } from './App';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
