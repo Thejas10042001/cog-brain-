@@ -801,13 +801,6 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                       >
                          <ICONS.Speaker className="w-3.5 h-3.5" /> Re-hear Agent
                       </button>
-                      <button 
-                        onClick={handleSkip}
-                        disabled={isProcessing || STAGES.indexOf(currentStage) >= STAGES.length - 1}
-                        className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all active:scale-95"
-                      >
-                         <ICONS.Play className="w-3.5 h-3.5" /> Pass & Play Next
-                      </button>
                    </div>
                 </div>
 
