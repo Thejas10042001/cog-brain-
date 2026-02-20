@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { AnalysisResult, MeetingContext, ThinkingLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure } from "../types";
+import { AnalysisResult, MeetingContext, ThinkingLevel, DifficultyLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure } from "../types";
 
 // Upgraded thinking budget map for gemini-3-pro-preview capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
@@ -639,12 +639,19 @@ Target Products: ${context.targetProducts}`;
 // Generate Assessment Questions
 export async function generateAssessmentQuestions(
   docContent: string, 
-  config: { mcq: number; short: number; long: number; mic: number; video: number },
+  config: { mcq: number; short: number; long: number; mic: number; video: number; difficulty?: DifficultyLevel },
   perspective: 'document' | 'customer' = 'document'
 ): Promise<AssessmentQuestion[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-pro-preview';
   
+  const difficulty = config.difficulty || 'Medium';
+  const difficultyInstruction = {
+    'Easy': 'Questions should be straightforward, focusing on core facts and basic concepts. Use clear language and avoid overly complex scenarios.',
+    'Medium': 'Questions should require a solid understanding of the material, involving some logical inference and tactical application of knowledge.',
+    'Hard': 'Questions should be highly challenging, requiring deep strategic thinking, synthesis of multiple data points, and handling of subtle, high-stakes nuances.'
+  }[difficulty];
+
   const roleInstruction = perspective === 'document' 
     ? `Act as an Elite Sales Readiness Coach and a High-Precision Factual Auditor. 
        Your goal is to test the salesperson's ABSOLUTE MASTERY of the specific data, metrics, names, and explicit details within the provided documents.`
@@ -658,6 +665,9 @@ export async function generateAssessmentQuestions(
   const prompt = `${roleInstruction} 
   Based on the grounded document content below, generate a set of challenging questions.
   
+  DIFFICULTY LEVEL: ${difficulty.toUpperCase()}
+  ${difficultyInstruction}
+
   PERSPECTIVE ORIENTATION: ${perspective.toUpperCase()}
   ${questionContext}
   

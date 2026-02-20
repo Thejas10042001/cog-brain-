@@ -161,6 +161,8 @@ export type CustomerPersonaType = 'Balanced' | 'Technical' | 'Financial' | 'Busi
 
 export type ThinkingLevel = 'Minimal' | 'Low' | 'Medium' | 'High';
 
+export type DifficultyLevel = 'Easy' | 'Medium' | 'Hard';
+
 export interface VocalPersonaStructure {
   pitch: string;
   tempo: string;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ICONS } from '../constants';
 import { generateAssessmentQuestions, evaluateAssessment, generatePitchAudio, decodeAudioData } from '../services/geminiService';
-import { AssessmentQuestion, AssessmentResult, QuestionType } from '../types';
+import { AssessmentQuestion, AssessmentResult, QuestionType, DifficultyLevel } from '../types';
 
 const MetricScale = ({ label, value, colorClass = "bg-indigo-600" }: { label: string, value: number, colorClass?: string }) => (
   <div className="space-y-2">
@@ -137,7 +137,15 @@ type Perspective = 'document' | 'customer';
 
 export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments }) => {
   const [stage, setStage] = useState<'config' | 'running' | 'results'>('config');
-  const [config, setConfig] = useState({ mcq: 5, short: 0, long: 0, mic: 0, video: 0, timer: 10 });
+  const [config, setConfig] = useState<{
+    mcq: number;
+    short: number;
+    long: number;
+    mic: number;
+    video: number;
+    timer: number;
+    difficulty: DifficultyLevel;
+  }>({ mcq: 5, short: 0, long: 0, mic: 0, video: 0, timer: 10, difficulty: 'Medium' });
   const [perspective, setPerspective] = useState<Perspective>('document');
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -417,6 +425,21 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
             </div>
 
             <div className="space-y-6">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 border-b border-amber-50 pb-2">Cognitive Challenge Depth</h4>
+              <div className="grid grid-cols-3 gap-4">
+                {(['Easy', 'Medium', 'Hard'] as DifficultyLevel[]).map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setConfig({ ...config, difficulty: level })}
+                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${config.difficulty === level ? 'bg-amber-500 border-amber-400 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 text-slate-400 hover:border-amber-200'}`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600 border-b border-indigo-50 pb-2">Synthesis Perspective</h4>
               <div className="grid grid-cols-2 gap-4">
                 <button 
@@ -582,6 +605,14 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
         <div className="p-16 flex flex-col md:flex-row items-center justify-between gap-12 text-left">
            <div className="space-y-8 flex-1">
               <h2 className="text-5xl font-black tracking-tight">Intelligence Audit Result</h2>
+              <div className="flex items-center gap-4">
+                 <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${config.difficulty === 'Easy' ? 'bg-emerald-100 text-emerald-600' : config.difficulty === 'Medium' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
+                    {config.difficulty} Mode Active
+                 </div>
+                 <div className="px-4 py-1.5 bg-indigo-100 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    {perspective === 'document' ? 'Document Focused' : 'Buyer Centric'}
+                 </div>
+              </div>
               <p className="text-slate-500 font-medium text-xl max-w-xl">
                  Neural logic benchmark completed. Your answers have been cross-referenced with the grounded document core.
               </p>
