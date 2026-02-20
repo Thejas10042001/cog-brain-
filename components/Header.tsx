@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-slate-200 h-16">
-      <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+      <div className="w-full px-8 h-full flex items-center justify-between">
         <div className="flex flex-col items-start leading-none">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-red-600 text-white rounded flex items-center justify-center font-black text-xl shadow-md">

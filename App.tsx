@@ -250,7 +250,7 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-slate-100 flex flex-col transition-all duration-300 ease-in-out origin-top-left"
+      className="min-h-screen bg-white flex flex-col transition-all duration-300 ease-in-out origin-top-left"
       style={{ 
         zoom: zoom / 100,
         // @ts-ignore
@@ -346,10 +346,10 @@ const App: React.FC = () => {
             </>
           )}
 
-          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-slate-50 relative">
+          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-white relative">
             <div className="w-full min-h-full">
               {!analysis && !isAnalyzing ? (
-                <div className="p-8 md:p-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 max-w-7xl mx-auto">
+                <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 w-full">
                   <div className="text-center space-y-4">
                     <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
                       SPIKED<span className="text-red-600">AI</span> Hub
@@ -425,7 +425,7 @@ const App: React.FC = () => {
               ) : (
                 <div className="animate-in fade-in duration-500 h-full flex flex-col">
                   {activeTab === 'context' && (
-                    <div className="p-8 md:p-12 space-y-12 max-w-7xl mx-auto">
+                    <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 w-full">
                       <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
                         <DocumentGallery documents={history} onRefresh={loadHistory} selectedIds={selectedLibraryDocIds} onToggleSelect={toggleLibraryDoc} onSynthesize={runAnalysis} isAnalyzing={isAnalyzing} />
                         <div className="mt-10 pt-8 border-t border-slate-100">
@@ -442,7 +442,7 @@ const App: React.FC = () => {
                   {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                   {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} />}
                   {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                  {activeTab === 'audio' && <div className="p-8 md:p-12 max-w-7xl mx-auto flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
+                  {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
                   {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
                   {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
                 </div>
