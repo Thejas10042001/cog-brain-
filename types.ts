@@ -252,6 +252,11 @@ export interface AssessmentEvaluation {
   bodyLanguageAdvice?: string;
   correctionSuggestions: string[];
   improvementPoints: string[];
+  stressLevel?: number; // 0-100
+  attentionScore?: number; // 0-100
+  eyeContactScore?: number; // 0-100
+  behavioralAnalysis?: string;
+  modelDeliveryScript?: string;
 }
 
 export interface AssessmentResult {
@@ -285,5 +290,17 @@ export interface GroomingEvaluation {
 }
 
 export type SimPersonaV2 = 'CIO' | 'CFO' | 'IT_DIRECTOR';
+
+declare global {
+  interface Window {
+    aistudio: {
+      hasSelectedApiKey: () => Promise<boolean>;
+      openSelectKey: () => Promise<void>;
+    };
+    webkitAudioContext: typeof AudioContext;
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 export type StagedSimStage = 'Ice Breakers' | 'About Business' | 'Pricing' | 'Technical' | 'Legal' | 'Closing';

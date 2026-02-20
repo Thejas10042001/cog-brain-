@@ -1,7 +1,133 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ICONS } from '../constants';
-import { generateAssessmentQuestions, evaluateAssessment } from '../services/geminiService';
+import { generateAssessmentQuestions, evaluateAssessment, generatePitchAudio, decodeAudioData } from '../services/geminiService';
 import { AssessmentQuestion, AssessmentResult, QuestionType } from '../types';
+
+const MetricScale = ({ label, value, colorClass = "bg-indigo-600" }: { label: string, value: number, colorClass?: string }) => (
+  <div className="space-y-2">
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-2">
+        <div className={`w-1.5 h-1.5 rounded-full ${colorClass}`} />
+        <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{label}</span>
+      </div>
+      <span className="text-[10px] font-black text-slate-900">{value}%</span>
+    </div>
+    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+      <div 
+        className={`h-full ${colorClass} transition-all duration-1000 ease-out`} 
+        style={{ width: `${value}%` }}
+      />
+    </div>
+  </div>
+);
+
+const ModelDeliveryPlayer = ({ script }: { script: string }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+
+  const handlePlay = async () => {
+    if (isPlaying) {
+      sourceRef.current?.stop();
+      setIsPlaying(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const audioData = await generatePitchAudio(script, 'Zephyr');
+      if (!audioData) throw new Error("Audio generation failed");
+
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      const buffer = await decodeAudioData(audioData, audioContextRef.current, 24000, 1);
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioContextRef.current.destination);
+      
+      source.onended = () => setIsPlaying(false);
+      sourceRef.current = source;
+      source.start(0);
+      setIsPlaying(true);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to generate model delivery audio.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      sourceRef.current?.stop();
+    };
+  }, []);
+
+  return (
+    <div className="p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+      <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
+        <ICONS.Sparkles className="w-16 h-16" />
+      </div>
+      
+      {/* Animated Waveform Overlay when playing */}
+      {isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-20 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div 
+              key={i} 
+              className="w-1 bg-indigo-500 rounded-full animate-pulse" 
+              style={{ 
+                height: `${20 + Math.random() * 60}%`,
+                animationDelay: `${i * 0.1}s`,
+                animationDuration: `${0.5 + Math.random() * 1}s`
+              }} 
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="relative z-10 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg transition-transform ${isPlaying ? 'scale-110 animate-bounce' : ''}`}>
+              <ICONS.Brain className="w-6 h-6" />
+            </div>
+            <div>
+              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Master Model Delivery</h5>
+              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Neural Coach Active</p>
+            </div>
+          </div>
+          <button 
+            onClick={handlePlay}
+            disabled={isLoading}
+            className={`flex items-center gap-2 px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isPlaying ? 'bg-rose-600 text-white' : 'bg-white text-slate-900 hover:bg-indigo-50'}`}
+          >
+            {isLoading ? (
+              <div className="w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+            ) : isPlaying ? (
+              <ICONS.X className="w-3 h-3" />
+            ) : (
+              <ICONS.Speaker className="w-3 h-3" />
+            )}
+            {isLoading ? "Synthesizing..." : isPlaying ? "Stop Coach" : "Play Model Answer"}
+          </button>
+        </div>
+        <p className="text-xl font-medium leading-relaxed italic text-indigo-50">
+          “{script}”
+        </p>
+        <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+          <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-ping' : 'bg-slate-600'}`} />
+          <span className="text-[8px] font-black uppercase text-indigo-300 tracking-widest">
+            {isPlaying ? 'Streaming Animated Coach Logic' : 'Coach Standby'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface AssessmentLabProps {
   activeDocuments: { name: string; content: string }[];
@@ -40,13 +166,21 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: any) => {
-        let transcript = '';
+        let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
         }
+        
         const qId = questions[currentIdx]?.id;
-        if (qId) {
-          setAnswers(prev => ({ ...prev, [qId]: transcript }));
+        if (qId && finalTranscript) {
+          setAnswers(prev => {
+            const current = prev[qId] || "";
+            // Append with a space if there's already content
+            const separator = current && !current.endsWith(' ') ? ' ' : '';
+            return { ...prev, [qId]: current + separator + finalTranscript };
+          });
         }
       };
 
@@ -488,30 +622,68 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                     {/* User Answer Column */}
-                     <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                           <ICONS.Chat className="w-4 h-4 text-slate-400" />
-                           <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Your Protocol Delivery</h5>
-                        </div>
-                        <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 italic text-slate-600 leading-relaxed font-medium">
-                           “{res?.userAnswer || "System encountered a null response node."}”
-                        </div>
-                     </div>
+                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                      {/* User Answer Column */}
+                      <div className="space-y-6">
+                         <div className="flex items-center gap-2 mb-2">
+                            <ICONS.Chat className="w-4 h-4 text-slate-400" />
+                            <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Your Protocol Delivery</h5>
+                         </div>
+                         <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 italic text-slate-600 leading-relaxed font-medium">
+                            “{res?.userAnswer || "System encountered a null response node."}”
+                         </div>
 
-                     {/* Correct Answer Column */}
-                     <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                           <ICONS.Shield className="w-4 h-4 text-indigo-600" />
-                           <h5 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Master Logic Node</h5>
-                        </div>
-                        <div className="p-8 bg-indigo-50 text-slate-900 rounded-[2.5rem] border border-indigo-100 shadow-sm leading-relaxed">
-                           <p className="text-[11px] font-black uppercase tracking-widest text-indigo-600 mb-3">Protocol Blocked: That was not the target answer. The master logic is as follows:</p>
-                           <p className="text-xl font-bold">“{q.correctAnswer}”</p>
-                        </div>
-                     </div>
-                  </div>
+                         {/* Performance Metrics for Video/Mic */}
+                         {(q.type === 'video' || q.type === 'mic') && res?.evaluation && (
+                           <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] space-y-6 shadow-sm">
+                              <div className="flex items-center justify-between border-b border-slate-50 pb-3">
+                                 <h6 className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Biometric & Cognitive Trace</h6>
+                                 <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1">
+                                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                       <span className="text-[7px] font-bold text-slate-400 uppercase">Optimal</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                       <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                       <span className="text-[7px] font-bold text-slate-400 uppercase">Critical</span>
+                                    </div>
+                                 </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                 <MetricScale label="Stress Level" value={res.evaluation.stressLevel || 0} colorClass={res.evaluation.stressLevel && res.evaluation.stressLevel > 60 ? "bg-rose-500" : "bg-emerald-500"} />
+                                 <MetricScale label="Attention Focus" value={res.evaluation.attentionScore || 0} colorClass="bg-indigo-600" />
+                                 <MetricScale label="Eye Contact" value={res.evaluation.eyeContactScore || 0} colorClass="bg-blue-500" />
+                                 <MetricScale label="Clarity Score" value={res.evaluation.score} colorClass="bg-indigo-600" />
+                              </div>
+                              {res.evaluation.behavioralAnalysis && (
+                                <div className="pt-4 border-t border-slate-50">
+                                   <p className="text-[10px] font-bold text-slate-500 leading-relaxed italic">
+                                      <span className="text-indigo-600 not-italic mr-1">Behavioral Audit:</span>
+                                      {res.evaluation.behavioralAnalysis}
+                                   </p>
+                                </div>
+                              )}
+                           </div>
+                         )}
+                      </div>
+
+                      {/* Correct Answer Column */}
+                      <div className="space-y-6">
+                         <div className="flex items-center gap-2 mb-2">
+                            <ICONS.Shield className="w-4 h-4 text-indigo-600" />
+                            <h5 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Master Logic Node</h5>
+                         </div>
+                         
+                         {res?.evaluation.modelDeliveryScript ? (
+                           <ModelDeliveryPlayer script={res.evaluation.modelDeliveryScript} />
+                         ) : (
+                           <div className="p-8 bg-indigo-50 text-slate-900 rounded-[2.5rem] border border-indigo-100 shadow-sm leading-relaxed">
+                              <p className="text-[11px] font-black uppercase tracking-widest text-indigo-600 mb-3">Protocol Blocked: That was not the target answer. The master logic is as follows:</p>
+                              <p className="text-xl font-bold">“{q.correctAnswer}”</p>
+                           </div>
+                         )}
+                      </div>
+                   </div>
 
                   {/* Strategic Insight Full Width */}
                   <div className="p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100 space-y-4">

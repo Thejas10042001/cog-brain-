@@ -739,7 +739,13 @@ export async function evaluateAssessment(
     - Provide a "toneResult" analyzing clarity and executive authority.
     - Provide "correctionSuggestions" (specific things to change/fix in the phrasing).
     - Provide "improvementPoints" (how to make the answer more impactful).
-    - For Video specifically: Include "bodyLanguageAdvice" inferred from phrasing density and filler word count.
+    - For Video specifically: 
+      - Infer "stressLevel" (0-100) from phrasing speed and filler words.
+      - Infer "attentionScore" (0-100) from focus on the core question.
+      - Infer "eyeContactScore" (0-100) based on directness of phrasing.
+      - Provide "behavioralAnalysis" (summary of perceived presence and confidence).
+      - Provide "modelDeliveryScript" (A perfect, high-impact version of this answer that the user should have said, written in a way that sounds natural and authoritative).
+      - Include "bodyLanguageAdvice" inferred from phrasing density and filler word count.
 
   Return a JSON array of objects:
   {
@@ -751,7 +757,12 @@ export async function evaluateAssessment(
       "toneResult": "Analysis of vocal/phrasing tone (required for mic/video)",
       "bodyLanguageAdvice": "Visual delivery advice (required for video)",
       "correctionSuggestions": ["Point 1", "Point 2"],
-      "improvementPoints": ["Impact point 1", "Impact point 2"]
+      "improvementPoints": ["Impact point 1", "Impact point 2"],
+      "stressLevel": 0-100,
+      "attentionScore": 0-100,
+      "eyeContactScore": 0-100,
+      "behavioralAnalysis": "string",
+      "modelDeliveryScript": "string"
     }
   }
   
