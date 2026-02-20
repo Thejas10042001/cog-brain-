@@ -330,15 +330,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
   );
 
   return (
-    <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-white shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-slate-900 animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto px-12">
-           <div className="w-80 h-80 bg-slate-900 rounded-[4rem] border border-white/5 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
+           <div className="w-80 h-80 bg-slate-50 rounded-[4rem] border border-slate-200 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
               <AIAnimatedBotCIO />
            </div>
            <div className="space-y-6">
-              <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
-              <p className="text-slate-400 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
+              <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
+              <p className="text-slate-500 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
            </div>
            <button onClick={handleInitiate} className="px-16 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Activate Simulation</button>
         </div>
@@ -346,7 +346,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
         <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full py-16 px-12 gap-12 justify-center">
              {/* Unified Single Focus Header */}
              <div className="text-center space-y-4">
-                <span className="px-5 py-2 bg-indigo-600/20 text-indigo-400 text-xs font-black uppercase tracking-[0.3em] rounded-full border border-indigo-500/20">
+                <span className="px-5 py-2 bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-[0.3em] rounded-full border border-indigo-100">
                    Identity: {meetingContext.clientNames || 'Executive Client'}
                 </span>
                 <h3 className="text-5xl font-black tracking-tight leading-tight">
@@ -372,16 +372,16 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
              </div>
 
              {/* Cinematic Narrative Display */}
-             <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+             <div className="bg-slate-50 border border-slate-200 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
                 <div className="flex items-center justify-between mb-2">
                    <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500">Dialogue Node</h5>
                    <div className="flex gap-1">
-                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`}></div>
-                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-75' : 'bg-slate-700'}`}></div>
-                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-150' : 'bg-slate-700'}`}></div>
+                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-75' : 'bg-slate-300'}`}></div>
+                      <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-150' : 'bg-slate-300'}`}></div>
                    </div>
                 </div>
-                <p className="text-4xl font-bold italic leading-[1.4] text-white tracking-tight">
+                <p className="text-4xl font-bold italic leading-[1.4] text-slate-900 tracking-tight">
                    {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
                 </p>
              </div>
@@ -392,20 +392,20 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
                    <textarea 
                      value={currentCaption} 
                      onChange={(e) => setCurrentCaption(e.target.value)} 
-                     className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-100 shadow-inner h-48 resize-none placeholder:text-slate-700 leading-relaxed" 
+                     className="w-full bg-slate-50 border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-900 shadow-inner h-48 resize-none placeholder:text-slate-400 leading-relaxed" 
                      placeholder={`${meetingContext.clientNames || 'The Executive'} is awaiting your strategic response...`} 
                    />
                    <button 
                      onClick={() => startListening()} 
-                     className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}
+                     className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}
                    >
                      <ICONS.Ear className="w-8 h-8" />
                    </button>
                 </div>
                 
                 {lastSuggestion && (
-                  <div className="p-8 bg-indigo-600/10 border border-indigo-500/20 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500 text-center">
-                     <p className="text-sm font-bold text-indigo-300 italic">"Strategic Adjustment: {lastSuggestion}"</p>
+                  <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500 text-center">
+                     <p className="text-sm font-bold text-indigo-600 italic">"Strategic Adjustment: {lastSuggestion}"</p>
                   </div>
                 )}
 

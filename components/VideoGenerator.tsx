@@ -169,7 +169,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
   };
 
   return (
-    <div className="bg-slate-950 border border-slate-800 rounded-[3rem] p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white">
+    <div className="bg-white border border-slate-200 rounded-[3rem] p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-slate-900">
       {/* Background Ambience */}
       <div className="absolute top-0 right-0 p-32 opacity-[0.02] pointer-events-none">
          <ICONS.Play className="w-96 h-96" />
@@ -212,7 +212,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
             {/* Left Column: Configuration */}
             <div className="lg:col-span-8 space-y-8 flex flex-col">
                {/* Mode Selection */}
-               <div className="flex gap-2 p-1.5 bg-slate-900 rounded-2xl border border-slate-800 w-fit">
+               <div className="flex gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-200 w-fit">
                   <button onClick={() => setMode('delivery-coach')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'delivery-coach' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-200'}`}>Strategic Delivery Coach</button>
                   <button onClick={() => setMode('text-to-video')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'text-to-video' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-200'}`}>Standard Scenario</button>
                   {lastOperation && (
@@ -220,7 +220,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
                   )}
                </div>
 
-               <div className="p-1 bg-slate-900 rounded-[3rem] border border-slate-800/50 flex-1 flex flex-col min-h-[450px] group focus-within:border-indigo-500/50 transition-all shadow-inner">
+               <div className="p-1 bg-slate-50 rounded-[3rem] border border-slate-200 flex-1 flex flex-col min-h-[450px] group focus-within:border-indigo-500/50 transition-all shadow-inner">
                   <div className="p-10 pb-4 flex items-center justify-between">
                      <label className="text-[11px] font-black uppercase text-indigo-400 tracking-[0.4em]">
                         {mode === 'delivery-coach' ? 'Input Question / Objection to Master' : 'Scenario Description'}
@@ -265,7 +265,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
 
             {/* Right Column: Controls & Execution */}
             <div className="lg:col-span-4 space-y-8 flex flex-col">
-               <div className="p-10 bg-slate-900 border border-white/5 rounded-[3rem] space-y-12">
+               <div className="p-10 bg-slate-50 border border-slate-200 rounded-[3rem] space-y-12">
                   <div className="space-y-6">
                      <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
                        <ICONS.Efficiency className="w-3.5 h-3.5" /> Frame Aspect Ratio
@@ -297,7 +297,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
                   <button
                     onClick={handleGenerateVideo}
                     disabled={isGenerating || (mode === 'delivery-coach' ? !coachingQuestion.trim() : !prompt.trim())}
-                    className={`group relative overflow-hidden flex flex-col items-center justify-center gap-2 py-10 rounded-[2.5rem] font-black text-xl shadow-2xl transition-all active:scale-95 ${!isGenerating && (mode === 'delivery-coach' ? coachingQuestion.trim() : prompt.trim()) ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/20' : 'bg-slate-900 text-slate-700 cursor-not-allowed border border-white/5'}`}
+                    className={`group relative overflow-hidden flex flex-col items-center justify-center gap-2 py-10 rounded-[2.5rem] font-black text-xl shadow-2xl transition-all active:scale-95 ${!isGenerating && (mode === 'delivery-coach' ? coachingQuestion.trim() : prompt.trim()) ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
                   >
                     {isGenerating ? (
                       <>
@@ -322,7 +322,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
           <div className="space-y-12 animate-in zoom-in-95 duration-1000 flex-1 flex flex-col pb-24">
             <div className="flex flex-col lg:flex-row gap-16 items-start">
               {/* Video Interface */}
-              <div className={`flex-1 rounded-[4rem] overflow-hidden border-[16px] border-slate-900 shadow-[0_60px_120px_-30px_rgba(0,0,0,0.8)] bg-black relative group ${aspectRatio === '9:16' ? 'max-w-md mx-auto aspect-[9/16]' : 'aspect-video'}`}>
+              <div className={`flex-1 rounded-[4rem] overflow-hidden border-[16px] border-slate-100 shadow-2xl bg-slate-50 relative group ${aspectRatio === '9:16' ? 'max-w-md mx-auto aspect-[9/16]' : 'aspect-video'}`}>
                 <video 
                   src={videoUrl} 
                   controls 
@@ -345,7 +345,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
                      <p className="text-2xl font-black leading-tight tracking-tight">{coachingAdvice.voiceTone}</p>
                   </div>
 
-                  <div className="bg-slate-900 border border-white/5 rounded-[3rem] p-10 space-y-10 shadow-2xl">
+                  <div className="bg-slate-50 border border-slate-200 rounded-[3rem] p-10 space-y-10 shadow-2xl">
                      <div className="space-y-4">
                         <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-600 flex items-center gap-3">
                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div> 02 • Opening Hook Protocol
@@ -387,7 +387,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-               <div className="lg:col-span-2 p-16 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl relative overflow-hidden group">
+               <div className="lg:col-span-2 p-16 bg-slate-50 rounded-[4rem] border border-slate-200 shadow-2xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover:scale-110 transition-transform duration-1000"><ICONS.Sparkles className="w-64 h-64" /></div>
                   <div className="flex items-center gap-5 mb-10">
                      <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-2xl"><ICONS.Document className="w-6 h-6" /></div>
@@ -409,7 +409,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
                     <a 
                       href={videoUrl} 
                       download={`Strategic-Coaching-${context.clientCompany.replace(/\s+/g, '-')}.mp4`}
-                      className="w-full inline-block py-8 bg-slate-950 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-indigo-600 transition-all hover:-translate-y-2 active:translate-y-0"
+                      className="w-full inline-block py-8 bg-indigo-600 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-indigo-700 transition-all hover:-translate-y-2 active:translate-y-0"
                     >
                       Download 4K Master
                     </a>

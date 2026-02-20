@@ -104,7 +104,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         <p className="text-sm text-rose-700 leading-relaxed">
           The cloud memory is locked. If you've updated your <strong>Firebase Rules</strong>, click the button below to establish the connection.
         </p>
-        <div className="bg-slate-900 text-indigo-300 p-4 rounded-xl font-mono text-[10px] shadow-inner overflow-x-auto">
+        <div className="bg-slate-50 text-indigo-600 p-4 rounded-xl font-mono text-[10px] shadow-inner overflow-x-auto border border-slate-100">
           <code>{`match /cognitive_documents/{doc=**} { allow read, write: if true; }`}</code>
         </div>
         <button 
@@ -393,7 +393,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
               </p>
               <button 
                 onClick={() => setViewingDoc(null)}
-                className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
+                className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95"
               >
                 Close Review
               </button>

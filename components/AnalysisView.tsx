@@ -84,7 +84,7 @@ const CompetitorCard: React.FC<{ comp: CompetitorInsight, name: string }> = ({ c
     
     <div className="flex items-center justify-between mb-8 relative z-10">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-xl shadow-xl shadow-slate-200">{name[0]}</div>
+        <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-xl shadow-indigo-100">{name[0]}</div>
         <div>
            <h4 className="text-2xl font-black text-slate-900 tracking-tight">{name}</h4>
            <div className="flex items-center gap-2 mt-1">
@@ -453,7 +453,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
       {/* NEW: Vocal Identity Fingerprint Section */}
       {context.vocalPersonaAnalysis && (
-        <section className="bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-800 overflow-hidden relative group">
+        <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-100 overflow-hidden relative group">
           <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform duration-1000">
              <ICONS.Speaker className="w-64 h-64 text-indigo-400" />
           </div>
@@ -621,7 +621,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div>
             <div className="flex items-center gap-4 mb-3">
-               <div className="p-4 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200"><ICONS.Trophy /></div>
+               <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100"><ICONS.Trophy /></div>
                <h3 className="text-[11px] font-black uppercase tracking-[0.5em] text-indigo-500">Market Intelligence Hub</h3>
             </div>
             <h2 className="text-4xl font-black text-slate-900 tracking-tight">Comparative SWOT Analysis</h2>

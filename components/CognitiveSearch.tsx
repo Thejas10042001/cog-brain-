@@ -313,7 +313,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
           <div className="bg-white rounded-[3.5rem] p-12 md:p-20 shadow-2xl border border-slate-200 relative overflow-hidden">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16 border-b border-slate-100 pb-12">
                <div className="flex items-center gap-5">
-                  <div className="p-4 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200 rotate-2 transition-transform hover:rotate-0"><ICONS.Brain className="w-6 h-6" /></div>
+                  <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100 rotate-2 transition-transform hover:rotate-0"><ICONS.Brain className="w-6 h-6" /></div>
                   <div>
                     <h3 className="text-[14px] font-black uppercase tracking-[0.3em] text-slate-900">Intelligence Synthesis</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 flex items-center gap-2">

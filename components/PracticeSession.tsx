@@ -451,14 +451,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                   <p className="text-lg font-medium leading-relaxed italic text-slate-700">“{evaluation.transcription}”</p>
                </div>
 
-               <div className="p-10 bg-slate-900 text-white rounded-[3rem] shadow-2xl relative overflow-hidden group">
-                  <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-6 flex items-center gap-2">
+                <div className="p-10 bg-slate-50 border border-slate-200 text-slate-900 rounded-[3rem] shadow-2xl relative overflow-hidden group">
+                  <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest mb-6 flex items-center gap-2">
                     <ICONS.Sparkles className="w-4 h-4" /> Tactical Breathing & Pacing Guide
                   </h4>
-                  <p className="text-xl font-medium leading-[2.2] text-indigo-50 font-serif italic">
+                  <p className="text-xl font-medium leading-[2.2] text-slate-700 font-serif italic">
                     {evaluation.breathPacingGuide.split(/(\[Take Breath\]|\[Pause - \d+s\]|\[Slow Down\])/g).map((part, i) => (
                       (part.startsWith('[Take Breath]') || part.startsWith('[Pause') || part.startsWith('[Slow'))
-                      ? <span key={i} className="bg-indigo-600/50 text-indigo-300 px-3 py-1 rounded-xl mx-1 font-black text-[10px] uppercase tracking-widest not-italic border border-white/10 shadow-sm">{part}</span>
+                      ? <span key={i} className="bg-indigo-600/10 text-indigo-600 px-3 py-1 rounded-xl mx-1 font-black text-[10px] uppercase tracking-widest not-italic border border-indigo-200 shadow-sm">{part}</span>
                       : part
                     ))}
                   </p>
@@ -525,12 +525,12 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
         </div>
       ) : (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden h-full">
-          <div className="lg:col-span-2 bg-slate-900 p-12 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
+          <div className="lg:col-span-2 bg-white p-12 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
             <div className={`absolute inset-0 opacity-10 blur-[150px] transition-colors duration-2000 ${selectedPersona === 'Technical' ? 'bg-blue-600' : selectedPersona === 'Financial' ? 'bg-emerald-600' : 'bg-indigo-600'}`}></div>
             
             <div className="relative w-80 h-80 mb-12 flex items-center justify-center">
-               <div className={`absolute inset-0 bg-white/5 rounded-full ${isActive ? 'animate-ping' : 'animate-pulse'} scale-[1.4]`}></div>
-               <div className={`w-40 h-40 bg-indigo-600 rounded-full flex items-center justify-center text-white scale-[1.7] shadow-[0_0_80px_rgba(79,70,229,0.5)] z-10 border-8 border-slate-900 transition-transform ${isActive ? 'animate-pulse' : ''}`}>
+               <div className={`absolute inset-0 bg-indigo-50 rounded-full ${isActive ? 'animate-ping' : 'animate-pulse'} scale-[1.4]`}></div>
+               <div className={`w-40 h-40 bg-indigo-600 rounded-full flex items-center justify-center text-white scale-[1.7] shadow-[0_0_80px_rgba(79,70,229,0.5)] z-10 border-8 border-white transition-transform ${isActive ? 'animate-pulse' : ''}`}>
                   {sessionMode === 'roleplay' ? <ICONS.Brain className="w-16 h-16" /> : <ICONS.Speaker className="w-16 h-16" />}
                </div>
                {isActive && (
@@ -542,13 +542,13 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
             </div>
             
             <div className="text-center space-y-6 relative z-10 max-w-xl">
-               <span className="px-5 py-2 bg-white/10 text-white/70 text-[10px] font-black uppercase tracking-[0.3em] rounded-xl border border-white/5 mb-4 inline-block">
+               <span className="px-5 py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[0.3em] rounded-xl border border-indigo-100 mb-4 inline-block">
                  {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : 'Bot-Led Grooming Active'}
                </span>
-               <h5 className="text-white text-4xl font-black tracking-tight leading-tight">
+               <h5 className="text-slate-900 text-4xl font-black tracking-tight leading-tight">
                  {sessionMode === 'roleplay' ? analysis.snapshot.role : 'Neural Bot-Coach'}
                </h5>
-               <p className="text-indigo-200/60 text-lg italic font-medium leading-relaxed">
+               <p className="text-slate-500 text-lg italic font-medium leading-relaxed">
                  {sessionMode === 'roleplay' 
                    ? '"Speak directly to our business value drivers."' 
                    : `Bot Question: "${groomingTarget}"`}

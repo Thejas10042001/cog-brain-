@@ -328,7 +328,7 @@ OPERATIONAL CONSTRAINTS:
              </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-col shadow-2xl relative overflow-hidden h-full text-white transition-all duration-500">
+          <div className="bg-white border border-slate-200 rounded-[2rem] flex flex-col shadow-2xl relative overflow-hidden h-full text-slate-900 transition-all duration-500">
              {/* Voice Mode Selector Header */}
              <div className="flex border-b border-white/5 p-1">
                 <button 
@@ -457,7 +457,7 @@ OPERATIONAL CONSTRAINTS:
                 </button>
              </div>
              {showVocalDirective && context.vocalPersonaAnalysis && (
-                 <div className="p-4 bg-slate-950 border-t border-white/10 text-[9px] text-indigo-300 italic leading-relaxed animate-in slide-in-from-top-2">
+                 <div className="p-4 bg-slate-50 border-t border-slate-100 text-[9px] text-indigo-600 italic leading-relaxed animate-in slide-in-from-top-2">
                      "{context.vocalPersonaAnalysis.mimicryDirective}"
                  </div>
              )}

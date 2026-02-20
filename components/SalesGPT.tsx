@@ -217,7 +217,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               <div className={`
                 max-w-[100%] md:max-w-[85%] p-10 rounded-[3.5rem] text-2xl font-medium leading-[1.6] shadow-2xl
                 ${msg.role === 'user' 
-                  ? 'bg-slate-900 text-white rounded-tr-none border-4 border-slate-800' 
+                  ? 'bg-indigo-50 text-slate-900 rounded-tr-none border-2 border-indigo-100 shadow-sm' 
                   : 'bg-white text-slate-800 rounded-tl-none border border-slate-200'}
               `}>
                 <div className="whitespace-pre-wrap markdown-content">

@@ -571,11 +571,11 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
   };
 
   const StarRating = ({ rating }: { rating: number | 'skipped' }) => {
-    if (rating === 'skipped') return <span className="text-[10px] font-black uppercase text-slate-600">Skipped</span>;
+    if (rating === 'skipped') return <span className="text-[10px] font-black uppercase text-slate-400">Skipped</span>;
     return (
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map(star => (
-          <svg key={star} className={`w-3.5 h-3.5 ${star <= rating ? 'text-amber-400 fill-current' : 'text-slate-800'}`} viewBox="0 0 24 24">
+          <svg key={star} className={`w-3.5 h-3.5 ${star <= rating ? 'text-amber-400 fill-current' : 'text-slate-200'}`} viewBox="0 0 24 24">
             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
           </svg>
         ))}
@@ -586,9 +586,9 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
   return (
-    <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-white shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-slate-900 animate-in zoom-in-95 duration-500">
       {showCelebration && (
-        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center bg-indigo-600/20 backdrop-blur-[2px] animate-celebrate-bg">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center bg-indigo-900/90 backdrop-blur-md animate-celebrate-bg">
            <div className="text-center animate-celebrate-text">
               <div className="flex justify-center mb-6 gap-2">
                  {[...Array(20)].map((_, i) => (
@@ -599,63 +599,63 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                    }}></div>
                  ))}
               </div>
-              <h2 className="text-8xl font-black text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.5)] uppercase">CONGRATULATIONS!</h2>
+              <h2 className="text-8xl font-black text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.3)] uppercase">CONGRATULATIONS!</h2>
               <p className="text-3xl font-black text-indigo-200 mt-4 uppercase tracking-[0.4em]">Stage Mastery Achieved</p>
            </div>
         </div>
       )}
 
       {showTransitionModal && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-500">
-              <div className="bg-slate-900 border border-white/10 rounded-[3rem] p-12 max-w-2xl w-full shadow-2xl space-y-10 animate-in zoom-in-95 duration-300">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-500">
+              <div className="bg-white border border-slate-200 rounded-[3rem] p-12 max-w-2xl w-full shadow-2xl space-y-10 animate-in zoom-in-95 duration-300">
                   <div className="text-center space-y-4">
                       <div className="w-20 h-20 bg-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto shadow-xl">
                           <ICONS.Sparkles className="w-10 h-10" />
                       </div>
-                      <h3 className="text-3xl font-black tracking-tight text-white">Neural Transition Control</h3>
-                      <p className="text-slate-400 font-medium">Stage Mastery confirmed. Configure the next tactical sequence.</p>
+                      <h3 className="text-3xl font-black tracking-tight text-slate-900">Neural Transition Control</h3>
+                      <p className="text-slate-500 font-medium">Stage Mastery confirmed. Configure the next tactical sequence.</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6">
                       <button 
                         onClick={() => setTransitionChoice('same')}
-                        className={`p-8 rounded-[2rem] border-2 text-left transition-all ${transitionChoice === 'same' ? 'bg-indigo-600 border-indigo-500 shadow-xl' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+                        className={`p-8 rounded-[2rem] border-2 text-left transition-all ${transitionChoice === 'same' ? 'bg-indigo-600 border-indigo-500 shadow-xl' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
                       >
-                          <h5 className="font-black uppercase tracking-widest text-[11px] mb-2 text-indigo-300">Option A</h5>
-                          <p className="text-lg font-bold text-white">Reinforce Current Stage</p>
+                          <h5 className="font-black uppercase tracking-widest text-[11px] mb-2 text-indigo-600">Option A</h5>
+                          <p className="text-lg font-bold text-slate-900">Reinforce Current Stage</p>
                           <p className="text-[10px] text-slate-500 mt-2">Deeper inquiry into {currentStage} specifics.</p>
                       </button>
                       <button 
                         onClick={() => setTransitionChoice('next')}
-                        className={`p-8 rounded-[2rem] border-2 text-left transition-all ${transitionChoice === 'next' ? 'bg-emerald-600 border-emerald-500 shadow-xl' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+                        className={`p-8 rounded-[2rem] border-2 text-left transition-all ${transitionChoice === 'next' ? 'bg-emerald-600 border-emerald-500 shadow-xl' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
                       >
-                          <h5 className="font-black uppercase tracking-widest text-[11px] mb-2 text-emerald-300">Option B</h5>
-                          <p className="text-lg font-bold text-white">Advance Protocol</p>
+                          <h5 className="font-black uppercase tracking-widest text-[11px] mb-2 text-emerald-600">Option B</h5>
+                          <p className="text-lg font-bold text-slate-900">Advance Protocol</p>
                           <p className="text-[10px] text-slate-500 mt-2">Move to the next tactical stage.</p>
                       </button>
                   </div>
 
-                  <div className="space-y-8 p-8 bg-black/30 rounded-[2.5rem]">
+                  <div className="space-y-8 p-8 bg-slate-50 rounded-[2.5rem]">
                       <div className="flex items-center justify-between">
                           <div className="space-y-1">
-                              <h5 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Inquiry Density</h5>
-                              <p className="text-xs font-bold text-white">{questionCount} questions to ask</p>
+                              <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Inquiry Density</h5>
+                              <p className="text-xs font-bold text-slate-900">{questionCount} questions to ask</p>
                           </div>
                           <div className="flex items-center gap-4">
-                              <button onClick={() => setQuestionCount(Math.max(1, questionCount - 1))} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-black text-white hover:bg-slate-700">-</button>
-                              <span className="text-2xl font-black text-indigo-400">{questionCount}</span>
-                              <button onClick={() => setQuestionCount(Math.min(5, questionCount + 1))} className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-black text-white hover:bg-slate-700">+</button>
+                              <button onClick={() => setQuestionCount(Math.max(1, questionCount - 1))} className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-black text-slate-900 hover:bg-slate-300">-</button>
+                              <span className="text-2xl font-black text-indigo-600">{questionCount}</span>
+                              <button onClick={() => setQuestionCount(Math.min(5, questionCount + 1))} className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-black text-slate-900 hover:bg-slate-300">+</button>
                           </div>
                       </div>
 
                       <div className="space-y-3">
-                          <h5 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Cognitive Difficulty</h5>
+                          <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Cognitive Difficulty</h5>
                           <div className="grid grid-cols-3 gap-3">
                               {(['Easy', 'Medium', 'Hard'] as const).map((lvl) => (
                                   <button 
                                     key={lvl}
                                     onClick={() => setDifficulty(lvl)}
-                                    className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${difficulty === lvl ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500 hover:text-slate-300'}`}
+                                    className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${difficulty === lvl ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500 hover:text-slate-700'}`}
                                   >
                                       {lvl}
                                   </button>
@@ -676,13 +676,13 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
 
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
-           <div className="p-10 bg-slate-900 rounded-[4rem] border border-white/5 shadow-2xl relative overflow-hidden group">
+           <div className="p-10 bg-slate-50 rounded-[4rem] border border-slate-200 shadow-2xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-indigo-600/10 scale-0 group-hover:scale-100 transition-transform duration-1000 rounded-full blur-3xl opacity-50"></div>
               <ICONS.Efficiency className="w-32 h-32 text-indigo-600 relative z-10" />
            </div>
            <div className="space-y-6 w-full">
-              <h2 className="text-6xl font-black tracking-tight text-white">Staged Simulation Hub</h2>
-              <p className="text-slate-400 text-2xl font-medium leading-relaxed w-full">
+              <h2 className="text-6xl font-black tracking-tight text-slate-900">Staged Simulation Hub</h2>
+              <p className="text-slate-500 text-2xl font-medium leading-relaxed w-full">
                 Advance through 6 tactical stages. Select your starting point below to begin the challenge.
               </p>
            </div>
@@ -694,13 +694,13 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                   <button 
                     key={s} 
                     onClick={() => setStartStageChoice(s)}
-                    className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-white/5 border-white/10 hover:border-indigo-400'}`}
+                    className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-slate-50 border-slate-200 hover:border-indigo-400'}`}
                   >
                     <div className="flex items-center justify-between">
-                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Stage 0{i+1}</span>
+                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>Stage 0{i+1}</span>
                        {isSelected && <div className="w-3 h-3 rounded-full bg-white animate-pulse"></div>}
                     </div>
-                    <h4 className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-slate-200'}`}>{s}</h4>
+                    <h4 className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-slate-900'}`}>{s}</h4>
                     <p className={`text-sm font-medium leading-relaxed ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
                       {STAGE_DESCRIPTIONS[s]}
                     </p>
@@ -723,10 +723,10 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       ) : (
         <div className="flex-1 flex overflow-hidden">
           {/* Main Dashboard Panel - EDGE TO EDGE */}
-          <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
+          <div className="flex-1 flex flex-col bg-white overflow-hidden">
              
              {/* Header Layer (Fixed) */}
-             <div className="p-8 border-b border-white/5 bg-slate-900/20 backdrop-blur-md">
+             <div className="p-8 border-b border-slate-100 bg-slate-50/50 backdrop-blur-md">
                 {/* Stage Progress Tracker */}
                 <div className="grid grid-cols-6 gap-4 w-full mb-8">
                    {STAGES.map((s, i) => {
@@ -739,8 +739,8 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                           <div className="h-5 flex items-center justify-center">
                              {rating !== undefined && <StarRating rating={rating} />}
                           </div>
-                          <div className={`h-2.5 w-full rounded-full transition-all duration-700 ${isDone ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : isActive ? 'bg-indigo-500 shadow-[0_0_25px_rgba(79,70,229,0.7)]' : 'bg-slate-800'}`}></div>
-                          <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-400' : isDone ? 'text-emerald-400' : 'text-slate-600'}`}>{s}</span>
+                          <div className={`h-2.5 w-full rounded-full transition-all duration-700 ${isDone ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : isActive ? 'bg-indigo-500 shadow-[0_0_25px_rgba(79,70,229,0.7)]' : 'bg-slate-200'}`}></div>
+                          <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-600' : isDone ? 'text-emerald-600' : 'text-slate-400'}`}>{s}</span>
                        </div>
                      );
                    })}
@@ -748,27 +748,27 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
 
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-6">
-                      <div className="p-3 bg-slate-900 border border-white/5 rounded-2xl">
+                      <div className="p-3 bg-white border border-slate-200 rounded-2xl">
                          {isGeneratingAvatar ? (
-                           <div className="w-10 h-10 rounded-lg bg-indigo-600/20 flex items-center justify-center animate-pulse">
-                              <ICONS.Efficiency className="w-5 h-5 text-indigo-500" />
+                           <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center animate-pulse">
+                               <ICONS.Efficiency className="w-5 h-5 text-indigo-500" />
                            </div>
                          ) : avatarUrl ? (
                            <img src={avatarUrl} alt="Client" className="w-10 h-10 rounded-lg object-cover" />
                          ) : (
-                           <ICONS.Brain className="w-10 h-10 text-slate-500" />
+                           <ICONS.Brain className="w-10 h-10 text-slate-400" />
                          )}
                       </div>
                       <div className="space-y-1">
                          <div className="flex items-center gap-4">
-                            <div className="px-3 py-1 bg-indigo-600/20 text-indigo-400 text-[8px] font-black uppercase tracking-[0.4em] rounded-full border border-indigo-500/20">
+                            <div className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[8px] font-black uppercase tracking-[0.4em] rounded-full border border-indigo-100">
                               {currentStage} Stage Active
                             </div>
-                            <h3 className="text-2xl font-black tracking-tight">Presence: {meetingContext.clientNames || 'Executive Client'}</h3>
+                            <h3 className="text-2xl font-black tracking-tight text-slate-900">Presence: {meetingContext.clientNames || 'Executive Client'}</h3>
                          </div>
                          <div className="flex items-center gap-3">
-                            <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.8)]' : 'bg-slate-700'}`}></div>
-                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{isAISpeaking ? 'Synchronizing Neural Link' : 'Awaiting Input'}</span>
+                            <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.8)]' : 'bg-slate-300'}`}></div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{isAISpeaking ? 'Synchronizing Neural Link' : 'Awaiting Input'}</span>
                          </div>
                       </div>
                    </div>
@@ -779,15 +779,15 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
              <div className="flex-1 overflow-y-auto custom-scrollbar p-12 space-y-12">
                 
                 {/* Question Area - FULL WIDTH */}
-                <div className="w-full bg-white/5 backdrop-blur-3xl border border-white/10 p-12 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700 relative group/qarea">
+                <div className="w-full bg-slate-50 border border-slate-200 p-12 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700 relative group/qarea">
                    <div className="flex justify-center">
-                      <div className="w-1.5 h-10 bg-indigo-600/20 rounded-full flex flex-col justify-end">
+                      <div className="w-1.5 h-10 bg-indigo-100 rounded-full flex flex-col justify-end">
                          <div className={`w-full bg-indigo-500 rounded-full transition-all duration-300 ${isAISpeaking ? 'h-full' : 'h-2'}`}></div>
                       </div>
                    </div>
                    <div className="space-y-2 text-center">
-                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">Cognitive Strategic Inquiry</h5>
-                      <p className="text-4xl font-bold italic leading-[1.3] text-white tracking-tight">
+                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500">Cognitive Strategic Inquiry</h5>
+                      <p className="text-4xl font-bold italic leading-[1.3] text-slate-900 tracking-tight">
                          {messages[messages.length - 1]?.content || (isProcessing ? "Establishing behavioral synchronization..." : "Initializing simulation core...")}
                       </p>
                    </div>
@@ -797,7 +797,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                       <button 
                         onClick={handleRehear}
                         disabled={isProcessing || messages.length === 0}
-                        className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[9px] font-black uppercase tracking-widest text-indigo-300 transition-all active:scale-95"
+                        className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all active:scale-95"
                       >
                          <ICONS.Speaker className="w-3.5 h-3.5" /> Re-hear Agent
                       </button>
@@ -806,20 +806,20 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
 
                 {/* Hint Area - FULL WIDTH */}
                 {currentHint && (
-                  <div className="w-full bg-indigo-900/40 border border-indigo-500/30 p-8 rounded-[2.5rem] shadow-2xl flex items-center gap-6 animate-in slide-in-from-top-4">
+                  <div className="w-full bg-indigo-50 border border-indigo-200 p-8 rounded-[2.5rem] shadow-xl flex items-center gap-6 animate-in slide-in-from-top-4">
                       <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
-                          <ICONS.Sparkles className="w-6 h-6 text-indigo-200" />
+                          <ICONS.Sparkles className="w-6 h-6 text-indigo-100" />
                       </div>
                       <div className="text-left flex-1">
-                        <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-1">Neural Strategic Hint</h5>
-                        <p className="text-lg font-bold text-white italic leading-snug">{currentHint}</p>
+                        <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
+                        <p className="text-lg font-bold text-slate-900 italic leading-snug">{currentHint}</p>
                       </div>
                   </div>
                 )}
 
                 {/* Enhanced Coaching Feedback Overlay - FULL WIDTH & NO CLOSE BUTTON */}
                 {coachingFeedback && (
-                  <div className="p-12 bg-rose-950/60 backdrop-blur-2xl border-2 border-rose-500/40 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
+                  <div className="p-12 bg-rose-50 backdrop-blur-2xl border-2 border-rose-200 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
                       <div className="flex items-center justify-between">
                          <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
@@ -829,14 +829,14 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
 
                       <button 
                         onClick={() => setShowCoachingDetails(!showCoachingDetails)}
-                        className="w-full group flex items-center justify-between p-10 bg-white/5 hover:bg-white/10 border-2 border-white/10 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
+                        className="w-full group flex items-center justify-between p-10 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
                       >
-                         <span className="text-xl font-black text-indigo-100 italic group-hover:text-white text-left pr-6">
+                         <span className="text-xl font-black text-indigo-600 italic group-hover:text-indigo-700 text-left pr-6">
                            Initialize Neural Alignment: Access Strategic Correction & Master Logic Node
                          </span>
-                         <div className={`w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`}>
-                            <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                         <div className={`w-12 h-12 rounded-full bg-indigo-600/10 border border-indigo-500/40 flex items-center justify-center transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`}>
+                            <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                             </svg>
                          </div>
                       </button>
@@ -845,31 +845,31 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                         <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500 pt-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-4">
-                                <h5 className="text-[11px] font-black uppercase text-rose-400 tracking-[0.3em]">Deficit Rationale</h5>
-                                <div className="text-lg font-bold text-rose-50/90 leading-relaxed italic border-l-4 border-rose-500/30 pl-8 py-2">
+                                <h5 className="text-[11px] font-black uppercase text-rose-600 tracking-[0.3em]">Deficit Rationale</h5>
+                                <div className="text-lg font-bold text-rose-900 leading-relaxed italic border-l-4 border-rose-300 pl-8 py-2">
                                   {coachingFeedback.failReason || "Incongruent logic detected in current stage response."}
                                 </div>
                             </div>
                             <div className="space-y-4">
-                                <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-[0.3em]">Strategic Guidance</h5>
-                                <div className="text-lg font-bold text-indigo-50/90 leading-relaxed italic border-l-4 border-indigo-500/30 pl-8 py-2">
+                                <h5 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.3em]">Strategic Guidance</h5>
+                                <div className="text-lg font-bold text-indigo-900 leading-relaxed italic border-l-4 border-indigo-300 pl-8 py-2">
                                   {coachingFeedback.styleGuide || "Adopt a higher-authority executive stance with grounded metrics."}
                                 </div>
                             </div>
                           </div>
 
                           {coachingFeedback.idealResponse && (
-                            <div className="p-12 bg-indigo-600/10 border-2 border-indigo-500/30 rounded-[3rem] space-y-6 shadow-inner">
-                                <h5 className="text-[12px] font-black uppercase text-indigo-300 tracking-[0.4em]">Master Logic Protocol</h5>
-                                <p className="text-3xl font-black text-white leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
+                            <div className="p-12 bg-indigo-50 border-2 border-indigo-100 rounded-[3rem] space-y-6 shadow-inner">
+                                <h5 className="text-[12px] font-black uppercase text-indigo-500 tracking-[0.4em]">Master Logic Protocol</h5>
+                                <p className="text-3xl font-black text-slate-900 leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
                             </div>
                           )}
 
-                          <div className="flex items-center gap-6 pt-8 border-t border-white/5">
+                          <div className="flex items-center gap-6 pt-8 border-t border-slate-200">
                             <button onClick={handleTryAgain} className="flex-1 py-7 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-4">
                                 <ICONS.Efficiency className="w-8 h-8" /> Try Again (Revert Turn)
                             </button>
-                            <button onClick={handleProceedWithFeedback} className="px-12 py-7 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.2em] hover:bg-slate-700 active:scale-95 transition-all">Proceed with Feedback</button>
+                            <button onClick={handleProceedWithFeedback} className="px-12 py-7 bg-slate-100 text-slate-600 border border-slate-200 rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.2em] hover:bg-slate-200 active:scale-95 transition-all">Proceed with Feedback</button>
                           </div>
                         </div>
                       )}
@@ -879,20 +879,20 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
              </div>
 
              {/* Input Area - FULL WIDTH */}
-             <div className="p-8 border-t border-white/5 bg-slate-900/40 backdrop-blur-2xl space-y-6">
+             <div className="p-8 border-t border-slate-100 bg-slate-50/50 backdrop-blur-2xl space-y-6">
                 <div className="w-full space-y-6">
                    <div className="relative group">
                       <textarea 
                         value={currentCaption} 
                         onChange={(e) => setCurrentCaption(e.target.value)} 
-                        className="w-full bg-slate-900/80 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-200 shadow-inner h-40 resize-none placeholder:text-slate-700" 
+                        className="w-full bg-white border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-900 shadow-inner h-40 resize-none placeholder:text-slate-400" 
                         placeholder={`Deploy tactical response for the ${currentStage} stage...`}
                       />
-                      <button onClick={() => startListening()} className={`absolute right-12 top-1/2 -translate-y-1/2 p-7 rounded-[2rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-white/5 border-white/10 text-indigo-400 hover:bg-white/10'}`}><ICONS.Ear className="w-10 h-10" /></button>
+                      <button onClick={() => startListening()} className={`absolute right-12 top-1/2 -translate-y-1/2 p-7 rounded-[2rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}><ICONS.Ear className="w-10 h-10" /></button>
                    </div>
                    <div className="flex items-center gap-6">
                       <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50">Commit Answer</button>
-                      <button onClick={handleSkip} disabled={isProcessing} className="px-12 py-8 bg-slate-800 text-slate-300 border border-slate-700 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-700 active:scale-95 transition-all">Skip</button>
+                      <button onClick={handleSkip} disabled={isProcessing} className="px-12 py-8 bg-slate-100 text-slate-600 border border-slate-200 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-200 active:scale-95 transition-all">Skip</button>
                       <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest hover:bg-rose-700 active:scale-95 transition-all">Audit</button>
                    </div>
                 </div>
@@ -914,14 +914,14 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
               fontSize: `${historyFontScale}rem`,
               transition: isResizing ? 'none' : 'all 0.3s ease'
             }}
-            className="border-l border-white/5 bg-slate-900/50 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
+            className="border-l border-slate-100 bg-slate-50/50 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
           >
-             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-indigo-600/5">
+             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-50">
                 <div className="flex items-center gap-3">
                    <div className="p-2 bg-indigo-600 rounded-lg text-white" style={{ transform: `scale(${historyFontScale})` }}><ICONS.Research className="w-4 h-4" /></div>
                    {historyWidth > 180 && (
                      <div className="overflow-hidden">
-                        <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-white truncate" style={{ fontSize: `${historyFontScale * 0.75}rem` }}>Simulation History</h4>
+                        <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-900 truncate" style={{ fontSize: `${historyFontScale * 0.75}rem` }}>Simulation History</h4>
                         <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest truncate" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Mastery Trace Log</p>
                      </div>
                    )}
@@ -948,7 +948,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                    const isSkipped = attempts.some(a => a.result === 'SKIPPED');
 
                    return (
-                     <div key={s} className={`rounded-3xl border transition-all duration-500 ${isExpanded ? 'bg-white/5 border-white/10' : 'bg-transparent border-white/5 opacity-60'}`}>
+                     <div key={s} className={`rounded-3xl border transition-all duration-500 ${isExpanded ? 'bg-white border-slate-200 shadow-sm' : 'bg-transparent border-slate-100 opacity-60'}`}>
                         <button 
                           onClick={() => !isLocked && toggleStageExpand(s)}
                           disabled={isLocked}
@@ -956,30 +956,30 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                         >
                            <div className="flex items-center gap-4">
                               <div 
-                                className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-[10px] ${isSuccess ? 'bg-emerald-500 text-white' : isSkipped ? 'bg-slate-700 text-slate-400' : isExpanded ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500'}`}
+                                className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-[10px] ${isSuccess ? 'bg-emerald-500 text-white' : isSkipped ? 'bg-slate-200 text-slate-500' : isExpanded ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}
                                 style={{ transform: `scale(${historyFontScale})` }}
                               >
                                  0{idx + 1}
                               </div>
                               {historyWidth > 180 && (
                                 <div className="text-left">
-                                  <h5 className={`text-[11px] font-black uppercase tracking-widest ${isSuccess ? 'text-emerald-400' : isExpanded ? 'text-white' : 'text-slate-500'}`} style={{ fontSize: `${historyFontScale * 0.7}rem` }}>{s}</h5>
+                                  <h5 className={`text-[11px] font-black uppercase tracking-widest ${isSuccess ? 'text-emerald-600' : isExpanded ? 'text-slate-900' : 'text-slate-400'}`} style={{ fontSize: `${historyFontScale * 0.7}rem` }}>{s}</h5>
                                   <p className="text-[8px] font-bold text-slate-500 uppercase" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>{attempts.length} interactions</p>
                                 </div>
                               )}
                            </div>
-                           <svg className={`w-4 h-4 text-slate-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 9l-7 7-7-7" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                           <svg className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 9l-7 7-7-7" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </button>
 
                         {isExpanded && historyWidth > 150 && (
                            <div className="px-5 pb-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                               {attempts.length === 0 ? (
-                                 <p className="text-[9px] font-bold text-slate-600 italic border-l-2 border-slate-800 pl-4 py-1" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>Awaiting interaction node...</p>
+                                 <p className="text-[9px] font-bold text-slate-400 italic border-l-2 border-slate-200 pl-4 py-1" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>Awaiting interaction node...</p>
                               ) : (
                                  attempts.map((at, i) => (
-                                    <div key={i} className={`p-4 rounded-2xl border ${at.result === 'SUCCESS' ? 'bg-emerald-500/5 border-emerald-500/20' : at.result === 'SKIPPED' ? 'bg-slate-800/50 border-white/5' : 'bg-rose-500/5 border-rose-500/20'}`}>
+                                    <div key={i} className={`p-4 rounded-2xl border ${at.result === 'SUCCESS' ? 'bg-emerald-50 border-emerald-100' : at.result === 'SKIPPED' ? 'bg-slate-50 border-slate-100' : 'bg-rose-50 border-rose-100'}`}>
                                        <div className="flex justify-between items-center mb-3">
-                                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${at.result === 'SUCCESS' ? 'bg-emerald-500 text-white' : at.result === 'SKIPPED' ? 'bg-slate-600 text-slate-200' : 'bg-rose-600 text-white'}`} style={{ fontSize: `${historyFontScale * 0.5}rem` }}>
+                                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${at.result === 'SUCCESS' ? 'bg-emerald-500 text-white' : at.result === 'SKIPPED' ? 'bg-slate-400 text-white' : 'bg-rose-600 text-white'}`} style={{ fontSize: `${historyFontScale * 0.5}rem` }}>
                                              {at.result === 'FAIL' ? 'Deficit' : at.result}
                                           </span>
                                           {at.rating && <div style={{ transform: `scale(${historyFontScale * 0.8})`, transformOrigin: 'right center' }}><StarRating rating={at.rating} /></div>}
@@ -987,23 +987,23 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                                        <div className="space-y-4">
                                           <div className="flex items-start gap-3">
                                              {avatarUrl ? (
-                                                <img src={avatarUrl} alt="Client" className="w-8 h-8 rounded-full object-cover border border-indigo-500/30 shrink-0 mt-1" style={{ width: `${historyFontScale * 2}rem`, height: `${historyFontScale * 2}rem` }} />
+                                                <img src={avatarUrl} alt="Client" className="w-8 h-8 rounded-full object-cover border border-indigo-100 shrink-0 mt-1" style={{ width: `${historyFontScale * 2}rem`, height: `${historyFontScale * 2}rem` }} />
                                              ) : (
-                                                <div className="w-8 h-8 rounded-full bg-indigo-900/50 flex items-center justify-center shrink-0 mt-1" style={{ width: `${historyFontScale * 2}rem`, height: `${historyFontScale * 2}rem` }}><ICONS.Brain className="w-4 h-4 text-indigo-400" /></div>
+                                                <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 mt-1" style={{ width: `${historyFontScale * 2}rem`, height: `${historyFontScale * 2}rem` }}><ICONS.Brain className="w-4 h-4 text-indigo-400" /></div>
                                              )}
                                              <div className="space-y-1 overflow-hidden">
-                                                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Inquiry:</p>
-                                                <p className="text-[10px] font-bold text-slate-300 leading-snug truncate" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>"{at.question}"</p>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Inquiry:</p>
+                                                <p className="text-[10px] font-bold text-slate-700 leading-snug truncate" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>"{at.question}"</p>
                                              </div>
                                           </div>
-                                          <div className="space-y-1 border-l-2 border-indigo-600/30 pl-3">
-                                             <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Protocol Delivery:</p>
-                                             <p className="text-[10px] font-bold text-white leading-relaxed line-clamp-3" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>"{at.userAnswer}"</p>
+                                          <div className="space-y-1 border-l-2 border-indigo-100 pl-3">
+                                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Protocol Delivery:</p>
+                                             <p className="text-[10px] font-bold text-slate-900 leading-relaxed line-clamp-3" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>"{at.userAnswer}"</p>
                                           </div>
                                           {at.feedback && historyWidth > 250 && (
-                                             <div className="pt-3 mt-3 border-t border-white/5 space-y-2">
-                                                <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Deficit Rationale:</p>
-                                                <p className="text-[9px] font-medium text-slate-400 italic leading-snug" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>{at.feedback.failReason}</p>
+                                             <div className="pt-3 mt-3 border-t border-slate-100 space-y-2">
+                                                <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Deficit Rationale:</p>
+                                                <p className="text-[9px] font-medium text-slate-500 italic leading-snug" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>{at.feedback.failReason}</p>
                                              </div>
                                           )}
                                        </div>
@@ -1018,7 +1018,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
              </div>
 
              {historyWidth > 150 && (
-               <div className="p-6 bg-slate-900 border-t border-white/5">
+               <div className="p-6 bg-white border-t border-slate-100">
                   <button 
                     onClick={handleEndSession}
                     className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all"

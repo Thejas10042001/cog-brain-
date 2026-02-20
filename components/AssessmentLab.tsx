@@ -389,7 +389,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                   <div className="flex flex-col items-center justify-center gap-10 w-full max-w-5xl">
                      {currentQ.type === 'video' ? (
                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
-                         <div className="relative rounded-[3rem] overflow-hidden bg-slate-900 aspect-video flex items-center justify-center">
+                         <div className="relative rounded-[3rem] overflow-hidden bg-slate-100 aspect-video flex items-center justify-center">
                             <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                          </div>
                          <div className="flex flex-col justify-center gap-6">
@@ -444,25 +444,25 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   if (stage === 'results') {
     const totalScore = Math.round(results.reduce((acc, r) => acc + r.evaluation.score, 0) / (results.length || 1));
     return (
-      <div className="animate-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] flex flex-col bg-slate-900 text-white">
+      <div className="animate-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] flex flex-col bg-white text-slate-900">
         <div className="p-16 flex flex-col md:flex-row items-center justify-between gap-12 text-left">
            <div className="space-y-8 flex-1">
               <h2 className="text-5xl font-black tracking-tight">Intelligence Audit Result</h2>
-              <p className="text-indigo-200/70 font-medium text-xl max-w-xl">
+              <p className="text-slate-500 font-medium text-xl max-w-xl">
                  Neural logic benchmark completed. Your answers have been cross-referenced with the grounded document core.
               </p>
               <div className="flex gap-4">
-                 <button onClick={exportPDF} className="px-8 py-3.5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">
+                 <button onClick={exportPDF} className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">
                    Export Strategy Report
                  </button>
-                 <button onClick={() => setStage('config')} className="px-8 py-3.5 bg-white/10 text-white border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                 <button onClick={() => setStage('config')} className="px-8 py-3.5 bg-slate-100 text-slate-600 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest">
                    Restart Lab
                  </button>
               </div>
            </div>
-           <div className="w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-white/10 shadow-2xl">
-              <span className="text-[12px] font-black uppercase text-indigo-200 mb-2 tracking-widest">Audit Score</span>
-              <span className="text-7xl font-black">{totalScore}%</span>
+           <div className="w-64 h-64 bg-indigo-600 rounded-full flex flex-col items-center justify-center border-[12px] border-indigo-50 shadow-2xl">
+              <span className="text-[12px] font-black uppercase text-indigo-100 mb-2 tracking-widest">Audit Score</span>
+              <span className="text-7xl font-black text-white">{totalScore}%</span>
            </div>
         </div>
         <div className="bg-slate-50 p-12 space-y-12">
@@ -506,8 +506,8 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                            <ICONS.Shield className="w-4 h-4 text-indigo-600" />
                            <h5 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Master Logic Node</h5>
                         </div>
-                        <div className="p-8 bg-indigo-600 text-white rounded-[2.5rem] shadow-xl shadow-indigo-100 leading-relaxed">
-                           <p className="text-[11px] font-black uppercase tracking-widest opacity-60 mb-3">Protocol Blocked: That was not the target answer. The master logic is as follows:</p>
+                        <div className="p-8 bg-indigo-50 text-slate-900 rounded-[2.5rem] border border-indigo-100 shadow-sm leading-relaxed">
+                           <p className="text-[11px] font-black uppercase tracking-widest text-indigo-600 mb-3">Protocol Blocked: That was not the target answer. The master logic is as follows:</p>
                            <p className="text-xl font-bold">“{q.correctAnswer}”</p>
                         </div>
                      </div>
