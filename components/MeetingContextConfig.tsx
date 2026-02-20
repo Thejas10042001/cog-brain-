@@ -330,27 +330,27 @@ OPERATIONAL CONSTRAINTS:
 
           <div className="bg-white border border-slate-200 rounded-[2rem] flex flex-col shadow-2xl relative overflow-hidden h-full text-slate-900 transition-all duration-500">
              {/* Voice Mode Selector Header */}
-             <div className="flex border-b border-white/5 p-1">
+             <div className="flex border-b border-slate-200 p-1.5 bg-slate-100/50">
                 <button 
                   onClick={() => handleChange('voiceMode', 'upload')}
-                  className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'upload' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`flex-1 flex flex-col items-center py-4 rounded-2xl transition-all ${context.voiceMode === 'upload' ? 'bg-indigo-600 text-white shadow-lg scale-[1.02]' : 'text-slate-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm'}`}
                 >
-                   <ICONS.Document className="w-3 h-3 mb-1" />
-                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Biological Trace</span>
+                   <ICONS.Document className="w-4 h-4 mb-1.5" />
+                   <span className="text-[9px] font-black uppercase tracking-[0.15em]">Biological Trace</span>
                 </button>
                 <button 
                   onClick={() => handleChange('voiceMode', 'persona')}
-                  className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'persona' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`flex-1 flex flex-col items-center py-4 rounded-2xl transition-all ${context.voiceMode === 'persona' ? 'bg-indigo-600 text-white shadow-lg scale-[1.02]' : 'text-slate-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm'}`}
                 >
-                   <ICONS.Brain className="w-3 h-3 mb-1" />
-                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Neural Presets</span>
+                   <ICONS.Brain className="w-4 h-4 mb-1.5" />
+                   <span className="text-[9px] font-black uppercase tracking-[0.15em]">Neural Presets</span>
                 </button>
                 <button 
                   onClick={() => handleChange('voiceMode', 'personality')}
-                  className={`flex-1 flex flex-col items-center py-3 rounded-t-xl transition-all ${context.voiceMode === 'personality' ? 'bg-white/10 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`flex-1 flex flex-col items-center py-4 rounded-2xl transition-all ${context.voiceMode === 'personality' ? 'bg-indigo-600 text-white shadow-lg scale-[1.02]' : 'text-slate-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm'}`}
                 >
-                   <ICONS.Trophy className="w-3 h-3 mb-1" />
-                   <span className="text-[7px] font-black uppercase tracking-[0.2em]">Elite Icons</span>
+                   <ICONS.Trophy className="w-4 h-4 mb-1.5" />
+                   <span className="text-[9px] font-black uppercase tracking-[0.15em]">Elite Icons</span>
                 </button>
              </div>
 
