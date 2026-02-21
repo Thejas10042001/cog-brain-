@@ -10,9 +10,19 @@ import { GPTMessage, MeetingContext, ComprehensiveAvatarReport } from '../types'
 
 interface AvatarSimulationProps {
   meetingContext: MeetingContext;
+  onContextChange: (ctx: MeetingContext) => void;
 }
 
-export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) => {
+const MEETING_FOCUS_PRESETS = [
+  { label: 'Introductory Call', value: 'Initial discovery call to understand business pain points and organizational structure.' },
+  { label: 'Demo Follow-up', value: 'Post-demo technical deep-dive and addressing specific feature-alignment questions.' },
+  { label: 'Objection Handling', value: 'Addressing critical resistance nodes regarding pricing, security, or competitive displacement.' },
+  { label: 'Closing', value: 'Final contract negotiation, implementation timeline alignment, and executive sign-off.' },
+  { label: 'ROI Deep Dive', value: 'Detailed financial modeling and business value realization presentation for CFO/Economic Buyer.' },
+  { label: 'Technical Review', value: 'In-depth architectural review, security compliance verification, and API integration mapping.' },
+];
+
+export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, onContextChange }) => {
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [currentCaption, setCurrentCaption] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -339,6 +349,21 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext }) 
            <div className="space-y-6">
               <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
               <p className="text-slate-500 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
+              
+              <div className="pt-4 space-y-4">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Select Simulation Protocol</p>
+                <div className="flex flex-wrap justify-center gap-3">
+                   {MEETING_FOCUS_PRESETS.map(preset => (
+                     <button
+                       key={preset.label}
+                       onClick={() => onContextChange({ ...meetingContext, meetingFocus: preset.value })}
+                       className={`px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all border-2 ${meetingContext.meetingFocus === preset.value ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'}`}
+                     >
+                       {preset.label}
+                     </button>
+                   ))}
+                </div>
+              </div>
            </div>
            <button onClick={handleInitiate} className="px-16 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Activate Simulation</button>
         </div>
