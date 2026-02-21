@@ -172,6 +172,11 @@ export interface VocalPersonaStructure {
   breathingPatterns: string;
   mimicryDirective: string;
   baseVoice?: string;
+  gender?: string;
+  toneAdjectives?: string[];
+  pace?: number;
+  stability?: number;
+  clarity?: number;
 }
 
 export type VoiceMode = 'upload' | 'persona' | 'personality';
