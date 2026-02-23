@@ -313,15 +313,21 @@ const App: React.FC = () => {
               >
                 <div className={`p-2 ${sidebarWidth > 120 ? 'lg:p-6' : 'p-2'} space-y-8 flex flex-col h-full`}>
                   <div className="space-y-1">
-                    {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
+                    {sidebarWidth > 180 && (
+                      <div className="flex items-center gap-2 mb-4 ml-2">
+                        <ICONS.Settings className="w-3 h-3 text-slate-400" />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Settings</p>
+                      </div>
+                    )}
                     <div className="flex flex-col gap-1">
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "Stage Simulation" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Settings />} label={sidebarWidth > 180 ? "Settings" : ""} scale={sidebarFontScale} />
                       <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "Q & A" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "Stage Simulation" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.LightningCloud />} label={sidebarWidth > 180 ? "Fast Answering" : ""} scale={sidebarFontScale} />
                       <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Grooming Lab" : ""} scale={sidebarFontScale} />
                       <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.LightningCloud />} label={sidebarWidth > 180 ? "Fast Answering" : ""} scale={sidebarFontScale} />
                       <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Config" : ""} scale={sidebarFontScale} />
                     </div>
                   </div>
