@@ -341,6 +341,8 @@ OPERATIONAL CONSTRAINTS:
     };
     onContextChange({
       ...context,
+      selectedPersonaId: undefined,
+      selectedPersonalityId: undefined,
       vocalPersonaAnalysis: { ...current, ...updates }
     });
   };
@@ -567,6 +569,8 @@ OPERATIONAL CONSTRAINTS:
                   <button 
                     onClick={async () => {
                       setIsSavingVoice(true);
+                      // Artificial delay for UX
+                      await new Promise(r => setTimeout(r, 1200));
                       await speak("Vocal parameters saved successfully.");
                       setIsSavingVoice(false);
                     }}
