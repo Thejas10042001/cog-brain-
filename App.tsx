@@ -11,8 +11,6 @@ import { AssessmentLab } from './components/AssessmentLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
-import { CognitiveSearch } from './components/CognitiveSearch';
-import { VideoGenerator } from './components/VideoGenerator';
 import { analyzeSalesContext } from './services/geminiService';
 import { fetchDocumentsFromFirebase, subscribeToAuth, User } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
@@ -61,8 +59,6 @@ const App: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
-  const [studioMode, setStudioMode] = useState<'audio' | 'video'>('audio');
-  const [groomingMode, setGroomingMode] = useState<'live' | 'assessment'>('live');
 
   // Whole Screen Magnifier State
   const [zoom, setZoom] = useState(100);
@@ -415,53 +411,9 @@ const App: React.FC = () => {
                   {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
                   {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} />}
                   {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                  {activeTab === 'audio' && (
-                    <div className="p-8 md:p-12 w-full flex-1 overflow-y-auto space-y-8">
-                      <div className="flex justify-center">
-                        <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
-                          <button 
-                            onClick={() => setStudioMode('audio')}
-                            className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${studioMode === 'audio' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
-                          >
-                            Audio Briefings
-                          </button>
-                          <button 
-                            onClick={() => setStudioMode('video')}
-                            className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${studioMode === 'video' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
-                          >
-                            Video Synthesis
-                          </button>
-                        </div>
-                      </div>
-                      {studioMode === 'audio' ? <AudioGenerator analysis={analysis!} /> : <VideoGenerator context={meetingContext} />}
-                    </div>
-                  )}
-                  {activeTab === 'practice' && (
-                    <div className="flex-1 flex flex-col">
-                      <div className="flex justify-center pt-8">
-                        <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
-                          <button 
-                            onClick={() => setGroomingMode('live')}
-                            className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${groomingMode === 'live' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
-                          >
-                            Live Practice
-                          </button>
-                          <button 
-                            onClick={() => setGroomingMode('assessment')}
-                            className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${groomingMode === 'assessment' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
-                          >
-                            Structured Assessment
-                          </button>
-                        </div>
-                      </div>
-                      {groomingMode === 'live' ? <PracticeSession analysis={analysis!} /> : <AssessmentLab activeDocuments={activeDocuments} />}
-                    </div>
-                  )}
-                  {activeTab === 'qa' && (
-                    <div className="px-4 md:px-8 py-8 md:py-12 w-full">
-                      <CognitiveSearch activeDocuments={activeDocuments} context={meetingContext} />
-                    </div>
-                  )}
+                  {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
+                  {activeTab === 'practice' && <PracticeSession analysis={analysis!} />}
+                  {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
                 </div>
               )}
             </div>

@@ -207,9 +207,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
     }
   };
 
-  const handleInitiate = async (targetStage?: StagedSimStage) => {
-    const stageToStart = targetStage || startStageChoice;
-
+  const handleInitiate = async () => {
     if (!meetingContext.kycDocId) {
       alert("Please select a KYC Document in Configuration first.");
       return;
@@ -232,8 +230,8 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
     setShowCoachingDetails(false);
     setCurrentHint(null);
     setStageRatings({});
-    setCurrentStage(stageToStart);
-    setExpandedStages(new Set([stageToStart]));
+    setCurrentStage('Ice Breakers');
+    setExpandedStages(new Set(['Ice Breakers']));
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
@@ -250,7 +248,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
     });
 
     try {
-      const stream = streamAvatarStagedSimulation(`START AT STAGE: ${stageToStart}`, [], meetingContext, stageToStart, kycContent);
+      const stream = streamAvatarStagedSimulation(`START AT STAGE: Ice Breakers`, [], meetingContext, 'Ice Breakers', kycContent);
       let firstMsg = "";
       for await (const chunk of stream) firstMsg += chunk;
       
@@ -272,42 +270,6 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
     } finally { 
       setIsProcessing(false); 
     }
-  };
-
-  const jumpToStage = async (stage: StagedSimStage) => {
-    if (isProcessing || !sessionActive) return;
-    
-    stopListening();
-    setIsProcessing(true);
-    setCoachingFeedback(null);
-    setShowCoachingDetails(false);
-    setCurrentHint(null);
-    setCurrentCaption("");
-    
-    setCurrentStage(stage);
-    setExpandedStages(prev => new Set(prev).add(stage));
-
-    const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
-    const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
-
-    try {
-      const stream = streamAvatarStagedSimulation(`System Directive: Manual Jump to Stage: ${stage}. Please reset your context to this stage and ask the first question for this phase.`, messages, meetingContext, stage, kycContent);
-      let response = "";
-      for await (const chunk of stream) response += chunk;
-
-      const hintMatch = response.match(/\[HINT: ([\s\S]*?)\]/);
-      if (hintMatch) setCurrentHint(hintMatch[1]);
-
-      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
-      const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
-      setMessages(prev => [...prev, aiMsg]);
-      playAIQuestion(cleaned);
-    } catch (e: any) { 
-      console.error(e); 
-      if (e.message?.includes("Requested entity was not found") && window.aistudio) {
-        window.aistudio.openSelectKey();
-      }
-    } finally { setIsProcessing(false); }
   };
 
   const handleCommit = async () => {
@@ -737,8 +699,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                 return (
                   <button 
                     key={s} 
-                    onClick={() => handleInitiate(s)}
-                    disabled={isProcessing}
+                    onClick={() => setStartStageChoice(s)}
                     className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-slate-50 border-slate-200 hover:border-indigo-400'}`}
                   >
                     <div className="flex items-center justify-between">
@@ -756,7 +717,7 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
 
            <div className="pt-6">
               <button 
-                onClick={() => handleInitiate()} 
+                onClick={handleInitiate} 
                 disabled={isProcessing}
                 className="px-24 py-10 bg-indigo-600 text-white rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -774,26 +735,21 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
              <div className="p-8 border-b border-slate-100 bg-slate-50/50 backdrop-blur-md">
                 {/* Stage Progress Tracker */}
                 <div className="grid grid-cols-6 gap-4 w-full mb-8">
-                    {STAGES.map((s, i) => {
-                      const isActive = currentStage === s;
-                      const isDone = STAGES.indexOf(currentStage) > i;
-                      const rating = stageRatings[s];
-                      
-                      return (
-                        <button 
-                          key={s} 
-                          onClick={() => jumpToStage(s)}
-                          disabled={isProcessing || isActive}
-                          className="flex flex-col items-center gap-2 group transition-all cursor-pointer disabled:cursor-default"
-                        >
-                           <div className="h-5 flex items-center justify-center">
-                              {rating !== undefined && <StarRating rating={rating} />}
-                           </div>
-                           <div className={`h-2.5 w-full rounded-full transition-all duration-700 ${isDone ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : isActive ? 'bg-indigo-500 shadow-[0_0_25px_rgba(79,70,229,0.7)]' : 'bg-slate-200 group-hover:bg-slate-300'}`}></div>
-                           <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-600' : isDone ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'}`}>{s}</span>
-                        </button>
-                      );
-                    })}
+                   {STAGES.map((s, i) => {
+                     const isActive = currentStage === s;
+                     const isDone = STAGES.indexOf(currentStage) > i;
+                     const rating = stageRatings[s];
+                     
+                     return (
+                       <div key={s} className="flex flex-col items-center gap-2 group transition-all">
+                          <div className="h-5 flex items-center justify-center">
+                             {rating !== undefined && <StarRating rating={rating} />}
+                          </div>
+                          <div className={`h-2.5 w-full rounded-full transition-all duration-700 ${isDone ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : isActive ? 'bg-indigo-500 shadow-[0_0_25px_rgba(79,70,229,0.7)]' : 'bg-slate-200'}`}></div>
+                          <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-600' : isDone ? 'text-emerald-600' : 'text-slate-400'}`}>{s}</span>
+                       </div>
+                     );
+                   })}
                 </div>
 
                 <div className="flex items-center justify-between">
