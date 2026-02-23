@@ -85,6 +85,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   const [localPrompt, setLocalPrompt] = useState(context.baseSystemPrompt);
   const [showHelp, setShowHelp] = useState(true);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isSavingVoice, setIsSavingVoice] = useState(false);
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [showVocalDirective, setShowVocalDirective] = useState(false);
@@ -321,6 +322,29 @@ OPERATIONAL CONSTRAINTS:
   const nextStep = () => setStep(prev => Math.min(prev + 1, 6));
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
+  const updateVocalAnalysis = (updates: Partial<VocalPersonaStructure>) => {
+    const current = context.vocalPersonaAnalysis || {
+      pitch: 'Moderate',
+      tempo: 'Controlled',
+      cadence: 'Strategic',
+      accent: 'Neutral',
+      emotionalBaseline: 'Steady',
+      breathingPatterns: 'Regulated',
+      mimicryDirective: '',
+      baseVoice: 'Zephyr',
+      gender: 'Male',
+      pace: 1.0,
+      stability: 80,
+      clarity: 90,
+      pitchValue: 1.0,
+      toneAdjectives: []
+    };
+    onContextChange({
+      ...context,
+      vocalPersonaAnalysis: { ...current, ...updates }
+    });
+  };
+
   const renderStep = () => {
     switch (step) {
       case 1:
@@ -357,17 +381,26 @@ OPERATIONAL CONSTRAINTS:
               </div>
               <div className="max-w-xl space-y-4">
                 <h3 className="text-3xl font-black uppercase tracking-widest text-slate-900">Neural Anchor</h3>
-                <p className="text-slate-500 font-medium">Select a behavior grounding source to anchor the AI's strategic logic.</p>
-                <select 
-                  value={context.kycDocId || ""} 
-                  onChange={(e) => handleKycChange(e.target.value)}
-                  className="w-full bg-white border-4 border-slate-200 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all shadow-xl"
-                >
-                  <option value="">Select grounding source...</option>
-                  {documents.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
+                <p className="text-slate-500 font-medium">Know Your Customer (KYC) Document</p>
+                <div className="relative">
+                  <select 
+                    value={context.kycDocId || ""} 
+                    onChange={(e) => handleKycChange(e.target.value)}
+                    className={`w-full bg-white border-4 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-700 outline-none transition-all shadow-xl ${isExtracting ? 'border-indigo-300 opacity-50 cursor-wait' : 'border-slate-200 focus:border-indigo-500'}`}
+                    disabled={isExtracting}
+                  >
+                    <option value="">Select grounding source...</option>
+                    {documents.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                  {isExtracting && (
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                      <div className="w-6 h-6 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+                {isExtracting && <p className="text-indigo-600 text-xs font-black uppercase animate-pulse">Extracting Strategic Metadata...</p>}
               </div>
             </div>
           </div>
@@ -444,9 +477,15 @@ OPERATIONAL CONSTRAINTS:
                     <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Vocal Parameters</h4>
                     <button 
                       onClick={handleTestVoice}
-                      className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isPlayingVoice ? 'bg-rose-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}
+                      disabled={isAnalyzingVoice}
+                      className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${isPlayingVoice ? 'bg-rose-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-500'} disabled:opacity-50`}
                     >
-                      {isPlayingVoice ? 'Stop' : 'Test Sample'}
+                      {isAnalyzingVoice ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Analyzing...</span>
+                        </>
+                      ) : isPlayingVoice ? 'Stop' : 'Test Sample'}
                     </button>
                   </div>
 
@@ -455,7 +494,7 @@ OPERATIONAL CONSTRAINTS:
                       <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Gender</label>
                       <select 
                         value={context.vocalPersonaAnalysis?.gender || 'Male'}
-                        onChange={(e) => onContextChange({...context, vocalPersonaAnalysis: {...context.vocalPersonaAnalysis!, gender: e.target.value}})}
+                        onChange={(e) => updateVocalAnalysis({ gender: e.target.value })}
                         className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
                       >
                         <option value="Male">Male</option>
@@ -466,7 +505,7 @@ OPERATIONAL CONSTRAINTS:
                       <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Base Voice</label>
                       <select 
                         value={context.vocalPersonaAnalysis?.baseVoice || 'Pegasus'}
-                        onChange={(e) => onContextChange({...context, vocalPersonaAnalysis: {...context.vocalPersonaAnalysis!, baseVoice: e.target.value}})}
+                        onChange={(e) => updateVocalAnalysis({ baseVoice: e.target.value })}
                         className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
                       >
                         <option value="Pegasus">Pegasus (High Energy)</option>
@@ -483,7 +522,7 @@ OPERATIONAL CONSTRAINTS:
                       <input 
                         type="range" min="0.5" max="2.0" step="0.1"
                         value={context.vocalPersonaAnalysis?.pitchValue || 1.0}
-                        onChange={(e) => onContextChange({...context, vocalPersonaAnalysis: {...context.vocalPersonaAnalysis!, pitchValue: parseFloat(e.target.value)}})}
+                        onChange={(e) => updateVocalAnalysis({ pitchValue: parseFloat(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
                     </div>
@@ -492,7 +531,7 @@ OPERATIONAL CONSTRAINTS:
                       <input 
                         type="range" min="0.5" max="2.0" step="0.1"
                         value={context.vocalPersonaAnalysis?.pace || 1.0}
-                        onChange={(e) => onContextChange({...context, vocalPersonaAnalysis: {...context.vocalPersonaAnalysis!, pace: parseFloat(e.target.value)}})}
+                        onChange={(e) => updateVocalAnalysis({ pace: parseFloat(e.target.value) })}
                         className="w-full accent-indigo-600"
                       />
                     </div>
@@ -501,7 +540,7 @@ OPERATIONAL CONSTRAINTS:
                       <input 
                         type="number"
                         value={context.vocalPersonaAnalysis?.stability || 80}
-                        onChange={(e) => onContextChange({...context, vocalPersonaAnalysis: {...context.vocalPersonaAnalysis!, stability: parseInt(e.target.value)}})}
+                        onChange={(e) => updateVocalAnalysis({ stability: parseInt(e.target.value) })}
                         className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -510,7 +549,7 @@ OPERATIONAL CONSTRAINTS:
                       <input 
                         type="number"
                         value={context.vocalPersonaAnalysis?.clarity || 90}
-                        onChange={(e) => onContextChange({...context, vocalPersonaAnalysis: {...context.vocalPersonaAnalysis!, clarity: parseInt(e.target.value)}})}
+                        onChange={(e) => updateVocalAnalysis({ clarity: parseInt(e.target.value) })}
                         className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -520,16 +559,26 @@ OPERATIONAL CONSTRAINTS:
                     <input 
                       type="text"
                       value={context.vocalPersonaAnalysis?.toneAdjectives?.join(', ') || ''}
-                      onChange={(e) => onContextChange({...context, vocalPersonaAnalysis: {...context.vocalPersonaAnalysis!, toneAdjectives: e.target.value.split(',').map(s => s.trim())}})}
+                      onChange={(e) => updateVocalAnalysis({ toneAdjectives: e.target.value.split(',').map(s => s.trim()) })}
                       className="w-full bg-white border-2 border-slate-200 rounded-xl px-6 py-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
                       placeholder="e.g. Measured, humble, steady"
                     />
                   </div>
                   <button 
-                    onClick={() => speak("Vocal parameters saved successfully.")}
-                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-emerald-700 transition-all"
+                    onClick={async () => {
+                      setIsSavingVoice(true);
+                      await speak("Vocal parameters saved successfully.");
+                      setIsSavingVoice(false);
+                    }}
+                    disabled={isSavingVoice}
+                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    Save Changes
+                    {isSavingVoice ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Saving...</span>
+                      </>
+                    ) : 'Save Changes'}
                   </button>
                 </div>
               </div>
@@ -699,7 +748,11 @@ OPERATIONAL CONSTRAINTS:
             </button>
           )}
           {step < 6 && (
-            <button onClick={nextStep} className="px-8 py-3 bg-indigo-600 text-white rounded-full font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg transition-all">
+            <button 
+              onClick={nextStep} 
+              disabled={step === 2 && (!context.kycDocId || isExtracting)}
+              className={`px-8 py-3 bg-indigo-600 text-white rounded-full font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed`}
+            >
               Next Step
             </button>
           )}
