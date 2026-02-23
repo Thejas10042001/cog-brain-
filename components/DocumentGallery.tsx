@@ -11,6 +11,7 @@ interface DocumentGalleryProps {
   onToggleSelect: (id: string) => void;
   onSynthesize: () => void;
   isAnalyzing: boolean;
+  hideSynthesize?: boolean;
 }
 
 export const DocumentGallery: React.FC<DocumentGalleryProps> = ({ 
@@ -19,7 +20,8 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
   selectedIds, 
   onToggleSelect,
   onSynthesize,
-  isAnalyzing
+  isAnalyzing,
+  hideSynthesize = false
 }) => {
   const [viewingDoc, setViewingDoc] = useState<StoredDocument | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -133,7 +135,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         </div>
         
         <div className="flex items-center gap-3">
-          {selectedIds.length > 0 && (
+          {selectedIds.length > 0 && !hideSynthesize && (
             <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
               <button 
                 onClick={handleDeleteSelected}

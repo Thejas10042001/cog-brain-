@@ -359,51 +359,18 @@ const App: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
-                    <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                          <ICONS.Research /> Cognitive Library Hub
-                        </h3>
-                    </div>
-                    <DocumentGallery 
-                      documents={history} 
-                      onRefresh={loadHistory} 
-                      selectedIds={selectedLibraryDocIds}
-                      onToggleSelect={toggleLibraryDoc}
-                      onSynthesize={runAnalysis}
-                      isAnalyzing={isAnalyzing}
-                    />
-                  </div>
-
                   <MeetingContextConfig 
                     context={meetingContext} 
                     onContextChange={setMeetingContext} 
                     documents={history}
+                    files={files}
+                    onFilesChange={setFiles}
+                    onUploadSuccess={loadHistory}
+                    selectedLibraryDocIds={selectedLibraryDocIds}
+                    onToggleLibraryDoc={toggleLibraryDoc}
+                    onSynthesize={runAnalysis}
+                    isAnalyzing={isAnalyzing}
                   />
-
-                  <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
-                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-8">
-                      <ICONS.Document /> Documentary Memory Store
-                    </h3>
-                    <FileUpload files={files} onFilesChange={setFiles} onUploadSuccess={loadHistory} />
-                    
-                    <div className="mt-12 flex flex-col items-center gap-6">
-                      {error && (
-                        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-6 mb-8 max-w-xl text-center">
-                          <p className="text-rose-600 font-bold mb-2">⚠️ Analysis Interrupted</p>
-                          <p className="text-rose-500 text-sm">{error}</p>
-                        </div>
-                      )}
-                      <button
-                        onClick={runAnalysis}
-                        disabled={activeDocuments.length === 0 || isAnyFileProcessing}
-                        className={`flex items-center gap-3 px-16 py-6 rounded-full font-black text-xl shadow-2xl transition-all ${(activeDocuments.length > 0 && !isAnyFileProcessing) ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105 shadow-indigo-200' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
-                      >
-                        <ICONS.Brain />
-                        {isAnyFileProcessing ? 'Retaining Documents...' : 'Synthesize Strategy Core'}
-                      </button>
-                    </div>
-                  </div>
                 </div>
               ) : isAnalyzing ? (
                 <div className="flex flex-col items-center justify-center space-y-12 h-full min-h-[600px]">
@@ -426,16 +393,18 @@ const App: React.FC = () => {
                 <div className="animate-in fade-in duration-500 h-full flex flex-col">
                   {activeTab === 'context' && (
                     <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 w-full">
-                      <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
-                        <DocumentGallery documents={history} onRefresh={loadHistory} selectedIds={selectedLibraryDocIds} onToggleSelect={toggleLibraryDoc} onSynthesize={runAnalysis} isAnalyzing={isAnalyzing} />
-                        <div className="mt-10 pt-8 border-t border-slate-100">
-                           <FileUpload files={files} onFilesChange={setFiles} onUploadSuccess={loadHistory} />
-                        </div>
-                      </div>
-                      <MeetingContextConfig context={meetingContext} onContextChange={setMeetingContext} documents={history} />
-                      <div className="flex justify-center pb-10">
-                        <button onClick={runAnalysis} disabled={isAnalyzing} className="px-12 py-5 bg-indigo-600 text-white rounded-full font-black text-lg shadow-2xl hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"><ICONS.Brain />Update Strategy</button>
-                      </div>
+                      <MeetingContextConfig 
+                        context={meetingContext} 
+                        onContextChange={setMeetingContext} 
+                        documents={history}
+                        files={files}
+                        onFilesChange={setFiles}
+                        onUploadSuccess={loadHistory}
+                        selectedLibraryDocIds={selectedLibraryDocIds}
+                        onToggleLibraryDoc={toggleLibraryDoc}
+                        onSynthesize={runAnalysis}
+                        isAnalyzing={isAnalyzing}
+                      />
                     </div>
                   )}
                   {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}

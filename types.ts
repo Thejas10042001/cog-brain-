@@ -177,6 +177,7 @@ export interface VocalPersonaStructure {
   pace?: number;
   stability?: number;
   clarity?: number;
+  pitchValue?: number;
 }
 
 export type VoiceMode = 'upload' | 'persona' | 'personality';
