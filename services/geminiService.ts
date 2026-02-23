@@ -334,6 +334,19 @@ export async function generateVoiceSample(
   if (voiceName === 'Pegasus') finalVoice = 'Puck';
   if (voiceName === 'Orion') finalVoice = 'Charon';
 
+  // Ensure gender alignment
+  if (gender === 'Female') {
+    // If it's a known male voice, switch to female
+    if (['Charon', 'Zephyr', 'Fenrir', 'Orion'].includes(finalVoice)) {
+      finalVoice = 'Kore';
+    }
+  } else if (gender === 'Male') {
+    // If it's a known female voice, switch to male
+    if (['Kore', 'Puck', 'Pegasus'].includes(finalVoice)) {
+      finalVoice = 'Zephyr';
+    }
+  }
+
   // Fallback for invalid voices
   const validVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
   if (!validVoices.includes(finalVoice)) {
@@ -346,14 +359,10 @@ export async function generateVoiceSample(
     const adjectives = analysis.toneAdjectives?.join(', ') || 'professional';
     const pace = analysis.pace || 1.0;
     const pitch = analysis.pitchValue || 1.0;
-    const stability = analysis.stability || 80;
-    const clarity = analysis.clarity || 90;
     
-    // Construct a highly descriptive instruction for the TTS model's prosody control
-    const instruction = `[VOCAL CONFIG: Tone=${adjectives}, Pace=${pace.toFixed(1)}x, Pitch=${pitch.toFixed(1)}x, Stability=${stability}%, Clarity=${clarity}%]`;
-    const directive = `Adopt a ${adjectives} tone. Speak at ${pace > 1 ? 'a faster' : pace < 1 ? 'a slower' : 'a normal'} pace with ${pitch > 1 ? 'higher' : pitch < 1 ? 'lower' : 'normal'} pitch. Ensure ${stability}% vocal stability and ${clarity}% articulation clarity.`;
-    
-    promptText = `${instruction} ${directive} TEXT: "${text}"`;
+    // Construct a descriptive instruction for the TTS model
+    const instruction = `[Tone: ${adjectives}, Pace: ${pace > 1.2 ? 'Fast' : pace < 0.8 ? 'Slow' : 'Normal'}, Pitch: ${pitch > 1.2 ? 'High' : pitch < 0.8 ? 'Low' : 'Normal'}]`;
+    promptText = `${instruction} ${text}`;
   }
 
   try {
@@ -1370,6 +1379,17 @@ export async function generatePitchAudio(
   if (voiceName === 'Pegasus') finalVoice = 'Puck';
   if (voiceName === 'Orion') finalVoice = 'Charon';
 
+  // Ensure gender alignment
+  if (gender === 'Female') {
+    if (['Charon', 'Zephyr', 'Fenrir', 'Orion'].includes(finalVoice)) {
+      finalVoice = 'Kore';
+    }
+  } else if (gender === 'Male') {
+    if (['Kore', 'Puck', 'Pegasus'].includes(finalVoice)) {
+      finalVoice = 'Zephyr';
+    }
+  }
+
   // Fallback for invalid voices
   const validVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
   if (!validVoices.includes(finalVoice)) {
@@ -1383,11 +1403,7 @@ export async function generatePitchAudio(
     const adjectives = analysis.toneAdjectives?.join(', ') || 'professional';
     const pace = analysis.pace || 1.0;
     const pitch = analysis.pitchValue || 1.0;
-    const stability = analysis.stability || 80;
-    const clarity = analysis.clarity || 90;
-    
-    instruction += `[VOCAL CONFIG: Tone=${adjectives}, Pace=${pace.toFixed(1)}x, Pitch=${pitch.toFixed(1)}x, Stability=${stability}%, Clarity=${clarity}%] `;
-    instruction += `Adopt a ${adjectives} tone. Speak at ${pace > 1 ? 'a faster' : pace < 1 ? 'a slower' : 'a normal'} pace with ${pitch > 1 ? 'higher' : pitch < 1 ? 'lower' : 'normal'} pitch. Ensure ${stability}% vocal stability and ${clarity}% articulation clarity. `;
+    instruction += `[Tone: ${adjectives}, Pace: ${pace > 1.2 ? 'Fast' : pace < 0.8 ? 'Slow' : 'Normal'}, Pitch: ${pitch > 1.2 ? 'High' : pitch < 0.8 ? 'Low' : 'Normal'}] `;
   }
 
   const contents = instruction 
