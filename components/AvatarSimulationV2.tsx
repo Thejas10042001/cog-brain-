@@ -74,13 +74,19 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
 
       let voice = persona === 'CFO' ? 'Charon' : persona === 'IT_DIRECTOR' ? 'Fenrir' : 'Kore';
-      let directive = meetingContext.vocalPersonaAnalysis?.mimicryDirective || "";
       
       if (meetingContext.vocalPersonaAnalysis?.baseVoice) {
         voice = meetingContext.vocalPersonaAnalysis.baseVoice;
       }
 
-      const bytes = await generatePitchAudio(text, voice, directive);
+      const analysis = meetingContext.vocalPersonaAnalysis;
+      const bytes = await generatePitchAudio(
+        text, 
+        voice, 
+        analysis?.mimicryDirective || "",
+        analysis?.gender || (persona === 'CFO' || persona === 'IT_DIRECTOR' ? 'Male' : 'Female'),
+        analysis || undefined
+      );
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);

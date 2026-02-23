@@ -155,12 +155,18 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
       let voice = "Charon";
-      let directive = meetingContext.vocalPersonaAnalysis?.mimicryDirective || "";
       if (meetingContext.vocalPersonaAnalysis?.baseVoice) {
         voice = meetingContext.vocalPersonaAnalysis.baseVoice;
       }
 
-      const bytes = await generatePitchAudio(text, voice, directive);
+      const analysis = meetingContext.vocalPersonaAnalysis;
+      const bytes = await generatePitchAudio(
+        text, 
+        voice, 
+        analysis?.mimicryDirective || "",
+        analysis?.gender || 'Male',
+        analysis || undefined
+      );
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);

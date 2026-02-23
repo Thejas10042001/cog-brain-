@@ -320,19 +320,60 @@ function pcmToWav(base64Pcm: string, sampleRate: number = 24000): string {
 }
 
 // Generate Voice Sample using TTS
-export async function generateVoiceSample(text: string, voiceName: string = 'Kore'): Promise<string> {
+export async function generateVoiceSample(
+  text: string, 
+  voiceName: string = 'Kore', 
+  gender?: string,
+  analysis?: VocalPersonaStructure
+): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-2.5-flash-preview-tts';
+
+  // Map non-TTS voices to TTS equivalents
+  let finalVoice = voiceName;
+  if (voiceName === 'Pegasus') finalVoice = 'Puck';
+  if (voiceName === 'Orion') finalVoice = 'Charon';
+
+  // Ensure gender alignment
+  if (gender === 'Female') {
+    // If it's a known male voice, switch to female
+    if (['Charon', 'Zephyr', 'Fenrir', 'Orion'].includes(finalVoice)) {
+      finalVoice = 'Kore';
+    }
+  } else if (gender === 'Male') {
+    // If it's a known female voice, switch to male
+    if (['Kore', 'Puck', 'Pegasus'].includes(finalVoice)) {
+      finalVoice = 'Zephyr';
+    }
+  }
+
+  // Fallback for invalid voices
+  const validVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
+  if (!validVoices.includes(finalVoice)) {
+    finalVoice = gender === 'Female' ? 'Kore' : 'Zephyr';
+  }
+
+  // Incorporate vocal parameters into the prompt to influence TTS output
+  let promptText = text;
+  if (analysis) {
+    const adjectives = analysis.toneAdjectives?.join(', ') || 'professional';
+    const pace = analysis.pace || 1.0;
+    const pitch = analysis.pitchValue || 1.0;
+    
+    // Construct a descriptive instruction for the TTS model
+    const instruction = `[Tone: ${adjectives}, Pace: ${pace > 1.2 ? 'Fast' : pace < 0.8 ? 'Slow' : 'Normal'}, Pitch: ${pitch > 1.2 ? 'High' : pitch < 0.8 ? 'Low' : 'Normal'}]`;
+    promptText = `${instruction} ${text}`;
+  }
 
   try {
     const response = await ai.models.generateContent({
       model: modelName,
-      contents: [{ parts: [{ text }] }],
+      contents: [{ parts: [{ text: promptText }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName }
+            prebuiltVoiceConfig: { voiceName: finalVoice }
           },
         },
       },
@@ -1327,16 +1368,46 @@ export async function generateExplanation(question: string, context: AnalysisRes
 export async function generatePitchAudio(
   text: string, 
   voiceName: string = 'Kore', 
-  personaDirective?: string
+  personaDirective?: string,
+  gender?: string,
+  analysis?: VocalPersonaStructure
 ): Promise<Uint8Array | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
+  // Map non-TTS voices to TTS equivalents
+  let finalVoice = voiceName;
+  if (voiceName === 'Pegasus') finalVoice = 'Puck';
+  if (voiceName === 'Orion') finalVoice = 'Charon';
+
+  // Ensure gender alignment
+  if (gender === 'Female') {
+    if (['Charon', 'Zephyr', 'Fenrir', 'Orion'].includes(finalVoice)) {
+      finalVoice = 'Kore';
+    }
+  } else if (gender === 'Male') {
+    if (['Kore', 'Puck', 'Pegasus'].includes(finalVoice)) {
+      finalVoice = 'Zephyr';
+    }
+  }
+
+  // Fallback for invalid voices
+  const validVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
+  if (!validVoices.includes(finalVoice)) {
+    finalVoice = gender === 'Female' ? 'Kore' : 'Zephyr';
+  }
+
   // High-fidelity mimicry logic: Prepend instructions to the content for the TTS model's LLM core to modulate its prosody.
-  const contents = personaDirective 
-    ? `MIMICRY PROTOCOL ACTIVE. 
-       TARGET SIGNATURE: "${personaDirective}"
-       INSTRUCTION: Adopt this tone, cadence, and resonance exactly.
-       TEXT TO SPEAK: "${text}"`
+  let instruction = personaDirective ? `MIMICRY PROTOCOL ACTIVE. TARGET SIGNATURE: "${personaDirective}". ` : "";
+  
+  if (analysis) {
+    const adjectives = analysis.toneAdjectives?.join(', ') || 'professional';
+    const pace = analysis.pace || 1.0;
+    const pitch = analysis.pitchValue || 1.0;
+    instruction += `[Tone: ${adjectives}, Pace: ${pace > 1.2 ? 'Fast' : pace < 0.8 ? 'Slow' : 'Normal'}, Pitch: ${pitch > 1.2 ? 'High' : pitch < 0.8 ? 'Low' : 'Normal'}] `;
+  }
+
+  const contents = instruction 
+    ? `${instruction} INSTRUCTION: Adopt this tone, cadence, and resonance exactly. TEXT TO SPEAK: "${text}"`
     : text;
 
   const response = await ai.models.generateContent({
@@ -1344,7 +1415,7 @@ export async function generatePitchAudio(
     contents: [{ parts: [{ text: contents }] }],
     config: {
       responseModalities: [Modality.AUDIO],
-      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } },
+      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: finalVoice } } },
     },
   });
   const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;

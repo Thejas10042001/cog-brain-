@@ -6,7 +6,7 @@ import {
   decodeAudioData,
   evaluateAvatarSession
 } from '../services/geminiService';
-import { GPTMessage, MeetingContext, ComprehensiveAvatarReport } from '../types';
+import { GPTMessage, MeetingContext, ComprehensiveAvatarReport, CustomerPersonaType } from '../types';
 
 interface AvatarSimulationProps {
   meetingContext: MeetingContext;
@@ -14,12 +14,42 @@ interface AvatarSimulationProps {
 }
 
 const MEETING_FOCUS_PRESETS = [
-  { label: 'Introductory Call', value: 'Initial discovery call to understand business pain points and organizational structure.' },
-  { label: 'Demo Follow-up', value: 'Post-demo technical deep-dive and addressing specific feature-alignment questions.' },
-  { label: 'Objection Handling', value: 'Addressing critical resistance nodes regarding pricing, security, or competitive displacement.' },
-  { label: 'Closing', value: 'Final contract negotiation, implementation timeline alignment, and executive sign-off.' },
-  { label: 'ROI Deep Dive', value: 'Detailed financial modeling and business value realization presentation for CFO/Economic Buyer.' },
-  { label: 'Technical Review', value: 'In-depth architectural review, security compliance verification, and API integration mapping.' },
+  { 
+    label: 'Introductory Call', 
+    value: 'Initial discovery call to understand business pain points and organizational structure.',
+    persona: 'Balanced' as CustomerPersonaType,
+    icon: <ICONS.Document className="w-5 h-5" />
+  },
+  { 
+    label: 'Demo Follow-up', 
+    value: 'Post-demo technical deep-dive and addressing specific feature-alignment questions.',
+    persona: 'Technical' as CustomerPersonaType,
+    icon: <ICONS.Brain className="w-5 h-5" />
+  },
+  { 
+    label: 'Objection Handling', 
+    value: 'Addressing critical resistance nodes regarding pricing, security, or competitive displacement.',
+    persona: 'Financial' as CustomerPersonaType,
+    icon: <ICONS.Security className="w-5 h-5" />
+  },
+  { 
+    label: 'Closing', 
+    value: 'Final contract negotiation, implementation timeline alignment, and executive sign-off.',
+    persona: 'Business Executives' as CustomerPersonaType,
+    icon: <ICONS.Trophy className="w-5 h-5" />
+  },
+  { 
+    label: 'ROI Deep Dive', 
+    value: 'Detailed financial modeling and business value realization presentation for CFO/Economic Buyer.',
+    persona: 'Financial' as CustomerPersonaType,
+    icon: <ICONS.ROI className="w-5 h-5" />
+  },
+  { 
+    label: 'Technical Review', 
+    value: 'In-depth architectural review, security compliance verification, and API integration mapping.',
+    persona: 'Technical' as CustomerPersonaType,
+    icon: <ICONS.Efficiency className="w-5 h-5" />
+  },
 ];
 
 export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, onContextChange }) => {
@@ -76,16 +106,14 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
       if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
       
-      let activeDirective = "";
-      let baseVoice = "Charon";
-      if (meetingContext.vocalPersonaAnalysis) {
-          activeDirective = meetingContext.vocalPersonaAnalysis.mimicryDirective;
-          if (meetingContext.vocalPersonaAnalysis.baseVoice) {
-            baseVoice = meetingContext.vocalPersonaAnalysis.baseVoice;
-          }
-      }
-
-      const bytes = await generatePitchAudio(text, baseVoice, activeDirective);
+      const analysis = meetingContext.vocalPersonaAnalysis;
+      const bytes = await generatePitchAudio(
+        text, 
+        analysis?.baseVoice || 'Charon', 
+        analysis?.mimicryDirective || "",
+        analysis?.gender || 'Male',
+        analysis || undefined
+      );
       if (bytes) {
         lastAudioBytes.current = bytes;
         const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
@@ -350,16 +378,26 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
               <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
               <p className="text-slate-500 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
               
-              <div className="pt-4 space-y-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Select Simulation Protocol</p>
-                <div className="flex flex-wrap justify-center gap-3">
+              <div className="pt-4 space-y-6 w-full">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Select Simulation Protocol Preset</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                    {MEETING_FOCUS_PRESETS.map(preset => (
                      <button
                        key={preset.label}
-                       onClick={() => onContextChange({ ...meetingContext, meetingFocus: preset.value })}
-                       className={`px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all border-2 ${meetingContext.meetingFocus === preset.value ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'}`}
+                       onClick={() => onContextChange({ 
+                         ...meetingContext, 
+                         meetingFocus: preset.value,
+                         persona: preset.persona
+                       })}
+                       className={`flex items-center gap-4 p-6 rounded-[2rem] text-left transition-all border-2 ${meetingContext.meetingFocus === preset.value ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 text-slate-600 hover:border-indigo-300 hover:bg-slate-50'}`}
                      >
-                       {preset.label}
+                       <div className={`p-3 rounded-xl ${meetingContext.meetingFocus === preset.value ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500'}`}>
+                         {preset.icon}
+                       </div>
+                       <div>
+                         <h4 className="font-black uppercase tracking-widest text-[10px] mb-1">{preset.label}</h4>
+                         <p className={`text-[9px] font-bold opacity-70 line-clamp-1`}>{preset.value}</p>
+                       </div>
                      </button>
                    ))}
                 </div>

@@ -50,19 +50,20 @@ const PERSONAS: { type: CustomerPersonaType; label: string; desc: string; icon: 
 ];
 
 const AI_VOICE_PERSONAS = [
-  { id: 'pro-male', label: 'Pro Male', desc: 'Direct, authoritative, business-first.', baseVoice: 'Kore', directive: 'Adopt a professional male resonance. Pacing should be steady and deliberate. Articulation must be crisp. Project absolute authority and business-first logic.' },
-  { id: 'high-energy', label: 'High Energy', desc: 'Enthusiastic, engaging, persuasive.', baseVoice: 'Puck', directive: 'Adopt a high-energy, upward-inflecting tone. Rapid tempo but controlled. Infuse every sentence with enthusiasm and persuasive conviction.' },
-  { id: 'deep-authority', label: 'Deep Authority', desc: 'Serious, steady, risk-conscious.', baseVoice: 'Charon', directive: 'A deep, heavy baritone. Pacing is slow and weight-bearing. This voice should project risk-consciousness and the gravity of board-level decisions.' },
-  { id: 'calm-strategist', label: 'Calm Strategist', desc: 'Consultative, soft, trusted advisor.', baseVoice: 'Zephyr', directive: 'Soft-spoken, melodic, and consultative. Use thoughtful pauses. This voice is designed to project the calm of a trusted strategic advisor.' },
+  { id: 'pro-male', label: 'Pro Male', desc: 'Direct, authoritative, business-first.', baseVoice: 'Zephyr', gender: 'Male', directive: 'Adopt a professional male resonance. Pacing should be steady and deliberate. Articulation must be crisp. Project absolute authority and business-first logic.' },
+  { id: 'high-energy', label: 'High Energy', desc: 'Enthusiastic, engaging, persuasive.', baseVoice: 'Puck', gender: 'Male', directive: 'Adopt a high-energy, upward-inflecting tone. Rapid tempo but controlled. Infuse every sentence with enthusiasm and persuasive conviction.' },
+  { id: 'deep-authority', label: 'Deep Authority', desc: 'Serious, steady, risk-conscious.', baseVoice: 'Charon', gender: 'Male', directive: 'A deep, heavy baritone. Pacing is slow and weight-bearing. This voice should project risk-consciousness and the gravity of board-level decisions.' },
+  { id: 'calm-strategist', label: 'Calm Strategist', desc: 'Consultative, soft, trusted advisor.', baseVoice: 'Zephyr', gender: 'Male', directive: 'Soft-spoken, melodic, and consultative. Use thoughtful pauses. This voice is designed to project the calm of a trusted strategic advisor.' },
+  { id: 'pro-female', label: 'Pro Female', desc: 'Professional, articulate, steady.', baseVoice: 'Kore', gender: 'Female', directive: 'Adopt a professional female resonance. Pacing is balanced and articulate. Project confidence and strategic clarity.' },
 ];
 
 const PUBLIC_PERSONALITIES = [
-  { id: 'jobs', label: 'The Visionary', desc: 'Steve Jobs style', baseVoice: 'Kore', directive: 'Minimalist, rhythmic pacing. Uses dramatic pauses and hyperbole. High visionary energy that demands the future.' },
-  { id: 'altman', label: 'The AI Architect', desc: 'Sam Altman style', baseVoice: 'Zephyr', directive: 'Neutral, fast-paced, highly articulate and logic-dense. Calm but intense intellectual speed.' },
-  { id: 'huang', label: 'The Growth Titan', desc: 'Jensen Huang style', baseVoice: 'Charon', directive: 'High confidence, enthusiastic storytelling about architectural scale and the compounding of technology.' },
-  { id: 'musk', label: 'The Disruptor', desc: 'Elon Musk style', baseVoice: 'Kore', directive: 'Abrupt pacing, thoughtful mid-sentence pauses, focusing on first-principles and mission urgency.' },
-  { id: 'perkins', label: 'The Unicorn Founder', desc: 'Melanie Perkins style', baseVoice: 'Puck', directive: 'Highly energetic, design-focused, optimistic, and articulate with a focus on creative empowerment.' },
-  { id: 'benioff', label: 'The SaaS Pioneer', desc: 'Marc Benioff style', baseVoice: 'Charon', directive: 'Deep baritone, booming executive presence, high warmth, focusing on customer success and values.' },
+  { id: 'jobs', label: 'The Visionary', desc: 'Steve Jobs style', baseVoice: 'Charon', gender: 'Male', directive: 'Minimalist, rhythmic pacing. Uses dramatic pauses and hyperbole. High visionary energy that demands the future.' },
+  { id: 'altman', label: 'The AI Architect', desc: 'Sam Altman style', baseVoice: 'Zephyr', gender: 'Male', directive: 'Neutral, fast-paced, highly articulate and logic-dense. Calm but intense intellectual speed.' },
+  { id: 'huang', label: 'The Growth Titan', desc: 'Jensen Huang style', baseVoice: 'Fenrir', gender: 'Male', directive: 'High confidence, enthusiastic storytelling about architectural scale and the compounding of technology.' },
+  { id: 'musk', label: 'The Disruptor', desc: 'Elon Musk style', baseVoice: 'Charon', gender: 'Male', directive: 'Abrupt pacing, thoughtful mid-sentence pauses, focusing on first-principles and mission urgency.' },
+  { id: 'perkins', label: 'The Unicorn Founder', desc: 'Melanie Perkins style', baseVoice: 'Kore', gender: 'Female', directive: 'Highly energetic, design-focused, optimistic, and articulate with a focus on creative empowerment.' },
+  { id: 'benioff', label: 'The SaaS Pioneer', desc: 'Marc Benioff style', baseVoice: 'Fenrir', gender: 'Male', directive: 'Deep baritone, booming executive presence, high warmth, focusing on customer success and values.' },
 ];
 
 export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({ 
@@ -78,6 +79,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   isAnalyzing
 }) => {
   const [step, setStep] = useState(1);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const [keywordInput, setKeywordInput] = useState("");
   const [objectionInput, setObjectionInput] = useState("");
   const [localPrompt, setLocalPrompt] = useState(context.baseSystemPrompt);
@@ -91,20 +93,33 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const speak = async (text: string) => {
+    if (!audioEnabled) return;
     try {
       if (ttsAudioRef.current) {
         ttsAudioRef.current.pause();
       }
-      const base64 = await generateVoiceSample(text, 'Zephyr');
+      const analysis = context.vocalPersonaAnalysis;
+      const base64 = await generateVoiceSample(
+        text, 
+        analysis?.baseVoice || 'Zephyr', 
+        analysis?.gender || 'Male',
+        analysis || undefined
+      );
       const audio = new Audio(`data:audio/wav;base64,${base64}`);
       ttsAudioRef.current = audio;
-      audio.play();
+      await audio.play().catch(err => {
+        if (err.name === 'NotAllowedError') {
+          console.warn("Autoplay blocked. User must interact first.");
+          setAudioEnabled(false);
+        }
+      });
     } catch (err) {
       console.error("Audio assistance failed:", err);
     }
   };
 
   useEffect(() => {
+    if (!audioEnabled) return;
     const messages: Record<number, string> = {
       1: "Welcome to the Cognitive Intelligence Hub. Step one: Please upload your documentary memory store or select documents from your cognitive library.",
       2: "Step two: Select your Neural Anchor. This document will ground the AI's behavioral logic.",
@@ -174,7 +189,7 @@ OPERATIONAL CONSTRAINTS:
     onContextChange({ ...context, [field]: value });
   };
 
-  const selectAIPersona = (p: typeof AI_VOICE_PERSONAS[0]) => {
+  const selectAIPersona = (p: any) => {
     onContextChange({
       ...context,
       voiceMode: 'persona',
@@ -190,7 +205,7 @@ OPERATIONAL CONSTRAINTS:
         breathingPatterns: 'Regulated',
         mimicryDirective: p.directive,
         baseVoice: p.baseVoice,
-        gender: 'Male',
+        gender: p.gender || 'Male',
         pace: 1.0,
         stability: 80,
         clarity: 90,
@@ -200,7 +215,7 @@ OPERATIONAL CONSTRAINTS:
     });
   };
 
-  const selectPersonality = (p: typeof PUBLIC_PERSONALITIES[0]) => {
+  const selectPersonality = (p: any) => {
     onContextChange({
       ...context,
       voiceMode: 'personality',
@@ -216,7 +231,7 @@ OPERATIONAL CONSTRAINTS:
         breathingPatterns: 'Signature',
         mimicryDirective: p.directive,
         baseVoice: p.baseVoice,
-        gender: 'Male',
+        gender: p.gender || 'Male',
         pace: 1.0,
         stability: 80,
         clarity: 90,
@@ -226,16 +241,20 @@ OPERATIONAL CONSTRAINTS:
     });
   };
 
-  const handleTestVoice = async (baseVoice: string, label: string) => {
+  const handleTestVoice = async () => {
     if (isPlayingVoice) {
       audioRef.current?.pause();
       setIsPlayingVoice(false);
       return;
     }
+    
+    const analysis = context.vocalPersonaAnalysis;
+    if (!analysis) return;
+
     setIsAnalyzingVoice(true);
     try {
-      const sampleText = `Hello, I am ${label}. This is a preview of my vocal signature for your cognitive simulation.`;
-      const base64 = await generateVoiceSample(sampleText, baseVoice);
+      const sampleText = `Hello, this is a preview of my vocal signature. My tone is ${analysis.toneAdjectives?.join(', ') || 'professional'}. I am ready for your cognitive simulation.`;
+      const base64 = await generateVoiceSample(sampleText, analysis.baseVoice || 'Kore', analysis.gender, analysis);
       const audio = new Audio(`data:audio/wav;base64,${base64}`);
       audioRef.current = audio;
       audio.onended = () => setIsPlayingVoice(false);
@@ -424,7 +443,7 @@ OPERATIONAL CONSTRAINTS:
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Vocal Parameters</h4>
                     <button 
-                      onClick={() => handleTestVoice(context.vocalPersonaAnalysis?.baseVoice === 'Pegasus' ? 'Puck' : 'Charon', 'Preview')}
+                      onClick={handleTestVoice}
                       className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isPlayingVoice ? 'bg-rose-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}
                     >
                       {isPlayingVoice ? 'Stop' : 'Test Sample'}
@@ -456,6 +475,7 @@ OPERATIONAL CONSTRAINTS:
                         <option value="Puck">Puck (Persuasive)</option>
                         <option value="Charon">Charon (Serious)</option>
                         <option value="Kore">Kore (Professional)</option>
+                        <option value="Fenrir">Fenrir (Authoritative)</option>
                       </select>
                     </div>
                     <div className="space-y-2">
@@ -640,6 +660,29 @@ OPERATIONAL CONSTRAINTS:
     <div className="space-y-12">
       <div className="flex items-center justify-between bg-white p-6 rounded-[2.5rem] shadow-xl border border-slate-100">
         <div className="flex items-center gap-6">
+          <button 
+            onClick={() => {
+              const newState = !audioEnabled;
+              setAudioEnabled(newState);
+              if (newState) {
+                const messages: Record<number, string> = {
+                  1: "Welcome to the Cognitive Intelligence Hub. Step one: Please upload your documentary memory store or select documents from your cognitive library.",
+                  2: "Step two: Select your Neural Anchor. This document will ground the AI's behavioral logic.",
+                  3: "Step three: Neural Vocal Sync. Configure the vocal signature of your AI persona. You can adjust pitch, pace, and stability.",
+                  4: "Step four: Review the strategic context. Ensure the seller, prospect, and solution details are accurate.",
+                  5: "Step five: Select the target buyer persona to align the AI's psychological drivers.",
+                  6: "Final step: Provide an opportunity snapshot and potential objections to finalize the strategy core."
+                };
+                // Immediate feedback to satisfy interaction requirement
+                speak(messages[step]);
+              }
+            }}
+            className={`p-3 rounded-2xl transition-all ${audioEnabled ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+            title={audioEnabled ? "Disable Audio Guidance" : "Enable Audio Guidance"}
+          >
+            {audioEnabled ? <ICONS.Speaker className="w-5 h-5" /> : <ICONS.Speaker className="w-5 h-5 opacity-50" />}
+          </button>
+          <div className="h-8 w-px bg-slate-200"></div>
           {[1, 2, 3, 4, 5, 6].map(s => (
             <div key={s} className="flex items-center gap-2">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm transition-all ${step === s ? 'bg-indigo-600 text-white shadow-lg scale-110' : step > s ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
