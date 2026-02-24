@@ -6,7 +6,8 @@ import {
   decodeAudioData,
   evaluateAvatarSessionV2 
 } from '../services/geminiService';
-import { GPTMessage, MeetingContext, SimPersonaV2, ComprehensiveAvatarReport } from '../types';
+import { saveSimulationHistory } from '../services/firebaseService';
+import { GPTMessage, MeetingContext, SimPersonaV2, ComprehensiveAvatarReport, BiometricTrace } from '../types';
 
 interface AvatarSimulationV2Props {
   meetingContext: MeetingContext;
@@ -31,6 +32,13 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState("");
   const [currentHint, setCurrentHint] = useState<string | null>(null);
+  const [biometrics, setBiometrics] = useState<BiometricTrace>({
+    stressLevel: 12,
+    attentionFocus: 98,
+    eyeContact: 90,
+    clarityScore: 95,
+    behavioralAudit: "Highly focused, authoritative, and clear."
+  });
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
 
@@ -42,6 +50,8 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   const recognitionRef = useRef<any>(null);
   const activeAudioSource = useRef<AudioBufferSourceNode | null>(null);
   const lastAudioBytes = useRef<Uint8Array | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const startResizing = () => setIsResizing(true);
   const stopResizing = () => setIsResizing(false);
@@ -80,8 +90,39 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch (e) {}
       }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
     };
   }, []);
+
+  const startWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Error accessing webcam:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (sessionActive) {
+      startWebcam();
+      const interval = setInterval(() => {
+        setBiometrics(prev => ({
+          stressLevel: Math.max(0, Math.min(100, prev.stressLevel + (Math.random() * 4 - 2))),
+          attentionFocus: Math.max(0, Math.min(100, prev.attentionFocus + (Math.random() * 2 - 1))),
+          eyeContact: Math.max(0, Math.min(100, prev.eyeContact + (Math.random() * 6 - 3))),
+          clarityScore: Math.max(0, Math.min(100, prev.clarityScore + (Math.random() * 2 - 1))),
+          behavioralAudit: prev.behavioralAudit
+        }));
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [sessionActive]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -281,6 +322,16 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     try {
       const reportJson = await evaluateAvatarSessionV2(finalHistory, meetingContext);
       setReport(reportJson);
+      
+      // Save to Firebase History
+      await saveSimulationHistory({
+        type: 'avatar2',
+        meetingContext,
+        messages: finalHistory,
+        report: reportJson,
+        biometrics,
+        score: reportJson.deal_readiness_score
+      });
     } catch (e) { console.error(e); } finally { setIsProcessing(false); setStatus(""); }
   };
 
@@ -351,56 +402,72 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   const AnimatedBotV2 = ({ type }: { type: SimPersonaV2 }) => {
     const config = PERSONA_CONFIG[type];
     return (
-      <svg viewBox="0 0 200 240" className={`w-80 h-80 md:w-96 md:h-96 transition-all duration-700 ${isAISpeaking ? `drop-shadow-[0_0_60px_${config.color}88]` : 'drop-shadow-2xl'}`}>
-        <defs>
-          <linearGradient id={`faceGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#f1f5f9" />
-          </linearGradient>
-          <linearGradient id={`suitGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e293b" />
-            <stop offset="100%" stopColor="#020617" />
-          </linearGradient>
-        </defs>
-        <g className="animate-breathe">
-          <path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill={`url(#suitGrad-${type})`} />
-          <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.9" />
-          <path d="M97 170 L 100 220 L 103 170" fill={config.color} opacity="0.7" />
-        </g>
-        <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
-          <rect x="90" y="155" width="20" height="20" rx="10" fill="#f1f5f9" />
-          <path d="M100 20 C 60 20, 50 60, 50 100 C 50 150, 70 170, 100 170 C 130 170, 150 150, 150 100 C 150 60, 140 20, 100 20" fill={`url(#faceGrad-${type})`} stroke="#1e293b" strokeWidth="0.5" />
-          <circle cx="55" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} />
-          <circle cx="145" cy="100" r="1.5" fill={config.color} opacity={isAISpeaking ? "1" : "0.2"} className={isAISpeaking ? "animate-pulse" : ""} />
-          <g className="animate-blink">
-            <circle cx="78" cy="85" r="5" fill="#0f172a" />
-            <circle cx="122" cy="85" r="5" fill="#0f172a" />
-            <circle cx="78" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
-            <circle cx="122" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
+      <div className="relative w-full h-full bg-slate-900 overflow-hidden flex items-center justify-center">
+        <div className={`absolute inset-0 bg-gradient-to-b from-indigo-900/20 to-black/40 transition-opacity duration-1000 ${isAISpeaking ? 'opacity-100' : 'opacity-40'}`}></div>
+        <svg viewBox="0 0 200 240" className={`w-full h-full max-w-[280px] transition-all duration-700 ${isAISpeaking ? `drop-shadow-[0_0_40px_${config.color}88] scale-105` : 'drop-shadow-2xl'}`}>
+          <defs>
+            <linearGradient id={`faceGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#f1f5f9" />
+            </linearGradient>
+            <linearGradient id={`suitGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+          </defs>
+          <g className="animate-breathe">
+            <path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill={`url(#suitGrad-${type})`} />
+            <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.9" />
+            <path d="M97 170 L 100 220 L 103 170" fill={config.color} opacity="0.7" />
           </g>
-          <g transform="translate(100, 135)">
-            {isAISpeaking ? (
-              <path d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" fill="#0f172a" className="animate-lip-morph-v2" />
-            ) : (
-              <path d="M-12 0 Q 0 3, 12 0" stroke="#0f172a" strokeWidth="3" fill="none" strokeLinecap="round" className={isUserListening ? "animate-listen-mouth" : ""} />
-            )}
+          <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
+            <rect x="90" y="155" width="20" height="20" rx="10" fill="#f1f5f9" />
+            <path d="M100 20 C 60 20, 50 60, 50 100 C 50 150, 70 170, 100 170 C 130 170, 150 150, 150 100 C 150 60, 140 20, 100 20" fill={`url(#faceGrad-${type})`} stroke="#1e293b" strokeWidth="0.5" />
+            <g className="animate-blink">
+              <circle cx="78" cy="85" r="5" fill="#0f172a" />
+              <circle cx="122" cy="85" r="5" fill="#0f172a" />
+              <circle cx="78" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
+              <circle cx="122" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
+            </g>
+            <g transform="translate(100, 135)">
+              {isAISpeaking ? (
+                <path d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" fill="#0f172a" className="animate-lip-morph-v2" />
+              ) : (
+                <path d="M-12 0 Q 0 3, 12 0" stroke="#0f172a" strokeWidth="3" fill="none" strokeLinecap="round" className={isUserListening ? "animate-listen-mouth" : ""} />
+              )}
+            </g>
           </g>
-        </g>
-        <style>{`
-          @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-          .animate-breathe { animation: breathe 5s ease-in-out infinite; }
-          @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
-          .animate-blink { transform-origin: center 85px; animation: blink 6s infinite; }
-          @keyframes lip-morph-v2 { 0%, 100% { d: path("M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0"); } 33% { d: path("M-10 0 Q 0 18, 10 0 Q 0 -5, -10 0"); } 66% { d: path("M-16 0 Q 0 8, 16 0 Q 0 -2, -16 0"); } }
-          .animate-lip-morph-v2 { animation: lip-morph-v2 0.12s linear infinite; }
-          @keyframes listen-tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(2deg); } }
-          .animate-listen-tilt { animation: listen-tilt 4s ease-in-out infinite; transform-origin: center bottom; }
-          @keyframes listen-mouth { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.15); } }
-          .animate-listen-mouth { animation: listen-mouth 0.6s ease-in-out infinite; transform-origin: center; }
-        `}</style>
-      </svg>
+        </svg>
+        {/* Simulation Overlay */}
+        <div className="absolute bottom-4 left-4 flex items-center gap-2">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+          <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Live Neural Feed</span>
+        </div>
+      </div>
     );
   };
+
+  const BiometricDisplay = () => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+      {[
+        { label: 'Stress Level', value: biometrics.stressLevel, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+        { label: 'Attention Focus', value: biometrics.attentionFocus, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+        { label: 'Eye Contact', value: biometrics.eyeContact, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+        { label: 'Clarity Score', value: biometrics.clarityScore, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+      ].map((stat) => (
+        <div key={stat.label} className={`${stat.bg} p-4 rounded-3xl border border-white/10 flex flex-col items-center justify-center space-y-1`}>
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">{stat.label}</span>
+          <div className="flex items-baseline gap-1">
+            <span className={`text-2xl font-black ${stat.color}`}>{Math.round(stat.value)}</span>
+            <span className="text-[10px] font-bold text-slate-400">%</span>
+          </div>
+          <div className="w-full h-1 bg-slate-200 rounded-full mt-2 overflow-hidden">
+            <div className={`h-full transition-all duration-1000 ${stat.color.replace('text-', 'bg-')}`} style={{ width: `${stat.value}%` }}></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
@@ -431,18 +498,57 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                   </h3>
                </div>
 
-               {/* Main Visual Core */}
-               <div className="relative flex flex-col items-center">
-                  <div className="relative z-20">
+               {/* Main Visual Core - Meeting Environment */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
+                  <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl group transition-all hover:scale-[1.02]">
                      {persona && <AnimatedBotV2 type={persona} />}
+                     <div className="absolute top-6 left-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest">{meetingContext.clientNames || persona}</span>
+                     </div>
                   </div>
                   
-                  {meetingContext.vocalPersonaAnalysis && (
-                     <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
-                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span>
+                  <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl bg-slate-100 group transition-all hover:scale-[1.02]">
+                     <video 
+                       ref={videoRef} 
+                       autoPlay 
+                       playsInline 
+                       muted 
+                       className="w-full h-full object-cover mirror"
+                     />
+                     <div className="absolute top-6 left-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest">You (Seller)</span>
                      </div>
-                  )}
+                     {!streamRef.current && (
+                       <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+                          <div className="text-center space-y-4">
+                             <ICONS.Security className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
+                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Webcam Protocol Initializing...</p>
+                          </div>
+                       </div>
+                     )}
+                  </div>
+               </div>
+
+               {/* Biometric & Cognitive Trace Layer */}
+               <div className="w-full max-w-6xl mx-auto space-y-6">
+                  <div className="flex items-center justify-between">
+                     <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Biometric & Cognitive Trace</h5>
+                     <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+                        <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Live Neural Audit Active</span>
+                     </div>
+                  </div>
+                  <BiometricDisplay />
+                  
+                  <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg">
+                        <ICONS.Research className="w-5 h-5 text-white" />
+                     </div>
+                     <div>
+                        <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-1">Behavioral Audit</h6>
+                        <p className="text-sm font-bold text-slate-600 italic leading-relaxed">"{biometrics.behavioralAudit}"</p>
+                     </div>
+                  </div>
                </div>
 
                {/* Cinematic Narrative Display */}

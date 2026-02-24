@@ -67,6 +67,7 @@ try {
 }
 
 const COLLECTION_NAME = "cognitive_documents";
+const HISTORY_COLLECTION = "simulation_history";
 
 export const getAuthInstance = () => auth;
 export const getDbInstance = () => db;
@@ -84,6 +85,40 @@ export const subscribeToAuth = (callback: (user: User | null) => void) => {
   }
   // Return a no-op cleanup function if auth is not initialized
   return () => {};
+};
+
+export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' | 'timestamp'>): Promise<string | null> => {
+  if (!db || !auth || !auth.currentUser) return null;
+  try {
+    const docRef = await addDoc(collection(db, HISTORY_COLLECTION), {
+      ...history,
+      userId: auth.currentUser.uid,
+      timestamp: Timestamp.now()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error saving simulation history:", error);
+    return null;
+  }
+};
+
+export const fetchSimulationHistory = async (): Promise<any[]> => {
+  if (!db || !auth || !auth.currentUser) return [];
+  try {
+    const q = query(
+      collection(db, HISTORY_COLLECTION),
+      where("userId", "==", auth.currentUser.uid)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: (doc.data().timestamp as Timestamp).toMillis()
+    })).sort((a, b) => b.timestamp - a.timestamp);
+  } catch (error) {
+    console.error("Error fetching simulation history:", error);
+    return [];
+  }
 };
 
 export const saveDocumentToFirebase = async (name: string, content: string, type: string): Promise<string | null> => {

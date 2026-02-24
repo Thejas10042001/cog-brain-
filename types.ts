@@ -253,6 +253,14 @@ export interface AssessmentQuestion {
   citation?: Citation;
 }
 
+export interface BiometricTrace {
+  stressLevel: number;
+  attentionFocus: number;
+  eyeContact: number;
+  clarityScore: number;
+  behavioralAudit: string;
+}
+
 export interface AssessmentEvaluation {
   score: number;
   feedback: string;
@@ -264,6 +272,7 @@ export interface AssessmentEvaluation {
   stressLevel?: number; // 0-100
   attentionScore?: number; // 0-100
   eyeContactScore?: number; // 0-100
+  clarityScore?: number; // 0-100
   behavioralAnalysis?: string;
   modelDeliveryScript?: string;
 }
@@ -310,6 +319,18 @@ declare global {
     SpeechRecognition: any;
     webkitSpeechRecognition: any;
   }
+}
+
+export interface SimulationHistory {
+  id: string;
+  userId: string;
+  type: 'avatar' | 'avatar2' | 'staged';
+  timestamp: number;
+  meetingContext: MeetingContext;
+  messages: GPTMessage[];
+  report?: ComprehensiveAvatarReport;
+  biometrics?: BiometricTrace;
+  score?: number;
 }
 
 export type StagedSimStage = 'Ice Breakers' | 'About Business' | 'Pricing' | 'Technical' | 'Legal' | 'Closing';

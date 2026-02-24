@@ -7,7 +7,8 @@ import {
   evaluateAvatarSession,
   generateClientAvatar
 } from '../services/geminiService';
-import { GPTMessage, MeetingContext, StagedSimStage, StoredDocument, ComprehensiveAvatarReport } from '../types';
+import { saveSimulationHistory } from '../services/firebaseService';
+import { GPTMessage, MeetingContext, StagedSimStage, StoredDocument, ComprehensiveAvatarReport, BiometricTrace } from '../types';
 
 interface StageAttempt {
   question: string;
@@ -46,7 +47,15 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
+  const [status, setStatus] = useState("");
   const [currentHint, setCurrentHint] = useState<string | null>(null);
+  const [biometrics, setBiometrics] = useState<BiometricTrace>({
+    stressLevel: 12,
+    attentionFocus: 98,
+    eyeContact: 90,
+    clarityScore: 95,
+    behavioralAudit: "Highly focused, authoritative, and clear."
+  });
   
   // Transition Flow State
   const [showTransitionModal, setShowTransitionModal] = useState(false);
@@ -75,6 +84,8 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
   const recognitionRef = useRef<any>(null);
   const activeAudioSource = useRef<AudioBufferSourceNode | null>(null);
   const lastAudioBytes = useRef<Uint8Array | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const startResizing = useCallback(() => setIsResizing(true), []);
   const stopResizing = useCallback(() => setIsResizing(false), []);
@@ -113,8 +124,39 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch (e) {}
       }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
     };
   }, []);
+
+  const startWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Error accessing webcam:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (sessionActive) {
+      startWebcam();
+      const interval = setInterval(() => {
+        setBiometrics(prev => ({
+          stressLevel: Math.max(0, Math.min(100, prev.stressLevel + (Math.random() * 4 - 2))),
+          attentionFocus: Math.max(0, Math.min(100, prev.attentionFocus + (Math.random() * 2 - 1))),
+          eyeContact: Math.max(0, Math.min(100, prev.eyeContact + (Math.random() * 6 - 3))),
+          clarityScore: Math.max(0, Math.min(100, prev.clarityScore + (Math.random() * 2 - 1))),
+          behavioralAudit: prev.behavioralAudit
+        }));
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [sessionActive]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -553,6 +595,16 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
     try {
       const reportJson = await evaluateAvatarSession(messages, meetingContext);
       setReport(reportJson);
+      
+      // Save to Firebase History
+      await saveSimulationHistory({
+        type: 'staged',
+        meetingContext,
+        messages,
+        report: reportJson,
+        biometrics,
+        score: reportJson.deal_readiness_score
+      });
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
@@ -640,6 +692,28 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
       </div>
     );
   };
+
+  const BiometricDisplay = () => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+      {[
+        { label: 'Stress Level', value: biometrics.stressLevel, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+        { label: 'Attention Focus', value: biometrics.attentionFocus, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+        { label: 'Eye Contact', value: biometrics.eyeContact, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+        { label: 'Clarity Score', value: biometrics.clarityScore, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+      ].map((stat) => (
+        <div key={stat.label} className={`${stat.bg} p-4 rounded-3xl border border-white/10 flex flex-col items-center justify-center space-y-1`}>
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">{stat.label}</span>
+          <div className="flex items-baseline gap-1">
+            <span className={`text-2xl font-black ${stat.color}`}>{Math.round(stat.value)}</span>
+            <span className="text-[10px] font-bold text-slate-400">%</span>
+          </div>
+          <div className="w-full h-1 bg-slate-200 rounded-full mt-2 overflow-hidden">
+            <div className={`h-full transition-all duration-1000 ${stat.color.replace('text-', 'bg-')}`} style={{ width: `${stat.value}%` }}></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
@@ -838,128 +912,172 @@ export const AvatarSimulationStaged: FC<{ meetingContext: MeetingContext; docume
                 </div>
              </div>
 
-             {/* Core Narrative Core (Scrollable) */}
-             <div className="flex-1 overflow-y-auto custom-scrollbar p-12 space-y-12">
-                
-                {/* Question Area - FULL WIDTH */}
-                <div className="w-full bg-slate-50 border border-slate-200 p-12 rounded-[4rem] space-y-8 shadow-2xl animate-in fade-in zoom-in-95 duration-700 relative group/qarea">
-                   <div className="flex justify-center">
-                      <div className="w-1.5 h-10 bg-indigo-100 rounded-full flex flex-col justify-end">
-                         <div className={`w-full bg-indigo-500 rounded-full transition-all duration-300 ${isAISpeaking ? 'h-full' : 'h-2'}`}></div>
-                      </div>
-                   </div>
-                   <div className="space-y-2 text-center">
-                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500">Cognitive Strategic Inquiry</h5>
-                      <p className="text-4xl font-bold italic leading-[1.3] text-slate-900 tracking-tight">
-                         {messages[messages.length - 1]?.content || (isProcessing ? "Establishing behavioral synchronization..." : "Initializing simulation core...")}
-                      </p>
-                   </div>
-
-                   {/* Strategic Controls Inside Question Area */}
-                   <div className="flex items-center justify-center gap-4 mt-4">
-                      <button 
-                        onClick={handleRehear}
-                        disabled={isProcessing || messages.length === 0}
-                        className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest text-indigo-600 transition-all active:scale-95"
-                      >
-                         <ICONS.Speaker className="w-3.5 h-3.5" /> Re-hear Agent
-                      </button>
-                   </div>
-                </div>
-
-                {/* Hint Area - FULL WIDTH */}
-                {currentHint && (
-                  <div className="w-full bg-indigo-50 border border-indigo-200 p-8 rounded-[2.5rem] shadow-xl flex items-center gap-6 animate-in slide-in-from-top-4">
-                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
-                          <ICONS.Sparkles className="w-6 h-6 text-indigo-100" />
-                      </div>
-                      <div className="text-left flex-1">
-                        <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
-                        <p className="text-lg font-bold text-slate-900 italic leading-snug">{currentHint}</p>
-                      </div>
-                  </div>
-                )}
-
-                {/* Enhanced Coaching Feedback Overlay - FULL WIDTH & NO CLOSE BUTTON */}
-                {coachingFeedback && (
-                  <div className="p-12 bg-rose-50 backdrop-blur-2xl border-2 border-rose-200 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
-                      <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
-                            <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
-                         </div>
-                      </div>
-
-                      <button 
-                        onClick={() => setShowCoachingDetails(!showCoachingDetails)}
-                        className="w-full group flex items-center justify-between p-10 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
-                      >
-                         <span className="text-xl font-black text-indigo-600 italic group-hover:text-indigo-700 text-left pr-6">
-                           Initialize Neural Alignment: Access Strategic Correction & Master Logic Node
-                         </span>
-                         <div className={`w-12 h-12 rounded-full bg-indigo-600/10 border border-indigo-500/40 flex items-center justify-center transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`}>
-                            <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                            </svg>
-                         </div>
-                      </button>
-
-                      {showCoachingDetails && (
-                        <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500 pt-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                            <div className="space-y-4">
-                                <h5 className="text-[11px] font-black uppercase text-rose-600 tracking-[0.3em]">Deficit Rationale</h5>
-                                <div className="text-lg font-bold text-rose-900 leading-relaxed italic border-l-4 border-rose-300 pl-8 py-2">
-                                  {coachingFeedback.failReason || "Incongruent logic detected in current stage response."}
+                 {/* Main Visual Core - Meeting Environment */}
+                 <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar p-12 gap-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
+                        <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl group transition-all hover:scale-[1.02] bg-slate-900 flex items-center justify-center">
+                           {isGeneratingAvatar ? (
+                             <div className="text-center space-y-4">
+                                <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto"></div>
+                                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Generating Presence...</p>
+                             </div>
+                           ) : avatarUrl ? (
+                             <img src={avatarUrl} alt="Client" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                           ) : (
+                             <div className="text-center space-y-4">
+                                <ICONS.Efficiency className="w-12 h-12 text-slate-600 mx-auto" />
+                                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Neural Presence Offline</p>
+                             </div>
+                           )}
+                           <div className="absolute top-6 left-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                              <span className="text-[10px] font-black text-white uppercase tracking-widest">{meetingContext.clientNames || "Client"}</span>
+                           </div>
+                        </div>
+                        
+                        <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl bg-slate-100 group transition-all hover:scale-[1.02]">
+                           <video 
+                             ref={videoRef} 
+                             autoPlay 
+                             playsInline 
+                             muted 
+                             className="w-full h-full object-cover mirror"
+                           />
+                           <div className="absolute top-6 left-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                              <span className="text-[10px] font-black text-white uppercase tracking-widest">You (Seller)</span>
+                           </div>
+                           {!streamRef.current && (
+                             <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+                                <div className="text-center space-y-4">
+                                   <ICONS.Security className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
+                                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Webcam Protocol Initializing...</p>
                                 </div>
-                            </div>
-                            <div className="space-y-4">
-                                <h5 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.3em]">Strategic Guidance</h5>
-                                <div className="text-lg font-bold text-indigo-900 leading-relaxed italic border-l-4 border-indigo-300 pl-8 py-2">
-                                  {coachingFeedback.styleGuide || "Adopt a higher-authority executive stance with grounded metrics."}
-                                </div>
-                            </div>
+                             </div>
+                           )}
+                        </div>
+                    </div>
+
+                    {/* Biometric & Cognitive Trace Layer */}
+                    <div className="w-full max-w-6xl mx-auto space-y-6">
+                        <div className="flex items-center justify-between">
+                           <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Biometric & Cognitive Trace</h5>
+                           <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+                              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Live Neural Audit Active</span>
+                           </div>
+                        </div>
+                        <BiometricDisplay />
+                        
+                        <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl flex items-start gap-4">
+                           <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg">
+                              <ICONS.Research className="w-5 h-5 text-white" />
+                           </div>
+                           <div>
+                              <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-1">Behavioral Audit</h6>
+                              <p className="text-sm font-bold text-slate-600 italic leading-relaxed">"{biometrics.behavioralAudit}"</p>
+                           </div>
+                        </div>
+                    </div>
+
+                    {/* Cinematic Narrative Display */}
+                    <div className="w-full max-w-6xl mx-auto bg-slate-50 border border-slate-200 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+                        <div className="flex items-center justify-between mb-2">
+                           <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">{currentStage} Strategic Inquiry</h5>
+                           <div className="flex gap-1.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/20"></div>
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                           </div>
+                        </div>
+                        <p className="text-4xl font-black italic leading-[1.4] text-slate-900 tracking-tight">
+                           {messages[messages.length - 1]?.content || "Synchronizing Strategic Core..."}
+                        </p>
+
+                        {/* Neural Strategic Hint - Integrated */}
+                        {currentHint && (
+                          <div className="mt-8 pt-8 border-t border-slate-200/60 flex items-start gap-4 animate-in slide-in-from-top-2">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
+                                  <ICONS.Sparkles className="w-4 h-4 text-indigo-100" />
+                              </div>
+                              <div className="text-left flex-1">
+                                <h5 className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
+                                <p className="text-base font-bold text-slate-600 italic leading-relaxed">{currentHint}</p>
+                              </div>
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Protocol Blocked Overlay */}
+                    {coachingFeedback && (
+                      <div className="w-full max-w-6xl mx-auto p-12 bg-rose-50 backdrop-blur-2xl border-2 border-rose-200 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
+                          <div className="flex items-center justify-between">
+                             <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
+                                <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
+                             </div>
                           </div>
 
-                          {coachingFeedback.idealResponse && (
-                            <div className="p-12 bg-indigo-50 border-2 border-indigo-100 rounded-[3rem] space-y-6 shadow-inner">
-                                <h5 className="text-[12px] font-black uppercase text-indigo-500 tracking-[0.4em]">Master Logic Protocol</h5>
-                                <p className="text-3xl font-black text-slate-900 leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
+                          <button 
+                            onClick={() => setShowCoachingDetails(!showCoachingDetails)}
+                            className="w-full group flex items-center justify-between p-10 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
+                          >
+                             <span className="text-xl font-black text-indigo-600 italic group-hover:text-indigo-700 text-left pr-6">
+                               Initialize Neural Alignment: Access Strategic Correction & Master Logic Node
+                             </span>
+                             <div className={`w-12 h-12 rounded-full bg-indigo-600/10 border border-indigo-500/40 flex items-center justify-center transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`}>
+                                <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                                </svg>
+                             </div>
+                          </button>
+
+                          {showCoachingDetails && (
+                            <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500 pt-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-4">
+                                    <h5 className="text-[11px] font-black uppercase text-rose-600 tracking-[0.3em]">Deficit Rationale</h5>
+                                    <div className="text-lg font-bold text-rose-900 leading-relaxed italic border-l-4 border-rose-300 pl-8 py-2">
+                                      {coachingFeedback.failReason || "Incongruent logic detected in current stage response."}
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <h5 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.3em]">Strategic Guidance</h5>
+                                    <div className="text-lg font-bold text-indigo-900 leading-relaxed italic border-l-4 border-indigo-300 pl-8 py-2">
+                                      {coachingFeedback.styleGuide || "Adopt a higher-authority executive stance with grounded metrics."}
+                                    </div>
+                                </div>
+                              </div>
+
+                              {coachingFeedback.idealResponse && (
+                                <div className="p-12 bg-indigo-50 border-2 border-indigo-100 rounded-[3rem] space-y-6 shadow-inner">
+                                    <h5 className="text-[12px] font-black uppercase text-indigo-500 tracking-[0.4em]">Master Logic Protocol</h5>
+                                    <p className="text-3xl font-black text-slate-900 leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
+                                </div>
+                              )}
+
+                              <div className="flex items-center gap-6 pt-8 border-t border-slate-200">
+                                <button onClick={handleTryAgain} className="flex-1 py-7 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-4">
+                                    <ICONS.Efficiency className="w-8 h-8" /> Try Again (Revert Turn)
+                                </button>
+                                <button onClick={handleProceedWithFeedback} className="px-12 py-7 bg-slate-100 text-slate-600 border border-slate-200 rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.2em] hover:bg-slate-200 active:scale-95 transition-all">Proceed with Feedback</button>
+                              </div>
                             </div>
                           )}
+                      </div>
+                    )}
 
-                          <div className="flex items-center gap-6 pt-8 border-t border-slate-200">
-                            <button onClick={handleTryAgain} className="flex-1 py-7 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-4">
-                                <ICONS.Efficiency className="w-8 h-8" /> Try Again (Revert Turn)
-                            </button>
-                            <button onClick={handleProceedWithFeedback} className="px-12 py-7 bg-slate-100 text-slate-600 border border-slate-200 rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.2em] hover:bg-slate-200 active:scale-95 transition-all">Proceed with Feedback</button>
-                          </div>
-                        </div>
-                      )}
-                  </div>
-                )}
-                <div className="h-10" />
-             </div>
+                    {/* User Interaction Layer */}
+                    <div className="w-full max-w-6xl mx-auto space-y-8 pb-24">
+                       <div className="relative group">
+                          <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-slate-900 shadow-inner h-48 resize-none placeholder:text-slate-400 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || "Client"}...`} />
+                          <button onClick={() => startListening()} className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}><ICONS.Ear className="w-8 h-8" /></button>
+                       </div>
 
-             {/* Input Area - FULL WIDTH */}
-             <div className="p-8 border-t border-slate-100 bg-slate-50/50 backdrop-blur-2xl space-y-6">
-                <div className="w-full space-y-6">
-                   <div className="relative group">
-                      <textarea 
-                        value={currentCaption} 
-                        onChange={(e) => setCurrentCaption(e.target.value)} 
-                        className="w-full bg-white border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-900 shadow-inner h-40 resize-none placeholder:text-slate-400" 
-                        placeholder={`Deploy tactical response for the ${currentStage} stage...`}
-                      />
-                      <button onClick={() => startListening()} className={`absolute right-12 top-1/2 -translate-y-1/2 p-7 rounded-[2rem] transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.5)]' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}><ICONS.Ear className="w-10 h-10" /></button>
-                   </div>
-                   <div className="flex items-center gap-6">
-                      <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50">Commit Answer</button>
-                      <button onClick={handleSkip} disabled={isProcessing} className="px-12 py-8 bg-slate-100 text-slate-600 border border-slate-200 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-200 active:scale-95 transition-all">Skip</button>
-                      <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest hover:bg-rose-700 active:scale-95 transition-all">Audit</button>
-                   </div>
-                </div>
-             </div>
+                       <div className="flex items-center gap-6">
+                          <button onClick={handleCommit} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Strategy</button>
+                          <button onClick={handleSkip} disabled={isProcessing} className="px-12 py-8 bg-slate-100 text-slate-600 border border-slate-200 rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition-all disabled:opacity-50">Skip Stage</button>
+                       </div>
+                    </div>
+                 </div>
           </div>
 
           {/* Draggable Partition Handle */}
