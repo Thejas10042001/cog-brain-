@@ -345,7 +345,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
       let y = 20;
 
       doc.setFontSize(22);
-      doc.text("Assessment Readiness Report", 20, y);
+      doc.text("Assignment Readiness Report", 20, y);
       y += 15;
 
       doc.setFontSize(10);
@@ -374,7 +374,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
         y += 15;
       });
 
-      doc.save("Cognitive-Assessment-Report.pdf");
+      doc.save("Cognitive-Assignment-Report.pdf");
     } catch (e) {
       console.error(e);
     } finally {
@@ -391,7 +391,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
               <ICONS.Trophy className="w-8 h-8" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Assessment Lab Configuration</h2>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Assignment Lab Configuration</h2>
               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Pressure-test your document mastery</p>
             </div>
           </div>
@@ -471,7 +471,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
           disabled={isGenerating || activeDocuments.length === 0}
           className={`w-full py-8 rounded-[2rem] font-black text-xl uppercase tracking-widest transition-all shadow-2xl flex items-center justify-center gap-4 ${isGenerating ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.01] active:scale-95 shadow-indigo-200'}`}
         >
-          {isGenerating ? "Synthesizing..." : "Initiate Neural Assessment"}
+          {isGenerating ? "Synthesizing..." : "Initiate Neural Assignment"}
         </button>
       </div>
     );
@@ -497,7 +497,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                 </div>
             </div>
             <button onClick={handleSubmit} className="px-8 py-2.5 bg-emerald-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
-                Submit Assessment
+                Submit Assignment
             </button>
           </div>
         </div>
@@ -588,7 +588,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                   </button>
                 ) : (
                   <button onClick={handleSubmit} className="px-12 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">
-                    Final Submission
+                    Final Assignment Submission
                   </button>
                 )}
               </div>
@@ -604,7 +604,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
       <div className="animate-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] flex flex-col bg-white text-slate-900">
         <div className="p-16 flex flex-col md:flex-row items-center justify-between gap-12 text-left">
            <div className="space-y-8 flex-1">
-              <h2 className="text-5xl font-black tracking-tight">Intelligence Audit Result</h2>
+              <h2 className="text-5xl font-black tracking-tight">Assignment Audit Result</h2>
               <div className="flex items-center gap-4">
                  <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${config.difficulty === 'Easy' ? 'bg-emerald-100 text-emerald-600' : config.difficulty === 'Medium' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
                     {config.difficulty} Mode Active
@@ -726,7 +726,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                         {q.explanation}
                      </p>
                      <div className="pt-4 border-t border-emerald-100 flex items-center gap-3">
-                        <span className="text-[9px] font-black uppercase text-emerald-600 tracking-widest">Coach Assessment:</span>
+                        <span className="text-[9px] font-black uppercase text-emerald-600 tracking-widest">Coach Assignment:</span>
                         <p className="text-sm font-medium text-emerald-700">{res?.evaluation.feedback}</p>
                      </div>
                   </div>
