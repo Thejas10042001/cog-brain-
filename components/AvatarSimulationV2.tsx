@@ -11,6 +11,7 @@ import { GPTMessage, MeetingContext, SimPersonaV2, ComprehensiveAvatarReport, Bi
 
 interface AvatarSimulationV2Props {
   meetingContext: MeetingContext;
+  onContextChange: (ctx: MeetingContext) => void;
 }
 
 const PERSONA_CONFIG: Record<SimPersonaV2, { color: string; accent: string; label: string }> = {
@@ -19,7 +20,7 @@ const PERSONA_CONFIG: Record<SimPersonaV2, { color: string; accent: string; labe
   IT_DIRECTOR: { color: "#f43f5e", accent: "#fb7185", label: "IT Director" }
 };
 
-export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext }) => {
+export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext, onContextChange }) => {
   const [persona, setPersona] = useState<SimPersonaV2 | null>(null);
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [currentCaption, setCurrentCaption] = useState("");
@@ -112,17 +113,37 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     if (sessionActive) {
       startWebcam();
       const interval = setInterval(() => {
-        setBiometrics(prev => ({
-          stressLevel: Math.max(0, Math.min(100, prev.stressLevel + (Math.random() * 4 - 2))),
-          attentionFocus: Math.max(0, Math.min(100, prev.attentionFocus + (Math.random() * 2 - 1))),
-          eyeContact: Math.max(0, Math.min(100, prev.eyeContact + (Math.random() * 6 - 3))),
-          clarityScore: Math.max(0, Math.min(100, prev.clarityScore + (Math.random() * 2 - 1))),
-          behavioralAudit: prev.behavioralAudit
-        }));
-      }, 2000);
+        setBiometrics(prev => {
+          // More "accurate" simulation logic
+          const stressDelta = !isAISpeaking ? (Math.random() * 2) : -(Math.random() * 1.5);
+          const newStress = Math.max(10, Math.min(85, prev.stressLevel + stressDelta));
+          
+          const attentionDelta = isAISpeaking ? (Math.random() * 1) : (Math.random() * 4 - 2.5);
+          const newAttention = Math.max(70, Math.min(100, prev.attentionFocus + attentionDelta));
+          
+          const eyeDelta = isAISpeaking ? (Math.random() * 2) : (Math.random() * 5 - 3);
+          const newEye = Math.max(60, Math.min(98, prev.eyeContact + eyeDelta));
+          
+          const newClarity = Math.max(80, Math.min(100, 90 + (Math.random() * 10 - 5)));
+
+          let audit = prev.behavioralAudit;
+          if (newStress > 60) audit = "High cognitive load detected. Maintain steady breathing.";
+          else if (newAttention < 80) audit = "Focus deviation detected. Re-engage with the core logic.";
+          else if (isAISpeaking) audit = "Active listening protocol engaged. Analyzing prospect cues.";
+          else audit = "Strategic delivery in progress. Maintaining executive presence.";
+
+          return {
+            stressLevel: newStress,
+            attentionFocus: newAttention,
+            eyeContact: newEye,
+            clarityScore: newClarity,
+            behavioralAudit: audit
+          };
+        });
+      }, 1500);
       return () => clearInterval(interval);
     }
-  }, [sessionActive]);
+  }, [sessionActive, isAISpeaking, isUserListening]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -479,6 +500,26 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
               <h2 className="text-7xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-600 bg-clip-text text-transparent">Simulation 2.0</h2>
               <p className="text-slate-500 text-2xl font-medium leading-relaxed">Select a target persona to connect with a high-fidelity animated AI Human Bot.</p>
            </div>
+
+           {/* Cognitive Challenge Depth Selection */}
+           <div className="w-full max-w-2xl bg-slate-50 p-8 rounded-[3rem] border border-slate-200 space-y-6">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Cognitive Challenge Depth</h4>
+                <span className="px-3 py-1 bg-amber-100 text-amber-600 text-[8px] font-black uppercase rounded-full">Adaptive Engine</span>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                {['Easy', 'Medium', 'Hard'].map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => onContextChange({ ...meetingContext, difficulty: level as any })}
+                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${meetingContext.difficulty === level ? 'bg-amber-500 border-amber-400 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 text-slate-400 hover:border-amber-200'}`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+           </div>
+
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
               {(Object.keys(PERSONA_CONFIG) as SimPersonaV2[]).map((p) => (
                 <PersonaCardV2 key={p} type={p} onClick={() => handleInitiate(p)} />
@@ -502,9 +543,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
                   <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl group transition-all hover:scale-[1.02]">
                      {persona && <AnimatedBotV2 type={persona} />}
-                     <div className="absolute top-6 left-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                        <span className="text-[10px] font-black text-white uppercase tracking-widest">{meetingContext.clientNames || persona}</span>
-                     </div>
                   </div>
                   
                   <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl bg-slate-100 group transition-all hover:scale-[1.02]">

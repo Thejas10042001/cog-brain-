@@ -145,17 +145,41 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     if (sessionActive) {
       startWebcam();
       const interval = setInterval(() => {
-        setBiometrics(prev => ({
-          stressLevel: Math.max(0, Math.min(100, prev.stressLevel + (Math.random() * 4 - 2))),
-          attentionFocus: Math.max(0, Math.min(100, prev.attentionFocus + (Math.random() * 2 - 1))),
-          eyeContact: Math.max(0, Math.min(100, prev.eyeContact + (Math.random() * 6 - 3))),
-          clarityScore: Math.max(0, Math.min(100, prev.clarityScore + (Math.random() * 2 - 1))),
-          behavioralAudit: prev.behavioralAudit
-        }));
-      }, 2000);
+        setBiometrics(prev => {
+          // More "accurate" simulation logic
+          // Stress level increases slightly when user is typing/speaking, decreases when AI speaks
+          const stressDelta = !isAISpeaking ? (Math.random() * 2) : -(Math.random() * 1.5);
+          const newStress = Math.max(10, Math.min(85, prev.stressLevel + stressDelta));
+          
+          // Attention focus is high when AI speaks, fluctuates when user speaks
+          const attentionDelta = isAISpeaking ? (Math.random() * 1) : (Math.random() * 4 - 2.5);
+          const newAttention = Math.max(70, Math.min(100, prev.attentionFocus + attentionDelta));
+          
+          // Eye contact is higher when AI is speaking (listening)
+          const eyeDelta = isAISpeaking ? (Math.random() * 2) : (Math.random() * 5 - 3);
+          const newEye = Math.max(60, Math.min(98, prev.eyeContact + eyeDelta));
+          
+          // Clarity score depends on current caption length and complexity (simulated)
+          const newClarity = Math.max(80, Math.min(100, 90 + (Math.random() * 10 - 5)));
+
+          let audit = prev.behavioralAudit;
+          if (newStress > 60) audit = "High cognitive load detected. Maintain steady breathing.";
+          else if (newAttention < 80) audit = "Focus deviation detected. Re-engage with the core logic.";
+          else if (isAISpeaking) audit = "Active listening protocol engaged. Analyzing prospect cues.";
+          else audit = "Strategic delivery in progress. Maintaining executive presence.";
+
+          return {
+            stressLevel: newStress,
+            attentionFocus: newAttention,
+            eyeContact: newEye,
+            clarityScore: newClarity,
+            behavioralAudit: audit
+          };
+        });
+      }, 1500);
       return () => clearInterval(interval);
     }
-  }, [sessionActive]);
+  }, [sessionActive, isAISpeaking, isUserListening]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -588,9 +612,6 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
                   <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl group transition-all hover:scale-[1.02]">
                      <AIAnimatedBotCIO />
-                     <div className="absolute top-6 left-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                        <span className="text-[10px] font-black text-white uppercase tracking-widest">{meetingContext.clientNames || 'Executive Client'}</span>
-                     </div>
                   </div>
                   
                   <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl bg-slate-100 group transition-all hover:scale-[1.02]">

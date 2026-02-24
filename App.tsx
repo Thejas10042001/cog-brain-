@@ -408,8 +408,8 @@ const App: React.FC = () => {
                       />
                     </div>
                   )}
-                  {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} />}
-                  {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} />}
+                  {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} />}
+                  {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} />}
                   {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} />}
                   {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
                   {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
