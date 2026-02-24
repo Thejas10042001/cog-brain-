@@ -334,6 +334,19 @@ export async function generateVoiceSample(
   if (voiceName === 'Pegasus') finalVoice = 'Puck';
   if (voiceName === 'Orion') finalVoice = 'Charon';
 
+  // Ensure gender alignment
+  if (gender === 'Female') {
+    // If it's a known male voice, switch to female
+    if (['Charon', 'Zephyr', 'Fenrir', 'Orion'].includes(finalVoice)) {
+      finalVoice = 'Kore';
+    }
+  } else if (gender === 'Male') {
+    // If it's a known female voice, switch to male
+    if (['Kore', 'Puck', 'Pegasus'].includes(finalVoice)) {
+      finalVoice = 'Zephyr';
+    }
+  }
+
   // Fallback for invalid voices
   const validVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
   if (!validVoices.includes(finalVoice)) {
@@ -346,14 +359,10 @@ export async function generateVoiceSample(
     const adjectives = analysis.toneAdjectives?.join(', ') || 'professional';
     const pace = analysis.pace || 1.0;
     const pitch = analysis.pitchValue || 1.0;
-    const stability = analysis.stability || 80;
-    const clarity = analysis.clarity || 90;
     
-    // Construct a highly descriptive instruction for the TTS model's prosody control
-    const instruction = `[VOCAL CONFIG: Tone=${adjectives}, Pace=${pace.toFixed(1)}x, Pitch=${pitch.toFixed(1)}x, Stability=${stability}%, Clarity=${clarity}%]`;
-    const directive = `Adopt a ${adjectives} tone. Speak at ${pace > 1 ? 'a faster' : pace < 1 ? 'a slower' : 'a normal'} pace with ${pitch > 1 ? 'higher' : pitch < 1 ? 'lower' : 'normal'} pitch. Ensure ${stability}% vocal stability and ${clarity}% articulation clarity.`;
-    
-    promptText = `${instruction} ${directive} TEXT: "${text}"`;
+    // Construct a descriptive instruction for the TTS model
+    const instruction = `[Tone: ${adjectives}, Pace: ${pace > 1.2 ? 'Fast' : pace < 0.8 ? 'Slow' : 'Normal'}, Pitch: ${pitch > 1.2 ? 'High' : pitch < 0.8 ? 'Low' : 'Normal'}]`;
+    promptText = `${instruction} ${text}`;
   }
 
   try {
@@ -507,10 +516,23 @@ Adopt the following behavioral and linguistic signature strictly:
 Infuse this personality into the selected Persona roles below.` : ""}
 
 ===========================================================
-STRATEGIC FEEDBACK RULE
+STRATEGIC FEEDBACK & GATEKEEPING RULES
 ===========================================================
-If the user provides an answer to your previous question, you MUST provide a brief strategic suggestion for improvement enclosed in square brackets at the start of your response.
-Example: "[SUGGESTION: You should have emphasized ROI metrics here.] Your next question is..."
+If the user provides an answer to your previous question, you MUST evaluate it.
+
+If the response is weak, vague, or unprofessional:
+1. Start with exactly: [RESULT: FAIL]
+2. Provide: [COACHING: Detailed explanation of the deficit.]
+3. Provide: [STYLE_GUIDE: Strategic guidance on presentation.]
+4. Provide: [IDEAL_RESPONSE: A world-class response the user should have given.]
+5. Provide: [RETRY_PROMPT: A repeated or adjusted question to force a retry.]
+
+If the response is strong:
+1. You MAY provide a brief strategic suggestion for improvement enclosed in exactly: [HINT: ...]
+2. Proceed with your next question.
+
+Example Success: "[HINT: Good use of metrics.] Your next question is..."
+Example Fail: "[RESULT: FAIL] [COACHING: Too technical.] [STYLE_GUIDE: Focus on business value.] [IDEAL_RESPONSE: Our solution delivers 20% ROI...] [RETRY_PROMPT: How do you justify the cost?]"
 
 ===========================================================
 PERSONA DEFINITIONS
@@ -628,10 +650,23 @@ Adopt the following behavioral signature strictly:
 Maintain this perspective throughout the Mode 1 interaction.` : ""}
 
 ===========================================================
-STRATEGIC FEEDBACK RULE
+STRATEGIC FEEDBACK & GATEKEEPING RULES
 ===========================================================
-If the user provides an answer to your previous question, you MUST provide a brief strategic suggestion for improvement enclosed in square brackets at the start of your response.
-Example: "[SUGGESTION: Instead of technical jargon, focus on the business outcome.] Your next question is..."
+If the user provides an answer to your previous question, you MUST evaluate it.
+
+If the response is weak, vague, or unprofessional:
+1. Start with exactly: [RESULT: FAIL]
+2. Provide: [COACHING: Detailed explanation of the deficit.]
+3. Provide: [STYLE_GUIDE: Strategic guidance on presentation.]
+4. Provide: [IDEAL_RESPONSE: A world-class response the user should have given.]
+5. Provide: [RETRY_PROMPT: A repeated or adjusted question to force a retry.]
+
+If the response is strong:
+1. You MAY provide a brief strategic suggestion for improvement enclosed in exactly: [HINT: ...]
+2. Proceed with your next question.
+
+Example Success: "[HINT: Instead of technical jargon, focus on the business outcome.] Your next question is..."
+Example Fail: "[RESULT: FAIL] [COACHING: Lacks ROI focus.] [STYLE_GUIDE: Use financial metrics.] [IDEAL_RESPONSE: We project a 15% reduction in OpEx...] [RETRY_PROMPT: Can you walk me through the financial justification?]"
 
 ===========================================================
 MODE 1: CIO BUYER SIMULATION
@@ -1370,6 +1405,17 @@ export async function generatePitchAudio(
   if (voiceName === 'Pegasus') finalVoice = 'Puck';
   if (voiceName === 'Orion') finalVoice = 'Charon';
 
+  // Ensure gender alignment
+  if (gender === 'Female') {
+    if (['Charon', 'Zephyr', 'Fenrir', 'Orion'].includes(finalVoice)) {
+      finalVoice = 'Kore';
+    }
+  } else if (gender === 'Male') {
+    if (['Kore', 'Puck', 'Pegasus'].includes(finalVoice)) {
+      finalVoice = 'Zephyr';
+    }
+  }
+
   // Fallback for invalid voices
   const validVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
   if (!validVoices.includes(finalVoice)) {
@@ -1383,11 +1429,7 @@ export async function generatePitchAudio(
     const adjectives = analysis.toneAdjectives?.join(', ') || 'professional';
     const pace = analysis.pace || 1.0;
     const pitch = analysis.pitchValue || 1.0;
-    const stability = analysis.stability || 80;
-    const clarity = analysis.clarity || 90;
-    
-    instruction += `[VOCAL CONFIG: Tone=${adjectives}, Pace=${pace.toFixed(1)}x, Pitch=${pitch.toFixed(1)}x, Stability=${stability}%, Clarity=${clarity}%] `;
-    instruction += `Adopt a ${adjectives} tone. Speak at ${pace > 1 ? 'a faster' : pace < 1 ? 'a slower' : 'a normal'} pace with ${pitch > 1 ? 'higher' : pitch < 1 ? 'lower' : 'normal'} pitch. Ensure ${stability}% vocal stability and ${clarity}% articulation clarity. `;
+    instruction += `[Tone: ${adjectives}, Pace: ${pace > 1.2 ? 'Fast' : pace < 0.8 ? 'Slow' : 'Normal'}, Pitch: ${pitch > 1.2 ? 'High' : pitch < 0.8 ? 'Low' : 'Normal'}] `;
   }
 
   const contents = instruction 

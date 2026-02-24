@@ -30,12 +30,44 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState("");
-  const [lastSuggestion, setLastSuggestion] = useState("");
+  const [currentHint, setCurrentHint] = useState<string | null>(null);
+  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
+  const [showCoachingDetails, setShowCoachingDetails] = useState(false);
+
+  // Resizable Logic for Sidebar
+  const [historyWidth, setHistoryWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const recognitionRef = useRef<any>(null);
   const activeAudioSource = useRef<AudioBufferSourceNode | null>(null);
   const lastAudioBytes = useRef<Uint8Array | null>(null);
+
+  const startResizing = () => setIsResizing(true);
+  const stopResizing = () => setIsResizing(false);
+  
+  const resize = (e: MouseEvent) => {
+    if (isResizing) {
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth > 150 && newWidth < 800) {
+        setHistoryWidth(newWidth);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    } else {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -147,14 +179,21 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     setMessages([]);
     setCurrentCaption("");
     setReport(null);
-    setLastSuggestion("");
+    setCurrentHint(null);
+    setCoachingFeedback(null);
+    setShowCoachingDetails(false);
     try {
       const stream = streamAvatarSimulationV2(`PERSONA: ${selected}`, [], meetingContext);
       let firstQuestion = "";
       for await (const chunk of stream) firstQuestion += chunk;
-      const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: firstQuestion, mode: 'standard' };
+      
+      const hintMatch = firstQuestion.match(/\[HINT: (.*?)\]/);
+      if (hintMatch) setCurrentHint(hintMatch[1]);
+
+      const cleaned = firstQuestion.replace(/\[HINT: .*?\]/, "").trim();
+      const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
-      playAIQuestion(firstQuestion);
+      playAIQuestion(cleaned);
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
@@ -162,6 +201,10 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     if (isProcessing || !currentCaption.trim()) return;
     stopListening();
     setIsProcessing(true);
+    setCoachingFeedback(null);
+    setShowCoachingDetails(false);
+    setCurrentHint(null);
+
     const userMsg: GPTMessage = { id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
@@ -170,18 +213,47 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       let nextContent = "";
       for await (const chunk of stream) nextContent += chunk;
       
-      let displayQuestion = nextContent;
-      const suggestionMatch = nextContent.match(/\[SUGGESTION: (.*?)\]/);
-      if (suggestionMatch) {
-        setLastSuggestion(suggestionMatch[1]);
-        displayQuestion = nextContent.replace(/\[SUGGESTION: .*?\]/, "").trim();
-      }
+      const isFail = nextContent.includes('[RESULT: FAIL]');
+      
+      const hintMatch = nextContent.match(/\[HINT: (.*?)\]/);
+      if (hintMatch) setCurrentHint(hintMatch[1]);
 
-      const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: displayQuestion, mode: 'standard' };
-      setMessages([...updatedMessages, assistantMsg]);
-      setCurrentCaption("");
-      playAIQuestion(displayQuestion);
+      if (isFail) {
+        const coachMatch = nextContent.match(/\[COACHING: (.*?)\]/);
+        const styleMatch = nextContent.match(/\[STYLE_GUIDE: (.*?)\]/);
+        const retryMatch = nextContent.match(/\[RETRY_PROMPT: (.*?)\]/);
+        const idealMatch = nextContent.match(/\[IDEAL_RESPONSE: (.*?)\]/);
+
+        setCoachingFeedback({
+          failReason: coachMatch?.[1]?.trim(),
+          styleGuide: styleMatch?.[1]?.trim(),
+          nextTry: retryMatch?.[1]?.trim(),
+          idealResponse: idealMatch?.[1]?.trim()
+        });
+
+        const retryText = retryMatch?.[1]?.trim() || "Protocol performance deficit detected. Please refine your logic and try again.";
+        const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: retryText, mode: 'standard' };
+        setMessages([...updatedMessages, assistantMsg]);
+        setCurrentCaption("");
+        playAIQuestion(retryText);
+      } else {
+        const cleaned = nextContent.replace(/\[HINT: .*?\]/, "").trim();
+        const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+        setMessages([...updatedMessages, assistantMsg]);
+        setCurrentCaption("");
+        playAIQuestion(cleaned);
+      }
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+  };
+
+  const handleTryAgain = () => {
+    if (messages.length < 3) return;
+    const originalQuestionMsg = messages[messages.length - 3];
+    setMessages(prev => prev.slice(0, -2));
+    setCoachingFeedback(null);
+    setShowCoachingDetails(false);
+    setCurrentCaption("");
+    playAIQuestion(originalQuestionMsg.content);
   };
 
   const handleEndSession = async () => {
@@ -316,6 +388,8 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     );
   };
 
+  const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
+
   return (
     <div className="bg-white shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-slate-900 animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
@@ -331,64 +405,200 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
            </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full py-16 px-12 gap-12 justify-center">
-             {/* Unified Focus Header */}
-             <div className="text-center space-y-4">
-                <span className="px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.4em] border border-slate-200 bg-slate-50" style={{ color: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}>
-                   {persona} PROTOCOL ONLINE
-                </span>
-                <h3 className="text-5xl font-black tracking-tight leading-tight">
-                   Presence: {meetingContext.clientNames || persona}
-                </h3>
-             </div>
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar py-16 px-12 gap-12 justify-center">
+               {/* Unified Focus Header */}
+               <div className="text-center space-y-4">
+                  <span className="px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.4em] border border-slate-200 bg-slate-50" style={{ color: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}>
+                     {persona} PROTOCOL ONLINE
+                  </span>
+                  <h3 className="text-5xl font-black tracking-tight leading-tight">
+                     Presence: {meetingContext.clientNames || persona}
+                  </h3>
+               </div>
 
-             {/* Main Visual Core */}
-             <div className="relative flex flex-col items-center">
-                <div className="relative z-20">
-                   {persona && <AnimatedBotV2 type={persona} />}
-                </div>
-                
-                {meetingContext.vocalPersonaAnalysis && (
-                   <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span>
-                   </div>
-                )}
-             </div>
-
-             {/* Cinematic Narrative Display */}
-             <div className="bg-slate-50 border border-slate-200 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
-                <div className="flex items-center justify-between mb-2">
-                   <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">{persona} Strategic Inquiry</h5>
-                   <div className="flex gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/20"></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                   </div>
-                </div>
-                <p className="text-4xl font-black italic leading-[1.4] text-slate-900 tracking-tight">
-                   {messages[messages.length - 1]?.content || status || "Synchronizing Strategic Core..."}
-                </p>
-             </div>
-
-             {/* User Interaction Layer */}
-             <div className="space-y-8">
-                <div className="relative group">
-                   <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-slate-900 shadow-inner h-48 resize-none placeholder:text-slate-400 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || persona}...`} />
-                   <button onClick={() => startListening()} className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}><ICONS.Ear className="w-8 h-8" /></button>
-                </div>
-
-                {lastSuggestion && (
-                  <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2.5rem] animate-in slide-in-from-top-4 duration-500 text-center">
-                     <p className="text-sm font-bold text-indigo-600 italic">"Coach Directive: {lastSuggestion}"</p>
+               {/* Main Visual Core */}
+               <div className="relative flex flex-col items-center">
+                  <div className="relative z-20">
+                     {persona && <AnimatedBotV2 type={persona} />}
                   </div>
-                )}
+                  
+                  {meetingContext.vocalPersonaAnalysis && (
+                     <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg">
+                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
+                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Vocal Mimicry Active</span>
+                     </div>
+                  )}
+               </div>
 
-                <div className="flex items-center gap-6">
-                   <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Strategy</button>
-                   <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50">End Session & Audit</button>
+               {/* Cinematic Narrative Display */}
+               <div className="bg-slate-50 border border-slate-200 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+                  <div className="flex items-center justify-between mb-2">
+                     <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">{persona} Strategic Inquiry</h5>
+                     <div className="flex gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/20"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                     </div>
+                  </div>
+                  <p className="text-4xl font-black italic leading-[1.4] text-slate-900 tracking-tight">
+                     {messages[messages.length - 1]?.content || status || "Synchronizing Strategic Core..."}
+                  </p>
+               </div>
+
+               {/* Neural Strategic Hint */}
+               {currentHint && (
+                 <div className="w-full bg-indigo-50 border border-indigo-200 p-8 rounded-[2.5rem] shadow-xl flex items-center gap-6 animate-in slide-in-from-top-4">
+                     <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                         <ICONS.Sparkles className="w-6 h-6 text-indigo-100" />
+                     </div>
+                     <div className="text-left flex-1">
+                       <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
+                       <p className="text-lg font-bold text-slate-900 italic leading-snug">{currentHint}</p>
+                     </div>
+                 </div>
+               )}
+
+               {/* Protocol Blocked Overlay */}
+               {coachingFeedback && (
+                 <div className="p-12 bg-rose-50 backdrop-blur-2xl border-2 border-rose-200 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                           <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
+                           <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
+                        </div>
+                     </div>
+
+                     <button 
+                       onClick={() => setShowCoachingDetails(!showCoachingDetails)}
+                       className="w-full group flex items-center justify-between p-10 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
+                     >
+                        <span className="text-xl font-black text-indigo-600 italic group-hover:text-indigo-700 text-left pr-6">
+                          Initialize Neural Alignment: Access Strategic Correction & Master Logic Node
+                        </span>
+                        <div className={`w-12 h-12 rounded-full bg-indigo-600/10 border border-indigo-500/40 flex items-center justify-center transition-transform duration-500 ${showCoachingDetails ? 'rotate-180' : ''}`}>
+                           <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                           </svg>
+                        </div>
+                     </button>
+
+                     {showCoachingDetails && (
+                       <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500 pt-4">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                           <div className="space-y-4">
+                               <h5 className="text-[11px] font-black uppercase text-rose-600 tracking-[0.3em]">Deficit Rationale</h5>
+                               <div className="text-lg font-bold text-rose-900 leading-relaxed italic border-l-4 border-rose-300 pl-8 py-2">
+                                 {coachingFeedback.failReason || "Incongruent logic detected in current stage response."}
+                               </div>
+                           </div>
+                           <div className="space-y-4">
+                               <h5 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.3em]">Strategic Guidance</h5>
+                               <div className="text-lg font-bold text-indigo-900 leading-relaxed italic border-l-4 border-indigo-300 pl-8 py-2">
+                                 {coachingFeedback.styleGuide || "Adopt a higher-authority executive stance with grounded metrics."}
+                               </div>
+                           </div>
+                         </div>
+
+                         {coachingFeedback.idealResponse && (
+                           <div className="p-12 bg-indigo-50 border-2 border-indigo-100 rounded-[3rem] space-y-6 shadow-inner">
+                               <h5 className="text-[12px] font-black uppercase text-indigo-500 tracking-[0.4em]">Master Logic Protocol</h5>
+                               <p className="text-3xl font-black text-slate-900 leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
+                           </div>
+                         )}
+
+                         <div className="flex items-center gap-6 pt-8 border-t border-slate-200">
+                           <button onClick={handleTryAgain} className="flex-1 py-7 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 flex items-center justify-center gap-4">
+                               <ICONS.Efficiency className="w-8 h-8" /> Try Again (Revert Turn)
+                           </button>
+                           <button onClick={() => setCoachingFeedback(null)} className="px-12 py-7 bg-slate-100 text-slate-600 border border-slate-200 rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.2em] hover:bg-slate-200 active:scale-95 transition-all">Proceed with Feedback</button>
+                         </div>
+                       </div>
+                     )}
+                 </div>
+               )}
+
+               {/* User Interaction Layer */}
+               <div className="space-y-8">
+                  <div className="relative group">
+                     <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-slate-900 shadow-inner h-48 resize-none placeholder:text-slate-400 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || persona}...`} />
+                     <button onClick={() => startListening()} className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}><ICONS.Ear className="w-8 h-8" /></button>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                     <button onClick={handleNextNode} disabled={isProcessing || !currentCaption.trim()} className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95">Commit Strategy</button>
+                     <button onClick={handleEndSession} disabled={isProcessing} className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50">End Session & Audit</button>
+                  </div>
+               </div>
+          </div>
+
+          {/* Draggable Partition Handle */}
+          <div 
+            onMouseDown={startResizing}
+            className="w-1.5 h-full cursor-col-resize hover:bg-indigo-500 active:bg-indigo-700 z-40 transition-colors relative"
+          >
+             <div className="absolute inset-y-0 -left-1 -right-1"></div>
+          </div>
+
+          {/* Right Sidebar: Neural Audit Log */}
+          <aside 
+            style={{ 
+              width: historyWidth, 
+              fontSize: `${historyFontScale}rem`,
+              transition: isResizing ? 'none' : 'all 0.3s ease'
+            }}
+            className="border-l border-slate-100 bg-slate-50/50 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
+          >
+             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-50">
+                <div className="flex items-center gap-3">
+                   <div className="p-2 bg-indigo-600 rounded-lg text-white" style={{ transform: `scale(${historyFontScale})` }}><ICONS.Research className="w-4 h-4" /></div>
+                   {historyWidth > 180 && (
+                     <div className="overflow-hidden">
+                        <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-900 truncate" style={{ fontSize: `${historyFontScale * 0.75}rem` }}>Simulation History</h4>
+                        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest truncate" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Mastery Trace Log</p>
+                     </div>
+                   )}
                 </div>
+                {historyWidth > 120 && (
+                  <button 
+                    onClick={exportPDF}
+                    disabled={isExporting}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg hover:bg-indigo-700 border border-indigo-500/30"
+                    style={{ transform: `scale(${historyFontScale})`, transformOrigin: 'right center' }}
+                  >
+                    {isExporting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <ICONS.Document className="w-3.5 h-3.5" />}
+                    {historyWidth > 200 && <span style={{ fontSize: '0.6rem' }}>Export Doc</span>}
+                  </button>
+                )}
              </div>
+
+             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
+                {messages.map((msg, idx) => (
+                  <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-white border-slate-200' : 'bg-indigo-50 border-indigo-100'}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${msg.role === 'assistant' ? 'bg-slate-900 text-white' : 'bg-indigo-600 text-white'}`}>
+                        {msg.role === 'assistant' ? 'Client' : 'Seller'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-700 leading-relaxed" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>
+                      {msg.content}
+                    </p>
+                  </div>
+                ))}
+             </div>
+
+             {historyWidth > 150 && (
+               <div className="p-6 bg-white border-t border-slate-100">
+                  <button 
+                    onClick={handleEndSession}
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all"
+                    style={{ fontSize: `${historyFontScale * 0.65}rem`, transform: `scale(${historyFontScale > 1.2 ? 1.1 : 1})` }}
+                  >
+                     Final Session Audit Review
+                  </button>
+               </div>
+             )}
+          </aside>
         </div>
       )}
     </div>
