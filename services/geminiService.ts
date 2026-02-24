@@ -508,6 +508,14 @@ You must switch behavior instantly and remain fully in that persona until change
 You are evaluating an enterprise AI platform called Kore.ai – AI for Work.
 You are conducting a serious enterprise buying evaluation.
 
+===========================================================
+COGNITIVE CHALLENGE DEPTH: ${context.difficulty || 'Medium'}
+===========================================================
+Adjust your scrutiny and pushback based on this level:
+- Easy: Be more forgiving, accept reasonable answers, provide helpful hints.
+- Medium: Standard executive scrutiny, demand metrics, probe for depth.
+- Hard: Extremely skeptical, aggressive pushback, demand absolute proof, zero tolerance for fluff.
+
 ${activeMimicry ? `===========================================================
 BEHAVIORAL MIMICRY DIRECTIVE (PERSONA CLONE ACTIVE)
 ===========================================================
@@ -641,6 +649,14 @@ export async function* streamAvatarSimulation(
 
 MODE 1 → Enterprise CIO (Primary Role – Visible to User)
 MODE 2 → Hidden Performance Evaluator (Internal – Do NOT reveal)
+
+===========================================================
+COGNITIVE CHALLENGE DEPTH: ${context.difficulty || 'Medium'}
+===========================================================
+Adjust your scrutiny and pushback based on this level:
+- Easy: Be more forgiving, accept reasonable answers, provide helpful hints.
+- Medium: Standard executive scrutiny, demand metrics, probe for depth.
+- Hard: Extremely skeptical, aggressive pushback, demand absolute proof, zero tolerance for fluff.
 
 ${activeMimicry ? `===========================================================
 BEHAVIORAL MIMICRY DIRECTIVE (PERSONA CLONE ACTIVE)
@@ -799,6 +815,14 @@ ${kycDocContent}
 ===========================================================
 CURRENT STAGE: ${currentStage}
 ===========================================================
+
+===========================================================
+COGNITIVE CHALLENGE DEPTH: ${context.difficulty || 'Medium'}
+===========================================================
+Adjust your scrutiny and pushback based on this level:
+- Easy: Be more forgiving, accept reasonable answers, provide helpful hints.
+- Medium: Standard executive scrutiny, demand metrics, probe for depth.
+- Hard: Extremely skeptical, aggressive pushback, demand absolute proof, zero tolerance for fluff.
 Stages logic:
 1. Ice Breakers - Common interest, rapport.
 2. About Business - Core value, business problem alignment.

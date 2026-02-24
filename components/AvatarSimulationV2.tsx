@@ -444,20 +444,20 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                   <p className="text-4xl font-black italic leading-[1.4] text-slate-900 tracking-tight">
                      {messages[messages.length - 1]?.content || status || "Synchronizing Strategic Core..."}
                   </p>
-               </div>
 
-               {/* Neural Strategic Hint */}
-               {currentHint && (
-                 <div className="w-full bg-indigo-50 border border-indigo-200 p-8 rounded-[2.5rem] shadow-xl flex items-center gap-6 animate-in slide-in-from-top-4">
-                     <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
-                         <ICONS.Sparkles className="w-6 h-6 text-indigo-100" />
-                     </div>
-                     <div className="text-left flex-1">
-                       <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
-                       <p className="text-lg font-bold text-slate-900 italic leading-snug">{currentHint}</p>
-                     </div>
-                 </div>
-               )}
+                  {/* Neural Strategic Hint - Integrated */}
+                  {currentHint && (
+                    <div className="mt-8 pt-8 border-t border-slate-200/60 flex items-start gap-4 animate-in slide-in-from-top-2">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
+                            <ICONS.Sparkles className="w-4 h-4 text-indigo-100" />
+                        </div>
+                        <div className="text-left flex-1">
+                          <h5 className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
+                          <p className="text-base font-bold text-slate-600 italic leading-relaxed">{currentHint}</p>
+                        </div>
+                    </div>
+                  )}
+               </div>
 
                {/* Protocol Blocked Overlay */}
                {coachingFeedback && (
