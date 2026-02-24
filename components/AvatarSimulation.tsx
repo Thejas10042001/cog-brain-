@@ -103,6 +103,20 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   }, [isResizing]);
 
   useEffect(() => {
+    return () => {
+      if (activeAudioSource.current) {
+        try { activeAudioSource.current.stop(); } catch (e) {}
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
