@@ -729,12 +729,12 @@ OPERATIONAL CONSTRAINTS:
                 onChange={(e) => setStep(parseInt(e.target.value))}
                 className="appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl pl-10 pr-12 py-3 text-xs font-black uppercase tracking-widest text-slate-600 outline-none focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
               >
-                <option value={1} disabled={maxStepReached < 1}>Step 1: Library</option>
-                <option value={2} disabled={maxStepReached < 2}>Step 2: Anchor</option>
-                <option value={3} disabled={maxStepReached < 3}>Step 3: Vocal Sync</option>
-                <option value={4} disabled={maxStepReached < 4}>Step 4: Context</option>
-                <option value={5} disabled={maxStepReached < 5}>Step 5: Persona</option>
-                <option value={6} disabled={maxStepReached < 6}>Step 6: Finalize</option>
+                <option value={1}>Step 1: Library</option>
+                <option value={2}>Step 2: Anchor</option>
+                <option value={3}>Step 3: Vocal Sync</option>
+                <option value={4}>Step 4: Context</option>
+                <option value={5}>Step 5: Persona</option>
+                <option value={6}>Step 6: Finalize</option>
               </select>
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none">
                 <ICONS.Efficiency className="w-4 h-4" />

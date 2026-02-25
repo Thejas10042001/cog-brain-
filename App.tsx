@@ -271,7 +271,7 @@ const App: React.FC = () => {
     const currentHash = generateStateHash();
     
     if (analysis && currentHash === lastAnalyzedHash.current) {
-      setActiveTab('qa');
+      setActiveTab('context');
       return;
     }
 
@@ -299,7 +299,7 @@ const App: React.FC = () => {
         setAnalysis(result);
         lastAnalyzedHash.current = currentHash;
         setIsAnalyzing(false);
-        setActiveTab('qa');
+        setActiveTab('context');
       }, 800);
 
     } catch (err: any) {
