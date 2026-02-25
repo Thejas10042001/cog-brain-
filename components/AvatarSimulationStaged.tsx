@@ -502,18 +502,13 @@ export const AvatarSimulationStaged: FC<{
 
   const handleTransitionProceed = async () => {
     setShowTransitionModal(false);
+    if (transitionChoice === 'next') {
+      await handleEndSession();
+      return;
+    }
     setIsProcessing(true);
 
     let nextS = currentStage;
-    if (transitionChoice === 'next') {
-        const nextIdx = STAGES.indexOf(currentStage) + 1;
-        if (nextIdx < STAGES.length) {
-            nextS = STAGES[nextIdx];
-            setCurrentStage(nextS);
-            setExpandedStages(prev => new Set(prev).add(nextS));
-        }
-    }
-
     setRemainingQuestionsInLoop(questionCount);
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
@@ -562,55 +557,7 @@ export const AvatarSimulationStaged: FC<{
   };
 
   const handleSkip = async () => {
-    const currentIndex = STAGES.indexOf(currentStage);
-    if (currentIndex >= STAGES.length - 1) return;
-
-    const currentQuestion = messages[messages.length - 1]?.content || "Manual Advance";
-    
-    stopListening();
-    setIsProcessing(true);
-    setCoachingFeedback(null);
-    setShowCoachingDetails(false);
-    setCurrentHint(null);
-    setCurrentCaption("");
-    
-    setStageRatings(prev => ({ ...prev, [currentStage]: 'skipped' }));
-    
-    const attempt: StageAttempt = {
-      question: currentQuestion,
-      userAnswer: "SKIPPED BY USER",
-      result: 'SKIPPED'
-    };
-    setStageHistory(prev => ({
-      ...prev,
-      [currentStage]: [...(prev[currentStage] || []), attempt]
-    }));
-
-    const nextStage = STAGES[currentIndex + 1];
-    setCurrentStage(nextStage);
-    setExpandedStages(prev => new Set(prev).add(nextStage));
-
-    const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
-    const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
-
-    try {
-      const stream = streamAvatarStagedSimulation(`Manual Override: Advance to Stage ${nextStage}`, messages, meetingContext, nextStage, kycContent);
-      let response = "";
-      for await (const chunk of stream) response += chunk;
-
-      const hintMatch = response.match(/\[HINT: ([\s\S]*?)\]/);
-      if (hintMatch) setCurrentHint(hintMatch[1]);
-
-      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
-      const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
-      setMessages(prev => [...prev, aiMsg]);
-      playAIQuestion(cleaned);
-    } catch (e: any) { 
-      console.error(e); 
-      if (e.message?.includes("Requested entity was not found") && window.aistudio) {
-        window.aistudio.openSelectKey();
-      }
-    } finally { setIsProcessing(false); }
+    await handleEndSession();
   };
 
   const handleEndSession = async () => {

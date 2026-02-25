@@ -9,7 +9,7 @@ interface PracticeSessionProps {
   analysis: AnalysisResult;
 }
 
-type SessionMode = 'roleplay' | 'grooming';
+type SessionMode = 'roleplay' | 'seller-roleplay' | 'grooming';
 
 const PERSONA_OPTIONS: { type: CustomerPersonaType; label: string; icon: React.ReactNode; desc: string }[] = [
   { type: 'Balanced', label: 'Balanced', icon: <ICONS.Document />, desc: 'Standard business profile, focused on utility.' },
@@ -111,6 +111,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
 
       const systemInstruction = sessionMode === 'roleplay' 
         ? `Act as the buyer: ${analysis.snapshot.role}. Persona: ${selectedPersona}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}.`
+        : sessionMode === 'seller-roleplay'
+        ? `Act as the elite salesperson representing your company. The user is acting as the buyer: ${analysis.snapshot.role}. Persona: ${selectedPersona}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.`
         : `Act as a world-class speech and sales coach. Start by stating: "I'm going to ask you a critical question. Take a breath, and give me your best structured response." Then ask exactly this question: "${groomingTarget}". Once the user provides a full answer, remain silent until the session is ended manually. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
       const sessionPromise = ai.live.connect({
@@ -301,13 +303,19 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
           <div className="flex gap-2 p-1.5 bg-slate-50 border border-slate-200 rounded-2xl">
             <button 
               onClick={() => { stopPractice(); setSessionMode('roleplay'); setEvaluation(null); }}
-              className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
             >
               Buyer Roleplay
             </button>
             <button 
+              onClick={() => { stopPractice(); setSessionMode('seller-roleplay'); setEvaluation(null); }}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'seller-roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Seller Roleplay
+            </button>
+            <button 
               onClick={() => { stopPractice(); setSessionMode('grooming'); }}
-              className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'grooming' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'grooming' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
             >
               Bot-Led Grooming
             </button>
@@ -357,11 +365,13 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                {sessionMode === 'roleplay' ? <ICONS.Brain className="w-10 h-10" /> : <ICONS.Trophy className="w-10 h-10" />}
             </div>
             <h4 className="text-4xl font-black text-slate-900 tracking-tight">
-              {sessionMode === 'roleplay' ? `Simulate a Live ${analysis.snapshot.role} Meeting` : 'Initiate Speech Mastery Protocol'}
+              {sessionMode === 'roleplay' ? `Simulate a Live ${analysis.snapshot.role} Meeting` : sessionMode === 'seller-roleplay' ? 'Simulate an Elite Sales Pitch' : 'Initiate Speech Mastery Protocol'}
             </h4>
             <p className="text-slate-500 text-lg leading-relaxed max-w-2xl mx-auto font-medium">
               {sessionMode === 'roleplay' 
                 ? 'Test your strategic reflexes in a real-time, low-latency dialogue with a persona-grounded buyer.'
+                : sessionMode === 'seller-roleplay'
+                ? 'Observe how an elite salesperson handles your questions. You act as the buyer, the AI acts as the seller.'
                 : 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit.'}
             </p>
           </div>
@@ -401,14 +411,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
           </div>
 
           <button 
-            onClick={sessionMode === 'roleplay' ? startPractice : startGroomingSession} 
+            onClick={sessionMode === 'grooming' ? startGroomingSession : startPractice} 
             disabled={status === 'connecting'} 
-            className={`group relative overflow-hidden inline-flex items-center gap-6 px-20 py-7 rounded-full font-black text-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 ${sessionMode === 'roleplay' ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200' : 'bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200'}`}
+            className={`group relative overflow-hidden inline-flex items-center gap-6 px-20 py-7 rounded-full font-black text-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 ${sessionMode === 'roleplay' || sessionMode === 'seller-roleplay' ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200' : 'bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200'}`}
           >
             {status === 'connecting' ? (
               <><div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div> Connecting...</>
             ) : (
-              <><ICONS.Play className="w-8 h-8" /> {sessionMode === 'roleplay' ? 'Commence Interaction' : 'Activate Bot-Coach'}</>
+              <><ICONS.Play className="w-8 h-8" /> {sessionMode === 'grooming' ? 'Activate Bot-Coach' : 'Commence Interaction'}</>
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
           </button>
@@ -542,17 +552,19 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
             </div>
             
             <div className="text-center space-y-6 relative z-10 max-w-xl">
-               <span className="px-5 py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[0.3em] rounded-xl border border-indigo-100 mb-4 inline-block">
-                 {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : 'Bot-Led Grooming Active'}
-               </span>
-               <h5 className="text-slate-900 text-4xl font-black tracking-tight leading-tight">
-                 {sessionMode === 'roleplay' ? analysis.snapshot.role : 'Neural Bot-Coach'}
-               </h5>
-               <p className="text-slate-500 text-lg italic font-medium leading-relaxed">
-                 {sessionMode === 'roleplay' 
-                   ? '"Speak directly to our business value drivers."' 
-                   : `Bot Question: "${groomingTarget}"`}
-               </p>
+                <span className="px-5 py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[0.3em] rounded-xl border border-indigo-100 mb-4 inline-block">
+                  {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : sessionMode === 'seller-roleplay' ? 'Elite Seller Simulation' : 'Bot-Led Grooming Active'}
+                </span>
+                <h5 className="text-slate-900 text-4xl font-black tracking-tight leading-tight">
+                  {sessionMode === 'roleplay' ? analysis.snapshot.role : sessionMode === 'seller-roleplay' ? 'Elite Salesperson' : 'Neural Bot-Coach'}
+                </h5>
+                <p className="text-slate-500 text-lg italic font-medium leading-relaxed">
+                  {sessionMode === 'roleplay' 
+                    ? '"Speak directly to our business value drivers."' 
+                    : sessionMode === 'seller-roleplay'
+                    ? '"I am ready to address your concerns and demonstrate our value."'
+                    : `Bot Question: "${groomingTarget}"`}
+                </p>
             </div>
 
             {isActive && (
@@ -576,11 +588,31 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
           </div>
           
           <div className="bg-slate-50 p-10 flex flex-col border-l border-slate-200 overflow-hidden shadow-inner relative h-full">
-            <h6 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8 flex items-center gap-3">
-               <ICONS.Efficiency className="w-4 h-4" /> Mastery Log
-            </h6>
+            <div className="flex items-center justify-between mb-8">
+              <h6 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 flex items-center gap-3">
+                 <ICONS.Efficiency className="w-4 h-4" /> Mastery Log
+              </h6>
+              <div className="flex gap-2">
+                {isActive && (
+                  <button 
+                    onClick={stopPractice}
+                    className="p-2 bg-rose-100 text-rose-600 rounded-lg hover:bg-rose-200 transition-colors"
+                    title="End Session"
+                  >
+                    <ICONS.X className="w-4 h-4" />
+                  </button>
+                )}
+                <button 
+                  onClick={() => { setTranscription([]); setCurrentTranscription({ user: '', ai: '' }); userTranscriptionRef.current = ''; aiTranscriptionRef.current = ''; }}
+                  className="p-2 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition-colors"
+                  title="Clear Log"
+                >
+                  <ICONS.Trash className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
             <div className="flex-1 overflow-y-auto space-y-8 custom-scrollbar pr-6">
-              {transcription.length === 0 && (
+              {transcription.length === 0 && !currentTranscription.user && !currentTranscription.ai && (
                 <div className="py-24 text-center space-y-6 opacity-20">
                    <ICONS.Speaker className="mx-auto w-14 h-14" />
                    <p className="text-[11px] font-black uppercase tracking-[0.4em]">Establishing Voice Link...</p>
@@ -589,17 +621,33 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
               {transcription.map((turn, i) => (
                 <div key={i} className="space-y-3 animate-in slide-in-from-bottom-4 duration-500">
                   <div className="flex flex-col items-end text-right">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Your response</p>
-                    <p className="text-sm text-slate-700 bg-white p-6 rounded-[2rem] rounded-tr-none border border-slate-100 shadow-sm leading-relaxed italic w-full">“{turn.user}”</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Your input</p>
+                    <p className="text-sm text-slate-700 bg-white p-6 rounded-[2rem] rounded-tr-none border border-slate-200 shadow-md leading-relaxed font-medium w-full">“{turn.user}”</p>
                   </div>
                   {turn.ai && (
                     <div className="flex flex-col items-start text-left">
-                      <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1.5">Coach input</p>
-                      <p className="text-sm text-indigo-950 bg-indigo-50/80 p-6 rounded-[2rem] rounded-tl-none border border-indigo-100 font-bold leading-relaxed w-full">“{turn.ai}”</p>
+                      <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1.5">AI Response</p>
+                      <p className="text-sm text-indigo-950 bg-indigo-50 p-6 rounded-[2rem] rounded-tl-none border border-indigo-200 font-bold shadow-md leading-relaxed w-full">“{turn.ai}”</p>
                     </div>
                   )}
                 </div>
               ))}
+              {(currentTranscription.user || currentTranscription.ai) && (
+                <div className="space-y-3 animate-pulse">
+                  {currentTranscription.user && (
+                    <div className="flex flex-col items-end text-right">
+                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5">Hearing...</p>
+                      <p className="text-sm text-slate-400 bg-white/50 p-6 rounded-[2rem] rounded-tr-none border border-dashed border-slate-200 leading-relaxed italic w-full">“{currentTranscription.user}”</p>
+                    </div>
+                  )}
+                  {currentTranscription.ai && (
+                    <div className="flex flex-col items-start text-left">
+                      <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest mb-1.5">Responding...</p>
+                      <p className="text-sm text-indigo-300 bg-indigo-50/30 p-6 rounded-[2rem] rounded-tl-none border border-dashed border-indigo-100 leading-relaxed italic w-full">“{currentTranscription.ai}”</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
