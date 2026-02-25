@@ -30,23 +30,37 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
   const speak = useCallback(async (text: string) => {
     if (!mountedRef.current) return;
     try {
-      setIsSpeaking(true);
+      // Stop any existing audio immediately
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      setIsProcessing(true);
       const base64 = await generateVoiceSample(text, 'Zephyr', 'Male');
+      setIsProcessing(false);
+      
+      if (!mountedRef.current) return;
+
+      setIsSpeaking(true);
       const audio = new Audio(`data:audio/wav;base64,${base64}`);
       audioRef.current = audio;
       
       return new Promise<void>((resolve) => {
         audio.onended = () => {
           setIsSpeaking(false);
+          audioRef.current = null;
           resolve();
         };
         audio.onerror = () => {
           setIsSpeaking(false);
+          audioRef.current = null;
           resolve();
         };
         audio.play().catch(err => {
           console.error("Audio play failed:", err);
           setIsSpeaking(false);
+          audioRef.current = null;
           resolve();
         });
       });
@@ -59,6 +73,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
   const startListening = useCallback(() => {
     if (!SpeechRecognition || !mountedRef.current) return;
 
+    // Don't start if already speaking
+    if (isSpeaking) return;
+
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -67,20 +84,31 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true; // Use interim results for faster wake word detection
     recognition.lang = 'en-US';
 
     recognition.onresult = async (event: any) => {
-      const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      console.log("Cogni Heard:", transcript);
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        transcript += event.results[i][0].transcript;
+      }
+      transcript = transcript.toLowerCase().trim();
+      
+      // Only process final results or specific wake word patterns in interim
+      const isFinal = event.results[event.results.length - 1].isFinal;
+      
+      console.log("Cogni Heard:", transcript, isFinal ? "(Final)" : "(Interim)");
+
+      const wakeWords = ["hey cogni", "ok cogni", "hey cogney", "ok cogney", "hey cogny", "ok cogny", "hey cockney", "ok cockney"];
+      const detectedWakeWord = wakeWords.some(word => transcript.includes(word));
 
       if (mode === 'wake_word') {
-        if (transcript.includes("hey cogni") || transcript.includes("ok cogni") || transcript.includes("hey cogney") || transcript.includes("ok cogney")) {
+        if (detectedWakeWord) {
           recognition.stop();
-          await speak("How may I help you?");
           setMode('query');
+          await speak("How may I help you?");
         }
-      } else {
+      } else if (isFinal) {
         recognition.stop();
         setIsProcessing(true);
         const response = await generateAssistantResponse(transcript, `User is currently on the ${activeTab} tab. User: ${user?.email || 'Anonymous'}`);
@@ -94,14 +122,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         console.error("Speech recognition error:", event.error);
       }
-      // Restart if not speaking
-      if (!isSpeaking && mountedRef.current) {
-        setTimeout(startListening, 100);
+      if (mountedRef.current && !isSpeaking) {
+        setTimeout(startListening, 300);
       }
     };
 
     recognition.onend = () => {
-      if (!isSpeaking && mountedRef.current) {
+      if (mountedRef.current && !isSpeaking) {
         startListening();
       }
     };
@@ -111,7 +138,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
       recognition.start();
       setIsListening(true);
     } catch (e) {
-      console.error("Recognition start failed:", e);
+      // Ignore if already started
     }
   }, [isSpeaking, speak, mode, activeTab, user]);
 
@@ -133,11 +160,19 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
   useEffect(() => {
     const handleExternalSpeak = async (e: any) => {
       if (e.detail && typeof e.detail.text === 'string') {
+        // Stop recognition while speaking
         if (recognitionRef.current) {
           try {
             recognitionRef.current.stop();
           } catch (err) {}
         }
+        
+        // If it's an interrupt request, we should stop current audio first
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+
         await speak(e.detail.text);
       }
     };

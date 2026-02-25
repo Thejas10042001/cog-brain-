@@ -514,7 +514,7 @@ export const AvatarSimulationStaged: FC<{
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
 
-    const directive = `System Directive: User has opted to ${transitionChoice === 'next' ? 'advance to ' + nextS : 'stay in ' + currentStage} for a sequence of ${questionCount} questions. 
+    const directive = `System Directive: User has opted to stay in ${currentStage} for a sequence of ${questionCount} questions. 
     Set the cognitive difficulty to: ${difficulty}. 
     Difficulty definitions:
     - Easy: Surface level, common business questions.

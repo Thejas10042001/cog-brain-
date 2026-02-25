@@ -96,30 +96,9 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const speak = async (text: string) => {
+  const speak = (text: string) => {
     if (!audioEnabled) return;
-    try {
-      if (ttsAudioRef.current) {
-        ttsAudioRef.current.pause();
-      }
-      const analysis = context.vocalPersonaAnalysis;
-      const base64 = await generateVoiceSample(
-        text, 
-        analysis?.baseVoice || 'Zephyr', 
-        analysis?.gender || 'Male',
-        analysis || undefined
-      );
-      const audio = new Audio(`data:audio/wav;base64,${base64}`);
-      ttsAudioRef.current = audio;
-      await audio.play().catch(err => {
-        if (err.name === 'NotAllowedError') {
-          console.warn("Autoplay blocked. User must interact first.");
-          setAudioEnabled(false);
-        }
-      });
-    } catch (err) {
-      console.error("Audio assistance failed:", err);
-    }
+    window.dispatchEvent(new CustomEvent('cogni-speak', { detail: { text } }));
   };
 
   useEffect(() => {

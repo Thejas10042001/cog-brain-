@@ -70,7 +70,7 @@ const App: React.FC = () => {
       feature: 'Strategic Priming & Context Configuration',
       purpose: 'Define the seller/client landscape, upload documents, and set simulation parameters.',
       howItHelps: 'Ensures the AI models are grounded in your specific deal reality for maximum relevance.',
-      audioText: 'Welcome to Settings. This is where you prime the strategic core.',
+      audioText: 'Welcome to Settings. The purpose of this feature is to define the seller and client landscape, upload documents, and set simulation parameters. It helps by ensuring the AI models are grounded in your specific deal reality for maximum relevance.',
       guideText: 'To operate Settings, look at the top navigation bar. You will see a Node Dial dropdown to jump between steps. In Step 1, use the Upload area to add documents. In Step 2, use the dropdown to select your Neural Anchor. Once all steps are configured, click the large purple Synthesize Strategy Core button at the bottom to prime the AI.'
     },
     'qa': {
@@ -78,7 +78,7 @@ const App: React.FC = () => {
       feature: 'Cognitive Assessment Lab',
       purpose: 'Test your knowledge of the deal and product through structured assignments.',
       howItHelps: 'Validates your readiness and identifies information gaps before you face the customer.',
-      audioText: 'This is the Hands-on Assignment lab.',
+      audioText: 'This is the Hands-on Assignment lab. Its purpose is to test your knowledge of the deal and product through structured assignments. This helps by validating your readiness and identifying information gaps before you face the customer.',
       guideText: 'In the Assignment Lab, first look at the top selection area to pick a document from your library. Click the Generate Assignment button to receive your tasks. Answer the questions in the text fields provided and click the Submit button at the bottom for a cognitive evaluation of your deal readiness.'
     },
     'avatar-staged': {
@@ -86,7 +86,7 @@ const App: React.FC = () => {
       feature: 'Progressive Deal Stages',
       purpose: 'Roleplay through specific meeting phases like Ice Breakers, Pricing, and Legal.',
       howItHelps: 'Allows you to master the nuances of each stage of the sales cycle.',
-      audioText: 'Welcome to Stage Simulation.',
+      audioText: 'Welcome to Stage Simulation. The purpose is to roleplay through specific meeting phases like Ice Breakers, Pricing, and Legal. It helps by allowing you to master the nuances of each stage of the sales cycle.',
       guideText: 'Start by looking at the interactive map in the center. Select a meeting stage, such as Ice Breaker or Pricing. Once selected, click the Commence Stage button to start the roleplay. During the session, use the End Stage button to stop and receive immediate feedback on that specific phase.'
     },
     'avatar': {
@@ -94,7 +94,7 @@ const App: React.FC = () => {
       feature: 'Dual-Mode Buyer Simulation',
       purpose: 'Real-time dialogue with a skeptical CIO persona.',
       howItHelps: 'Sharpens your strategic reflexes and objection-handling skills in a low-stakes environment.',
-      audioText: 'Avatar 1.0 is your dual-mode buyer simulation.',
+      audioText: 'Avatar 1.0 is your dual-mode buyer simulation. The purpose is to engage in real-time dialogue with a skeptical CIO persona. It helps by sharpening your strategic reflexes and objection-handling skills in a low-stakes environment.',
       guideText: 'Engage with the CIO by clicking the large Start Simulation button in the center. Speak clearly into your microphone when the pulse animation is active. To finish, look at the Mastery Log on the right and click End Session to stop and generate your performance report.'
     },
     'avatar2': {
@@ -102,7 +102,7 @@ const App: React.FC = () => {
       feature: 'Multi-Persona Enterprise Evaluation',
       purpose: 'Switch between CIO, CFO, and IT Director roles for comprehensive testing.',
       howItHelps: 'Prepares you for the diverse perspectives and scrutiny of a full buying committee.',
-      audioText: 'Avatar 2.0 offers multi-persona evaluation.',
+      audioText: 'Avatar 2.0 offers multi-persona evaluation. The purpose is to switch between CIO, CFO, and IT Director roles for comprehensive testing. It helps by preparing you for the diverse perspectives and scrutiny of a full buying committee.',
       guideText: 'First, select your target persona from the cards at the top: CIO, CFO, or IT Director. Click the Activate Persona button to begin. You can switch personas mid-session using the top cards to test different stakeholder perspectives. Use the End Session button to finalize the audit.'
     },
     'gpt': {
@@ -110,7 +110,7 @@ const App: React.FC = () => {
       feature: 'Strategic Knowledge Retrieval',
       purpose: 'Fast, grounded answering engine for any deal-related question.',
       howItHelps: 'Provides instant access to winning strategies and data points from your uploaded context.',
-      audioText: 'This is Spiked GPT, your strategic knowledge engine.',
+      audioText: 'This is Spiked GPT, your strategic knowledge engine. The purpose is to provide a fast, grounded answering engine for any deal-related question. It helps by providing instant access to winning strategies and data points from your uploaded context.',
       guideText: 'Type any question about your deal in the input box at the very bottom of the screen. Spiked GPT will retrieve grounded answers from your documents and display them in the chat history above. Use the Clear Chat button in the header if you wish to start a new inquiry.'
     },
     'practice': {
@@ -118,7 +118,7 @@ const App: React.FC = () => {
       feature: 'Verbal Architecture & Pacing Audit',
       purpose: 'Practice your delivery and receive an elite audit on tone, grammar, and pacing.',
       howItHelps: 'Refines your vocal presence and ensures your delivery is as strong as your strategy.',
-      audioText: 'Welcome to the Grooming Lab.',
+      audioText: 'Welcome to the Grooming Lab. The purpose is to practice your delivery and receive an elite audit on tone, grammar, and pacing. It helps by refining your vocal presence and ensuring your delivery is as strong as your strategy.',
       guideText: 'Select your roleplay mode using the toggle at the top: Buyer Roleplay or Seller Roleplay. Click the large Commence Interaction button to start speaking. The lab will audit your tone and pacing in real-time. Use the X button in the Mastery Log header on the right to end the session.'
     },
     'audio': {
@@ -126,26 +126,13 @@ const App: React.FC = () => {
       feature: 'High-Fidelity Audio Generation',
       purpose: 'Generate professional-grade audio samples of your winning pitches.',
       howItHelps: 'Allows you to hear the ideal delivery and use it for rehearsal or internal alignment.',
-      audioText: 'This is the Studio.',
+      audioText: 'This is the Studio. The purpose is to generate professional-grade audio samples of your winning pitches. It helps by allowing you to hear the ideal delivery and use it for rehearsal or internal alignment.',
       guideText: 'Enter the text you want to hear in the large Pitch Script area on the left. Select a voice profile from the options on the right and click the Generate Audio button. Once synthesized, you can play or download the resulting high-fidelity sample for your rehearsal.'
     }
   };
 
-  const playNodeAudio = async (text: string) => {
-    try {
-      if (nodeAudioRef.current) {
-        nodeAudioRef.current.pause();
-      }
-      const { generateVoiceSample } = await import('./services/geminiService');
-      const base64 = await generateVoiceSample(text, 'Zephyr', 'Male');
-      const audio = new Audio(`data:audio/wav;base64,${base64}`);
-      nodeAudioRef.current = audio;
-      audio.onplay = () => setIsAudioPlaying(true);
-      audio.onended = () => setIsAudioPlaying(false);
-      await audio.play();
-    } catch (err) {
-      console.error("Node audio failed:", err);
-    }
+  const playNodeAudio = (text: string) => {
+    window.dispatchEvent(new CustomEvent('cogni-speak', { detail: { text } }));
   };
 
   const handleNodeClick = (tab: any) => {
@@ -159,14 +146,21 @@ const App: React.FC = () => {
       const tab = showNodeInfo;
       setActiveTab(tab as any);
       setShowNodeInfo(null);
-      if (nodeAudioRef.current) {
-        nodeAudioRef.current.pause();
-        setIsAudioPlaying(false);
-      }
       // Play detailed guide audio
       playNodeAudio(NODE_DETAILS[tab].guideText);
     }
   };
+
+  // Auto-narrate on tab change
+  useEffect(() => {
+    if (analysis && activeTab) {
+      // Small delay to ensure screen is ready
+      const timer = setTimeout(() => {
+        playNodeAudio(NODE_DETAILS[activeTab].audioText);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, !!analysis]);
 
   // Whole Screen Magnifier State
   const [zoom, setZoom] = useState(100);
