@@ -52,7 +52,6 @@ const ALL_ANSWER_STYLES = [
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [history, setHistory] = useState<StoredDocument[]>([]);
   const [selectedLibraryDocIds, setSelectedLibraryDocIds] = useState<string[]>([]);
@@ -64,14 +63,6 @@ const App: React.FC = () => {
   const [showNodeInfo, setShowNodeInfo] = useState<string | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const nodeAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
 
   const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string }> = {
     'context': {
@@ -418,8 +409,6 @@ const App: React.FC = () => {
         onZoomChange={setZoom}
         textZoom={textZoom}
         onTextZoomChange={setTextZoom}
-        darkMode={darkMode}
-        onDarkModeToggle={() => setDarkMode(!darkMode)}
       />
 
       <VoiceAssistant activeTab={activeTab} user={user} />
@@ -427,14 +416,14 @@ const App: React.FC = () => {
       {/* Node Info Overlay */}
       {showNodeInfo && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300 transition-colors duration-500">
+          <div className="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-300">
             <div className="p-12 space-y-8">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">{NODE_DETAILS[showNodeInfo].label}</h2>
-                  <p className="text-indigo-600 dark:text-indigo-400 font-black text-xs uppercase tracking-widest">{NODE_DETAILS[showNodeInfo].feature}</p>
+                  <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">{NODE_DETAILS[showNodeInfo].label}</h2>
+                  <p className="text-indigo-600 font-black text-xs uppercase tracking-widest">{NODE_DETAILS[showNodeInfo].feature}</p>
                 </div>
-                <div className={`w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 ${isAudioPlaying ? 'animate-pulse' : ''}`}>
+                <div className={`w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 ${isAudioPlaying ? 'animate-pulse' : ''}`}>
                   <ICONS.Speaker className="w-8 h-8" />
                 </div>
               </div>
@@ -442,11 +431,11 @@ const App: React.FC = () => {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">The Purpose</h4>
-                  <p className="text-lg font-bold text-slate-700 dark:text-slate-200 leading-relaxed">{NODE_DETAILS[showNodeInfo].purpose}</p>
+                  <p className="text-lg font-bold text-slate-700 leading-relaxed">{NODE_DETAILS[showNodeInfo].purpose}</p>
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">How it helps</h4>
-                  <p className="text-lg font-bold text-slate-700 dark:text-slate-200 leading-relaxed">{NODE_DETAILS[showNodeInfo].howItHelps}</p>
+                  <p className="text-lg font-bold text-slate-700 leading-relaxed">{NODE_DETAILS[showNodeInfo].howItHelps}</p>
                 </div>
               </div>
 
@@ -459,13 +448,13 @@ const App: React.FC = () => {
                       setIsAudioPlaying(false);
                     }
                   }}
-                  className="flex-1 py-5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                  className="flex-1 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={confirmNodeStart}
-                  className="flex-2 py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 dark:shadow-none transition-all flex items-center justify-center gap-3"
+                  className="flex-2 py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-3"
                 >
                   Start Using Feature <ICONS.ArrowRight className="w-5 h-5" />
                 </button>
@@ -477,12 +466,12 @@ const App: React.FC = () => {
       
       <div className="pt-16 flex flex-1 overflow-hidden text-magnifier">
         
-        <div className="flex flex-1 overflow-hidden bg-white dark:bg-slate-950 relative transition-colors duration-500">
+        <div className="flex flex-1 overflow-hidden bg-white relative">
           {analysis && !isAnalyzing && (
             <>
               <aside 
                 style={{ width: sidebarWidth, fontSize: `${sidebarFontScale}rem` }}
-                className="bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all duration-500"
+                className="bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all"
               >
                 <div className={`p-2 ${sidebarWidth > 120 ? 'lg:p-6' : 'p-2'} space-y-8 flex flex-col h-full`}>
                   <div className="space-y-1">
@@ -519,12 +508,12 @@ const App: React.FC = () => {
             </>
           )}
 
-          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-950 relative transition-colors duration-500">
+          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-white relative">
             <div className="w-full min-h-full">
               {!analysis && !isAnalyzing ? (
                 <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 w-full">
                   <div className="text-center space-y-4">
-                    <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
+                    <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
                       SPIKED<span className="text-red-600">AI</span> Hub
                     </h1>
                     <p className="text-xl text-slate-400 font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto">
@@ -604,13 +593,13 @@ const SidebarBtn = ({ active, onClick, icon, label, scale = 1 }: { active: boole
     onClick={onClick}
     className={`w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl font-bold transition-all text-sm group ${
       active 
-      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 dark:shadow-none scale-[1.02]' 
-      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02]' 
+      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
     }`}
     style={{ transform: active ? `scale(${1.02 * (scale > 1 ? 1 : scale)})` : 'none' }}
   >
     <div 
-      className={`${active ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-indigo-500'} transition-colors shrink-0`}
+      className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors shrink-0`}
       style={{ transform: `scale(${scale})` }}
     >
       {icon}

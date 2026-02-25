@@ -8,19 +8,6 @@
     <script>
       // Shim process.env for the browser environment to prevent crashes
       window.process = window.process || { env: { API_KEY: '' } };
-      
-      // Tailwind Configuration
-      window.tailwind = window.tailwind || {};
-      window.tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-          }
-        }
-      };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">

@@ -71,7 +71,7 @@ export const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-12 transition-colors duration-500">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-4">
           <div className="flex justify-center mb-6">
@@ -79,7 +79,7 @@ export const Auth: React.FC = () => {
               !
             </div>
           </div>
-          <h2 className="text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
+          <h2 className="text-5xl font-black tracking-tighter text-slate-900">
             SPIKED<span className="text-red-600">AI</span>
           </h2>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">
@@ -87,11 +87,11 @@ export const Auth: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-bottom-8 duration-500 transition-colors duration-500">
-          <div className="flex p-1 bg-slate-50 dark:bg-slate-800 rounded-2xl mb-8">
+        <div className="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-100 animate-in fade-in slide-in-from-bottom-8 duration-500">
+          <div className="flex p-1 bg-slate-50 rounded-2xl mb-8">
             <button 
               onClick={() => { setIsLogin(true); setError(null); }}
-              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${isLogin ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${isLogin ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
               Login
             </button>
@@ -103,7 +103,7 @@ export const Auth: React.FC = () => {
                   detail: { text: "Direct profile instantiation is currently restricted. Please coordinate with our Sales Engineering team for tailored onboarding." } 
                 }));
               }}
-              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${!isLogin ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${!isLogin ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
               Join the Core
             </button>
@@ -118,7 +118,7 @@ export const Auth: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800 dark:text-slate-200"
+                  className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800"
                   placeholder="architect@spikedai.io"
                 />
               </div>
@@ -130,7 +130,7 @@ export const Auth: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800 dark:text-slate-200"
+                  className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm focus:border-indigo-500 outline-none transition-all font-semibold text-slate-800"
                   placeholder="••••••••"
                 />
                 <div className="flex justify-between items-center px-1">
@@ -148,19 +148,19 @@ export const Auth: React.FC = () => {
 
               {error && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                  <div className="p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-xl text-rose-600 dark:text-rose-400 text-[10px] font-bold text-center">
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-[10px] font-bold text-center">
                     {error}
                   </div>
                   
-                  <div className="p-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl text-center space-y-3">
-                    <p className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-tight">
+                  <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl text-center space-y-3">
+                    <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-tight">
                       Unable to log in? Contact Spiked AI support team
                     </p>
                     <a 
                       href={SUPPORT_LINK}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
+                      className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-indigo-200 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
                     >
                       <ICONS.Search className="w-3 h-3" />
                       Contact Support Team
@@ -172,7 +172,7 @@ export const Auth: React.FC = () => {
               <button 
                 type="submit"
                 disabled={loading}
-                className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+                className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -183,17 +183,17 @@ export const Auth: React.FC = () => {
             </form>
           ) : (
             <div className="space-y-8 py-4 animate-in fade-in zoom-in-95 duration-500">
-               <div className="p-8 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-[2.5rem] text-center space-y-6">
+               <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2.5rem] text-center space-y-6">
                   <div className="flex justify-center">
                     <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl">
                       <ICONS.Shield className="w-8 h-8" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Provisioning Restricted</h3>
-                    <p className="text-xs text-indigo-700 dark:text-indigo-400 font-bold uppercase tracking-widest">Protocol: Elite Managed Access</p>
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight">Provisioning Restricted</h3>
+                    <p className="text-xs text-indigo-700 font-bold uppercase tracking-widest">Protocol: Elite Managed Access</p>
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
                     Direct profile instantiation is currently restricted to verified enterprise partners. 
                     To provision your cognitive intelligence core, please coordinate with our <strong>Sales Engineering team</strong> for tailored onboarding.
                   </p>
@@ -202,7 +202,7 @@ export const Auth: React.FC = () => {
                       href={SUPPORT_LINK}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
+                      className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
                     >
                       <ICONS.Sparkles className="w-4 h-4" />
                       Coordinate with Sales Team
@@ -218,13 +218,13 @@ export const Auth: React.FC = () => {
           )}
           
           {isLogin && !error && (
-            <div className="mt-8 pt-6 border-t border-slate-50 dark:border-slate-800 text-center">
+            <div className="mt-8 pt-6 border-t border-slate-50 text-center">
                <p className="text-[10px] text-slate-400 font-bold mb-3">NEED ASSISTANCE?</p>
                <a 
                  href={SUPPORT_LINK}
                  target="_blank"
                  rel="noopener noreferrer"
-                 className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-indigo-600 transition-colors"
                >
                  Contact Spiked AI Support
                </a>
