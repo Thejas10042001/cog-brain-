@@ -719,15 +719,15 @@ OPERATIONAL CONSTRAINTS:
   };
 
   return (
-    <div className="space-y-12">
-      <div className="flex items-center justify-between bg-white p-6 rounded-[2.5rem] shadow-xl border border-slate-100">
+    <div className="space-y-12 transition-colors duration-500">
+      <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 transition-colors duration-500">
         <div className="flex items-center gap-6">
           {hasAnalysis && (
             <div className="relative group animate-in fade-in slide-in-from-left-2 duration-500">
               <select 
                 value={step}
                 onChange={(e) => setStep(parseInt(e.target.value))}
-                className="appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl pl-10 pr-12 py-3 text-xs font-black uppercase tracking-widest text-slate-600 outline-none focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
+                className="appearance-none bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl pl-10 pr-12 py-3 text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 outline-none focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
               >
                 <option value={1}>Step 1: Library</option>
                 <option value={2}>Step 2: Anchor</option>
@@ -744,7 +744,7 @@ OPERATIONAL CONSTRAINTS:
               </div>
             </div>
           )}
-          {hasAnalysis && <div className="h-8 w-px bg-slate-200"></div>}
+          {hasAnalysis && <div className="h-8 w-px bg-slate-200 dark:bg-slate-800"></div>}
           <button 
             onClick={() => {
               const newState = !audioEnabled;

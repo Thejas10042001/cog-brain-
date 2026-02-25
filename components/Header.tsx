@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ICONS } from '../constants';
 import { logoutUser, User } from '../services/firebaseService';
 
@@ -9,9 +10,19 @@ interface HeaderProps {
   onZoomChange: (newZoom: number) => void;
   textZoom: number;
   onTextZoomChange: (newZoom: number) => void;
+  darkMode: boolean;
+  onDarkModeToggle: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZoom, onTextZoomChange }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  user, 
+  zoom, 
+  onZoomChange, 
+  textZoom, 
+  onTextZoomChange,
+  darkMode,
+  onDarkModeToggle
+}) => {
   const [showUtility, setShowUtility] = useState(false);
   const [activeMagnifierTab, setActiveMagnifierTab] = useState<'simulation' | 'typography'>('simulation');
   const utilityRef = useRef<HTMLDivElement>(null);
@@ -27,14 +38,14 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-slate-200 h-16">
+    <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-slate-200 dark:border-slate-800 dark:bg-slate-900/80 h-16 transition-colors duration-500">
       <div className="w-full px-8 h-full flex items-center justify-between">
         <div className="flex flex-col items-start leading-none">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-red-600 text-white rounded flex items-center justify-center font-black text-xl shadow-md">
               !
             </div>
-            <span className="font-black text-2xl tracking-tighter text-slate-900">
+            <span className="font-black text-2xl tracking-tighter text-slate-900 dark:text-white">
               SPIKED<span className="text-red-600">AI</span>
             </span>
           </div>
@@ -44,15 +55,59 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={onDarkModeToggle}
+            className="relative w-14 h-7 bg-slate-200 dark:bg-slate-700 rounded-full p-1 transition-colors duration-500 focus:outline-none shadow-inner overflow-hidden"
+            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            <motion.div
+              className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none"
+              initial={false}
+            >
+              <ICONS.Sun className="w-3 h-3 text-amber-500" />
+              <ICONS.Moon className="w-3 h-3 text-indigo-400" />
+            </motion.div>
+            <motion.div
+              className="w-5 h-5 bg-white dark:bg-slate-900 rounded-full shadow-md z-10 relative flex items-center justify-center"
+              animate={{ x: darkMode ? 28 : 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {darkMode ? (
+                  <motion.div
+                    key="moon"
+                    initial={{ opacity: 0, rotate: -90 }}
+                    animate={{ opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, rotate: 90 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ICONS.Moon className="w-3 h-3 text-indigo-400" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="sun"
+                    initial={{ opacity: 0, rotate: -90 }}
+                    animate={{ opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, rotate: 90 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ICONS.Sun className="w-3 h-3 text-amber-500" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </button>
+
           {user && (
-            <div className="hidden lg:flex items-center gap-4 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
+            <div className="hidden lg:flex items-center gap-4 bg-slate-50 dark:bg-slate-800 px-4 py-1.5 rounded-full border border-slate-100 dark:border-slate-700 transition-colors duration-500">
               <div className="flex flex-col items-end">
                 <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Active Link</span>
-                <span className="text-[10px] font-bold text-slate-700 truncate max-w-[120px]">{user.email}</span>
+                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 truncate max-w-[120px]">{user.email}</span>
               </div>
               <button 
                 onClick={() => logoutUser()}
-                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-all"
                 title="Disconnect Neural Link"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
           <div className="relative" ref={utilityRef}>
             <button 
               onClick={() => setShowUtility(!showUtility)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-sm ${showUtility ? 'bg-indigo-600 border-indigo-700 text-white shadow-indigo-200' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-sm ${showUtility ? 'bg-indigo-600 border-indigo-700 text-white shadow-indigo-200' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
               title="Cognitive Magnifier"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,9 +130,9 @@ export const Header: React.FC<HeaderProps> = ({ user, zoom, onZoomChange, textZo
             </button>
 
             {showUtility && (
-              <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
                 {/* Tab Switcher */}
-                <div className="flex border-b border-slate-100 p-2 gap-2 bg-slate-50/50">
+                <div className="flex border-b border-slate-100 dark:border-slate-800 p-2 gap-2 bg-slate-50/50 dark:bg-slate-800/50">
                   <button 
                     onClick={() => setActiveMagnifierTab('simulation')}
                     className={`flex-1 py-2 px-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${activeMagnifierTab === 'simulation' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
