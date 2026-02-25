@@ -518,6 +518,7 @@ const App: React.FC = () => {
                     onToggleLibraryDoc={toggleLibraryDoc}
                     onSynthesize={runAnalysis}
                     isAnalyzing={isAnalyzing}
+                    hasAnalysis={!!analysis}
                   />
                 </div>
               ) : isAnalyzing ? (
@@ -552,6 +553,7 @@ const App: React.FC = () => {
                         onToggleLibraryDoc={toggleLibraryDoc}
                         onSynthesize={runAnalysis}
                         isAnalyzing={isAnalyzing}
+                        hasAnalysis={!!analysis}
                       />
                     </div>
                   )}
