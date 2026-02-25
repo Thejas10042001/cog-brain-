@@ -63,62 +63,70 @@ const App: React.FC = () => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const nodeAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string }> = {
+  const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string }> = {
     'context': {
       label: 'Settings',
       feature: 'Strategic Priming & Context Configuration',
       purpose: 'Define the seller/client landscape, upload documents, and set simulation parameters.',
       howItHelps: 'Ensures the AI models are grounded in your specific deal reality for maximum relevance.',
-      audioText: 'Welcome to Settings. This is where you prime the strategic core. Define your landscape and upload your documents to ensure the AI is grounded in your deal reality.'
+      audioText: 'Welcome to Settings. This is where you prime the strategic core.',
+      guideText: 'To operate Settings, start by uploading your documents in Step 1. Then, select your Neural Anchor in Step 2. Use the Node Dial dropdown at the top to jump between steps quickly. Finally, click Synthesize Strategy Core to prime the AI.'
     },
     'qa': {
       label: 'Hands-on Assignment',
       feature: 'Cognitive Assessment Lab',
       purpose: 'Test your knowledge of the deal and product through structured assignments.',
       howItHelps: 'Validates your readiness and identifies information gaps before you face the customer.',
-      audioText: 'This is the Hands-on Assignment lab. Here, we test your cognitive readiness through structured deal assignments to ensure you have no information gaps.'
+      audioText: 'This is the Hands-on Assignment lab.',
+      guideText: 'In the Assignment Lab, first select a document from your library. Click Generate Assignment to receive your tasks. Answer the questions and click Submit for a cognitive evaluation of your deal readiness.'
     },
     'avatar-staged': {
       label: 'Stage Simulation',
       feature: 'Progressive Deal Stages',
       purpose: 'Roleplay through specific meeting phases like Ice Breakers, Pricing, and Legal.',
       howItHelps: 'Allows you to master the nuances of each stage of the sales cycle.',
-      audioText: 'Welcome to Stage Simulation. Practice specific meeting phases from ice breakers to legal negotiations to master every step of the sales cycle.'
+      audioText: 'Welcome to Stage Simulation.',
+      guideText: 'Start by selecting a meeting stage from the map, such as Ice Breaker or Pricing. Click Commence Stage to start the roleplay. Use the End Stage button to stop and receive feedback on that specific phase.'
     },
     'avatar': {
       label: 'Avatar 1.0',
       feature: 'Dual-Mode Buyer Simulation',
       purpose: 'Real-time dialogue with a skeptical CIO persona.',
       howItHelps: 'Sharpens your strategic reflexes and objection-handling skills in a low-stakes environment.',
-      audioText: 'Avatar 1.0 is your dual-mode buyer simulation. Engage with a skeptical CIO to sharpen your reflexes and objection handling skills.'
+      audioText: 'Avatar 1.0 is your dual-mode buyer simulation.',
+      guideText: 'Engage with the CIO by clicking Start Simulation. Speak clearly into your microphone. The AI will push back on your claims. Click End Session in the Mastery Log to stop and generate your performance report.'
     },
     'avatar2': {
       label: 'Avatar 2.0',
       feature: 'Multi-Persona Enterprise Evaluation',
       purpose: 'Switch between CIO, CFO, and IT Director roles for comprehensive testing.',
       howItHelps: 'Prepares you for the diverse perspectives and scrutiny of a full buying committee.',
-      audioText: 'Avatar 2.0 offers multi-persona evaluation. Switch between CIO, CFO, and IT Director roles to prepare for a full buying committee.'
+      audioText: 'Avatar 2.0 offers multi-persona evaluation.',
+      guideText: 'First, select your target persona: CIO, CFO, or IT Director. Click Activate Persona to begin. You can switch personas mid-session to test different stakeholder perspectives. Use End Session to finalize the audit.'
     },
     'gpt': {
       label: 'Spiked GPT',
       feature: 'Strategic Knowledge Retrieval',
       purpose: 'Fast, grounded answering engine for any deal-related question.',
       howItHelps: 'Provides instant access to winning strategies and data points from your uploaded context.',
-      audioText: 'This is Spiked GPT, your strategic knowledge engine. Get instant, grounded answers to any deal-related question using your uploaded context.'
+      audioText: 'This is Spiked GPT, your strategic knowledge engine.',
+      guideText: 'Type any question about your deal in the input box at the bottom. Spiked GPT will retrieve grounded answers from your documents. Use the Clear Chat button to start a new inquiry.'
     },
     'practice': {
       label: 'Grooming Lab',
       feature: 'Verbal Architecture & Pacing Audit',
       purpose: 'Practice your delivery and receive an elite audit on tone, grammar, and pacing.',
       howItHelps: 'Refines your vocal presence and ensures your delivery is as strong as your strategy.',
-      audioText: 'Welcome to the Grooming Lab. Practice your verbal delivery and receive an elite audit on your tone, pacing, and strategic architecture.'
+      audioText: 'Welcome to the Grooming Lab.',
+      guideText: 'Select your roleplay mode: Buyer or Seller. Click Commence Interaction to start speaking. The lab will audit your tone and pacing in real-time. Use the X button in the Mastery Log to end the session.'
     },
     'audio': {
       label: 'Studio',
       feature: 'High-Fidelity Audio Generation',
       purpose: 'Generate professional-grade audio samples of your winning pitches.',
       howItHelps: 'Allows you to hear the ideal delivery and use it for rehearsal or internal alignment.',
-      audioText: 'This is the Studio. Generate high-fidelity audio samples of your winning pitches to hear and master the ideal delivery.'
+      audioText: 'This is the Studio.',
+      guideText: 'Enter the text you want to hear in the Pitch Script area. Select a voice profile and click Generate Audio. You can download the resulting high-fidelity sample for rehearsal.'
     }
   };
 
@@ -147,12 +155,15 @@ const App: React.FC = () => {
 
   const confirmNodeStart = () => {
     if (showNodeInfo) {
-      setActiveTab(showNodeInfo as any);
+      const tab = showNodeInfo;
+      setActiveTab(tab as any);
       setShowNodeInfo(null);
       if (nodeAudioRef.current) {
         nodeAudioRef.current.pause();
         setIsAudioPlaying(false);
       }
+      // Play detailed guide audio
+      playNodeAudio(NODE_DETAILS[tab].guideText);
     }
   };
 
