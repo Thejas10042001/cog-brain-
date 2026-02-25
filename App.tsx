@@ -70,7 +70,7 @@ const App: React.FC = () => {
       purpose: 'Define the seller/client landscape, upload documents, and set simulation parameters.',
       howItHelps: 'Ensures the AI models are grounded in your specific deal reality for maximum relevance.',
       audioText: 'Welcome to Settings. This is where you prime the strategic core.',
-      guideText: 'To operate Settings, start by uploading your documents in Step 1. Then, select your Neural Anchor in Step 2. Use the Node Dial dropdown at the top to jump between steps quickly. Finally, click Synthesize Strategy Core to prime the AI.'
+      guideText: 'To operate Settings, look at the top navigation bar. You will see a Node Dial dropdown to jump between steps. In Step 1, use the Upload area to add documents. In Step 2, use the dropdown to select your Neural Anchor. Once all steps are configured, click the large purple Synthesize Strategy Core button at the bottom to prime the AI.'
     },
     'qa': {
       label: 'Hands-on Assignment',
@@ -78,7 +78,7 @@ const App: React.FC = () => {
       purpose: 'Test your knowledge of the deal and product through structured assignments.',
       howItHelps: 'Validates your readiness and identifies information gaps before you face the customer.',
       audioText: 'This is the Hands-on Assignment lab.',
-      guideText: 'In the Assignment Lab, first select a document from your library. Click Generate Assignment to receive your tasks. Answer the questions and click Submit for a cognitive evaluation of your deal readiness.'
+      guideText: 'In the Assignment Lab, first look at the top selection area to pick a document from your library. Click the Generate Assignment button to receive your tasks. Answer the questions in the text fields provided and click the Submit button at the bottom for a cognitive evaluation of your deal readiness.'
     },
     'avatar-staged': {
       label: 'Stage Simulation',
@@ -86,7 +86,7 @@ const App: React.FC = () => {
       purpose: 'Roleplay through specific meeting phases like Ice Breakers, Pricing, and Legal.',
       howItHelps: 'Allows you to master the nuances of each stage of the sales cycle.',
       audioText: 'Welcome to Stage Simulation.',
-      guideText: 'Start by selecting a meeting stage from the map, such as Ice Breaker or Pricing. Click Commence Stage to start the roleplay. Use the End Stage button to stop and receive feedback on that specific phase.'
+      guideText: 'Start by looking at the interactive map in the center. Select a meeting stage, such as Ice Breaker or Pricing. Once selected, click the Commence Stage button to start the roleplay. During the session, use the End Stage button to stop and receive immediate feedback on that specific phase.'
     },
     'avatar': {
       label: 'Avatar 1.0',
@@ -94,7 +94,7 @@ const App: React.FC = () => {
       purpose: 'Real-time dialogue with a skeptical CIO persona.',
       howItHelps: 'Sharpens your strategic reflexes and objection-handling skills in a low-stakes environment.',
       audioText: 'Avatar 1.0 is your dual-mode buyer simulation.',
-      guideText: 'Engage with the CIO by clicking Start Simulation. Speak clearly into your microphone. The AI will push back on your claims. Click End Session in the Mastery Log to stop and generate your performance report.'
+      guideText: 'Engage with the CIO by clicking the large Start Simulation button in the center. Speak clearly into your microphone when the pulse animation is active. To finish, look at the Mastery Log on the right and click End Session to stop and generate your performance report.'
     },
     'avatar2': {
       label: 'Avatar 2.0',
@@ -102,7 +102,7 @@ const App: React.FC = () => {
       purpose: 'Switch between CIO, CFO, and IT Director roles for comprehensive testing.',
       howItHelps: 'Prepares you for the diverse perspectives and scrutiny of a full buying committee.',
       audioText: 'Avatar 2.0 offers multi-persona evaluation.',
-      guideText: 'First, select your target persona: CIO, CFO, or IT Director. Click Activate Persona to begin. You can switch personas mid-session to test different stakeholder perspectives. Use End Session to finalize the audit.'
+      guideText: 'First, select your target persona from the cards at the top: CIO, CFO, or IT Director. Click the Activate Persona button to begin. You can switch personas mid-session using the top cards to test different stakeholder perspectives. Use the End Session button to finalize the audit.'
     },
     'gpt': {
       label: 'Spiked GPT',
@@ -110,7 +110,7 @@ const App: React.FC = () => {
       purpose: 'Fast, grounded answering engine for any deal-related question.',
       howItHelps: 'Provides instant access to winning strategies and data points from your uploaded context.',
       audioText: 'This is Spiked GPT, your strategic knowledge engine.',
-      guideText: 'Type any question about your deal in the input box at the bottom. Spiked GPT will retrieve grounded answers from your documents. Use the Clear Chat button to start a new inquiry.'
+      guideText: 'Type any question about your deal in the input box at the very bottom of the screen. Spiked GPT will retrieve grounded answers from your documents and display them in the chat history above. Use the Clear Chat button in the header if you wish to start a new inquiry.'
     },
     'practice': {
       label: 'Grooming Lab',
@@ -118,7 +118,7 @@ const App: React.FC = () => {
       purpose: 'Practice your delivery and receive an elite audit on tone, grammar, and pacing.',
       howItHelps: 'Refines your vocal presence and ensures your delivery is as strong as your strategy.',
       audioText: 'Welcome to the Grooming Lab.',
-      guideText: 'Select your roleplay mode: Buyer or Seller. Click Commence Interaction to start speaking. The lab will audit your tone and pacing in real-time. Use the X button in the Mastery Log to end the session.'
+      guideText: 'Select your roleplay mode using the toggle at the top: Buyer Roleplay or Seller Roleplay. Click the large Commence Interaction button to start speaking. The lab will audit your tone and pacing in real-time. Use the X button in the Mastery Log header on the right to end the session.'
     },
     'audio': {
       label: 'Studio',
@@ -126,7 +126,7 @@ const App: React.FC = () => {
       purpose: 'Generate professional-grade audio samples of your winning pitches.',
       howItHelps: 'Allows you to hear the ideal delivery and use it for rehearsal or internal alignment.',
       audioText: 'This is the Studio.',
-      guideText: 'Enter the text you want to hear in the Pitch Script area. Select a voice profile and click Generate Audio. You can download the resulting high-fidelity sample for rehearsal.'
+      guideText: 'Enter the text you want to hear in the large Pitch Script area on the left. Select a voice profile from the options on the right and click the Generate Audio button. Once synthesized, you can play or download the resulting high-fidelity sample for your rehearsal.'
     }
   };
 
