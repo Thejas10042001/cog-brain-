@@ -59,6 +59,102 @@ const App: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
+  const [showNodeInfo, setShowNodeInfo] = useState<string | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const nodeAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string }> = {
+    'context': {
+      label: 'Settings',
+      feature: 'Strategic Priming & Context Configuration',
+      purpose: 'Define the seller/client landscape, upload documents, and set simulation parameters.',
+      howItHelps: 'Ensures the AI models are grounded in your specific deal reality for maximum relevance.',
+      audioText: 'Welcome to Settings. This is where you prime the strategic core. Define your landscape and upload your documents to ensure the AI is grounded in your deal reality.'
+    },
+    'qa': {
+      label: 'Hands-on Assignment',
+      feature: 'Cognitive Assessment Lab',
+      purpose: 'Test your knowledge of the deal and product through structured assignments.',
+      howItHelps: 'Validates your readiness and identifies information gaps before you face the customer.',
+      audioText: 'This is the Hands-on Assignment lab. Here, we test your cognitive readiness through structured deal assignments to ensure you have no information gaps.'
+    },
+    'avatar-staged': {
+      label: 'Stage Simulation',
+      feature: 'Progressive Deal Stages',
+      purpose: 'Roleplay through specific meeting phases like Ice Breakers, Pricing, and Legal.',
+      howItHelps: 'Allows you to master the nuances of each stage of the sales cycle.',
+      audioText: 'Welcome to Stage Simulation. Practice specific meeting phases from ice breakers to legal negotiations to master every step of the sales cycle.'
+    },
+    'avatar': {
+      label: 'Avatar 1.0',
+      feature: 'Dual-Mode Buyer Simulation',
+      purpose: 'Real-time dialogue with a skeptical CIO persona.',
+      howItHelps: 'Sharpens your strategic reflexes and objection-handling skills in a low-stakes environment.',
+      audioText: 'Avatar 1.0 is your dual-mode buyer simulation. Engage with a skeptical CIO to sharpen your reflexes and objection handling skills.'
+    },
+    'avatar2': {
+      label: 'Avatar 2.0',
+      feature: 'Multi-Persona Enterprise Evaluation',
+      purpose: 'Switch between CIO, CFO, and IT Director roles for comprehensive testing.',
+      howItHelps: 'Prepares you for the diverse perspectives and scrutiny of a full buying committee.',
+      audioText: 'Avatar 2.0 offers multi-persona evaluation. Switch between CIO, CFO, and IT Director roles to prepare for a full buying committee.'
+    },
+    'gpt': {
+      label: 'Spiked GPT',
+      feature: 'Strategic Knowledge Retrieval',
+      purpose: 'Fast, grounded answering engine for any deal-related question.',
+      howItHelps: 'Provides instant access to winning strategies and data points from your uploaded context.',
+      audioText: 'This is Spiked GPT, your strategic knowledge engine. Get instant, grounded answers to any deal-related question using your uploaded context.'
+    },
+    'practice': {
+      label: 'Grooming Lab',
+      feature: 'Verbal Architecture & Pacing Audit',
+      purpose: 'Practice your delivery and receive an elite audit on tone, grammar, and pacing.',
+      howItHelps: 'Refines your vocal presence and ensures your delivery is as strong as your strategy.',
+      audioText: 'Welcome to the Grooming Lab. Practice your verbal delivery and receive an elite audit on your tone, pacing, and strategic architecture.'
+    },
+    'audio': {
+      label: 'Studio',
+      feature: 'High-Fidelity Audio Generation',
+      purpose: 'Generate professional-grade audio samples of your winning pitches.',
+      howItHelps: 'Allows you to hear the ideal delivery and use it for rehearsal or internal alignment.',
+      audioText: 'This is the Studio. Generate high-fidelity audio samples of your winning pitches to hear and master the ideal delivery.'
+    }
+  };
+
+  const playNodeAudio = async (text: string) => {
+    try {
+      if (nodeAudioRef.current) {
+        nodeAudioRef.current.pause();
+      }
+      const { generateVoiceSample } = await import('./services/geminiService');
+      const base64 = await generateVoiceSample(text, 'Zephyr', 'Male');
+      const audio = new Audio(`data:audio/wav;base64,${base64}`);
+      nodeAudioRef.current = audio;
+      audio.onplay = () => setIsAudioPlaying(true);
+      audio.onended = () => setIsAudioPlaying(false);
+      await audio.play();
+    } catch (err) {
+      console.error("Node audio failed:", err);
+    }
+  };
+
+  const handleNodeClick = (tab: any) => {
+    if (activeTab === tab) return;
+    setShowNodeInfo(tab);
+    playNodeAudio(NODE_DETAILS[tab].audioText);
+  };
+
+  const confirmNodeStart = () => {
+    if (showNodeInfo) {
+      setActiveTab(showNodeInfo as any);
+      setShowNodeInfo(null);
+      if (nodeAudioRef.current) {
+        nodeAudioRef.current.pause();
+        setIsAudioPlaying(false);
+      }
+    }
+  };
 
   // Whole Screen Magnifier State
   const [zoom, setZoom] = useState(100);
@@ -302,6 +398,57 @@ const App: React.FC = () => {
         textZoom={textZoom}
         onTextZoomChange={setTextZoom}
       />
+
+      {/* Node Info Overlay */}
+      {showNodeInfo && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-300">
+            <div className="p-12 space-y-8">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">{NODE_DETAILS[showNodeInfo].label}</h2>
+                  <p className="text-indigo-600 font-black text-xs uppercase tracking-widest">{NODE_DETAILS[showNodeInfo].feature}</p>
+                </div>
+                <div className={`w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 ${isAudioPlaying ? 'animate-pulse' : ''}`}>
+                  <ICONS.Speaker className="w-8 h-8" />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">The Purpose</h4>
+                  <p className="text-lg font-bold text-slate-700 leading-relaxed">{NODE_DETAILS[showNodeInfo].purpose}</p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">How it helps</h4>
+                  <p className="text-lg font-bold text-slate-700 leading-relaxed">{NODE_DETAILS[showNodeInfo].howItHelps}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button 
+                  onClick={() => {
+                    setShowNodeInfo(null);
+                    if (nodeAudioRef.current) {
+                      nodeAudioRef.current.pause();
+                      setIsAudioPlaying(false);
+                    }
+                  }}
+                  className="flex-1 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmNodeStart}
+                  className="flex-2 py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-3"
+                >
+                  Start Using Feature <ICONS.ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="pt-16 flex flex-1 overflow-hidden text-magnifier">
         
@@ -316,14 +463,14 @@ const App: React.FC = () => {
                   <div className="space-y-1">
                     {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
                     <div className="flex flex-col gap-1">
-                      <SidebarBtn active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "Assignment Lab" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => setActiveTab('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "Stage Simulation" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => setActiveTab('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => setActiveTab('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => setActiveTab('gpt')} icon={<ICONS.LightningCloud />} label={sidebarWidth > 180 ? "Fast Answering" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'practice'} onClick={() => setActiveTab('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Grooming Lab" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'audio'} onClick={() => setActiveTab('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'context'} onClick={() => setActiveTab('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Settings" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'context' || showNodeInfo === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Settings" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'qa' || showNodeInfo === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "Hands-on Assignment" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar-staged' || showNodeInfo === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "Stage Simulation" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar' || showNodeInfo === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar2' || showNodeInfo === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'gpt' || showNodeInfo === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "Spiked GPT" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'practice' || showNodeInfo === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Grooming Lab" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'audio' || showNodeInfo === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} scale={sidebarFontScale} />
                     </div>
                   </div>
 
