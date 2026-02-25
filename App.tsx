@@ -11,6 +11,7 @@ import { AssessmentLab } from './components/AssessmentLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
+import { VoiceAssistant } from './components/VoiceAssistant';
 import { analyzeSalesContext } from './services/geminiService';
 import { fetchDocumentsFromFirebase, subscribeToAuth, User } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
@@ -409,6 +410,8 @@ const App: React.FC = () => {
         textZoom={textZoom}
         onTextZoomChange={setTextZoom}
       />
+
+      <VoiceAssistant activeTab={activeTab} user={user} />
 
       {/* Node Info Overlay */}
       {showNodeInfo && (

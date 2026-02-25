@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { loginUser } from '../services/firebaseService';
 import { ICONS } from '../constants';
 
@@ -11,6 +11,16 @@ export const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const SUPPORT_LINK = "https://www.spiked.ai/contact-sales";
+
+  // Trigger welcome message on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('cogni-speak', { 
+        detail: { text: "Welcome to Spiked AI Cognitive Intelligence Simulation. Please enter your login credentials like email and password. If you are a new user, you need to connect with our sales team for getting help." } 
+      }));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const mapAuthError = (code: string) => {
     switch (code) {
@@ -50,7 +60,11 @@ export const Auth: React.FC = () => {
       await loginUser(email, password);
     } catch (err: any) {
       console.error("Auth Error:", err);
-      setError(mapAuthError(err.code));
+      const mappedError = mapAuthError(err.code);
+      setError(mappedError);
+      window.dispatchEvent(new CustomEvent('cogni-speak', { 
+        detail: { text: `Neural link failed. ${mappedError} Please try again or contact our sales team by clicking the sales team button.` } 
+      }));
     } finally {
       setLoading(false);
     }
@@ -82,7 +96,13 @@ export const Auth: React.FC = () => {
               Login
             </button>
             <button 
-              onClick={() => { setIsLogin(false); setError(null); }}
+              onClick={() => { 
+                setIsLogin(false); 
+                setError(null); 
+                window.dispatchEvent(new CustomEvent('cogni-speak', { 
+                  detail: { text: "Direct profile instantiation is currently restricted. Please coordinate with our Sales Engineering team for tailored onboarding." } 
+                }));
+              }}
               className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${!isLogin ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
               Join the Core

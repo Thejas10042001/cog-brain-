@@ -390,6 +390,42 @@ export async function generateVoiceSample(
   }
 }
 
+// Generate response for the Cogni Voice Assistant
+export async function generateAssistantResponse(query: string, context?: string): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const systemInstruction = `You are Cogni, an Elite Cognitive Sales Intelligence Assistant for Spiked AI.
+  Your goal is to provide concise, strategic, and helpful guidance to sales professionals using the Spiked AI platform.
+  
+  TONE: Professional, elite, strategic, and supportive.
+  
+  CONTEXT:
+  ${context || "The user is navigating the Spiked AI Cognitive Intelligence Simulation platform."}
+  
+  DIRECTIVES:
+  1. If the user asks for help, explain how to use the current feature or suggest a strategic next step.
+  2. If the user asks a deal-related question, provide a grounded, strategic answer based on the context.
+  3. Keep responses brief and optimized for text-to-speech.
+  4. Always maintain the "Cogni" persona.
+  
+  Current Query: ${query}`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: query,
+      config: {
+        systemInstruction
+      }
+    });
+    return response.text || "I'm here to help. What would you like to achieve today?";
+  } catch (error) {
+    console.error("Assistant response failed:", error);
+    return "I encountered a neural link error. How else can I assist you?";
+  }
+}
+
 // Unified High-Depth Avatar Evaluation
 async function performHighDepthEvaluation(
   history: GPTMessage[], 
