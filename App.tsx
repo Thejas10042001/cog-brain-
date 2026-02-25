@@ -62,7 +62,16 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
   const [showNodeInfo, setShowNodeInfo] = useState<string | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const nodeAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string }> = {
     'context': {
@@ -403,6 +412,8 @@ const App: React.FC = () => {
         onZoomChange={setZoom}
         textZoom={textZoom}
         onTextZoomChange={setTextZoom}
+        darkMode={darkMode}
+        onDarkModeToggle={() => setDarkMode(!darkMode)}
       />
 
       <VoiceAssistant activeTab={activeTab} user={user} />

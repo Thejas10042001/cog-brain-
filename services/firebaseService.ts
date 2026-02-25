@@ -3,12 +3,13 @@
 // Use separate imports for value and type to resolve potential "no exported member" errors in some environments.
 // Fix: Use wildcard import and destructuring to resolve 'no exported member' errors for initializeApp.
 import * as firebaseApp from "firebase/app";
-const { initializeApp } = firebaseApp as any;
+const { initializeApp, getApp, getApps } = firebaseApp as any;
 
 // Fix: Removed unused 'FirebaseApp' type import which was causing compilation errors.
 
 import { 
   getFirestore, 
+  initializeFirestore,
   Firestore,
   collection, 
   addDoc, 
@@ -56,10 +57,20 @@ let auth: Auth | null = null;
 // Initialize Firebase App, Firestore, and Auth
 try {
   if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "REPLACE_WITH_YOUR_API_KEY") {
-    // Correct modular initialization for Firebase v9+
-    // Using any for app to bypass potential type export issues in this environment
-    const app: any = initializeApp(firebaseConfig);
-    db = getFirestore(app);
+    // Check if app is already initialized to avoid "already exists" errors
+    const app: any = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    
+    // Use initializeFirestore with experimentalForceLongPolling to bypass potential WebSocket blocks
+    // Wrap in try-catch to handle cases where it's already initialized
+    try {
+      db = initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+      });
+    } catch (e) {
+      // If already initialized, just get the existing instance
+      db = getFirestore(app);
+    }
+    
     auth = getAuth(app);
   }
 } catch (error) {
