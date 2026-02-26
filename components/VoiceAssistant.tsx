@@ -71,8 +71,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
         };
         audio.play().catch(err => {
           // The play() request was interrupted by a call to pause() is usually an AbortError
+          // Autoplay block is NotAllowedError
           const isInterrupted = err.name === 'AbortError' || 
-                               (err.message && err.message.includes('interrupted by a call to pause'));
+                               err.name === 'NotAllowedError' ||
+                               (err.message && err.message.includes('interrupted by a call to pause')) ||
+                               (err.message && err.message.includes('interact with the document first'));
           
           if (!isInterrupted) {
             console.error("Audio play failed:", err);

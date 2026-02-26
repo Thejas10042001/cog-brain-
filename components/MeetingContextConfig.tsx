@@ -245,7 +245,9 @@ OPERATIONAL CONSTRAINTS:
       audio.onended = () => setIsPlayingVoice(false);
       audio.play().catch(err => {
         const isInterrupted = err.name === 'AbortError' || 
-                             (err.message && err.message.includes('interrupted by a call to pause'));
+                             err.name === 'NotAllowedError' ||
+                             (err.message && err.message.includes('interrupted by a call to pause')) ||
+                             (err.message && err.message.includes('interact with the document first'));
         if (!isInterrupted) {
           console.error("Audio play failed:", err);
         }
@@ -315,6 +317,8 @@ OPERATIONAL CONSTRAINTS:
     if (next > maxStepReached) {
       setMaxStepReached(next);
     }
+    // Auto-save on next step
+    if (onSave) onSave();
   };
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
@@ -690,7 +694,10 @@ OPERATIONAL CONSTRAINTS:
             </div>
             <div className="flex justify-center pt-8">
               <button
-                onClick={onSynthesize}
+                onClick={() => {
+                  if (onSave) onSave();
+                  onSynthesize();
+                }}
                 disabled={isAnalyzing}
                 className="flex items-center gap-4 px-20 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl shadow-2xl hover:bg-indigo-700 hover:scale-105 transition-all active:scale-95"
               >
@@ -754,16 +761,6 @@ OPERATIONAL CONSTRAINTS:
           >
             {audioEnabled ? <ICONS.Speaker className="w-5 h-5" /> : <ICONS.Speaker className="w-5 h-5 opacity-50" />}
           </button>
-          <div className="h-8 w-px bg-slate-200"></div>
-          {onSave && (
-            <button 
-              onClick={onSave}
-              className="px-6 py-3 bg-white border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-all flex items-center gap-2 shadow-sm"
-              title="Save current configuration to cloud"
-            >
-              <ICONS.Security className="w-4 h-4" /> Save Configuration
-            </button>
-          )}
           <div className="h-8 w-px bg-slate-200"></div>
           {[1, 2, 3, 4, 5, 6].map(s => (
             <div key={s} className="flex items-center gap-2">

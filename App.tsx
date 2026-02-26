@@ -57,6 +57,7 @@ const App: React.FC = () => {
   const [selectedLibraryDocIds, setSelectedLibraryDocIds] = useState<string[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
@@ -159,16 +160,28 @@ const App: React.FC = () => {
     }
   };
 
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  useEffect(() => {
+    const handleInteraction = () => setHasInteracted(true);
+    window.addEventListener('mousedown', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+    return () => {
+      window.removeEventListener('mousedown', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+    };
+  }, []);
+
   // Auto-narrate on tab change
   useEffect(() => {
-    if (analysis && activeTab) {
+    if (analysis && activeTab && hasInteracted) {
       // Small delay to ensure screen is ready
       const timer = setTimeout(() => {
         playNodeAudio(NODE_DETAILS[activeTab].audioText);
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [activeTab, !!analysis]);
+  }, [activeTab, !!analysis, hasInteracted]);
 
   // Whole Screen Magnifier State
   const [zoom, setZoom] = useState(100);
@@ -238,15 +251,34 @@ const App: React.FC = () => {
     const savedData = await fetchMeetingContext();
     if (savedData) {
       const { userId, updatedAt, meetingContext: savedContext, selectedLibraryDocIds: savedDocIds, analysis: savedAnalysis } = savedData;
+      
+      setIsRestoring(true);
+      setLoadingProgress(0);
+
       if (savedContext) setMeetingContext(prev => ({ ...prev, ...savedContext }));
       if (savedDocIds) setSelectedLibraryDocIds(savedDocIds);
-      if (savedAnalysis) {
-        setAnalysis(savedAnalysis);
-        setActiveTab('qa');
-      } else {
-        // If we have documents but no analysis, we can trigger analysis
-        setShouldAutoAnalyze(true);
-      }
+      
+      // Simulate neural restoration progress
+      const interval = setInterval(() => {
+        setLoadingProgress(p => {
+          if (p >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return p + 5;
+        });
+      }, 100);
+
+      setTimeout(() => {
+        if (savedAnalysis) {
+          setAnalysis(savedAnalysis);
+          setActiveTab('qa');
+        } else {
+          // If we have documents but no analysis, we can trigger analysis
+          setShouldAutoAnalyze(true);
+        }
+        setIsRestoring(false);
+      }, 2500);
     }
   }, [user]);
 
@@ -358,6 +390,12 @@ const App: React.FC = () => {
   }, [activeDocuments, meetingContext, analysis, generateStateHash]);
 
   const loadingStatusText = useMemo(() => {
+    if (isRestoring) {
+      if (loadingProgress < 30) return "Neural Link: Establishing Secure Connection...";
+      if (loadingProgress < 60) return "Context Sync: Restoring Strategic Parameters...";
+      if (loadingProgress < 90) return "Intelligence Core: Re-aligning Cognitive Nodes...";
+      return "Finalizing Neural Restoration...";
+    }
     if (loadingProgress < 20) return "Neural Ingestion: Parsing Documentary Nodes...";
     if (loadingProgress < 40) return "Context Alignment: Mapping Seller/Prospect Domains...";
     if (loadingProgress < 60) return "Psychological Synthesis: Inferring Buyer Resistance...";
@@ -380,12 +418,7 @@ const App: React.FC = () => {
   };
 
   const handleSaveContext = async () => {
-    const success = await saveMeetingContext({ meetingContext, selectedLibraryDocIds, analysis });
-    if (success) {
-      alert("Strategy Core Configuration Saved to Cloud.");
-    } else {
-      alert("Failed to save configuration. Please check your connection.");
-    }
+    await saveMeetingContext({ meetingContext, selectedLibraryDocIds, analysis });
   };
 
   if (authLoading) {
@@ -557,7 +590,7 @@ const App: React.FC = () => {
 
           <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-white relative">
             <div className="w-full min-h-full">
-              {!analysis && !isAnalyzing ? (
+              {!analysis && !isAnalyzing && !isRestoring ? (
                 <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 w-full">
                   <div className="text-center space-y-4">
                     <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
@@ -583,7 +616,7 @@ const App: React.FC = () => {
                     hasAnalysis={!!analysis}
                   />
                 </div>
-              ) : isAnalyzing ? (
+              ) : (isAnalyzing || isRestoring) ? (
                 <div className="flex flex-col items-center justify-center space-y-12 h-full min-h-[600px]">
                   <div className="relative">
                     <div className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out" style={{ transform: `scale(${1 + (loadingProgress / 100)})`, opacity: 0.2 + (loadingProgress / 100) }}></div>
