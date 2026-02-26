@@ -379,8 +379,26 @@ export async function generateVoiceSample(
       },
     });
 
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) throw new Error("No audio data returned");
+    // Iterate through parts to find the audio data, as it may not be the first part
+    let base64Audio: string | undefined;
+    let refusalText: string | undefined;
+
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData?.data) {
+        base64Audio = part.inlineData.data;
+        break;
+      }
+      if (part.text) {
+        refusalText = part.text;
+      }
+    }
+
+    if (!base64Audio) {
+      if (refusalText) {
+        throw new Error(`Voice sample generation failed: ${refusalText}`);
+      }
+      throw new Error("No audio data returned from the model");
+    }
     
     // Wrap raw PCM in WAV container for browser compatibility
     return pcmToWav(base64Audio, 24000);

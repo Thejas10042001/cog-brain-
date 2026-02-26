@@ -13,7 +13,7 @@ import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { VoiceAssistant } from './components/VoiceAssistant';
 import { analyzeSalesContext } from './services/geminiService';
-import { fetchDocumentsFromFirebase, subscribeToAuth, User } from './services/firebaseService';
+import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
 
@@ -63,7 +63,6 @@ const App: React.FC = () => {
   const [showNodeInfo, setShowNodeInfo] = useState<string | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const nodeAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (darkMode) {
@@ -234,7 +233,31 @@ const App: React.FC = () => {
     if (!user) return;
     const docs = await fetchDocumentsFromFirebase();
     setHistory(docs);
+    
+    // Fetch saved meeting context
+    const savedData = await fetchMeetingContext();
+    if (savedData) {
+      const { userId, updatedAt, meetingContext: savedContext, selectedLibraryDocIds: savedDocIds } = savedData;
+      if (savedContext) setMeetingContext(prev => ({ ...prev, ...savedContext }));
+      if (savedDocIds) setSelectedLibraryDocIds(savedDocIds);
+      
+      // If we have documents, we can trigger analysis
+      setShouldAutoAnalyze(true);
+    }
   }, [user]);
+
+  const [shouldAutoAnalyze, setShouldAutoAnalyze] = useState(false);
+
+  useEffect(() => {
+    if (shouldAutoAnalyze && history.length > 0 && user) {
+      // Trigger analysis if we have a saved context and documents are loaded
+      const hasDocs = history.some(d => selectedLibraryDocIds.includes(d.id)) || files.length > 0;
+      if (hasDocs) {
+        runAnalysis(true);
+      }
+      setShouldAutoAnalyze(false);
+    }
+  }, [shouldAutoAnalyze, history, user, selectedLibraryDocIds, files]);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuth((u) => {
@@ -277,16 +300,16 @@ const App: React.FC = () => {
     return `${fileIds}-${libIds}-${ctxString}`;
   }, [files, selectedLibraryDocIds, meetingContext]);
 
-  const runAnalysis = useCallback(async () => {
+  const runAnalysis = useCallback(async (isAuto = false) => {
     if (activeDocuments.length === 0) {
-      setError("Please ensure at least one document (from library or upload) is ready for analysis.");
+      if (!isAuto) setError("Please ensure at least one document (from library or upload) is ready for analysis.");
       return;
     }
 
     const currentHash = generateStateHash();
     
     if (analysis && currentHash === lastAnalyzedHash.current) {
-      setActiveTab('context');
+      setActiveTab(isAuto ? 'qa' : 'context');
       return;
     }
 
@@ -310,11 +333,16 @@ const App: React.FC = () => {
       clearInterval(progressInterval);
       setLoadingProgress(100);
       
-      setTimeout(() => {
+      setTimeout(async () => {
         setAnalysis(result);
         lastAnalyzedHash.current = currentHash;
         setIsAnalyzing(false);
-        setActiveTab('context');
+        setActiveTab(isAuto ? 'qa' : 'context');
+        
+        // Save context to Firebase
+        if (!isAuto) {
+          await saveMeetingContext({ meetingContext, selectedLibraryDocIds });
+        }
       }, 800);
 
     } catch (err: any) {
@@ -333,7 +361,7 @@ const App: React.FC = () => {
     return "Finalizing Core Strategy Brief...";
   }, [loadingProgress]);
 
-  const reset = () => {
+  const reset = async () => {
     if(confirm("Are you sure you want to wipe current strategy context?")) {
       setFiles([]);
       setSelectedLibraryDocIds([]);
@@ -341,6 +369,18 @@ const App: React.FC = () => {
       lastAnalyzedHash.current = null;
       setError(null);
       setActiveTab('context');
+      
+      // Delete from Firebase
+      await deleteMeetingContext();
+    }
+  };
+
+  const handleSaveContext = async () => {
+    const success = await saveMeetingContext({ meetingContext, selectedLibraryDocIds });
+    if (success) {
+      alert("Strategy Core Configuration Saved to Cloud.");
+    } else {
+      alert("Failed to save configuration. Please check your connection.");
     }
   };
 
@@ -448,10 +488,8 @@ const App: React.FC = () => {
                 <button 
                   onClick={() => {
                     setShowNodeInfo(null);
-                    if (nodeAudioRef.current) {
-                      nodeAudioRef.current.pause();
-                      setIsAudioPlaying(false);
-                    }
+                    // Send empty speak request to stop current audio
+                    window.dispatchEvent(new CustomEvent('cogni-speak', { detail: { text: '' } }));
                   }}
                   className="flex-1 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
                 >
@@ -536,6 +574,7 @@ const App: React.FC = () => {
                     selectedLibraryDocIds={selectedLibraryDocIds}
                     onToggleLibraryDoc={toggleLibraryDoc}
                     onSynthesize={runAnalysis}
+                    onSave={handleSaveContext}
                     isAnalyzing={isAnalyzing}
                     hasAnalysis={!!analysis}
                   />
@@ -571,6 +610,7 @@ const App: React.FC = () => {
                         selectedLibraryDocIds={selectedLibraryDocIds}
                         onToggleLibraryDoc={toggleLibraryDoc}
                         onSynthesize={runAnalysis}
+                        onSave={handleSaveContext}
                         isAnalyzing={isAnalyzing}
                         hasAnalysis={!!analysis}
                       />

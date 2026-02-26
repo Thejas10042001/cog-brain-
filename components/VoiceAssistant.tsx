@@ -26,13 +26,20 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mountedRef = useRef(true);
+  const generationIdRef = useRef(0);
 
   const speak = useCallback(async (text: string) => {
     if (!mountedRef.current) return;
+    const currentGenId = ++generationIdRef.current;
+    
     try {
       // Stop any existing audio immediately
       if (audioRef.current) {
-        audioRef.current.pause();
+        try {
+          audioRef.current.pause();
+        } catch (e) {
+          // Ignore pause errors
+        }
         audioRef.current = null;
       }
 
@@ -40,7 +47,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
       const base64 = await generateVoiceSample(text, 'Zephyr', 'Male');
       setIsProcessing(false);
       
-      if (!mountedRef.current) return;
+      // If a new generation started while we were waiting, abort this one
+      if (currentGenId !== generationIdRef.current || !mountedRef.current) return;
 
       setIsSpeaking(true);
       const audio = new Audio(`data:audio/wav;base64,${base64}`);
@@ -48,25 +56,40 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
       
       return new Promise<void>((resolve) => {
         audio.onended = () => {
-          setIsSpeaking(false);
-          audioRef.current = null;
+          if (currentGenId === generationIdRef.current) {
+            setIsSpeaking(false);
+            audioRef.current = null;
+          }
           resolve();
         };
         audio.onerror = () => {
-          setIsSpeaking(false);
-          audioRef.current = null;
+          if (currentGenId === generationIdRef.current) {
+            setIsSpeaking(false);
+            audioRef.current = null;
+          }
           resolve();
         };
         audio.play().catch(err => {
-          console.error("Audio play failed:", err);
-          setIsSpeaking(false);
-          audioRef.current = null;
+          // The play() request was interrupted by a call to pause() is usually an AbortError
+          const isInterrupted = err.name === 'AbortError' || 
+                               (err.message && err.message.includes('interrupted by a call to pause'));
+          
+          if (!isInterrupted) {
+            console.error("Audio play failed:", err);
+          }
+          if (currentGenId === generationIdRef.current) {
+            setIsSpeaking(false);
+            audioRef.current = null;
+          }
           resolve();
         });
       });
     } catch (err) {
-      console.error("Voice Assistant speak failed:", err);
-      setIsSpeaking(false);
+      if (currentGenId === generationIdRef.current) {
+        console.error("Voice Assistant speak failed:", err);
+        setIsSpeaking(false);
+        setIsProcessing(false);
+      }
     }
   }, []);
 

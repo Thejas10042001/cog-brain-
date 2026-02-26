@@ -79,6 +79,7 @@ try {
 
 const COLLECTION_NAME = "cognitive_documents";
 const HISTORY_COLLECTION = "simulation_history";
+const CONTEXT_COLLECTION = "meeting_contexts";
 
 export const getAuthInstance = () => auth;
 export const getDbInstance = () => db;
@@ -221,4 +222,66 @@ export const deleteDocumentFromFirebase = async (id: string): Promise<boolean> =
   }
 };
 
-export const isFirebaseActive = (): boolean => !!db;
+export const saveMeetingContext = async (data: { meetingContext: any, selectedLibraryDocIds: string[] }): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  try {
+    const userId = auth.currentUser.uid;
+    const q = query(collection(db, CONTEXT_COLLECTION), where("userId", "==", userId));
+    const querySnapshot = await getDocs(q);
+    
+    const contextData = {
+      ...data,
+      userId,
+      updatedAt: Timestamp.now()
+    };
+
+    if (!querySnapshot.empty) {
+      // Update existing
+      const docId = querySnapshot.docs[0].id;
+      await updateDoc(doc(db, CONTEXT_COLLECTION, docId), contextData);
+    } else {
+      // Create new
+      await addDoc(collection(db, CONTEXT_COLLECTION), contextData);
+    }
+    return true;
+  } catch (error) {
+    console.error("Error saving meeting context:", error);
+    return false;
+  }
+};
+
+export const fetchMeetingContext = async (): Promise<any | null> => {
+  if (!db || !auth || !auth.currentUser) return null;
+  try {
+    const q = query(
+      collection(db, CONTEXT_COLLECTION),
+      where("userId", "==", auth.currentUser.uid)
+    );
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].data();
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching meeting context:", error);
+    return null;
+  }
+};
+
+export const deleteMeetingContext = async (): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  try {
+    const q = query(
+      collection(db, CONTEXT_COLLECTION),
+      where("userId", "==", auth.currentUser.uid)
+    );
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      await deleteDoc(doc(db, CONTEXT_COLLECTION, querySnapshot.docs[0].id));
+    }
+    return true;
+  } catch (error) {
+    console.error("Error deleting meeting context:", error);
+    return false;
+  }
+};

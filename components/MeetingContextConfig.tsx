@@ -15,6 +15,7 @@ interface MeetingContextConfigProps {
   selectedLibraryDocIds: string[];
   onToggleLibraryDoc: (id: string) => void;
   onSynthesize: () => void;
+  onSave?: () => void;
   isAnalyzing: boolean;
   hasAnalysis: boolean;
 }
@@ -77,6 +78,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   selectedLibraryDocIds,
   onToggleLibraryDoc,
   onSynthesize,
+  onSave,
   isAnalyzing,
   hasAnalysis
 }) => {
@@ -241,7 +243,13 @@ OPERATIONAL CONSTRAINTS:
       const audio = new Audio(`data:audio/wav;base64,${base64}`);
       audioRef.current = audio;
       audio.onended = () => setIsPlayingVoice(false);
-      audio.play();
+      audio.play().catch(err => {
+        const isInterrupted = err.name === 'AbortError' || 
+                             (err.message && err.message.includes('interrupted by a call to pause'));
+        if (!isInterrupted) {
+          console.error("Audio play failed:", err);
+        }
+      });
       setIsPlayingVoice(true);
     } catch (err) {
       console.error(err);
@@ -746,6 +754,16 @@ OPERATIONAL CONSTRAINTS:
           >
             {audioEnabled ? <ICONS.Speaker className="w-5 h-5" /> : <ICONS.Speaker className="w-5 h-5 opacity-50" />}
           </button>
+          <div className="h-8 w-px bg-slate-200"></div>
+          {onSave && (
+            <button 
+              onClick={onSave}
+              className="px-6 py-3 bg-white border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-all flex items-center gap-2 shadow-sm"
+              title="Save current configuration to cloud"
+            >
+              <ICONS.Security className="w-4 h-4" /> Save Configuration
+            </button>
+          )}
           <div className="h-8 w-px bg-slate-200"></div>
           {[1, 2, 3, 4, 5, 6].map(s => (
             <div key={s} className="flex items-center gap-2">
