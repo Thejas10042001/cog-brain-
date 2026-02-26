@@ -222,7 +222,7 @@ export const deleteDocumentFromFirebase = async (id: string): Promise<boolean> =
   }
 };
 
-export const saveMeetingContext = async (data: { meetingContext: any, selectedLibraryDocIds: string[] }): Promise<boolean> => {
+export const saveMeetingContext = async (data: { meetingContext: any, selectedLibraryDocIds: string[], analysis?: any }): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
   try {
     const userId = auth.currentUser.uid;

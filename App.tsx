@@ -237,12 +237,16 @@ const App: React.FC = () => {
     // Fetch saved meeting context
     const savedData = await fetchMeetingContext();
     if (savedData) {
-      const { userId, updatedAt, meetingContext: savedContext, selectedLibraryDocIds: savedDocIds } = savedData;
+      const { userId, updatedAt, meetingContext: savedContext, selectedLibraryDocIds: savedDocIds, analysis: savedAnalysis } = savedData;
       if (savedContext) setMeetingContext(prev => ({ ...prev, ...savedContext }));
       if (savedDocIds) setSelectedLibraryDocIds(savedDocIds);
-      
-      // If we have documents, we can trigger analysis
-      setShouldAutoAnalyze(true);
+      if (savedAnalysis) {
+        setAnalysis(savedAnalysis);
+        setActiveTab('qa');
+      } else {
+        // If we have documents but no analysis, we can trigger analysis
+        setShouldAutoAnalyze(true);
+      }
     }
   }, [user]);
 
@@ -339,9 +343,9 @@ const App: React.FC = () => {
         setIsAnalyzing(false);
         setActiveTab(isAuto ? 'qa' : 'context');
         
-        // Save context to Firebase
+        // Save context and analysis to Firebase
         if (!isAuto) {
-          await saveMeetingContext({ meetingContext, selectedLibraryDocIds });
+          await saveMeetingContext({ meetingContext, selectedLibraryDocIds, analysis: result });
         }
       }, 800);
 
@@ -376,7 +380,7 @@ const App: React.FC = () => {
   };
 
   const handleSaveContext = async () => {
-    const success = await saveMeetingContext({ meetingContext, selectedLibraryDocIds });
+    const success = await saveMeetingContext({ meetingContext, selectedLibraryDocIds, analysis });
     if (success) {
       alert("Strategy Core Configuration Saved to Cloud.");
     } else {
