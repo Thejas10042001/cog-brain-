@@ -20,6 +20,39 @@ const PERSONA_CONFIG: Record<SimPersonaV2, { color: string; accent: string; labe
   IT_DIRECTOR: { color: "#f43f5e", accent: "#fb7185", label: "IT Director" }
 };
 
+const SIMULATION_PRESETS = [
+  {
+    id: 'intro',
+    label: 'Introductory Call',
+    description: 'Initial discovery call to understand business pain points and organizational structure.'
+  },
+  {
+    id: 'demo',
+    label: 'Demo Follow-up',
+    description: 'Post-demo technical deep-dive and addressing specific feature-alignment questions.'
+  },
+  {
+    id: 'objection',
+    label: 'Objection Handling',
+    description: 'Addressing critical resistance nodes regarding pricing, security, or competitive displacement.'
+  },
+  {
+    id: 'closing',
+    label: 'Closing',
+    description: 'Final contract negotiation, implementation timeline alignment, and executive sign-off.'
+  },
+  {
+    id: 'roi',
+    label: 'ROI Deep Dive',
+    description: 'Detailed financial modeling and business value realization presentation for CFO/Economic Buyer.'
+  },
+  {
+    id: 'technical',
+    label: 'Technical Review',
+    description: 'In-depth technical evaluation and architecture alignment.'
+  }
+];
+
 export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext, onContextChange }) => {
   const [persona, setPersona] = useState<SimPersonaV2 | null>(null);
   const [messages, setMessages] = useState<GPTMessage[]>([]);
@@ -501,6 +534,26 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
               <p className="text-slate-500 text-2xl font-medium leading-relaxed">Select a target persona to connect with a high-fidelity animated AI Human Bot.</p>
            </div>
 
+           {/* Simulation Protocol Preset Selection */}
+           <div className="w-full max-w-5xl bg-slate-50 p-8 rounded-[3rem] border border-slate-200 space-y-6">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Select Simulation Protocol Preset</h4>
+                <span className="px-3 py-1 bg-indigo-100 text-indigo-600 text-[8px] font-black uppercase rounded-full">Strategic Context</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {SIMULATION_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => onContextChange({ ...meetingContext, simulationProtocol: preset.label })}
+                    className={`p-6 rounded-3xl text-left transition-all border group ${meetingContext.simulationProtocol === preset.label ? 'bg-indigo-600 border-indigo-400 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 text-slate-600 hover:border-indigo-200'}`}
+                  >
+                    <h5 className={`text-xs font-black uppercase tracking-widest mb-2 ${meetingContext.simulationProtocol === preset.label ? 'text-white' : 'text-slate-900'}`}>{preset.label}</h5>
+                    <p className={`text-[10px] font-medium leading-relaxed ${meetingContext.simulationProtocol === preset.label ? 'text-indigo-100' : 'text-slate-400'}`}>{preset.description}</p>
+                  </button>
+                ))}
+              </div>
+           </div>
+
            {/* Cognitive Challenge Depth Selection */}
            <div className="w-full max-w-2xl bg-slate-50 p-8 rounded-[3rem] border border-slate-200 space-y-6">
               <div className="flex items-center justify-between">
@@ -530,10 +583,17 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar py-16 px-12 gap-12 justify-center">
                {/* Unified Focus Header */}
-               <div className="text-center space-y-4">
-                  <span className="px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.4em] border border-slate-200 bg-slate-50" style={{ color: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}>
-                     {persona} PROTOCOL ONLINE
-                  </span>
+                <div className="text-center space-y-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="px-6 py-2 rounded-full font-black text-xs uppercase tracking-[0.4em] border border-slate-200 bg-slate-50" style={{ color: persona ? PERSONA_CONFIG[persona].color : '#4f46e5' }}>
+                       {persona} PROTOCOL ONLINE
+                    </span>
+                    {meetingContext.simulationProtocol && (
+                      <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                        Active Protocol: {meetingContext.simulationProtocol}
+                      </span>
+                    )}
+                  </div>
                   <h3 className="text-5xl font-black tracking-tight leading-tight">
                      Presence: {meetingContext.clientNames || persona}
                   </h3>

@@ -206,6 +206,7 @@ export interface MeetingContext {
   clonedVoiceMimeType?: string;
   vocalPersonaAnalysis?: VocalPersonaStructure;
   difficulty?: DifficultyLevel;
+  simulationProtocol?: string;
 }
 
 export interface ComprehensiveAvatarReport {

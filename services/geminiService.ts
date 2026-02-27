@@ -565,6 +565,8 @@ You are conducting a serious enterprise buying evaluation.
 ===========================================================
 COGNITIVE CHALLENGE DEPTH: ${context.difficulty || 'Medium'}
 ===========================================================
+SIMULATION PROTOCOL: ${context.simulationProtocol || 'Standard Discovery'}
+===========================================================
 Adjust your scrutiny and pushback based on this level:
 - Easy: Be more forgiving, accept reasonable answers, provide helpful hints.
 - Medium: Standard executive scrutiny, demand metrics, probe for depth.
