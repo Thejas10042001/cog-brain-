@@ -61,7 +61,6 @@ const App: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
-  const [showNodeInfo, setShowNodeInfo] = useState<string | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -146,18 +145,7 @@ const App: React.FC = () => {
 
   const handleNodeClick = (tab: any) => {
     if (activeTab === tab) return;
-    setShowNodeInfo(tab);
-    playNodeAudio(NODE_DETAILS[tab].audioText);
-  };
-
-  const confirmNodeStart = () => {
-    if (showNodeInfo) {
-      const tab = showNodeInfo;
-      setActiveTab(tab as any);
-      setShowNodeInfo(null);
-      // Play detailed guide audio
-      playNodeAudio(NODE_DETAILS[tab].guideText);
-    }
+    setActiveTab(tab as any);
   };
 
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -177,7 +165,9 @@ const App: React.FC = () => {
     if (analysis && activeTab && hasInteracted) {
       // Small delay to ensure screen is ready
       const timer = setTimeout(() => {
-        playNodeAudio(NODE_DETAILS[activeTab].audioText);
+        const detail = NODE_DETAILS[activeTab];
+        const fullNarration = `${detail.audioText} ${detail.guideText}`;
+        playNodeAudio(fullNarration);
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -494,55 +484,6 @@ const App: React.FC = () => {
       />
 
       <VoiceAssistant activeTab={activeTab} user={user} />
-
-      {/* Node Info Overlay */}
-      {showNodeInfo && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-300">
-            <div className="p-12 space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">{NODE_DETAILS[showNodeInfo].label}</h2>
-                  <p className="text-indigo-600 font-black text-xs uppercase tracking-widest">{NODE_DETAILS[showNodeInfo].feature}</p>
-                </div>
-                <div className={`w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 ${isAudioPlaying ? 'animate-pulse' : ''}`}>
-                  <ICONS.Speaker className="w-8 h-8" />
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">The Purpose</h4>
-                  <p className="text-lg font-bold text-slate-700 leading-relaxed">{NODE_DETAILS[showNodeInfo].purpose}</p>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">How it helps</h4>
-                  <p className="text-lg font-bold text-slate-700 leading-relaxed">{NODE_DETAILS[showNodeInfo].howItHelps}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button 
-                  onClick={() => {
-                    setShowNodeInfo(null);
-                    // Send empty speak request to stop current audio
-                    window.dispatchEvent(new CustomEvent('cogni-speak', { detail: { text: '' } }));
-                  }}
-                  className="flex-1 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={confirmNodeStart}
-                  className="flex-2 py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-3"
-                >
-                  Start Using Feature <ICONS.ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       
       <div className="pt-16 flex flex-1 overflow-hidden text-magnifier">
         
@@ -557,14 +498,14 @@ const App: React.FC = () => {
                   <div className="space-y-1">
                     {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
                     <div className="flex flex-col gap-1">
-                      <SidebarBtn active={activeTab === 'context' || showNodeInfo === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Settings" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'qa' || showNodeInfo === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "Hands-on Assignment" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar-staged' || showNodeInfo === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "Stage Simulation" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar' || showNodeInfo === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar2' || showNodeInfo === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'gpt' || showNodeInfo === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "Spiked GPT" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'practice' || showNodeInfo === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Grooming Lab" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'audio' || showNodeInfo === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Settings" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "Hands-on Assignment" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "Stage Simulation" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "Spiked GPT" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Grooming Lab" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} scale={sidebarFontScale} />
                     </div>
                   </div>
 
@@ -635,6 +576,33 @@ const App: React.FC = () => {
                 </div>
               ) : (
                 <div className="animate-in fade-in duration-500 h-full flex flex-col">
+                  {/* Fixed Node Header */}
+                  <div className="px-8 py-6 bg-slate-50 border-b border-slate-100">
+                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                          <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{NODE_DETAILS[activeTab].label}</h2>
+                          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 text-[10px] font-black rounded-md uppercase tracking-wider">Active Node</span>
+                        </div>
+                        <p className="text-indigo-600 font-bold text-xs uppercase tracking-widest">{NODE_DETAILS[activeTab].feature}</p>
+                      </div>
+                      <div className="flex-1 max-w-3xl grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-1">
+                          <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Purpose</h4>
+                          <p className="text-[11px] font-medium text-slate-600 leading-tight">{NODE_DETAILS[activeTab].purpose}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">How it helps</h4>
+                          <p className="text-[11px] font-medium text-slate-600 leading-tight">{NODE_DETAILS[activeTab].howItHelps}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Operational Guide</h4>
+                          <p className="text-[11px] font-bold text-indigo-600 leading-tight italic">{NODE_DETAILS[activeTab].guideText}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {activeTab === 'context' && (
                     <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 w-full">
                       <MeetingContextConfig 
