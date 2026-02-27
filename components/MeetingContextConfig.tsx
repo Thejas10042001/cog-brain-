@@ -107,11 +107,10 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
     if (!audioEnabled) return;
     const messages: Record<number, string> = {
       1: "Welcome to the Cognitive Intelligence Hub. Step one: Please upload your documentary memory store or select documents from your cognitive library.",
-      2: "Step two: Select your Neural Anchor. This document will ground the AI's behavioral logic.",
+      2: "Step two: Select your Neural Anchor and review the strategic context. Ensure the seller, client, and solution details are accurate.",
       3: "Step three: Neural Vocal Sync. Configure the vocal signature of your AI persona. You can adjust pitch, pace, and stability.",
-      4: "Step four: Review the strategic context. Ensure the seller, prospect, and solution details are accurate.",
-      5: "Step five: Select the target buyer persona to align the AI's psychological drivers.",
-      6: "Final step: Provide an opportunity snapshot and potential objections to finalize the strategy core."
+      4: "Step four: Select the target buyer persona to align the AI's psychological drivers.",
+      5: "Final step: Provide an opportunity snapshot and potential objections to finalize the strategy core."
     };
     speak(messages[step]);
   }, [step]);
@@ -312,7 +311,7 @@ OPERATIONAL CONSTRAINTS:
   };
 
   const nextStep = () => {
-    const next = Math.min(step + 1, 6);
+    const next = Math.min(step + 1, 5);
     setStep(next);
     if (next > maxStepReached) {
       setMaxStepReached(next);
@@ -376,7 +375,7 @@ OPERATIONAL CONSTRAINTS:
         );
       case 2:
         return (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="p-12 bg-indigo-50 border border-indigo-100 rounded-[3rem] flex flex-col items-center gap-8 shadow-inner text-center">
               <div className="p-6 bg-indigo-600 text-white rounded-[2rem] shadow-2xl">
                 <ICONS.Shield className="w-12 h-12" />
@@ -403,6 +402,42 @@ OPERATIONAL CONSTRAINTS:
                   )}
                 </div>
                 {isExtracting && <p className="text-indigo-600 text-xs font-black uppercase animate-pulse">Extracting Strategic Metadata...</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-200">
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                   <div className="text-indigo-500"><ICONS.Trophy /></div>
+                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Seller Side</h4>
+                </div>
+                <div className="space-y-5">
+                  <Input label="Seller Company" value={context.sellerCompany} onChange={v => handleChange('sellerCompany', v)} placeholder="e.g. Your Organization Name" />
+                  <Input label="Seller Name(s)" value={context.sellerNames} onChange={v => handleChange('sellerNames', v)} placeholder="e.g. Full names of participants" />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                   <div className="text-rose-500"><ICONS.Search /></div>
+                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Prospect Side</h4>
+                </div>
+                <div className="space-y-5">
+                  <Input label="Client Company" value={context.clientCompany} onChange={v => handleChange('clientCompany', v)} placeholder="e.g. Prospect Organization Name" />
+                  <Input label="Client Name" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="e.g. Names and titles extracted from doc" />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                   <div className="text-emerald-500"><ICONS.Efficiency /></div>
+                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Solution Context</h4>
+                </div>
+                <div className="space-y-5">
+                  <Input label="Target Products / Services" value={context.targetProducts} onChange={v => handleChange('targetProducts', v)} placeholder="e.g. Enterprise Solution XYZ" />
+                  <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="e.g. Cybersecurity, AI SaaS" />
+                  <Input label="Meeting Focus / Domains" value={context.meetingFocus} onChange={v => handleChange('meetingFocus', v)} placeholder="e.g. ROI presentation" />
+                </div>
               </div>
             </div>
           </div>
@@ -591,46 +626,6 @@ OPERATIONAL CONSTRAINTS:
         );
       case 4:
         return (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-200">
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                   <div className="text-indigo-500"><ICONS.Trophy /></div>
-                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Seller Side</h4>
-                </div>
-                <div className="space-y-5">
-                  <Input label="Seller Company" value={context.sellerCompany} onChange={v => handleChange('sellerCompany', v)} placeholder="e.g. Your Organization Name" />
-                  <Input label="Seller Name(s)" value={context.sellerNames} onChange={v => handleChange('sellerNames', v)} placeholder="e.g. Full names of participants" />
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                   <div className="text-rose-500"><ICONS.Search /></div>
-                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Prospect Side</h4>
-                </div>
-                <div className="space-y-5">
-                  <Input label="Client Company" value={context.clientCompany} onChange={v => handleChange('clientCompany', v)} placeholder="e.g. Prospect Organization Name" />
-                  <Input label="Power Brokers & Stakeholders" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="e.g. Names and titles extracted from doc" />
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                   <div className="text-emerald-500"><ICONS.Efficiency /></div>
-                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Solution Context</h4>
-                </div>
-                <div className="space-y-5">
-                  <Input label="Target Products / Services" value={context.targetProducts} onChange={v => handleChange('targetProducts', v)} placeholder="e.g. Enterprise Solution XYZ" />
-                  <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="e.g. Cybersecurity, AI SaaS" />
-                  <Input label="Meeting Focus / Domains" value={context.meetingFocus} onChange={v => handleChange('meetingFocus', v)} placeholder="e.g. ROI presentation" />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 5:
-        return (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center space-y-4">
               <h3 className="text-3xl font-black uppercase tracking-widest text-slate-900">Target Buyer Persona</h3>
@@ -651,7 +646,7 @@ OPERATIONAL CONSTRAINTS:
             </div>
           </div>
         );
-      case 6:
+      case 5:
         return (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -724,11 +719,10 @@ OPERATIONAL CONSTRAINTS:
                 className="appearance-none bg-slate-50 border-2 border-slate-100 rounded-2xl pl-10 pr-12 py-3 text-xs font-black uppercase tracking-widest text-slate-600 outline-none focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
               >
                 <option value={1}>Step 1: Library</option>
-                <option value={2}>Step 2: Anchor</option>
+                <option value={2}>Step 2: Anchor & Context</option>
                 <option value={3}>Step 3: Vocal Sync</option>
-                <option value={4}>Step 4: Context</option>
-                <option value={5}>Step 5: Persona</option>
-                <option value={6}>Step 6: Finalize</option>
+                <option value={4}>Step 4: Persona</option>
+                <option value={5}>Step 5: Finalize</option>
               </select>
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none">
                 <ICONS.Efficiency className="w-4 h-4" />
@@ -746,11 +740,10 @@ OPERATIONAL CONSTRAINTS:
               if (newState) {
                 const messages: Record<number, string> = {
                   1: "Welcome to the Cognitive Intelligence Hub. Step one: Please upload your documentary memory store or select documents from your cognitive library.",
-                  2: "Step two: Select your Neural Anchor. This document will ground the AI's behavioral logic.",
+                  2: "Step two: Select your Neural Anchor and review the strategic context. Ensure the seller, client, and solution details are accurate.",
                   3: "Step three: Neural Vocal Sync. Configure the vocal signature of your AI persona. You can adjust pitch, pace, and stability.",
-                  4: "Step four: Review the strategic context. Ensure the seller, prospect, and solution details are accurate.",
-                  5: "Step five: Select the target buyer persona to align the AI's psychological drivers.",
-                  6: "Final step: Provide an opportunity snapshot and potential objections to finalize the strategy core."
+                  4: "Step four: Select the target buyer persona to align the AI's psychological drivers.",
+                  5: "Final step: Provide an opportunity snapshot and potential objections to finalize the strategy core."
                 };
                 // Immediate feedback to satisfy interaction requirement
                 speak(messages[step]);
@@ -762,12 +755,12 @@ OPERATIONAL CONSTRAINTS:
             {audioEnabled ? <ICONS.Speaker className="w-5 h-5" /> : <ICONS.Speaker className="w-5 h-5 opacity-50" />}
           </button>
           <div className="h-8 w-px bg-slate-200"></div>
-          {[1, 2, 3, 4, 5, 6].map(s => (
+          {[1, 2, 3, 4, 5].map(s => (
             <div key={s} className="flex items-center gap-2">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm transition-all ${step === s ? 'bg-indigo-600 text-white shadow-lg scale-110' : step > s ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
                 {step > s ? '✓' : s}
               </div>
-              {s < 6 && <div className={`w-8 h-1 rounded-full ${step > s ? 'bg-emerald-500' : 'bg-slate-100'}`}></div>}
+              {s < 5 && <div className={`w-8 h-1 rounded-full ${step > s ? 'bg-emerald-500' : 'bg-slate-100'}`}></div>}
             </div>
           ))}
         </div>
@@ -777,7 +770,7 @@ OPERATIONAL CONSTRAINTS:
               Previous
             </button>
           )}
-          {step < 6 && (
+          {step < 5 && (
             <button 
               onClick={nextStep} 
               disabled={step === 2 && (!context.kycDocId || isExtracting)}

@@ -88,7 +88,7 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
   - sellerCompany: string
   - sellerNames: string
   - clientCompany: string
-  - clientNames: string (Specifically Power Brokers, Titles, and Stakeholders)
+  - clientNames: string (Specifically Client Names, Titles, and Stakeholders)
   - targetProducts: string
   - productDomain: string
   - meetingFocus: string
