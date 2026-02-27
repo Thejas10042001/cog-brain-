@@ -779,10 +779,6 @@ export const AvatarSimulationStaged: FC<{
 
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
-           <div className="p-10 bg-slate-50 rounded-[4rem] border border-slate-200 shadow-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-indigo-600/10 scale-0 group-hover:scale-100 transition-transform duration-1000 rounded-full blur-3xl opacity-50"></div>
-              <ICONS.Efficiency className="w-32 h-32 text-indigo-600 relative z-10" />
-           </div>
            <div className="space-y-6 w-full">
               <h2 className="text-6xl font-black tracking-tight text-slate-900">Staged Simulation Hub</h2>
               <p className="text-slate-500 text-2xl font-medium leading-relaxed w-full">
