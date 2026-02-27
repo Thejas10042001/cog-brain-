@@ -1,12 +1,13 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { AnalysisResult, CustomerPersonaType, GroomingEvaluation } from '../types';
+import { AnalysisResult, CustomerPersonaType, GroomingEvaluation, MeetingContext } from '../types';
 import { ICONS } from '../constants';
 import { GoogleGenAI, Modality, LiveServerMessage, Type } from '@google/genai';
 import { generatePitchAudio, decodeAudioData } from '../services/geminiService';
 
 interface PracticeSessionProps {
   analysis: AnalysisResult;
+  meetingContext: MeetingContext;
 }
 
 type SessionMode = 'roleplay' | 'seller-roleplay' | 'grooming';
@@ -26,7 +27,7 @@ interface SavedGrooming {
   timestamp: number;
 }
 
-export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) => {
+export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meetingContext }) => {
   const [sessionMode, setSessionMode] = useState<SessionMode>('roleplay');
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'active' | 'error' | 'analyzing'>('idle');
@@ -51,6 +52,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
 
   const userTranscriptionRef = useRef('');
   const aiTranscriptionRef = useRef('');
+
+  const buyerName = meetingContext.clientNames || analysis.snapshot.role || "the Buyer";
+  const sellerName = meetingContext.sellerNames || "the Seller";
 
   const encode = (bytes: Uint8Array) => {
     let binary = '';
@@ -110,9 +114,11 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
       }[selectedPersona];
 
       const systemInstruction = sessionMode === 'roleplay' 
-        ? `Act as the buyer: ${analysis.snapshot.role}. Persona: ${selectedPersona}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}.`
+        ? `Act as the buyer: ${buyerName}. Persona: ${selectedPersona}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}. 
+           Start by saying: "I will act as ${buyerName} and you need to act as ${sellerName} in this roleplay."`
         : sessionMode === 'seller-roleplay'
-        ? `Act as the elite salesperson representing your company. The user is acting as the buyer: ${analysis.snapshot.role}. Persona: ${selectedPersona}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.`
+        ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. Persona: ${selectedPersona}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
+           Start by saying: "I will act as ${sellerName} and you need to act as ${buyerName} in this roleplay."`
         : `Act as a world-class speech and sales coach. Start by stating: "I'm going to ask you a critical question. Take a breath, and give me your best structured response." Then ask exactly this question: "${groomingTarget}". Once the user provides a full answer, remain silent until the session is ended manually. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
       const sessionPromise = ai.live.connect({
@@ -365,13 +371,13 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                {sessionMode === 'roleplay' ? <ICONS.Brain className="w-10 h-10" /> : <ICONS.Trophy className="w-10 h-10" />}
             </div>
             <h4 className="text-4xl font-black text-slate-900 tracking-tight">
-              {sessionMode === 'roleplay' ? `Simulate a Live ${analysis.snapshot.role} Meeting` : sessionMode === 'seller-roleplay' ? 'Simulate an Elite Sales Pitch' : 'Initiate Speech Mastery Protocol'}
+              {sessionMode === 'roleplay' ? `Simulate a Live ${buyerName} Meeting` : sessionMode === 'seller-roleplay' ? `Simulate an Elite ${sellerName} Pitch` : 'Initiate Speech Mastery Protocol'}
             </h4>
             <p className="text-slate-500 text-lg leading-relaxed max-w-2xl mx-auto font-medium">
               {sessionMode === 'roleplay' 
-                ? 'Test your strategic reflexes in a real-time, low-latency dialogue with a persona-grounded buyer.'
+                ? `Test your strategic reflexes in a real-time, low-latency dialogue with ${buyerName}.`
                 : sessionMode === 'seller-roleplay'
-                ? 'Observe how an elite salesperson handles your questions. You act as the buyer, the AI acts as the seller.'
+                ? `Observe how an elite salesperson (${sellerName}) handles your questions. You act as ${buyerName}, the AI acts as ${sellerName}.`
                 : 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit.'}
             </p>
           </div>
@@ -556,13 +562,13 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis }) =>
                   {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : sessionMode === 'seller-roleplay' ? 'Elite Seller Simulation' : 'Bot-Led Grooming Active'}
                 </span>
                 <h5 className="text-slate-900 text-4xl font-black tracking-tight leading-tight">
-                  {sessionMode === 'roleplay' ? analysis.snapshot.role : sessionMode === 'seller-roleplay' ? 'Elite Salesperson' : 'Neural Bot-Coach'}
+                  {sessionMode === 'roleplay' ? buyerName : sessionMode === 'seller-roleplay' ? sellerName : 'Neural Bot-Coach'}
                 </h5>
                 <p className="text-slate-500 text-lg italic font-medium leading-relaxed">
                   {sessionMode === 'roleplay' 
-                    ? '"Speak directly to our business value drivers."' 
+                    ? `"Speak directly to our business value drivers."` 
                     : sessionMode === 'seller-roleplay'
-                    ? '"I am ready to address your concerns and demonstrate our value."'
+                    ? `"I am ready to address your concerns and demonstrate our value."`
                     : `Bot Question: "${groomingTarget}"`}
                 </p>
             </div>
