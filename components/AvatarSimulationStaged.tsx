@@ -47,6 +47,7 @@ export const AvatarSimulationStaged: FC<{
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isUserListening, setIsUserListening] = useState(false);
+  const [micPermissionError, setMicPermissionError] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
@@ -207,10 +208,16 @@ export const AvatarSimulationStaged: FC<{
         setIsUserListening(true);
       };
       recognition.onend = () => {
-        if (sessionActive && !isAISpeaking) {
+        if (sessionActive && !isAISpeaking && !micPermissionError) {
             try { recognitionRef.current.start(); } catch(e) {}
         }
         setIsUserListening(false);
+      };
+      recognition.onerror = (event: any) => {
+        if (event.error === 'not-allowed') {
+          setMicPermissionError(true);
+          setIsUserListening(false);
+        }
       };
       recognitionRef.current = recognition;
     }
@@ -777,6 +784,24 @@ export const AvatarSimulationStaged: FC<{
           </div>
       )}
 
+      {micPermissionError && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
+          <ICONS.Security className="w-5 h-5" />
+          <div className="flex flex-col">
+            <span className="text-xs font-black uppercase tracking-widest">Microphone Access Denied</span>
+            <span className="text-[10px] font-bold opacity-80">Please enable microphone permissions in your browser to use voice features.</span>
+          </div>
+          <button 
+            onClick={() => {
+              setMicPermissionError(false);
+              startListening();
+            }}
+            className="ml-4 bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
            <div className="space-y-6 w-full">

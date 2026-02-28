@@ -157,6 +157,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const [micPermissionError, setMicPermissionError] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   const timerRef = useRef<any>(null);
@@ -194,6 +195,13 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
 
       recognition.onend = () => {
         setIsRecording(false);
+      };
+
+      recognition.onerror = (event: any) => {
+        if (event.error === 'not-allowed') {
+          setMicPermissionError(true);
+          setIsRecording(false);
+        }
       };
 
       recognitionRef.current = recognition;
@@ -385,6 +393,25 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   if (stage === 'config') {
     return (
       <div className="bg-white p-12 border-y border-slate-200 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-64px)]">
+        {micPermissionError && (
+          <div className="mb-8 bg-rose-50 border border-rose-200 p-6 rounded-[2rem] flex items-center justify-between animate-in slide-in-from-top-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-rose-600 text-white rounded-xl shadow-lg">
+                <ICONS.Security className="w-6 h-6" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-black uppercase tracking-widest text-rose-900">Microphone Access Denied</span>
+                <span className="text-xs font-bold text-rose-600 opacity-80">Enable microphone permissions in your browser to use voice-based assignments.</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => setMicPermissionError(false)}
+              className="px-6 py-2 bg-rose-600 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-700 transition-all"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div className="flex items-center gap-4">
             <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100">

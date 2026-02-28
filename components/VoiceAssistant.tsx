@@ -22,6 +22,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
   const [mode, setMode] = useState<'wake_word' | 'query'>('wake_word');
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -145,6 +146,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
     };
 
     recognition.onerror = (event: any) => {
+      if (event.error === 'not-allowed') {
+        console.error("Speech recognition error: Permission denied (not-allowed)");
+        setPermissionDenied(true);
+        setIsListening(false);
+        return; // Stop retrying if permission is denied
+      }
+      
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         console.error("Speech recognition error:", event.error);
       }
@@ -206,10 +214,29 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
     return () => window.removeEventListener('cogni-speak', handleExternalSpeak);
   }, [speak]);
 
+  const handleRetry = () => {
+    setPermissionDenied(false);
+    startListening();
+  };
+
   if (!SpeechRecognition) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-4">
+      {permissionDenied && (
+        <div className="bg-rose-50 border border-rose-200 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-right-4">
+          <ICONS.Security className="w-4 h-4 text-rose-500" />
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Mic Access Denied</span>
+            <button 
+              onClick={handleRetry}
+              className="text-[8px] font-bold text-rose-400 hover:text-rose-600 underline text-left uppercase tracking-tighter"
+            >
+              Click to retry permission
+            </button>
+          </div>
+        </div>
+      )}
       {isProcessing && (
         <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-indigo-100 animate-pulse flex items-center gap-2">
           <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></div>

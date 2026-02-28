@@ -60,6 +60,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isUserListening, setIsUserListening] = useState(false);
+  const [micPermissionError, setMicPermissionError] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -206,6 +207,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         setIsUserListening(true);
       };
       recognition.onend = () => setIsUserListening(false);
+      recognition.onerror = (event: any) => {
+        if (event.error === 'not-allowed') {
+          setMicPermissionError(true);
+          setIsUserListening(false);
+        }
+      };
       recognitionRef.current = recognition;
     }
   }, []);
@@ -544,6 +551,24 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
   return (
     <div className="bg-white shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-slate-900 animate-in zoom-in-95 duration-500">
+      {micPermissionError && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
+          <ICONS.Security className="w-5 h-5" />
+          <div className="flex flex-col">
+            <span className="text-xs font-black uppercase tracking-widest">Microphone Access Denied</span>
+            <span className="text-[10px] font-bold opacity-80">Please enable microphone permissions in your browser to use voice features.</span>
+          </div>
+          <button 
+            onClick={() => {
+              setMicPermissionError(false);
+              startListening();
+            }}
+            className="ml-4 bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto px-12">
            <div className="w-80 h-80 bg-slate-50 rounded-[4rem] border border-slate-200 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
