@@ -137,48 +137,10 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           onopen: () => {
             setStatus('active');
             setIsActive(true);
-            const source = inputCtx.createMediaStreamSource(stream);
-            const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
-            scriptProcessor.onaudioprocess = (e) => {
-              const inputData = e.inputBuffer.getChannelData(0);
-              const int16 = new Int16Array(inputData.length);
-              for (let i = 0; i < inputData.length; i++) int16[i] = inputData[i] * 32768;
-              const pcmBlob = { data: encode(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' };
-              sessionPromise.then(session => session.sendRealtimeInput({ media: pcmBlob }));
-            };
-            source.connect(scriptProcessor);
-            scriptProcessor.connect(inputCtx.destination);
+            // Microphone input disabled
           },
           onmessage: async (message: LiveServerMessage) => {
-            const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (base64Audio) {
-              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputCtx.currentTime);
-              const buffer = await decodeAudioData(decode(base64Audio), outputCtx, 24000, 1);
-              const source = outputCtx.createBufferSource();
-              source.buffer = buffer;
-              source.connect(outputCtx.destination);
-              source.onended = () => sourcesRef.current.delete(source);
-              source.start(nextStartTimeRef.current);
-              nextStartTimeRef.current += buffer.duration;
-              sourcesRef.current.add(source);
-            }
-
-            if (message.serverContent?.inputTranscription) {
-              userTranscriptionRef.current += message.serverContent.inputTranscription.text;
-              setCurrentTranscription(prev => ({ ...prev, user: userTranscriptionRef.current }));
-            }
-            if (message.serverContent?.outputTranscription) {
-              aiTranscriptionRef.current += message.serverContent.outputTranscription.text;
-              setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
-            }
-            if (message.serverContent?.turnComplete) {
-              setTranscription(prev => [...prev, { user: userTranscriptionRef.current, ai: aiTranscriptionRef.current }]);
-              if (sessionMode === 'roleplay') {
-                userTranscriptionRef.current = '';
-                aiTranscriptionRef.current = '';
-                setCurrentTranscription({ user: '', ai: '' });
-              }
-            }
+            // Audio output and transcription disabled
           },
           onerror: (e) => { setStatus('error'); stopPractice(); },
           onclose: () => stopPractice(),
@@ -650,7 +612,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
               {transcription.length === 0 && !currentTranscription.user && !currentTranscription.ai && (
                 <div className="py-24 text-center space-y-6 opacity-20">
                    <ICONS.Speaker className="mx-auto w-14 h-14" />
-                   <p className="text-[11px] font-black uppercase tracking-[0.4em]">Establishing Voice Link...</p>
+                   <p className="text-[11px] font-black uppercase tracking-[0.4em]">Voice Interaction Disabled</p>
                 </div>
               )}
               {transcription.map((turn, i) => (

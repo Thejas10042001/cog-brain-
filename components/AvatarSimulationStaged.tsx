@@ -199,96 +199,66 @@ export const AvatarSimulationStaged: FC<{
   };
 
   const playAIQuestion = async (text: string) => {
-    if (!text.trim()) {
-      setIsAISpeaking(false);
-      return;
-    }
-    setIsAISpeaking(true);
-    setIsPaused(false);
-    try {
-      if (!audioContextRef.current) audioContextRef.current = new AudioContext({ sampleRate: 24000 });
-      if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
-      
-      let voice = "Charon";
-      if (meetingContext.vocalPersonaAnalysis?.baseVoice) {
-        voice = meetingContext.vocalPersonaAnalysis.baseVoice;
-      }
-
-      const analysis = meetingContext.vocalPersonaAnalysis;
-      const bytes = await generatePitchAudio(
-        text, 
-        voice, 
-        analysis?.mimicryDirective || "",
-        analysis?.gender || 'Male',
-        analysis || undefined
-      );
-      if (bytes) {
-        lastAudioBytes.current = bytes;
-        const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContextRef.current.destination);
-        source.onended = () => {
-          setIsAISpeaking(false);
-          startListening();
-        };
-        activeAudioSource.current = source;
-        source.start();
-      } else {
-        setIsAISpeaking(false);
-      }
-    } catch (e) {
-      setIsAISpeaking(false);
-    }
+    // Voice output disabled
   };
 
   const startListening = () => {
+    if (isProcessing || isAISpeaking) return;
+    
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition || isAISpeaking) return;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
 
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch (e) {}
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
     recognition.lang = 'en-US';
-    
-    recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        }
-      }
-      if (finalTranscript) {
-        setCurrentCaption(prev => {
-          const trimmedPrev = prev.trim();
-          const trimmedNew = finalTranscript.trim();
-          if (trimmedPrev.endsWith(trimmedNew)) return prev;
-          return trimmedPrev + (trimmedPrev ? " " : "") + trimmedNew;
-        });
-      }
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.onstart = () => {
       setIsUserListening(true);
+      setMicPermissionError(false);
     };
 
-    recognition.onstart = () => setIsUserListening(true);
-    recognition.onend = () => setIsUserListening(false);
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      
+      if (finalTranscript) {
+        setCurrentCaption(prev => {
+          const base = prev.trim();
+          return base ? `${base} ${finalTranscript.trim()}` : finalTranscript.trim();
+        });
+      }
+    };
+
     recognition.onerror = (event: any) => {
-      console.error("Staged Simulation Mic Error:", event.error);
+      console.error("Speech recognition error:", event.error);
       if (event.error === 'not-allowed') {
         setMicPermissionError(true);
       }
       setIsUserListening(false);
     };
 
+    recognition.onend = () => {
+      setIsUserListening(false);
+    };
+
     recognitionRef.current = recognition;
-    try {
-      recognition.start();
-    } catch (e) {
-      console.error("Failed to start staged recognition:", e);
-    }
+    recognition.start();
   };
 
   const stopListening = () => {
@@ -1176,7 +1146,13 @@ export const AvatarSimulationStaged: FC<{
                     <div className="w-full max-w-6xl mx-auto space-y-8 pb-24">
                        <div className="relative group">
                           <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-slate-900 shadow-inner h-48 resize-none placeholder:text-slate-400 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || "Client"}...`} />
-                          <button onClick={() => startListening()} className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}><ICONS.Ear className="w-8 h-8" /></button>
+                          <button 
+                          onClick={() => isUserListening ? stopListening() : startListening()} 
+                          className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}
+                          title={isUserListening ? "Stop Listening" : "Start Listening"}
+                        >
+                          <ICONS.Ear className="w-8 h-8" />
+                        </button>
                        </div>
 
                        <div className="flex items-center gap-6">

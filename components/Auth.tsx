@@ -12,14 +12,9 @@ export const Auth: React.FC = () => {
 
   const SUPPORT_LINK = "https://www.spiked.ai/contact-sales";
 
-  // Trigger welcome message on mount
+  // Welcome message removed
   useEffect(() => {
-    const timer = setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('assistant-speak', { 
-        detail: { text: "Welcome to Spiked AI Cognitive Intelligence Simulation. Please enter your login credentials like email and password. If you are a new user, you need to connect with our sales team for getting help." } 
-      }));
-    }, 1000);
-    return () => clearTimeout(timer);
+    // Voice assistant disabled
   }, []);
 
   const mapAuthError = (code: string) => {
@@ -62,9 +57,6 @@ export const Auth: React.FC = () => {
       console.error("Auth Error:", err);
       const mappedError = mapAuthError(err.code);
       setError(mappedError);
-      window.dispatchEvent(new CustomEvent('assistant-speak', { 
-        detail: { text: `Neural link failed. ${mappedError} Please try again or contact our sales team by clicking the sales team button.` } 
-      }));
     } finally {
       setLoading(false);
     }
@@ -99,9 +91,6 @@ export const Auth: React.FC = () => {
               onClick={() => { 
                 setIsLogin(false); 
                 setError(null); 
-                window.dispatchEvent(new CustomEvent('assistant-speak', { 
-                  detail: { text: "Direct profile instantiation is currently restricted. Please coordinate with our Sales Engineering team for tailored onboarding." } 
-                }));
               }}
               className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${!isLogin ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
             >

@@ -190,115 +190,74 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   }, []);
 
   const playAIQuestion = async (text: string) => {
-    setIsAISpeaking(true);
-    setIsPaused(false);
-    try {
-      if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-      if (audioContextRef.current.state === 'suspended') await audioContextRef.current.resume();
-      
-      const analysis = meetingContext.vocalPersonaAnalysis;
-      const bytes = await generatePitchAudio(
-        text, 
-        analysis?.baseVoice || 'Charon', 
-        analysis?.mimicryDirective || "",
-        analysis?.gender || 'Male',
-        analysis || undefined
-      );
-      if (bytes) {
-        lastAudioBytes.current = bytes;
-        const buffer = await decodeAudioData(bytes, audioContextRef.current, 24000, 1);
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContextRef.current.destination);
-        source.onended = () => {
-          setIsAISpeaking(false);
-          startListening();
-        };
-        activeAudioSource.current = source;
-        source.start();
-      }
-    } catch (e) {
-      setIsAISpeaking(false);
-    }
+    // Voice output disabled
   };
 
   const handlePauseResume = async () => {
-    if (!audioContextRef.current) return;
-    if (isPaused) {
-      await audioContextRef.current.resume();
-      setIsPaused(false);
-    } else {
-      await audioContextRef.current.suspend();
-      setIsPaused(true);
-    }
+    // Audio control disabled
   };
 
   const handleRepeat = async () => {
-    if (!lastAudioBytes.current || !audioContextRef.current) return;
-    if (activeAudioSource.current) {
-      activeAudioSource.current.stop();
-    }
-    const buffer = await decodeAudioData(lastAudioBytes.current, audioContextRef.current, 24000, 1);
-    const source = audioContextRef.current.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
-    source.onended = () => {
-      setIsAISpeaking(false);
-      startListening();
-    };
-    activeAudioSource.current = source;
-    setIsAISpeaking(true);
-    setIsPaused(false);
-    source.start();
+    // Audio control disabled
   };
 
   const startListening = () => {
+    if (isProcessing || isAISpeaking) return;
+    
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition || isAISpeaking) return;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
 
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch (e) {}
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
     recognition.lang = 'en-US';
-    
-    recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        }
-      }
-      if (finalTranscript) {
-        setCurrentCaption(prev => {
-          const trimmedPrev = prev.trim();
-          const trimmedNew = finalTranscript.trim();
-          if (trimmedPrev.endsWith(trimmedNew)) return prev;
-          return trimmedPrev + (trimmedPrev ? " " : "") + trimmedNew;
-        });
-      }
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.onstart = () => {
       setIsUserListening(true);
+      setMicPermissionError(false);
     };
 
-    recognition.onstart = () => setIsUserListening(true);
-    recognition.onend = () => setIsUserListening(false);
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      
+      if (finalTranscript) {
+        setCurrentCaption(prev => {
+          const base = prev.trim();
+          return base ? `${base} ${finalTranscript.trim()}` : finalTranscript.trim();
+        });
+      }
+    };
+
     recognition.onerror = (event: any) => {
-      console.error("Simulation Mic Error:", event.error);
+      console.error("Speech recognition error:", event.error);
       if (event.error === 'not-allowed') {
         setMicPermissionError(true);
       }
       setIsUserListening(false);
     };
 
+    recognition.onend = () => {
+      setIsUserListening(false);
+    };
+
     recognitionRef.current = recognition;
-    try {
-      recognition.start();
-    } catch (e) {
-      console.error("Failed to start recognition:", e);
-    }
+    recognition.start();
   };
 
   const stopListening = () => {
@@ -836,7 +795,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                        placeholder={`${meetingContext.clientNames || 'The Executive'} is awaiting your strategic response...`} 
                      />
                      <button 
-                       onClick={() => startListening()} 
+                       onClick={() => isUserListening ? stopListening() : startListening()} 
                        className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}
                      >
                        <ICONS.Ear className="w-8 h-8" />

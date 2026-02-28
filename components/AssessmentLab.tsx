@@ -209,59 +209,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   };
 
   const toggleRecording = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Speech Recognition is not supported in this browser.");
-      return;
-    }
-
-    if (isRecording) {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
-      }
-      setIsRecording(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        }
-      }
-      
-      const qId = questions[currentIdx]?.id;
-      if (qId && finalTranscript) {
-        setAnswers(prev => {
-          const current = prev[qId] || "";
-          const separator = current && !current.endsWith(' ') ? ' ' : '';
-          return { ...prev, [qId]: current + separator + finalTranscript };
-        });
-      }
-    };
-
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onend = () => setIsRecording(false);
-    recognition.onerror = (event: any) => {
-      console.error("Assessment Mic Error:", event.error);
-      if (event.error === 'not-allowed') {
-        setMicPermissionError(true);
-      }
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    try {
-      recognition.start();
-    } catch (e) {
-      console.error("Failed to start assessment recognition:", e);
-    }
+    // Microphone input disabled
   };
 
   const handleStart = async (customConfig?: typeof config) => {
@@ -585,15 +533,23 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                               className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-10 text-lg h-60"
                               placeholder="Transcribed performance..."
                             />
-                            <button onClick={toggleRecording} className={`py-5 rounded-full font-black text-lg transition-all ${isRecording ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white'}`}>
-                               {isRecording ? "End Trace" : "Begin Performance"}
+                            <button 
+                              onClick={() => {}} 
+                              className="py-5 rounded-full font-black text-lg bg-slate-100 text-slate-400 cursor-not-allowed opacity-50"
+                              title="Voice disabled"
+                            >
+                               Voice disabled
                             </button>
                          </div>
                        </div>
                      ) : (
                        <div className="space-y-10 flex flex-col items-center w-full">
-                          <button onClick={toggleRecording} className={`w-32 h-32 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-rose-600 scale-110 shadow-2xl' : 'bg-indigo-600'}`}>
-                             {isRecording ? <ICONS.X className="w-12 h-12 text-white" /> : <ICONS.Speaker className="w-12 h-12 text-white" />}
+                          <button 
+                            onClick={() => {}} 
+                            className="w-32 h-32 rounded-full flex items-center justify-center bg-slate-100 text-slate-400 cursor-not-allowed opacity-50"
+                            title="Voice disabled"
+                          >
+                             <ICONS.Speaker className="w-12 h-12" />
                           </button>
                           <textarea 
                              value={answers[currentQ.id] || ""}
