@@ -519,12 +519,7 @@ const App: React.FC = () => {
         onDarkModeToggle={() => setDarkMode(!darkMode)}
       />
 
-      <VoiceAssistant 
-        activeTab={activeTab} 
-        user={user} 
-        context={meetingContext}
-        onContextChange={setMeetingContext}
-      />
+      <VoiceAssistant activeTab={activeTab} user={user} />
       
       <div className="pt-16 flex flex-1 overflow-hidden text-magnifier">
         
