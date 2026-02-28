@@ -78,8 +78,8 @@ const App: React.FC = () => {
       feature: 'Strategic Priming & Context Configuration',
       purpose: 'Define the seller/client landscape, upload documents, and set simulation parameters.',
       howItHelps: 'Ensures the AI models are grounded in your specific deal reality for maximum relevance.',
-      audioText: 'Welcome to Settings. The purpose of this feature is to define the seller and client landscape, upload documents, and set simulation parameters. It helps by ensuring the AI models are grounded in your specific deal reality for maximum relevance.',
-      guideText: 'To operate Settings, look at the top navigation bar. You will see a Node Dial dropdown to jump between steps. In Step 1, use the Upload area to add documents. In Step 2, use the dropdown to select your Neural Anchor and review the Seller, Client, and Solution context. Once all steps are configured, click the large purple Synthesize Strategy Core button at the bottom to prime the AI.'
+      audioText: 'Welcome to the Intelligence Node Settings. All strategic parameters are now accessible on this single-page interface for holistic synthesis. Define the seller and client landscape, upload documents, and set simulation parameters to ground the AI in your deal reality.',
+      guideText: 'Welcome to the Intelligence Node Settings. All strategic parameters are now accessible on this single-page interface. Use the Library section to add documents, and the Cognitive Mind Core to select your KYC source and review the Seller, Client, and Solution context. Once configured, click the Synthesize Strategy Core button at the top or bottom to prime the AI.'
     },
     'qa': {
       label: 'Hands-on Assignment',
