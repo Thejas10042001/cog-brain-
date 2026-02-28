@@ -210,7 +210,23 @@ const App: React.FC = () => {
     baseSystemPrompt: "",
     kycDocId: "",
     voiceMode: 'upload',
-    difficulty: 'Medium'
+    difficulty: 'Medium',
+    vocalPersonaAnalysis: {
+      pitch: 'Moderate',
+      tempo: 'Controlled',
+      cadence: 'Strategic',
+      accent: 'Neutral',
+      emotionalBaseline: 'Steady',
+      breathingPatterns: 'Regulated',
+      mimicryDirective: '',
+      baseVoice: 'Zephyr',
+      gender: 'Male',
+      pace: 1.0,
+      stability: 80,
+      clarity: 90,
+      pitchValue: 1.0,
+      toneAdjectives: []
+    }
   });
 
   const startResizing = useCallback(() => setIsResizing(true), []);
@@ -253,8 +269,8 @@ const App: React.FC = () => {
       setIsRestoring(true);
       setLoadingProgress(0);
 
-      // If an analysis exists, we keep the context at defaults as requested
-      if (!savedAnalysis && savedContext) {
+      // Always restore the meeting context if it exists
+      if (savedContext) {
         setMeetingContext(prev => ({ ...prev, ...savedContext }));
       }
       
@@ -274,11 +290,11 @@ const App: React.FC = () => {
       setTimeout(() => {
         if (savedAnalysis) {
           setAnalysis(savedAnalysis);
-          setActiveTab('qa');
         } else {
           // If we have documents but no analysis, we can trigger analysis
           setShouldAutoAnalyze(true);
         }
+        setActiveTab('context');
         setIsRestoring(false);
       }, 2500);
     }
@@ -291,7 +307,7 @@ const App: React.FC = () => {
       // Trigger analysis if we have a saved context and documents are loaded
       const hasDocs = history.some(d => selectedLibraryDocIds.includes(d.id)) || files.length > 0;
       if (hasDocs) {
-        runAnalysis(true);
+        runAnalysis(undefined, true);
       }
       setShouldAutoAnalyze(false);
     }
@@ -338,7 +354,9 @@ const App: React.FC = () => {
     return `${fileIds}-${libIds}-${ctxString}`;
   }, [files, selectedLibraryDocIds, meetingContext]);
 
-  const runAnalysis = useCallback(async (isAuto = false) => {
+  const runAnalysis = useCallback(async (currentContext?: MeetingContext, isAuto = false) => {
+    const effectiveContext = currentContext || meetingContext;
+    
     if (activeDocuments.length === 0) {
       if (!isAuto) setError("Please ensure at least one document (from library or upload) is ready for analysis.");
       return;
@@ -347,13 +365,19 @@ const App: React.FC = () => {
     const currentHash = generateStateHash();
     
     if (analysis && currentHash === lastAnalyzedHash.current) {
-      setActiveTab(isAuto ? 'qa' : 'context');
+      setActiveTab('context');
       return;
     }
 
     setIsAnalyzing(true);
+    setAnalysis(null); // Clear old analysis as requested
     setLoadingProgress(0);
     setError(null);
+
+    // Save current context as a draft before starting analysis
+    if (!isAuto) {
+      await saveMeetingContext({ meetingContext: effectiveContext, selectedLibraryDocIds, analysis: null });
+    }
 
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
@@ -366,7 +390,7 @@ const App: React.FC = () => {
 
     try {
       const combinedContent = activeDocuments.map(d => `DOC NAME: ${d.name}\n${d.content}`).join('\n\n');
-      const result = await analyzeSalesContext(combinedContent, meetingContext);
+      const result = await analyzeSalesContext(combinedContent, effectiveContext);
       
       clearInterval(progressInterval);
       setLoadingProgress(100);
@@ -375,35 +399,11 @@ const App: React.FC = () => {
         setAnalysis(result);
         lastAnalyzedHash.current = currentHash;
         setIsAnalyzing(false);
-        setActiveTab(isAuto ? 'qa' : 'context');
+        setActiveTab('context');
         
         // Save context and analysis to Firebase
         if (!isAuto) {
-          await saveMeetingContext({ meetingContext, selectedLibraryDocIds, analysis: result });
-          
-          // Reset settings to default after manual synthesis as requested
-          setMeetingContext({
-            sellerCompany: "",
-            sellerNames: "",
-            clientCompany: "",
-            clientNames: "",
-            targetProducts: "",
-            productDomain: "",
-            meetingFocus: "",
-            persona: "Balanced",
-            thinkingLevel: "Medium",
-            temperature: 1.0,
-            answerStyles: ALL_ANSWER_STYLES,
-            executiveSnapshot: "",
-            strategicKeywords: [],
-            potentialObjections: [],
-            baseSystemPrompt: "",
-            kycDocId: "",
-            voiceMode: 'upload',
-            difficulty: 'Medium'
-          });
-          setFiles([]);
-          setSelectedLibraryDocIds([]);
+          await saveMeetingContext({ meetingContext: effectiveContext, selectedLibraryDocIds, analysis: result });
         }
       }, 800);
 
@@ -413,7 +413,7 @@ const App: React.FC = () => {
       setError(err.message || "An unexpected error occurred during analysis.");
       setIsAnalyzing(false);
     }
-  }, [activeDocuments, meetingContext, analysis, generateStateHash]);
+  }, [activeDocuments, meetingContext, analysis, generateStateHash, selectedLibraryDocIds]);
 
   const loadingStatusText = useMemo(() => {
     if (isRestoring) {

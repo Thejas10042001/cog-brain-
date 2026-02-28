@@ -14,7 +14,7 @@ interface MeetingContextConfigProps {
   onUploadSuccess: () => void;
   selectedLibraryDocIds: string[];
   onToggleLibraryDoc: (id: string) => void;
-  onSynthesize: () => void;
+  onSynthesize: (currentContext?: MeetingContext) => void;
   onSave?: () => void;
   isAnalyzing: boolean;
   hasAnalysis: boolean;
@@ -715,10 +715,7 @@ OPERATIONAL CONSTRAINTS:
 
       <div className="flex justify-center pb-12">
         <button
-          onClick={() => {
-            if (onSave) onSave();
-            onSynthesize();
-          }}
+          onClick={() => onSynthesize(context)}
           disabled={isAnalyzing}
           className="flex items-center gap-4 px-20 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl shadow-2xl hover:bg-indigo-700 hover:scale-105 transition-all active:scale-95"
         >
