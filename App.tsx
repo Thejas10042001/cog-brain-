@@ -72,75 +72,83 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string }> = {
+  const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string; stepNumber: string }> = {
     'context': {
+      stepNumber: '01',
       label: 'Settings',
       feature: 'Strategic Priming & Context Configuration',
       purpose: 'Define the seller/client landscape, upload documents, and set simulation parameters.',
       howItHelps: 'Ensures the AI models are grounded in your specific deal reality for maximum relevance.',
       audioText: 'Welcome to the Intelligence Node Settings. All strategic parameters are now accessible on this single-page interface for holistic synthesis. Define the seller and client landscape, upload documents, and set simulation parameters to ground the AI in your deal reality.',
-      guideText: 'Welcome to the Intelligence Node Settings. All strategic parameters are now accessible on this single-page interface. Use the Library section to add documents, and the Cognitive Mind Core to select your KYC source and review the Seller, Client, and Solution context. Once configured, click the Synthesize Strategy Core button at the top or bottom to prime the AI.'
+      guideText: 'Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base for neural synthesis. Anchor the cognitive simulation by selecting a primary KYC node to calibrate seller, client, and solution parameters.'
     },
     'qa': {
+      stepNumber: '02',
       label: 'Hands-on Assignment',
       feature: 'Cognitive Assessment Lab',
       purpose: 'Test your knowledge of the deal and product through structured assignments.',
       howItHelps: 'Validates your readiness and identifies information gaps before you face the customer.',
       audioText: 'This is the Hands-on Assignment lab. Its purpose is to test your knowledge of the deal and product through structured assignments. This helps by validating your readiness and identifying information gaps before you face the customer.',
-      guideText: 'In the Assignment Lab, first look at the top selection area to pick a document from your library. Click the Generate Assignment button to receive your tasks. Answer the questions in the text fields provided and click the Submit button at the bottom for a cognitive evaluation of your deal readiness.'
+      guideText: 'Calibrate the assessment parameters and challenge depth to align with your current strategic readiness. Initiate the neural assignment to pressure-test your document mastery and identify logic deficits.'
     },
     'avatar-staged': {
+      stepNumber: '03',
       label: 'Stage Simulation',
       feature: 'Progressive Deal Stages',
       purpose: 'Roleplay through specific meeting phases like Ice Breakers, Pricing, and Legal.',
       howItHelps: 'Allows you to master the nuances of each stage of the sales cycle.',
       audioText: 'Welcome to Stage Simulation. The purpose is to roleplay through specific meeting phases like Ice Breakers, Pricing, and Legal. It helps by allowing you to master the nuances of each stage of the sales cycle.',
-      guideText: 'Start by looking at the interactive map in the center. Select a meeting stage, such as Ice Breaker or Pricing. Once selected, click the Commence Stage button to start the roleplay. During the session, use the End Stage button to stop and receive immediate feedback on that specific phase.'
+      guideText: 'Navigate through the progressive deal stages to master the nuances of each phase of the sales cycle. Select a tactical node and commence the stage simulation to refine your situational reflexes.'
     },
     'avatar': {
+      stepNumber: '04',
       label: 'Avatar 1.0',
       feature: 'Dual-Mode Buyer Simulation',
       purpose: 'Real-time dialogue with a skeptical CIO persona.',
       howItHelps: 'Sharpens your strategic reflexes and objection-handling skills in a low-stakes environment.',
       audioText: 'Avatar 1.0 is your dual-mode buyer simulation. The purpose is to engage in real-time dialogue with a skeptical CIO persona. It helps by sharpening your strategic reflexes and objection-handling skills in a low-stakes environment.',
-      guideText: 'Engage with the CIO by clicking the large Start Simulation button in the center. Speak clearly into your microphone when the pulse animation is active. To finish, look at the Mastery Log on the right and click End Session to stop and generate your performance report.'
+      guideText: 'Engage in high-fidelity, real-time dialogue with a skeptical CIO persona to sharpen your strategic reflexes. Activate the simulation and maintain vocal authority to neutralize predicted resistance.'
     },
     'avatar2': {
+      stepNumber: '05',
       label: 'Avatar 2.0',
       feature: 'Multi-Persona Enterprise Evaluation',
       purpose: 'Switch between CIO, CFO, and IT Director roles for comprehensive testing.',
       howItHelps: 'Prepares you for the diverse perspectives and scrutiny of a full buying committee.',
       audioText: 'Avatar 2.0 offers multi-persona evaluation. The purpose is to switch between CIO, CFO, and IT Director roles for comprehensive testing. It helps by preparing you for the diverse perspectives and scrutiny of a full buying committee.',
-      guideText: 'First, select your target persona from the cards at the top: CIO, CFO, or IT Director. Click the Activate Persona button to begin. You can switch personas mid-session using the top cards to test different stakeholder perspectives. Use the End Session button to finalize the audit.'
+      guideText: 'Evaluate your performance across a multi-persona enterprise committee. Switch between CIO, CFO, and IT Director roles to test the resilience of your strategy against diverse stakeholder scrutiny.'
     },
     'gpt': {
+      stepNumber: '06',
       label: 'Spiked GPT',
       feature: 'Strategic Knowledge Retrieval',
       purpose: 'Fast, grounded answering engine for any deal-related question.',
       howItHelps: 'Provides instant access to winning strategies and data points from your uploaded context.',
       audioText: 'This is Spiked GPT, your strategic knowledge engine. The purpose is to provide a fast, grounded answering engine for any deal-related question. It helps by providing instant access to winning strategies and data points from your uploaded context.',
-      guideText: 'Type any question about your deal in the input box at the very bottom of the screen. Spiked GPT will retrieve grounded answers from your documents and display them in the chat history above. Use the Clear Chat button in the header if you wish to start a new inquiry.'
+      guideText: 'Access the strategic knowledge retrieval engine for instantaneous, grounded responses to complex deal inquiries. Query the cognitive core to extract winning strategies and precise data points.'
     },
     'practice': {
+      stepNumber: '07',
       label: 'Grooming Lab',
       feature: 'Verbal Architecture & Pacing Audit',
       purpose: 'Practice your delivery and receive an elite audit on tone, grammar, and pacing.',
       howItHelps: 'Refines your vocal presence and ensures your delivery is as strong as your strategy.',
       audioText: 'Welcome to the Grooming Lab. The purpose is to practice your delivery and receive an elite audit on tone, grammar, and pacing. It helps by refining your vocal presence and ensuring your delivery is as strong as your strategy.',
-      guideText: 'Select your roleplay mode using the toggle at the top: Buyer Roleplay or Seller Roleplay. Click the large Commence Interaction button to start speaking. The lab will audit your tone and pacing in real-time. Use the X button in the Mastery Log header on the right to end the session.'
+      guideText: 'Audit your verbal architecture and pacing to ensure your delivery matches the strength of your strategy. Initiate the grooming protocol to receive an elite analysis of your vocal energy and authority.'
     },
     'audio': {
+      stepNumber: '08',
       label: 'Studio',
       feature: 'High-Fidelity Audio Generation',
       purpose: 'Generate professional-grade audio samples of your winning pitches.',
       howItHelps: 'Allows you to hear the ideal delivery and use it for rehearsal or internal alignment.',
       audioText: 'This is the Studio. The purpose is to generate professional-grade audio samples of your winning pitches. It helps by allowing you to hear the ideal delivery and use it for rehearsal or internal alignment.',
-      guideText: 'Enter the text you want to hear in the large Pitch Script area on the left. Select a voice profile from the options on the right and click the Generate Audio button. Once synthesized, you can play or download the resulting high-fidelity sample for your rehearsal.'
+      guideText: 'Synthesize high-fidelity audio samples of your winning pitches to establish a baseline for elite delivery. Generate professional-grade vocal signatures for rehearsal and strategic alignment.'
     }
   };
 
   const playNodeAudio = (text: string) => {
-    window.dispatchEvent(new CustomEvent('cogni-speak', { detail: { text } }));
+    window.dispatchEvent(new CustomEvent('assistant-speak', { detail: { text } }));
   };
 
   const handleNodeClick = (tab: any) => {
@@ -245,7 +253,11 @@ const App: React.FC = () => {
       setIsRestoring(true);
       setLoadingProgress(0);
 
-      if (savedContext) setMeetingContext(prev => ({ ...prev, ...savedContext }));
+      // If an analysis exists, we keep the context at defaults as requested
+      if (!savedAnalysis && savedContext) {
+        setMeetingContext(prev => ({ ...prev, ...savedContext }));
+      }
+      
       if (savedDocIds) setSelectedLibraryDocIds(savedDocIds);
       
       // Simulate neural restoration progress
@@ -368,6 +380,30 @@ const App: React.FC = () => {
         // Save context and analysis to Firebase
         if (!isAuto) {
           await saveMeetingContext({ meetingContext, selectedLibraryDocIds, analysis: result });
+          
+          // Reset settings to default after manual synthesis as requested
+          setMeetingContext({
+            sellerCompany: "",
+            sellerNames: "",
+            clientCompany: "",
+            clientNames: "",
+            targetProducts: "",
+            productDomain: "",
+            meetingFocus: "",
+            persona: "Balanced",
+            thinkingLevel: "Medium",
+            temperature: 1.0,
+            answerStyles: ALL_ANSWER_STYLES,
+            executiveSnapshot: "",
+            strategicKeywords: [],
+            potentialObjections: [],
+            baseSystemPrompt: "",
+            kycDocId: "",
+            voiceMode: 'upload',
+            difficulty: 'Medium'
+          });
+          setFiles([]);
+          setSelectedLibraryDocIds([]);
         }
       }, 800);
 
@@ -498,14 +534,14 @@ const App: React.FC = () => {
                   <div className="space-y-1">
                     {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
                     <div className="flex flex-col gap-1">
-                      <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "Settings" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "Hands-on Assignment" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "Stage Simulation" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "Avatar 1.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "Avatar 2.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "Spiked GPT" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "Grooming Lab" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "Studio" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "01 Settings" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "02 Hands-on Assignment" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "03 Stage Simulation" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "04 Avatar 1.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "05 Avatar 2.0" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "06 Spiked GPT" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "07 Grooming Lab" : ""} scale={sidebarFontScale} />
+                      <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "08 Studio" : ""} scale={sidebarFontScale} />
                     </div>
                   </div>
 
@@ -581,6 +617,7 @@ const App: React.FC = () => {
                     <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-lg">{NODE_DETAILS[activeTab].stepNumber}</div>
                           <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{NODE_DETAILS[activeTab].label}</h2>
                           <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 text-[10px] font-black rounded-md uppercase tracking-wider">Active Node</span>
                         </div>

@@ -98,7 +98,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
 
   const speak = (text: string) => {
     if (!audioEnabled) return;
-    window.dispatchEvent(new CustomEvent('cogni-speak', { detail: { text } }));
+    window.dispatchEvent(new CustomEvent('assistant-speak', { detail: { text } }));
   };
 
   useEffect(() => {
@@ -333,7 +333,10 @@ OPERATIONAL CONSTRAINTS:
         <div className="space-y-8">
           <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
             <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">01</div>
-            <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Cognitive Library Hub</h3>
+            <div className="flex flex-col">
+              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Cognitive Library Hub</h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base for neural synthesis.</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 gap-12">
             <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
@@ -363,7 +366,10 @@ OPERATIONAL CONSTRAINTS:
         <div className="space-y-8">
           <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
             <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">02</div>
-            <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Cognitive Mind Core</h3>
+            <div className="flex flex-col">
+              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Cognitive Mind Core</h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Anchor the cognitive simulation by selecting a primary KYC node to calibrate seller, client, and solution parameters.</p>
+            </div>
           </div>
           <div className="space-y-12">
             <div className="p-12 bg-indigo-50 border border-indigo-100 rounded-[3rem] flex flex-col items-center gap-8 shadow-inner text-center">
@@ -437,7 +443,10 @@ OPERATIONAL CONSTRAINTS:
         <div className="space-y-8">
           <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
             <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">03</div>
-            <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Target Buyer Persona</h3>
+            <div className="flex flex-col">
+              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Target Buyer Persona</h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Calibrate the psychological architecture of the target buyer to ensure behavioral alignment during interaction.</p>
+            </div>
           </div>
           <div className="space-y-8">
             <div className="text-center space-y-4">
@@ -463,7 +472,10 @@ OPERATIONAL CONSTRAINTS:
         <div className="space-y-8">
           <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
             <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">04</div>
-            <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Strategy Finalization</h3>
+            <div className="flex flex-col">
+              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Strategy Finalization</h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Synthesize the final strategic brief by mapping opportunity snapshots and neutralizing predicted resistance nodes.</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-white rounded-[3rem] p-10 shadow-2xl border border-slate-200 space-y-6">
@@ -509,7 +521,10 @@ OPERATIONAL CONSTRAINTS:
         <div className="space-y-8">
           <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
             <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">05</div>
-            <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Neural Vocal Sync</h3>
+            <div className="flex flex-col">
+              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Neural Vocal Sync</h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Synchronize the neural vocal signature to match the intended professional resonance and strategic authority.</p>
+            </div>
           </div>
           <div className="bg-white border border-slate-200 rounded-[3rem] flex flex-col shadow-2xl overflow-hidden">
             <div className="flex border-b border-slate-200 p-2 bg-slate-50">
@@ -694,20 +709,6 @@ OPERATIONAL CONSTRAINTS:
 
   return (
     <div className="space-y-12">
-      <div className="flex justify-center">
-        <button
-          onClick={() => {
-            if (onSave) onSave();
-            onSynthesize();
-          }}
-          disabled={isAnalyzing}
-          className="flex items-center gap-4 px-20 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl shadow-2xl hover:bg-indigo-700 hover:scale-105 transition-all active:scale-95"
-        >
-          <ICONS.Brain className="w-8 h-8" />
-          {isAnalyzing ? 'Synthesizing...' : 'Synthesize Strategy Core'}
-        </button>
-      </div>
-
       <div className="min-h-[600px]">
         {renderAllSections()}
       </div>

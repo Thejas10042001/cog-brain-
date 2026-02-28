@@ -15,7 +15,7 @@ export const Auth: React.FC = () => {
   // Trigger welcome message on mount
   useEffect(() => {
     const timer = setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('cogni-speak', { 
+      window.dispatchEvent(new CustomEvent('assistant-speak', { 
         detail: { text: "Welcome to Spiked AI Cognitive Intelligence Simulation. Please enter your login credentials like email and password. If you are a new user, you need to connect with our sales team for getting help." } 
       }));
     }, 1000);
@@ -62,7 +62,7 @@ export const Auth: React.FC = () => {
       console.error("Auth Error:", err);
       const mappedError = mapAuthError(err.code);
       setError(mappedError);
-      window.dispatchEvent(new CustomEvent('cogni-speak', { 
+      window.dispatchEvent(new CustomEvent('assistant-speak', { 
         detail: { text: `Neural link failed. ${mappedError} Please try again or contact our sales team by clicking the sales team button.` } 
       }));
     } finally {
@@ -99,7 +99,7 @@ export const Auth: React.FC = () => {
               onClick={() => { 
                 setIsLogin(false); 
                 setError(null); 
-                window.dispatchEvent(new CustomEvent('cogni-speak', { 
+                window.dispatchEvent(new CustomEvent('assistant-speak', { 
                   detail: { text: "Direct profile instantiation is currently restricted. Please coordinate with our Sales Engineering team for tailored onboarding." } 
                 }));
               }}

@@ -76,6 +76,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   });
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
+  const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
 
   // Resizable Logic for Sidebar
   const [historyWidth, setHistoryWidth] = useState(400);
@@ -299,6 +300,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     setCoachingFeedback(null);
     setShowCoachingDetails(false);
     try {
+      setQuotaExceeded({ exceeded: false });
       const stream = streamAvatarSimulationV2(`PERSONA: ${selected}`, [], meetingContext);
       let firstQuestion = "";
       for await (const chunk of stream) firstQuestion += chunk;
@@ -310,7 +312,19 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages([assistantMsg]);
       playAIQuestion(cleaned);
-    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+    } catch (e: any) { 
+      console.error(e); 
+      const errorStr = JSON.stringify(e);
+      if (errorStr.includes("RESOURCE_EXHAUSTED") || e.code === 429) {
+        let retryAfter = "later";
+        const match = errorStr.match(/retry in ([\d.]+)s/);
+        if (match) {
+          retryAfter = `in ${Math.round(parseFloat(match[1]))}s`;
+        }
+        setQuotaExceeded({ exceeded: true, retryAfter });
+        setTimeout(() => setQuotaExceeded({ exceeded: false }), 10000);
+      }
+    } finally { setIsProcessing(false); }
   };
 
   const handleNextNode = async () => {
@@ -325,6 +339,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     try {
+      setQuotaExceeded({ exceeded: false });
       const stream = streamAvatarSimulationV2(currentCaption, messages, meetingContext);
       let nextContent = "";
       for await (const chunk of stream) nextContent += chunk;
@@ -359,7 +374,19 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         setCurrentCaption("");
         playAIQuestion(cleaned);
       }
-    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+    } catch (e: any) { 
+      console.error(e); 
+      const errorStr = JSON.stringify(e);
+      if (errorStr.includes("RESOURCE_EXHAUSTED") || e.code === 429) {
+        let retryAfter = "later";
+        const match = errorStr.match(/retry in ([\d.]+)s/);
+        if (match) {
+          retryAfter = `in ${Math.round(parseFloat(match[1]))}s`;
+        }
+        setQuotaExceeded({ exceeded: true, retryAfter });
+        setTimeout(() => setQuotaExceeded({ exceeded: false }), 10000);
+      }
+    } finally { setIsProcessing(false); }
   };
 
   const handleTryAgain = () => {
@@ -534,6 +561,15 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
   return (
     <div className="bg-white shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-slate-900 animate-in zoom-in-95 duration-500">
+      {quotaExceeded.exceeded && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] bg-amber-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
+          <ICONS.Shield className="w-5 h-5" />
+          <div className="flex flex-col">
+            <span className="text-xs font-black uppercase tracking-widest">API Quota Exceeded</span>
+            <span className="text-[10px] font-bold opacity-80">Please retry {quotaExceeded.retryAfter}. The neural link is currently saturated.</span>
+          </div>
+        </div>
+      )}
       {micPermissionError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <ICONS.Security className="w-5 h-5" />

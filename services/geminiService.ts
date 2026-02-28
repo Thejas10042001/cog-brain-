@@ -66,6 +66,55 @@ function safeJsonParse(str: string) {
   throw new Error("Failed to parse cognitive intelligence response as valid JSON.");
 }
 
+/**
+ * Helper to retry API calls that fail due to quota exhaustion (429).
+ */
+async function withRetry<T>(fn: () => Promise<T>, maxRetries: number = 3): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const errorStr = JSON.stringify(error);
+      const isQuotaError = errorStr.includes("RESOURCE_EXHAUSTED") || 
+                          error.status === "RESOURCE_EXHAUSTED" || 
+                          error.code === 429 ||
+                          (error.message && error.message.includes("429"));
+
+      if (isQuotaError) {
+        let delay = Math.pow(2, i) * 2000; // Exponential backoff starting at 2s
+        
+        try {
+          const details = error.details || (error.error && error.error.details);
+          if (details && Array.isArray(details)) {
+            const retryInfo = details.find((d: any) => d["@type"] === "type.googleapis.com/google.rpc.RetryInfo");
+            if (retryInfo && retryInfo.retryDelay) {
+              const seconds = parseFloat(retryInfo.retryDelay.replace('s', ''));
+              if (!isNaN(seconds)) {
+                delay = (seconds * 1000) + 1000; // Add 1s buffer
+              }
+            }
+          } else if (error.message && error.message.includes("retry in")) {
+             const match = error.message.match(/retry in ([\d.]+)s/);
+             if (match) {
+               delay = (parseFloat(match[1]) * 1000) + 1000;
+             }
+          }
+        } catch (e) {
+          // Fallback to calculated delay
+        }
+
+        console.warn(`Gemini API Quota exceeded. Retrying in ${Math.round(delay/1000)}s... (Attempt ${i + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 // Extract meeting metadata from a document content
 export async function extractMetadataFromDocument(content: string): Promise<Partial<MeetingContext>> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -99,7 +148,7 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
   Return ONLY the JSON object.`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: prompt,
       config: {
@@ -125,7 +174,7 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
           ]
         }
       }
-    });
+    }));
     return safeJsonParse(response.text || "{}");
   } catch (error) {
     console.error("Neural extraction failed:", error);
@@ -366,7 +415,7 @@ export async function generateVoiceSample(
   }
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: [{ parts: [{ text: promptText }] }],
       config: {
@@ -377,7 +426,7 @@ export async function generateVoiceSample(
           },
         },
       },
-    });
+    }));
 
     // Iterate through parts to find the audio data, as it may not be the first part
     let base64Audio: string | undefined;
@@ -413,7 +462,7 @@ export async function generateAssistantResponse(query: string, context?: string)
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
-  const systemInstruction = `You are Cogni, an Elite Cognitive Sales Intelligence Assistant for Spiked AI.
+  const systemInstruction = `You are an Elite Cognitive Sales Intelligence Assistant for Spiked AI.
   Your goal is to provide concise, strategic, and helpful guidance to sales professionals using the Spiked AI platform.
   
   TONE: Professional, elite, strategic, and supportive.
@@ -425,18 +474,18 @@ export async function generateAssistantResponse(query: string, context?: string)
   1. If the user asks for help, explain how to use the current feature or suggest a strategic next step.
   2. If the user asks a deal-related question, provide a grounded, strategic answer based on the context.
   3. Keep responses brief and optimized for text-to-speech.
-  4. Always maintain the "Cogni" persona.
+  4. Do not introduce yourself as "Cogni" or use any specific name unless asked.
   
   Current Query: ${query}`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: query,
       config: {
         systemInstruction
       }
-    });
+    }));
     return response.text || "I'm here to help. What would you like to achieve today?";
   } catch (error) {
     console.error("Assistant response failed:", error);
@@ -653,7 +702,7 @@ Seller: ${context.sellerNames} (${context.sellerCompany})
 Meeting Objective: ${context.meetingFocus}`;
 
   try {
-    const result = await ai.models.generateContentStream({
+    const result = await withRetry(() => ai.models.generateContentStream({
       model: modelName,
       contents: [
         ...formattedHistory,
@@ -663,7 +712,7 @@ Meeting Objective: ${context.meetingFocus}`;
         systemInstruction,
         thinkingConfig: { thinkingBudget: 16000 }
       }
-    });
+    }));
 
     for await (const chunk of result) {
       yield chunk.text || "";
@@ -807,7 +856,7 @@ Target: ${context.clientNames} at ${context.clientCompany}
 Focus: ${context.meetingFocus}`;
 
   try {
-    const result = await ai.models.generateContentStream({
+    const result = await withRetry(() => ai.models.generateContentStream({
       model: modelName,
       contents: [
         ...formattedHistory,
@@ -817,7 +866,7 @@ Focus: ${context.meetingFocus}`;
         systemInstruction: systemInstruction,
         thinkingConfig: { thinkingBudget: 16000 }
       }
-    });
+    }));
 
     for await (const chunk of result) {
       yield chunk.text || "";
@@ -918,7 +967,7 @@ Focus: ${context.meetingFocus}
 Target Products: ${context.targetProducts}`;
 
   try {
-    const result = await ai.models.generateContentStream({
+    const result = await withRetry(() => ai.models.generateContentStream({
       model: modelName,
       contents: [
         ...formattedHistory,
@@ -928,7 +977,7 @@ Target Products: ${context.targetProducts}`;
         systemInstruction,
         thinkingConfig: { thinkingBudget: 16000 }
       }
-    });
+    }));
 
     for await (const chunk of result) {
       yield chunk.text || "";
@@ -1008,14 +1057,14 @@ export async function generateAssessmentQuestions(
   ${docContent}`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
         thinkingConfig: { thinkingBudget: 16000 }
       }
-    });
+    }));
     return safeJsonParse(response.text || "[]");
   } catch (error) {
     console.error("Failed to generate questions:", error);
@@ -1083,11 +1132,11 @@ export async function evaluateAssessment(
   ${JSON.stringify(textPayload)}`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: prompt,
       config: { responseMimeType: "application/json" }
-    });
+    }));
     const evals = safeJsonParse(response.text || "[]");
     
     return questions.map(q => {
@@ -1116,7 +1165,7 @@ export async function performVisionOcr(base64Data: string, mimeType: string): Pr
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview'; 
   try {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: {
         parts: [
@@ -1127,7 +1176,7 @@ export async function performVisionOcr(base64Data: string, mimeType: string): Pr
           },
         ],
       },
-    });
+    }));
     return response.text || "";
   } catch (error) {
     console.error("Vision OCR failed:", error);
@@ -1168,14 +1217,14 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
   -----------------------` : ""}`;
 
   try {
-    const result = await ai.models.generateContentStream({
+    const result = await withRetry(() => ai.models.generateContentStream({
       model: modelName,
       contents: contents,
       config: {
         systemInstruction: systemInstruction,
         thinkingConfig: { thinkingBudget: 0 }
       }
-    });
+    }));
 
     for await (const chunk of result) {
       yield chunk.text || "";
@@ -1195,7 +1244,7 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
     The style should be a modern 3D render, minimalist, with soft cinematic lighting and a professional color palette. 
     Avoid cluttered details. Ensure it looks like a slide from a top-tier executive presentation.`;
 
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: {
         parts: [{ text: strategicPrompt }],
@@ -1203,7 +1252,7 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
       config: {
         imageConfig: { aspectRatio: "16:9" }
       }
-    });
+    }));
 
     for (const part of response.candidates[0].content.parts) {
       if (part.inlineData) {
@@ -1232,7 +1281,7 @@ export async function generateClientAvatar(name: string, company: string): Promi
     The logo should be centered on a clean white background. 
     Resolution: 1K. Cinematic studio lighting on a flat surface.`;
 
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: {
         parts: [{ text: prompt }],
@@ -1244,7 +1293,7 @@ export async function generateClientAvatar(name: string, company: string): Promi
         },
         tools: [{googleSearch: {}}],
       },
-    });
+    }));
 
     for (const part of response.candidates[0].content.parts) {
       if (part.inlineData) {
@@ -1289,14 +1338,14 @@ export async function* streamDeepStudy(prompt: string, history: GPTMessage[], co
   Use the maximum thinking budget to find hidden connections.`;
 
   try {
-    const result = await ai.models.generateContentStream({
+    const result = await withRetry(() => ai.models.generateContentStream({
       model: modelName,
       contents: contents,
       config: {
         systemInstruction: systemInstruction,
         thinkingConfig: { thinkingBudget: 32768 }
       }
-    });
+    }));
 
     for await (const chunk of result) {
       yield chunk.text || "";
@@ -1384,7 +1433,7 @@ export async function* performCognitiveSearchStream(
   ${filesContent}`;
 
   try {
-    const result = await ai.models.generateContentStream({
+    const result = await withRetry(() => ai.models.generateContentStream({
       model: modelName,
       contents: prompt,
       config: {
@@ -1393,7 +1442,7 @@ export async function* performCognitiveSearchStream(
         responseSchema,
         thinkingConfig: { thinkingBudget: 32768 }
       }
-    });
+    }));
 
     for await (const chunk of result) {
       yield chunk.text || "";
@@ -1421,7 +1470,7 @@ export async function generateDynamicSuggestions(filesContent: string, context: 
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   const prompt = `Suggest 3 highly strategic sales questions for ${context.clientCompany || 'the prospect'}. Return as a JSON array of strings.`;
-  const response = await ai.models.generateContent({ 
+  const response = await withRetry(() => ai.models.generateContent({ 
     model: modelName, 
     contents: prompt, 
     config: { 
@@ -1432,7 +1481,7 @@ export async function generateDynamicSuggestions(filesContent: string, context: 
       },
       thinkingConfig: { thinkingBudget: 0 }
     } 
-  });
+  }));
   return safeJsonParse(response.text || "[]");
 }
 
@@ -1458,12 +1507,12 @@ export async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampl
 
 export async function generateExplanation(question: string, context: AnalysisResult): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response = await ai.models.generateContent({
+  const response = await withRetry(() => ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Explain the deep sales strategy behind: "${question}" based on the buyer snapshot: ${JSON.stringify(context.snapshot)}.`,
     // Fix: thinkingBudget must be wrapped in thinkingConfig per SDK guidelines
     config: { thinkingConfig: { thinkingBudget: 0 } }
-  });
+  }));
   return response.text || "";
 }
 
@@ -1516,14 +1565,14 @@ export async function generatePitchAudio(
     ? `${instruction} INSTRUCTION: Adopt this tone, cadence, and resonance exactly. TEXT TO SPEAK: "${text}"`
     : text;
 
-  const response = await ai.models.generateContent({
+  const response = await withRetry(() => ai.models.generateContent({
     model: "gemini-2.5-flash-preview-tts",
     contents: [{ parts: [{ text: contents }] }],
     config: {
       responseModalities: [Modality.AUDIO],
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: finalVoice } } },
     },
-  });
+  }));
   const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
   return base64Audio ? decode(base64Audio) : null;
 }
@@ -1657,7 +1706,7 @@ export async function analyzeSalesContext(filesContent: string, context: Meeting
   ${filesContent}`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: prompt,
       config: {
@@ -1667,7 +1716,7 @@ export async function analyzeSalesContext(filesContent: string, context: Meeting
         temperature: context.temperature,
         thinkingConfig: { thinkingBudget: THINKING_LEVEL_MAP[context.thinkingLevel] }
       },
-    });
+    }));
     return safeJsonParse(response.text || "{}") as AnalysisResult;
   } catch (error: any) { throw new Error(`Analysis Failed: ${error.message}`); }
 }

@@ -51,6 +51,7 @@ export const AvatarSimulationStaged: FC<{
   const [sessionActive, setSessionActive] = useState(false);
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
+  const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [status, setStatus] = useState("");
   const [currentHint, setCurrentHint] = useState<string | null>(null);
@@ -337,6 +338,7 @@ export const AvatarSimulationStaged: FC<{
     });
 
     try {
+      setQuotaExceeded({ exceeded: false });
       const stream = streamAvatarStagedSimulation(`START AT STAGE: ${targetStage}`, [], meetingContext, targetStage, kycContent);
       let firstMsg = "";
       for await (const chunk of stream) firstMsg += chunk;
@@ -353,6 +355,16 @@ export const AvatarSimulationStaged: FC<{
       playAIQuestion(cleaned);
     } catch (e: any) { 
       console.error(e);
+      const errorStr = JSON.stringify(e);
+      if (errorStr.includes("RESOURCE_EXHAUSTED") || e.code === 429) {
+        let retryAfter = "later";
+        const match = errorStr.match(/retry in ([\d.]+)s/);
+        if (match) {
+          retryAfter = `in ${Math.round(parseFloat(match[1]))}s`;
+        }
+        setQuotaExceeded({ exceeded: true, retryAfter });
+        setTimeout(() => setQuotaExceeded({ exceeded: false }), 10000);
+      }
       if (e.message?.includes("Requested entity was not found") && window.aistudio) {
         window.aistudio.openSelectKey();
       }
@@ -378,6 +390,7 @@ export const AvatarSimulationStaged: FC<{
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
 
     try {
+      setQuotaExceeded({ exceeded: false });
       const stream = streamAvatarStagedSimulation(`Manual Override: Jump to Stage ${stage}`, messages, meetingContext, stage, kycContent);
       let response = "";
       for await (const chunk of stream) response += chunk;
@@ -391,6 +404,16 @@ export const AvatarSimulationStaged: FC<{
       playAIQuestion(cleaned);
     } catch (e: any) { 
       console.error(e); 
+      const errorStr = JSON.stringify(e);
+      if (errorStr.includes("RESOURCE_EXHAUSTED") || e.code === 429) {
+        let retryAfter = "later";
+        const match = errorStr.match(/retry in ([\d.]+)s/);
+        if (match) {
+          retryAfter = `in ${Math.round(parseFloat(match[1]))}s`;
+        }
+        setQuotaExceeded({ exceeded: true, retryAfter });
+        setTimeout(() => setQuotaExceeded({ exceeded: false }), 10000);
+      }
       if (e.message?.includes("Requested entity was not found") && window.aistudio) {
         window.aistudio.openSelectKey();
       }
@@ -416,6 +439,7 @@ export const AvatarSimulationStaged: FC<{
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
 
     try {
+      setQuotaExceeded({ exceeded: false });
       const stream = streamAvatarStagedSimulation(currentCaption, updatedHistory, meetingContext, currentStage, kycContent);
       let response = "";
       for await (const chunk of stream) response += chunk;
@@ -501,6 +525,16 @@ export const AvatarSimulationStaged: FC<{
       }
     } catch (e: any) { 
       console.error(e);
+      const errorStr = JSON.stringify(e);
+      if (errorStr.includes("RESOURCE_EXHAUSTED") || e.code === 429) {
+        let retryAfter = "later";
+        const match = errorStr.match(/retry in ([\d.]+)s/);
+        if (match) {
+          retryAfter = `in ${Math.round(parseFloat(match[1]))}s`;
+        }
+        setQuotaExceeded({ exceeded: true, retryAfter });
+        setTimeout(() => setQuotaExceeded({ exceeded: false }), 10000);
+      }
       if (e.message?.includes("Requested entity was not found") && window.aistudio) {
         window.aistudio.openSelectKey();
       }
@@ -697,6 +731,15 @@ export const AvatarSimulationStaged: FC<{
 
   return (
     <div className="bg-white shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-slate-900 animate-in zoom-in-95 duration-500">
+      {quotaExceeded.exceeded && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[120] bg-amber-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
+          <ICONS.Shield className="w-5 h-5" />
+          <div className="flex flex-col">
+            <span className="text-xs font-black uppercase tracking-widest">API Quota Exceeded</span>
+            <span className="text-[10px] font-bold opacity-80">Please retry {quotaExceeded.retryAfter}. The neural link is currently saturated.</span>
+          </div>
+        </div>
+      )}
       {showCelebration && (
         <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center bg-indigo-900/90 backdrop-blur-md animate-celebrate-bg">
            <div className="text-center animate-celebrate-text">

@@ -23,7 +23,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
-  const [mode, setMode] = useState<'wake_word' | 'query'>('wake_word');
+  const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
+  const [mode, setMode] = useState<'idle' | 'query'>('idle');
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mountedRef = useRef(true);
@@ -45,6 +46,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
       }
 
       setIsProcessing(true);
+      setQuotaExceeded({ exceeded: false });
       const base64 = await generateVoiceSample(text, 'Zephyr', 'Male');
       setIsProcessing(false);
       
@@ -88,11 +90,24 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
           resolve();
         });
       });
-    } catch (err) {
+    } catch (err: any) {
       if (currentGenId === generationIdRef.current) {
         console.error("Voice Assistant speak failed:", err);
         setIsSpeaking(false);
         setIsProcessing(false);
+        
+        const errorStr = JSON.stringify(err);
+        if (errorStr.includes("RESOURCE_EXHAUSTED") || err.code === 429) {
+          let retryAfter = "later";
+          const match = errorStr.match(/retry in ([\d.]+)s/);
+          if (match) {
+            retryAfter = `in ${Math.round(parseFloat(match[1]))}s`;
+          }
+          setQuotaExceeded({ exceeded: true, retryAfter });
+          
+          // Reset quota error after 10 seconds
+          setTimeout(() => setQuotaExceeded({ exceeded: false }), 10000);
+        }
       }
     }
   }, []);
@@ -100,8 +115,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
   const startListening = useCallback(() => {
     if (!SpeechRecognition || !mountedRef.current) return;
 
-    // Don't start if already speaking
-    if (isSpeaking) return;
+    // Don't start if already speaking or processing
+    if (isSpeaking || isProcessing) return;
 
     if (recognitionRef.current) {
       try {
@@ -110,38 +125,30 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true; // Use interim results for faster wake word detection
+    recognition.continuous = mode === 'idle'; // Continuous in idle to wait for manual trigger or just stay alive
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
 
     recognition.onresult = async (event: any) => {
+      if (mode === 'idle') return; // Ignore results in idle mode
+
       let transcript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         transcript += event.results[i][0].transcript;
       }
       transcript = transcript.toLowerCase().trim();
       
-      // Only process final results or specific wake word patterns in interim
       const isFinal = event.results[event.results.length - 1].isFinal;
       
-      console.log("Cogni Heard:", transcript, isFinal ? "(Final)" : "(Interim)");
+      console.log("Assistant Heard:", transcript, isFinal ? "(Final)" : "(Interim)");
 
-      const wakeWords = ["hey cogni", "ok cogni", "hey cogney", "ok cogney", "hey cogny", "ok cogny", "hey cockney", "ok cockney"];
-      const detectedWakeWord = wakeWords.some(word => transcript.includes(word));
-
-      if (mode === 'wake_word') {
-        if (detectedWakeWord) {
-          recognition.stop();
-          setMode('query');
-          await speak("How may I help you?");
-        }
-      } else if (isFinal) {
+      if (isFinal && transcript) {
         recognition.stop();
         setIsProcessing(true);
         const response = await generateAssistantResponse(transcript, `User is currently on the ${activeTab} tab. User: ${user?.email || 'Anonymous'}`);
         setIsProcessing(false);
         await speak(response);
-        setMode('wake_word');
+        setMode('idle');
       }
     };
 
@@ -210,8 +217,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
         await speak(e.detail.text);
       }
     };
-    window.addEventListener('cogni-speak', handleExternalSpeak);
-    return () => window.removeEventListener('cogni-speak', handleExternalSpeak);
+    window.addEventListener('assistant-speak', handleExternalSpeak);
+    return () => window.removeEventListener('assistant-speak', handleExternalSpeak);
   }, [speak]);
 
   const handleRetry = () => {
@@ -219,10 +226,43 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
     startListening();
   };
 
+  const toggleListening = () => {
+    if (isSpeaking) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setIsSpeaking(false);
+      return;
+    }
+
+    if (mode === 'idle') {
+      setMode('query');
+    } else {
+      setMode('idle');
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+    }
+  };
+
   if (!SpeechRecognition) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-4">
+      {quotaExceeded.exceeded && (
+        <div className="bg-amber-50 border border-amber-200 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-right-4">
+          <ICONS.Shield className="w-4 h-4 text-amber-500" />
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">API Quota Exceeded</span>
+            <span className="text-[8px] font-bold text-amber-400 uppercase tracking-tighter">
+              Please retry {quotaExceeded.retryAfter}
+            </span>
+          </div>
+        </div>
+      )}
       {permissionDenied && (
         <div className="bg-rose-50 border border-rose-200 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-right-4">
           <ICONS.Security className="w-4 h-4 text-rose-500" />
@@ -240,10 +280,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
       {isProcessing && (
         <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-indigo-100 animate-pulse flex items-center gap-2">
           <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></div>
-          <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Cogni Processing...</span>
+          <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Processing...</span>
         </div>
       )}
-      <div 
+      <button 
+        onClick={toggleListening}
         className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 ${
           isSpeaking ? 'bg-indigo-600 scale-110' : 
           mode === 'query' ? 'bg-emerald-500 scale-110 animate-pulse' : 
@@ -264,7 +305,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
             <ICONS.Brain className="w-6 h-6 text-indigo-600" />
           </div>
         )}
-      </div>
+      </button>
     </div>
   );
 };
