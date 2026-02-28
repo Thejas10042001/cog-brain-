@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { generateVoiceSample, generateAssistantResponse } from '../services/geminiService';
 import { ICONS } from '../constants';
 
+import { MeetingContext, VocalPersonaStructure } from '../types';
+
 declare global {
   interface Window {
     SpeechRecognition: any;
@@ -16,12 +18,15 @@ interface VoiceAssistantProps {
   activeTab?: string;
   user?: any;
   onCommand?: (command: string) => void;
+  context?: MeetingContext;
+  onContextChange?: (context: MeetingContext) => void;
 }
 
-export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user, onCommand }) => {
+export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user, onCommand, context, onContextChange }) => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
   const [mode, setMode] = useState<'idle' | 'query'>('idle');
@@ -47,7 +52,12 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
 
       setIsProcessing(true);
       setQuotaExceeded({ exceeded: false });
-      const base64 = await generateVoiceSample(text, 'Zephyr', 'Male');
+      
+      const voice = context?.vocalPersonaAnalysis?.baseVoice || 'Zephyr';
+      const gender = context?.vocalPersonaAnalysis?.gender || 'Male';
+      const analysis = context?.vocalPersonaAnalysis;
+      
+      const base64 = await generateVoiceSample(text, voice, gender, analysis);
       setIsProcessing(false);
       
       // If a new generation started while we were waiting, abort this one
@@ -249,6 +259,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
 
     if (mode === 'idle') {
       setMode('query');
+      setShowSettings(false);
     } else {
       setMode('idle');
       if (recognitionRef.current) {
@@ -259,11 +270,101 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
     }
   };
 
+  const updateVocalAnalysis = (updates: Partial<VocalPersonaStructure>) => {
+    if (!context || !onContextChange) return;
+    const current = context.vocalPersonaAnalysis || {
+      pitch: 'Moderate',
+      tempo: 'Controlled',
+      cadence: 'Strategic',
+      accent: 'Neutral',
+      emotionalBaseline: 'Steady',
+      breathingPatterns: 'Regulated',
+      mimicryDirective: '',
+      baseVoice: 'Zephyr',
+      gender: 'Male',
+      pace: 1.0,
+      stability: 80,
+      clarity: 90,
+      pitchValue: 1.0,
+      toneAdjectives: []
+    };
+    onContextChange({
+      ...context,
+      vocalPersonaAnalysis: { ...current, ...updates }
+    });
+  };
+
   if (!SpeechRecognition) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-4">
-      {quotaExceeded.exceeded && (
+    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-4">
+      {showSettings && context && (
+        <div className="bg-white/95 backdrop-blur-xl border-2 border-indigo-100 p-6 rounded-[2rem] shadow-2xl w-72 animate-in slide-in-from-bottom-4 duration-300 space-y-6 mb-2">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-900">Voice Synthesis</h4>
+            <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-rose-500 transition-colors">
+              <ICONS.X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Voice Model</label>
+              <select 
+                value={context.vocalPersonaAnalysis?.baseVoice || 'Zephyr'}
+                onChange={(e) => updateVocalAnalysis({ baseVoice: e.target.value })}
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
+              >
+                <option value="Zephyr">Zephyr (Calm)</option>
+                <option value="Puck">Puck (Persuasive)</option>
+                <option value="Charon">Charon (Serious)</option>
+                <option value="Kore">Kore (Professional)</option>
+                <option value="Fenrir">Fenrir (Authoritative)</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Speaking Rate</label>
+                <span className="text-[10px] font-black text-indigo-600">{context.vocalPersonaAnalysis?.pace || 1.0}x</span>
+              </div>
+              <input 
+                type="range" min="0.5" max="2.0" step="0.1"
+                value={context.vocalPersonaAnalysis?.pace || 1.0}
+                onChange={(e) => updateVocalAnalysis({ pace: parseFloat(e.target.value) })}
+                className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              />
+              <div className="flex justify-between text-[8px] font-bold text-slate-300 uppercase tracking-tighter px-1">
+                <span>Slower</span>
+                <span>Faster</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Pitch</label>
+                <span className="text-[10px] font-black text-indigo-600">{context.vocalPersonaAnalysis?.pitchValue || 1.0}x</span>
+              </div>
+              <input 
+                type="range" min="0.5" max="2.0" step="0.1"
+                value={context.vocalPersonaAnalysis?.pitchValue || 1.0}
+                onChange={(e) => updateVocalAnalysis({ pitchValue: parseFloat(e.target.value) })}
+                className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              />
+            </div>
+          </div>
+
+          <button 
+            onClick={() => setShowSettings(false)}
+            className="w-full py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all"
+          >
+            Apply Settings
+          </button>
+        </div>
+      )}
+
+      <div className="flex items-center gap-4">
+        {quotaExceeded.exceeded && (
         <div className="bg-amber-50 border border-amber-200 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-right-4">
           <ICONS.Shield className="w-4 h-4 text-amber-500" />
           <div className="flex flex-col">
@@ -294,29 +395,38 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
           <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Processing...</span>
         </div>
       )}
-      <button 
-        onClick={toggleListening}
-        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 ${
-          isSpeaking ? 'bg-indigo-600 scale-110' : 
-          mode === 'query' ? 'bg-emerald-500 scale-110 animate-pulse' : 
-          'bg-white hover:scale-105'
-        } border-2 ${isSpeaking ? 'border-indigo-400' : 'border-indigo-100'}`}
-      >
-        {isSpeaking ? (
-          <div className="flex gap-1 items-center">
-            <div className="w-1 h-4 bg-white rounded-full animate-[bounce_0.6s_infinite]"></div>
-            <div className="w-1 h-6 bg-white rounded-full animate-[bounce_0.8s_infinite]"></div>
-            <div className="w-1 h-4 bg-white rounded-full animate-[bounce_0.6s_infinite]"></div>
-          </div>
-        ) : mode === 'query' ? (
-          <ICONS.Ear className="w-6 h-6 text-white" />
-        ) : (
-          <div className="relative">
-            <div className={`absolute -inset-2 bg-indigo-500/20 rounded-full animate-ping ${isListening ? 'block' : 'hidden'}`}></div>
-            <ICONS.Brain className="w-6 h-6 text-indigo-600" />
-          </div>
-        )}
-      </button>
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={() => setShowSettings(!showSettings)}
+          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xl transition-all ${showSettings ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400 hover:text-indigo-600 border border-slate-100'}`}
+        >
+          <ICONS.Settings className={`w-5 h-5 ${showSettings ? 'animate-spin-slow' : ''}`} />
+        </button>
+        <button 
+          onClick={toggleListening}
+          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 ${
+            isSpeaking ? 'bg-indigo-600 scale-110' : 
+            mode === 'query' ? 'bg-emerald-500 scale-110 animate-pulse' : 
+            'bg-white hover:scale-105'
+          } border-2 ${isSpeaking ? 'border-indigo-400' : 'border-indigo-100'}`}
+        >
+          {isSpeaking ? (
+            <div className="flex gap-1 items-center">
+              <div className="w-1 h-4 bg-white rounded-full animate-[bounce_0.6s_infinite]"></div>
+              <div className="w-1 h-6 bg-white rounded-full animate-[bounce_0.8s_infinite]"></div>
+              <div className="w-1 h-4 bg-white rounded-full animate-[bounce_0.6s_infinite]"></div>
+            </div>
+          ) : mode === 'query' ? (
+            <ICONS.Ear className="w-6 h-6 text-white" />
+          ) : (
+            <div className="relative">
+              <div className={`absolute -inset-2 bg-indigo-500/20 rounded-full animate-ping ${isListening ? 'block' : 'hidden'}`}></div>
+              <ICONS.Brain className="w-6 h-6 text-indigo-600" />
+            </div>
+          )}
+        </button>
+      </div>
     </div>
+  </div>
   );
 };
