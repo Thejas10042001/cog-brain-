@@ -183,35 +183,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-      recognition.onresult = (event: any) => {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-        if (finalTranscript) {
-          setCurrentCaption(prev => {
-            const trimmedPrev = prev.trim();
-            const trimmedNew = finalTranscript.trim();
-            if (trimmedPrev.endsWith(trimmedNew)) return prev;
-            return trimmedPrev + (trimmedPrev ? " " : "") + trimmedNew;
-          });
-        }
-        setIsUserListening(true);
-      };
-      recognition.onend = () => setIsUserListening(false);
-      recognition.onerror = (event: any) => {
-        if (event.error === 'not-allowed') {
-          setMicPermissionError(true);
-          setIsUserListening(false);
-        }
-      };
-      recognitionRef.current = recognition;
+      // We'll initialize on demand in startListening for better reliability
     }
   }, []);
 
@@ -280,13 +252,59 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   };
 
   const startListening = () => {
-    if (recognitionRef.current && !isAISpeaking) {
-      try { recognitionRef.current.start(); setIsUserListening(true); } catch (e) {}
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition || isAISpeaking) return;
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    
+    recognition.onresult = (event: any) => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        setCurrentCaption(prev => {
+          const trimmedPrev = prev.trim();
+          const trimmedNew = finalTranscript.trim();
+          if (trimmedPrev.endsWith(trimmedNew)) return prev;
+          return trimmedPrev + (trimmedPrev ? " " : "") + trimmedNew;
+        });
+      }
+      setIsUserListening(true);
+    };
+
+    recognition.onstart = () => setIsUserListening(true);
+    recognition.onend = () => setIsUserListening(false);
+    recognition.onerror = (event: any) => {
+      console.error("Simulation Mic Error:", event.error);
+      if (event.error === 'not-allowed') {
+        setMicPermissionError(true);
+      }
+      setIsUserListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error("Failed to start recognition:", e);
     }
   };
 
   const stopListening = () => {
-    if (recognitionRef.current) { recognitionRef.current.stop(); setIsUserListening(false); }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+      setIsUserListening(false);
+    }
   };
 
   const handleInitiate = async (selected: SimPersonaV2) => {

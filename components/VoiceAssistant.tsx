@@ -118,6 +118,17 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ activeTab, user,
     // Don't start if already speaking or processing
     if (isSpeaking || isProcessing) return;
 
+    // Don't start if in a simulation tab that needs the microphone
+    const simulationTabs = ['avatar', 'avatar2', 'avatar-staged', 'practice', 'qa'];
+    if (simulationTabs.includes(activeTab)) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+      return;
+    }
+
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();

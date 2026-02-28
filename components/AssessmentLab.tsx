@@ -169,42 +169,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-
-      recognition.onresult = (event: any) => {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-        
-        const qId = questions[currentIdx]?.id;
-        if (qId && finalTranscript) {
-          setAnswers(prev => {
-            const current = prev[qId] || "";
-            // Append with a space if there's already content
-            const separator = current && !current.endsWith(' ') ? ' ' : '';
-            return { ...prev, [qId]: current + separator + finalTranscript };
-          });
-        }
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognition.onerror = (event: any) => {
-        if (event.error === 'not-allowed') {
-          setMicPermissionError(true);
-          setIsRecording(false);
-        }
-      };
-
-      recognitionRef.current = recognition;
+      // We'll initialize on demand in toggleRecording for better reliability
     }
 
     return () => {
@@ -212,7 +177,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
         recognitionRef.current.stop();
       }
     };
-  }, [questions, currentIdx]);
+  }, []);
 
   useEffect(() => {
     const currentQ = questions[currentIdx];
@@ -244,21 +209,58 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   };
 
   const toggleRecording = () => {
-    if (!recognitionRef.current) {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
       alert("Speech Recognition is not supported in this browser.");
       return;
     }
 
     if (isRecording) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsRecording(true);
-      } catch (e) {
-        console.error("Speech start error:", e);
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
       }
+      setIsRecording(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+      
+      const qId = questions[currentIdx]?.id;
+      if (qId && finalTranscript) {
+        setAnswers(prev => {
+          const current = prev[qId] || "";
+          const separator = current && !current.endsWith(' ') ? ' ' : '';
+          return { ...prev, [qId]: current + separator + finalTranscript };
+        });
+      }
+    };
+
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = (event: any) => {
+      console.error("Assessment Mic Error:", event.error);
+      if (event.error === 'not-allowed') {
+        setMicPermissionError(true);
+      }
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error("Failed to start assessment recognition:", e);
     }
   };
 
