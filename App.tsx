@@ -11,7 +11,6 @@ import { AssessmentLab } from './components/AssessmentLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
-import { VoiceAssistant } from './components/VoiceAssistant';
 import { analyzeSalesContext } from './services/geminiService';
 import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
@@ -148,7 +147,7 @@ const App: React.FC = () => {
   };
 
   const playNodeAudio = (text: string) => {
-    window.dispatchEvent(new CustomEvent('assistant-speak', { detail: { text } }));
+    // Voice assistant disabled
   };
 
   const handleNodeClick = (tab: any) => {
@@ -168,17 +167,9 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Auto-narrate on tab change
+  // Auto-narrate disabled
   useEffect(() => {
-    if (analysis && activeTab && hasInteracted) {
-      // Small delay to ensure screen is ready
-      const timer = setTimeout(() => {
-        const detail = NODE_DETAILS[activeTab];
-        const fullNarration = `${detail.audioText} ${detail.guideText}`;
-        playNodeAudio(fullNarration);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
+    // Voice assistant disabled
   }, [activeTab, !!analysis, hasInteracted]);
 
   // Whole Screen Magnifier State
@@ -517,13 +508,6 @@ const App: React.FC = () => {
         onTextZoomChange={setTextZoom}
         darkMode={darkMode}
         onDarkModeToggle={() => setDarkMode(!darkMode)}
-      />
-
-      <VoiceAssistant 
-        activeTab={activeTab} 
-        user={user} 
-        context={meetingContext}
-        onContextChange={setMeetingContext}
       />
       
       <div className="pt-16 flex flex-1 overflow-hidden text-magnifier">

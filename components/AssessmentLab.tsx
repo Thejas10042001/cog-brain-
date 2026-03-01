@@ -22,106 +22,38 @@ const MetricScale = ({ label, value, colorClass = "bg-indigo-600" }: { label: st
 );
 
 const ModelDeliveryPlayer = ({ script }: { script: string }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
-
-  const handlePlay = async () => {
-    if (isPlaying) {
-      sourceRef.current?.stop();
-      setIsPlaying(false);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const audioData = await generatePitchAudio(script, 'Zephyr');
-      if (!audioData) throw new Error("Audio generation failed");
-
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-
-      const buffer = await decodeAudioData(audioData, audioContextRef.current, 24000, 1);
-      const source = audioContextRef.current.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioContextRef.current.destination);
-      
-      source.onended = () => setIsPlaying(false);
-      sourceRef.current = source;
-      source.start(0);
-      setIsPlaying(true);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to generate model delivery audio.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      sourceRef.current?.stop();
-    };
-  }, []);
-
   return (
-    <div className="p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
-      <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
+    <div className="p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl relative overflow-hidden group opacity-50">
+      <div className="absolute top-0 right-0 p-6 opacity-10">
         <ICONS.Sparkles className="w-16 h-16" />
       </div>
       
-      {/* Animated Waveform Overlay when playing */}
-      {isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-20 pointer-events-none">
-          {[...Array(20)].map((_, i) => (
-            <div 
-              key={i} 
-              className="w-1 bg-indigo-500 rounded-full animate-pulse" 
-              style={{ 
-                height: `${20 + Math.random() * 60}%`,
-                animationDelay: `${i * 0.1}s`,
-                animationDuration: `${0.5 + Math.random() * 1}s`
-              }} 
-            />
-          ))}
-        </div>
-      )}
-
       <div className="relative z-10 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg transition-transform ${isPlaying ? 'scale-110 animate-bounce' : ''}`}>
+            <div className="w-12 h-12 bg-slate-700 rounded-2xl flex items-center justify-center shadow-lg">
               <ICONS.Brain className="w-6 h-6" />
             </div>
             <div>
-              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Master Model Delivery</h5>
-              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Neural Coach Active</p>
+              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Master Model Delivery</h5>
+              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Neural Coach Disabled</p>
             </div>
           </div>
           <button 
-            onClick={handlePlay}
-            disabled={isLoading}
-            className={`flex items-center gap-2 px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isPlaying ? 'bg-rose-600 text-white' : 'bg-white text-slate-900 hover:bg-indigo-50'}`}
+            disabled
+            className="flex items-center gap-2 px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-800 text-slate-500 cursor-not-allowed"
           >
-            {isLoading ? (
-              <div className="w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-            ) : isPlaying ? (
-              <ICONS.X className="w-3 h-3" />
-            ) : (
-              <ICONS.Speaker className="w-3 h-3" />
-            )}
-            {isLoading ? "Synthesizing..." : isPlaying ? "Stop Coach" : "Play Model Answer"}
+            <ICONS.Speaker className="w-3 h-3" />
+            Voice Disabled
           </button>
         </div>
-        <p className="text-xl font-medium leading-relaxed italic text-indigo-50">
+        <p className="text-xl font-medium leading-relaxed italic text-slate-400">
           “{script}”
         </p>
         <div className="flex items-center gap-3 pt-4 border-t border-white/10">
-          <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-ping' : 'bg-slate-600'}`} />
-          <span className="text-[8px] font-black uppercase text-indigo-300 tracking-widest">
-            {isPlaying ? 'Streaming Animated Coach Logic' : 'Coach Standby'}
+          <div className="w-2 h-2 rounded-full bg-slate-600" />
+          <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">
+            Coach Standby (Voice Interaction Disabled)
           </span>
         </div>
       </div>
@@ -380,8 +312,12 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
             <ConfigRow label="MCQ (Logic Gates)" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document />} />
             <ConfigRow label="Short Answer (Tactical)" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency />} />
             <ConfigRow label="Long Answer (Strategic)" val={config.long} set={(v) => setConfig({ ...config, long: v })} icon={<ICONS.Research />} />
-            <ConfigRow label="Microphone (Verbal Delivery)" val={config.mic} set={(v) => setConfig({ ...config, mic: v })} icon={<ICONS.Speaker />} />
-            <ConfigRow label="Video Performance (Visual/Verbal)" val={config.video} set={(v) => setConfig({ ...config, video: v })} icon={<ICONS.Play className="w-4 h-4" />} />
+            <div className="opacity-50 pointer-events-none grayscale">
+              <ConfigRow label="Microphone (Verbal Delivery) - Disabled" val={0} set={() => {}} icon={<ICONS.Speaker />} />
+            </div>
+            <div className="opacity-50 pointer-events-none grayscale">
+              <ConfigRow label="Video Performance (Visual/Verbal) - Disabled" val={0} set={() => {}} icon={<ICONS.Play className="w-4 h-4" />} />
+            </div>
           </div>
 
           <div className="space-y-10">

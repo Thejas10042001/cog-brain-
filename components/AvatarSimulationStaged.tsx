@@ -203,62 +203,8 @@ export const AvatarSimulationStaged: FC<{
   };
 
   const startListening = () => {
-    if (isProcessing || isAISpeaking) return;
-    
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
-      return;
-    }
-
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = true;
-    recognition.continuous = true;
-
-    recognition.onstart = () => {
-      setIsUserListening(true);
-      setMicPermissionError(false);
-    };
-
-    recognition.onresult = (event: any) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          interimTranscript += event.results[i][0].transcript;
-        }
-      }
-      
-      if (finalTranscript) {
-        setCurrentCaption(prev => {
-          const base = prev.trim();
-          return base ? `${base} ${finalTranscript.trim()}` : finalTranscript.trim();
-        });
-      }
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
-      if (event.error === 'not-allowed') {
-        setMicPermissionError(true);
-      }
-      setIsUserListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsUserListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
+    // Voice input disabled
+    console.log("Voice input is disabled per user request.");
   };
 
   const stopListening = () => {
@@ -810,24 +756,6 @@ export const AvatarSimulationStaged: FC<{
           </div>
       )}
 
-      {micPermissionError && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
-          <ICONS.Security className="w-5 h-5" />
-          <div className="flex flex-col">
-            <span className="text-xs font-black uppercase tracking-widest">Microphone Access Denied</span>
-            <span className="text-[10px] font-bold opacity-80">Please enable microphone permissions in your browser to use voice features.</span>
-          </div>
-          <button 
-            onClick={() => {
-              setMicPermissionError(false);
-              startListening();
-            }}
-            className="ml-4 bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all"
-          >
-            Retry
-          </button>
-        </div>
-      )}
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
            <div className="space-y-6 w-full">

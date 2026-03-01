@@ -338,25 +338,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         </div>
       ) : !isActive && status !== 'analyzing' && !evaluation ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto py-12">
-          {micPermissionError && (
-            <div className="mb-8 bg-rose-50 border border-rose-200 p-6 rounded-[2rem] flex items-center justify-between animate-in slide-in-from-top-4 max-w-4xl mx-auto w-full">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-rose-600 text-white rounded-xl shadow-lg">
-                  <ICONS.Security className="w-6 h-6" />
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-black uppercase tracking-widest text-rose-900">Microphone Access Denied</span>
-                  <span className="text-xs font-bold text-rose-600 opacity-80">Enable microphone permissions in your browser to use the Grooming Lab.</span>
-                </div>
-              </div>
-              <button 
-                onClick={() => setMicPermissionError(false)}
-                className="px-6 py-2 bg-rose-600 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-rose-700 transition-all"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
           <div className="space-y-4">
             <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-2xl transition-transform hover:scale-105 duration-500 ${sessionMode === 'roleplay' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'}`}>
                {sessionMode === 'roleplay' ? <ICONS.Brain className="w-10 h-10" /> : <ICONS.Trophy className="w-10 h-10" />}

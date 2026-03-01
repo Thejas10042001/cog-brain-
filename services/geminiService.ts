@@ -184,137 +184,36 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
 
 // Analyze Audio for Vocal Persona
 export async function analyzeVocalPersona(base64Audio: string, mimeType: string): Promise<VocalPersonaStructure> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
-
-  const prompt = `Act as an Expert Neural Audio Engineer and Behavioral Psychologist.
-  Analyze this audio sample of a specific customer to create a comprehensive "Vocal Identity Fingerprint".
-  
-  EXTRACT WITH MAXIMUM PRECISION:
-  - pitch: EXACT PITCH & RESONANCE (e.g., deep chesty baritone, nasal high-pitched tenor, breathy soft soprano).
-  - tempo: TEMPO in descriptions (e.g., rapid-fire staccato, slow drawling, measured and rhythmic).
-  - cadence: CADENCE & LINGUISTIC MELODY (e.g., flat monotone, melodic and sing-song, choppy and authoritative).
-  - accent: ACCENT & DIALECT (e.g., Mid-Atlantic executive, subtle Southern warmth, clipped British professional).
-  - emotionalBaseline: EMOTIONAL BASELINE (e.g., permanently skeptical, overly enthusiastic, cold and calculating, warm and inviting).
-  - breathingPatterns: BREATHING & INFLECTION (e.g., frequent audible breaths, upward inflections at ends of sentences, sighs, sharp intakes).
-  - mimicryDirective: A single paragraph of dense "Mimicry Instructions" that a high-end TTS engine can use to clone this voice exactly. Use descriptive, technical language.
-
-  Return ONLY a JSON object.`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: {
-        parts: [
-          { inlineData: { data: base64Audio, mimeType: mimeType } },
-          { text: prompt }
-        ]
-      },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            pitch: { type: Type.STRING },
-            tempo: { type: Type.STRING },
-            cadence: { type: Type.STRING },
-            accent: { type: Type.STRING },
-            emotionalBaseline: { type: Type.STRING },
-            breathingPatterns: { type: Type.STRING },
-            mimicryDirective: { type: Type.STRING }
-          },
-          required: ["pitch", "tempo", "cadence", "accent", "emotionalBaseline", "breathingPatterns", "mimicryDirective"]
-        }
-      }
-    });
-    return safeJsonParse(response.text || "{}") as VocalPersonaStructure;
-  } catch (error) {
-    console.error("Vocal analysis failed:", error);
-    return {
-      pitch: "Professional Neutral",
-      tempo: "Balanced",
-      cadence: "Direct",
-      accent: "Global Business",
-      emotionalBaseline: "Serious",
-      breathingPatterns: "Controlled",
-      mimicryDirective: "Direct, professional business vocal profile."
-    };
-  }
+  // Vocal analysis disabled
+  return {
+    pitch: "Professional Neutral",
+    tempo: "Balanced",
+    cadence: "Direct",
+    accent: "Global Business",
+    emotionalBaseline: "Serious",
+    breathingPatterns: "Controlled",
+    mimicryDirective: "Direct, professional business vocal profile."
+  };
 }
 
 // Suggest Vocal Persona from Document
 export async function suggestVocalPersonaFromDoc(content: string): Promise<VocalPersonaStructure> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
-  
-  const prompt = `Act as an Expert Neural Audio Engineer and Behavioral Psychologist.
-  Analyze the provided document which describes a specific customer/persona. 
-  Based on their role, personality, and the context provided, suggest the most appropriate vocal parameters for an AI avatar to mimic this person.
-  
-  DOCUMENT CONTENT:
-  ${content}
-  
-  SUGGEST THE FOLLOWING PARAMETERS:
-  - gender: 'Male' or 'Female'
-  - baseVoice: 'Pegasus' or 'Orion' (Gemini OOTB voices)
-  - toneAdjectives: 3-4 adjectives describing the tone (e.g., Measured, humble, steady)
-  - pitch: Descriptive pitch (e.g., Low-Mid, High-Mid)
-  - pace: Numeric pace (e.g., 0.9, 1.0, 1.1)
-  - stability: Percentage (0-100)
-  - clarity: Percentage (0-100)
-  - mimicryDirective: A single paragraph of dense "Mimicry Instructions" for a TTS engine.
-  
-  Return ONLY a JSON object.`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            gender: { type: Type.STRING },
-            baseVoice: { type: Type.STRING },
-            toneAdjectives: { type: Type.ARRAY, items: { type: Type.STRING } },
-            pitch: { type: Type.STRING },
-            pace: { type: Type.NUMBER },
-            stability: { type: Type.NUMBER },
-            clarity: { type: Type.NUMBER },
-            mimicryDirective: { type: Type.STRING }
-          },
-          required: ["gender", "baseVoice", "toneAdjectives", "pitch", "pace", "stability", "clarity", "mimicryDirective"]
-        }
-      }
-    });
-    const result = safeJsonParse(response.text || "{}");
-    return {
-      ...result,
-      tempo: result.pace >= 1.1 ? 'Fast' : result.pace <= 0.9 ? 'Slow' : 'Balanced',
-      cadence: 'Strategic',
-      accent: 'Professional',
-      emotionalBaseline: result.toneAdjectives?.join(', ') || 'Steady',
-      breathingPatterns: 'Regulated'
-    } as VocalPersonaStructure;
-  } catch (error) {
-    console.error("Vocal suggestion failed:", error);
-    return {
-      gender: 'Male',
-      baseVoice: 'Pegasus',
-      toneAdjectives: ['Measured', 'humble', 'steady'],
-      pitch: 'Low-Mid',
-      pace: 0.9,
-      stability: 80,
-      clarity: 90,
-      mimicryDirective: "Direct, professional business vocal profile.",
-      tempo: 'Slow',
-      cadence: 'Strategic',
-      accent: 'Professional',
-      emotionalBaseline: 'Steady',
-      breathingPatterns: 'Regulated'
-    };
-  }
+  // Vocal suggestion disabled
+  return {
+    gender: 'Male',
+    baseVoice: 'Pegasus',
+    toneAdjectives: ['Measured', 'humble', 'steady'],
+    pitch: 'Low-Mid',
+    pace: 0.9,
+    stability: 80,
+    clarity: 90,
+    mimicryDirective: "Direct, professional business vocal profile.",
+    tempo: 'Slow',
+    cadence: 'Strategic',
+    accent: 'Professional',
+    emotionalBaseline: 'Steady',
+    breathingPatterns: 'Regulated'
+  };
 }
 
 // Helper to wrap raw PCM in a WAV container
@@ -375,86 +274,8 @@ export async function generateVoiceSample(
   gender?: string,
   analysis?: VocalPersonaStructure
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-2.5-flash-preview-tts';
-
-  // Map non-TTS voices to TTS equivalents
-  let finalVoice = voiceName;
-  if (voiceName === 'Pegasus') finalVoice = 'Puck';
-  if (voiceName === 'Orion') finalVoice = 'Charon';
-
-  // Ensure gender alignment
-  if (gender === 'Female') {
-    // If it's a known male voice, switch to female
-    if (['Charon', 'Zephyr', 'Fenrir', 'Orion'].includes(finalVoice)) {
-      finalVoice = 'Kore';
-    }
-  } else if (gender === 'Male') {
-    // If it's a known female voice, switch to male
-    if (['Kore', 'Puck', 'Pegasus'].includes(finalVoice)) {
-      finalVoice = 'Zephyr';
-    }
-  }
-
-  // Fallback for invalid voices
-  const validVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
-  if (!validVoices.includes(finalVoice)) {
-    finalVoice = gender === 'Female' ? 'Kore' : 'Zephyr';
-  }
-
-  // Incorporate vocal parameters into the prompt to influence TTS output
-  let promptText = text;
-  if (analysis) {
-    const adjectives = analysis.toneAdjectives?.join(', ') || 'professional';
-    const pace = analysis.pace || 1.0;
-    const pitch = analysis.pitchValue || 1.0;
-    
-    // Construct a descriptive instruction for the TTS model
-    const instruction = `[Tone: ${adjectives}, Pace: ${pace > 1.2 ? 'Fast' : pace < 0.8 ? 'Slow' : 'Normal'}, Pitch: ${pitch > 1.2 ? 'High' : pitch < 0.8 ? 'Low' : 'Normal'}]`;
-    promptText = `${instruction} ${text}`;
-  }
-
-  try {
-    const response = await withRetry(() => ai.models.generateContent({
-      model: modelName,
-      contents: [{ parts: [{ text: promptText }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: finalVoice }
-          },
-        },
-      },
-    }));
-
-    // Iterate through parts to find the audio data, as it may not be the first part
-    let base64Audio: string | undefined;
-    let refusalText: string | undefined;
-
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData?.data) {
-        base64Audio = part.inlineData.data;
-        break;
-      }
-      if (part.text) {
-        refusalText = part.text;
-      }
-    }
-
-    if (!base64Audio) {
-      if (refusalText) {
-        throw new Error(`Voice sample generation failed: ${refusalText}`);
-      }
-      throw new Error("No audio data returned from the model");
-    }
-    
-    // Wrap raw PCM in WAV container for browser compatibility
-    return pcmToWav(base64Audio, 24000);
-  } catch (error) {
-    console.error("Voice sample generation failed:", error);
-    throw error;
-  }
+  // Voice generation disabled
+  return "";
 }
 
 // Generate response for the Cogni Voice Assistant
@@ -1527,54 +1348,8 @@ export async function generatePitchAudio(
   gender?: string,
   analysis?: VocalPersonaStructure
 ): Promise<Uint8Array | null> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
-  // Map non-TTS voices to TTS equivalents
-  let finalVoice = voiceName;
-  if (voiceName === 'Pegasus') finalVoice = 'Puck';
-  if (voiceName === 'Orion') finalVoice = 'Charon';
-
-  // Ensure gender alignment
-  if (gender === 'Female') {
-    if (['Charon', 'Zephyr', 'Fenrir', 'Orion'].includes(finalVoice)) {
-      finalVoice = 'Kore';
-    }
-  } else if (gender === 'Male') {
-    if (['Kore', 'Puck', 'Pegasus'].includes(finalVoice)) {
-      finalVoice = 'Zephyr';
-    }
-  }
-
-  // Fallback for invalid voices
-  const validVoices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
-  if (!validVoices.includes(finalVoice)) {
-    finalVoice = gender === 'Female' ? 'Kore' : 'Zephyr';
-  }
-
-  // High-fidelity mimicry logic: Prepend instructions to the content for the TTS model's LLM core to modulate its prosody.
-  let instruction = personaDirective ? `MIMICRY PROTOCOL ACTIVE. TARGET SIGNATURE: "${personaDirective}". ` : "";
-  
-  if (analysis) {
-    const adjectives = analysis.toneAdjectives?.join(', ') || 'professional';
-    const pace = analysis.pace || 1.0;
-    const pitch = analysis.pitchValue || 1.0;
-    instruction += `[Tone: ${adjectives}, Pace: ${pace > 1.2 ? 'Fast' : pace < 0.8 ? 'Slow' : 'Normal'}, Pitch: ${pitch > 1.2 ? 'High' : pitch < 0.8 ? 'Low' : 'Normal'}] `;
-  }
-
-  const contents = instruction 
-    ? `${instruction} INSTRUCTION: Adopt this tone, cadence, and resonance exactly. TEXT TO SPEAK: "${text}"`
-    : text;
-
-  const response = await withRetry(() => ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-tts",
-    contents: [{ parts: [{ text: contents }] }],
-    config: {
-      responseModalities: [Modality.AUDIO],
-      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: finalVoice } } },
-    },
-  }));
-  const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  return base64Audio ? decode(base64Audio) : null;
+  // Pitch audio generation disabled
+  return null;
 }
 
 // Full Context Analysis upgraded to Pro model for comprehensive reasoning
