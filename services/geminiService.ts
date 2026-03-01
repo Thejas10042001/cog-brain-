@@ -9,6 +9,39 @@ const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
   'High': 32768 // Max for gemini-3-pro-preview
 };
 
+export async function generateExplanation(question: string, stageOrAnalysis: string | AnalysisResult, context?: MeetingContext): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  
+  let prompt = "";
+  if (typeof stageOrAnalysis === 'string' && context) {
+    prompt = `Explain the strategic reasoning behind this sales question: "${question}". 
+    The current stage is "${stageOrAnalysis}". 
+    Context: ${JSON.stringify(context.vocalPersonaAnalysis)}.
+    Provide a concise explanation that helps the seller understand why the client is asking this and how they should respond.`;
+  } else {
+    // AudioGenerator case
+    const analysis = stageOrAnalysis as AnalysisResult;
+    prompt = `Explain the deep sales strategy behind: "${question}" based on the buyer snapshot: ${JSON.stringify(analysis.snapshot)}.`;
+  }
+
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+  });
+  return response.text || "No explanation available.";
+}
+
+export async function generateNodeExplanation(stage: string, context: MeetingContext): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Provide a very brief (1-2 sentences) explanation of the "${stage}" stage in a sales simulation. 
+    The client persona is: ${JSON.stringify(context.vocalPersonaAnalysis)}.
+    Explain what the goal of this stage is for the seller.`,
+  });
+  return response.text || `Entering the ${stage} stage.`;
+}
+
 /**
  * Robustly parses JSON from a string, handling markdown wrappers, prefix/suffix text,
  * and the specific 'Unexpected non-whitespace character after JSON' error.
@@ -1418,17 +1451,6 @@ export async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampl
     }
   }
   return buffer;
-}
-
-export async function generateExplanation(question: string, context: AnalysisResult): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response = await withRetry(() => ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: `Explain the deep sales strategy behind: "${question}" based on the buyer snapshot: ${JSON.stringify(context.snapshot)}.`,
-    // Fix: thinkingBudget must be wrapped in thinkingConfig per SDK guidelines
-    config: { thinkingConfig: { thinkingBudget: 0 } }
-  }));
-  return response.text || "";
 }
 
 /**

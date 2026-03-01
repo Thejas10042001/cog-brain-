@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, FC, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ICONS } from '../constants';
 import { 
   streamAvatarStagedSimulation, 
@@ -6,7 +7,9 @@ import {
   generateVoiceSample,
   decodeAudioData,
   evaluateAvatarSession,
-  generateClientAvatar
+  generateClientAvatar,
+  generateExplanation,
+  generateNodeExplanation
 } from '../services/geminiService';
 import { saveSimulationHistory } from '../services/firebaseService';
 import { GPTMessage, MeetingContext, StagedSimStage, StoredDocument, ComprehensiveAvatarReport, BiometricTrace } from '../types';
@@ -85,6 +88,9 @@ export const AvatarSimulationStaged: FC<{
   // Track ratings for each stage
   const [stageRatings, setStageRatings] = useState<Record<string, number | 'skipped'>>({});
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [explanationContent, setExplanationContent] = useState("");
+  const [isExplaining, setIsExplaining] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -265,6 +271,32 @@ export const AvatarSimulationStaged: FC<{
     }
   };
 
+  const handleExplainQuestion = async () => {
+    const lastAI = messages.filter(m => m.role === 'assistant').pop();
+    if (!lastAI) return;
+
+    setIsExplaining(true);
+    try {
+      const explanation = await generateExplanation(lastAI.content, currentStage, meetingContext);
+      setExplanationContent(explanation);
+      setShowExplanation(true);
+      playAIQuestion(explanation);
+    } catch (e) {
+      console.error("Explanation failed:", e);
+    } finally {
+      setIsExplaining(false);
+    }
+  };
+
+  const explainNode = async (stage: string) => {
+    try {
+      const explanation = await generateNodeExplanation(stage, meetingContext);
+      playAIQuestion(explanation);
+    } catch (e) {
+      console.error("Node explanation failed:", e);
+    }
+  };
+
   const startListening = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -397,8 +429,12 @@ export const AvatarSimulationStaged: FC<{
 
       const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
-      setMessages([assistantMsg]);
+      
+      // Zero latency: play immediately
+      explainNode(targetStage);
       playAIQuestion(cleaned);
+      
+      setMessages([assistantMsg]);
     } catch (e: any) { 
       console.error(e);
       const errorStr = JSON.stringify(e);
@@ -446,8 +482,12 @@ export const AvatarSimulationStaged: FC<{
 
       const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
-      setMessages(prev => [...prev, aiMsg]);
+      
+      // Zero latency: play immediately
+      explainNode(stage);
       playAIQuestion(cleaned);
+      
+      setMessages(prev => [...prev, aiMsg]);
     } catch (e: any) { 
       console.error(e); 
       const errorStr = JSON.stringify(e);
@@ -1153,6 +1193,12 @@ export const AvatarSimulationStaged: FC<{
                               >
                                 <ICONS.Research className="w-3 h-3" /> Re-hear
                               </button>
+                              <button 
+                                onClick={() => handleExplainQuestion()} 
+                                className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                              >
+                                <ICONS.Research className="w-3 h-3" /> Explain Question
+                              </button>
                               <div className="flex gap-1.5 ml-2">
                                 <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-indigo-500/20'}`}></div>
                                 <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-75' : 'bg-indigo-500/40'}`}></div>
@@ -1160,22 +1206,24 @@ export const AvatarSimulationStaged: FC<{
                               </div>
                            </div>
                         </div>
-                        <p className="text-4xl font-black italic leading-[1.4] text-slate-900 tracking-tight">
-                           {messages[messages.length - 1]?.content || "Synchronizing Strategic Core..."}
-                        </p>
+                        <div className="flex flex-col md:flex-row gap-8 items-start">
+                          <p className="flex-1 text-4xl font-black italic leading-[1.4] text-slate-900 tracking-tight">
+                             {messages[messages.length - 1]?.content || "Synchronizing Strategic Core..."}
+                          </p>
 
-                        {/* Neural Strategic Hint - Integrated */}
-                        {currentHint && (
-                          <div className="mt-8 pt-8 border-t border-slate-200/60 flex items-start gap-4 animate-in slide-in-from-top-2">
-                              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
-                                  <ICONS.Sparkles className="w-4 h-4 text-indigo-100" />
-                              </div>
-                              <div className="text-left flex-1">
-                                <h5 className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
-                                <p className="text-base font-bold text-slate-600 italic leading-relaxed">{currentHint}</p>
-                              </div>
-                          </div>
-                        )}
+                          {/* Neural Strategic Hint - Integrated */}
+                          {currentHint && (
+                            <div className="w-full md:w-80 p-6 bg-indigo-50 border border-indigo-100 rounded-3xl flex items-start gap-4 animate-in slide-in-from-right-4 shrink-0 shadow-sm">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
+                                    <ICONS.Sparkles className="w-4 h-4 text-indigo-100" />
+                                </div>
+                                <div className="text-left flex-1">
+                                  <h5 className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
+                                  <p className="text-xs font-bold text-slate-600 italic leading-relaxed">{currentHint}</p>
+                                </div>
+                            </div>
+                          )}
+                        </div>
                     </div>
 
                     {/* Protocol Blocked Overlay */}
@@ -1390,6 +1438,65 @@ export const AvatarSimulationStaged: FC<{
           </aside>
         </div>
       )}
+
+      <AnimatePresence>
+        {showExplanation && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200"
+            >
+              <div className="p-10 space-y-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                      <ICONS.Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">Strategic Explanation</h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Neural Logic Node Analysis</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowExplanation(false);
+                      if (activeAudioSource.current) {
+                        try { activeAudioSource.current.stop(); } catch(e) {}
+                      }
+                    }}
+                    className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-2xl transition-all"
+                  >
+                    <ICONS.Security className="w-6 h-6 rotate-45" />
+                  </button>
+                </div>
+
+                <div className="p-8 bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] relative">
+                  <p className="text-2xl font-bold italic text-slate-900 leading-relaxed">
+                    {explanationContent || "Analyzing strategic core..."}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={handlePauseResume}
+                    className="flex-1 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3"
+                  >
+                    {isPaused ? <><ICONS.Play className="w-5 h-5" /> Resume Audio</> : <><ICONS.Speaker className="w-5 h-5" /> Pause Audio</>}
+                  </button>
+                  <button 
+                    onClick={() => playAIQuestion(explanationContent)}
+                    className="px-10 py-6 bg-amber-100 text-amber-600 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-amber-200 transition-all"
+                  >
+                    Re-hear
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <style>{`
         @keyframes celebrate-bg { 

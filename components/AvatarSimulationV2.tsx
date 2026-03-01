@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect, FC } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ICONS } from '../constants';
 import { 
   streamAvatarSimulationV2, 
   generatePitchAudio, 
   generateVoiceSample,
   decodeAudioData,
-  evaluateAvatarSessionV2 
+  evaluateAvatarSessionV2,
+  generateExplanation,
+  generateNodeExplanation
 } from '../services/geminiService';
 import { saveSimulationHistory } from '../services/firebaseService';
 import { GPTMessage, MeetingContext, SimPersonaV2, ComprehensiveAvatarReport, BiometricTrace } from '../types';
@@ -77,6 +80,9 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [explanationContent, setExplanationContent] = useState("");
+  const [isExplaining, setIsExplaining] = useState(false);
 
   // Resizable Logic for Sidebar
   const [historyWidth, setHistoryWidth] = useState(400);
@@ -254,6 +260,32 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     }
   };
 
+  const handleExplainQuestion = async () => {
+    const lastAI = messages.filter(m => m.role === 'assistant').pop();
+    if (!lastAI) return;
+
+    setIsExplaining(true);
+    try {
+      const explanation = await generateExplanation(lastAI.content, persona || "V2 Simulation", meetingContext);
+      setExplanationContent(explanation);
+      setShowExplanation(true);
+      playAIQuestion(explanation);
+    } catch (e) {
+      console.error("Explanation failed:", e);
+    } finally {
+      setIsExplaining(false);
+    }
+  };
+
+  const explainNode = async (nodeName: string) => {
+    try {
+      const explanation = await generateNodeExplanation(nodeName, meetingContext);
+      playAIQuestion(explanation);
+    } catch (e) {
+      console.error("Node explanation failed:", e);
+    }
+  };
+
   const startListening = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -395,16 +427,22 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
         const retryText = retryMatch?.[1]?.trim() || "Protocol performance deficit detected. Please refine your logic and try again.";
         const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: retryText, mode: 'standard' };
-        setMessages([...updatedMessages, assistantMsg]);
-        setCurrentCaption("");
+        
+        // Zero latency: play immediately
         playAIQuestion(retryText);
-      } else {
-        const cleaned = nextContent.replace(/\[HINT: .*?\]/, "").trim();
-        const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+        
         setMessages([...updatedMessages, assistantMsg]);
         setCurrentCaption("");
-        playAIQuestion(cleaned);
-      }
+      } else {
+      const cleaned = nextContent.replace(/\[HINT: .*?\]/, "").trim();
+      const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+      
+      // Zero latency: play immediately
+      playAIQuestion(cleaned);
+      
+      setMessages([...updatedMessages, assistantMsg]);
+      setCurrentCaption("");
+    }
     } catch (e: any) { 
       console.error(e); 
       const errorStr = JSON.stringify(e);
@@ -777,6 +815,12 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                         >
                           <ICONS.Research className="w-3 h-3" /> Re-hear
                         </button>
+                        <button 
+                          onClick={() => handleExplainQuestion()} 
+                          className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                        >
+                          <ICONS.Research className="w-3 h-3" /> Explain Question
+                        </button>
                         <div className="flex gap-1.5 ml-2">
                           <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-indigo-500/20'}`}></div>
                           <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-75' : 'bg-indigo-500/40'}`}></div>
@@ -952,6 +996,65 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
           </aside>
         </div>
       )}
+
+      <AnimatePresence>
+        {showExplanation && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200"
+            >
+              <div className="p-10 space-y-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                      <ICONS.Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">Strategic Explanation</h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Neural Logic Node Analysis</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowExplanation(false);
+                      if (activeAudioSource.current) {
+                        try { activeAudioSource.current.stop(); } catch(e) {}
+                      }
+                    }}
+                    className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-2xl transition-all"
+                  >
+                    <ICONS.Security className="w-6 h-6 rotate-45" />
+                  </button>
+                </div>
+
+                <div className="p-8 bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] relative">
+                  <p className="text-2xl font-bold italic text-slate-900 leading-relaxed">
+                    {explanationContent || "Analyzing strategic core..."}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={handlePauseResume}
+                    className="flex-1 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3"
+                  >
+                    {isPaused ? <><ICONS.Play className="w-5 h-5" /> Resume Audio</> : <><ICONS.Speaker className="w-5 h-5" /> Pause Audio</>}
+                  </button>
+                  <button 
+                    onClick={() => playAIQuestion(explanationContent)}
+                    className="px-10 py-6 bg-amber-100 text-amber-600 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-amber-200 transition-all"
+                  >
+                    Re-hear
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
