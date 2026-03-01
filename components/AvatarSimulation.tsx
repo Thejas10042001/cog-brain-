@@ -3,6 +3,7 @@ import { ICONS } from '../constants';
 import { 
   streamAvatarSimulation, 
   generatePitchAudio, 
+  generateVoiceSample,
   decodeAudioData,
   evaluateAvatarSession
 } from '../services/geminiService';
@@ -201,7 +202,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
       const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
       if (voiceSample) {
-        const audioBuffer = await decodeAudioData(voiceSample);
+        const audioData = atob(voiceSample);
+        const arrayBuffer = new ArrayBuffer(audioData.length);
+        const view = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
+        
+        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
         
         if (activeAudioSource.current) {
           try { activeAudioSource.current.stop(); } catch (e) {}
@@ -246,7 +252,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     }
   };
 
-  const startListening = () => {
+  const startListening = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
@@ -297,9 +303,11 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
     recognitionRef.current = recognition;
     try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
       recognition.start();
     } catch (e) {
       console.error("Failed to start recognition:", e);
+      setMicPermissionError(true);
     }
   };
 

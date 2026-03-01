@@ -346,7 +346,7 @@ export async function generateVoiceSample(
   if (!cleanText) return "";
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: cleanText }] }],
       config: {
@@ -359,7 +359,7 @@ export async function generateVoiceSample(
           },
         },
       },
-    });
+    }));
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (base64Audio) {
@@ -1442,8 +1442,42 @@ export async function generatePitchAudio(
   gender?: string,
   analysis?: VocalPersonaStructure
 ): Promise<Uint8Array | null> {
-  // Pitch audio generation disabled
-  return null;
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  // Clean text of markdown tags for better TTS
+  const cleanText = text.replace(/\[.*?\]/g, '').trim();
+  if (!cleanText) return null;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: cleanText }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { 
+              voiceName: (voiceName as any) || 'Kore' 
+            },
+          },
+        },
+      },
+    }));
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (base64Audio) {
+      const binaryString = atob(base64Audio);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes;
+    }
+    return null;
+  } catch (error) {
+    console.error("Pitch Audio Generation failed:", error);
+    return null;
+  }
 }
 
 // Full Context Analysis upgraded to Pro model for comprehensive reasoning

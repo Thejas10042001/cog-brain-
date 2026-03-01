@@ -42,6 +42,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const [isPlayingExplanation, setIsPlayingExplanation] = useState(false);
   const [savedGroomings, setSavedGroomings] = useState<SavedGrooming[]>([]);
   const [highlightedButton, setHighlightedButton] = useState<string | null>(null);
+  const [showGroomingJournal, setShowGroomingJournal] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const playGuidance = async (text: string, buttonToHighlight?: string) => {
     if (!text) return;

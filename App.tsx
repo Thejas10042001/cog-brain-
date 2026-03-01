@@ -11,7 +11,7 @@ import { AssessmentLab } from './components/AssessmentLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
-import { analyzeSalesContext } from './services/geminiService';
+import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
 import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
@@ -149,9 +149,9 @@ const App: React.FC = () => {
   const playNodeAudio = async (text: string) => {
     if (!text) return;
     try {
-      const audioUrl = await generateVoiceSample(text, 'Zephyr');
-      if (audioUrl) {
-        const audio = new Audio(audioUrl);
+      const voiceSample = await generateVoiceSample(text, 'Zephyr');
+      if (voiceSample) {
+        const audio = new Audio(`data:audio/wav;base64,${voiceSample}`);
         audio.play();
       }
     } catch (error) {

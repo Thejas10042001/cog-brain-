@@ -159,7 +159,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
     }
   };
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (isRecording) {
       if (recognitionRef.current) recognitionRef.current.stop();
       setIsRecording(false);
@@ -203,8 +203,15 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
       };
 
       recognitionRef.current = recognition;
-      recognition.start();
-      setIsRecording(true);
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognition.start();
+        setIsRecording(true);
+      } catch (e) {
+        console.error("Failed to start recognition:", e);
+        setMicPermissionError(true);
+        setIsRecording(false);
+      }
     }
   };
 

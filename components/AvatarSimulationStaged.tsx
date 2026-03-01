@@ -3,6 +3,7 @@ import { ICONS } from '../constants';
 import { 
   streamAvatarStagedSimulation, 
   generatePitchAudio, 
+  generateVoiceSample,
   decodeAudioData,
   evaluateAvatarSession,
   generateClientAvatar
@@ -199,12 +200,88 @@ export const AvatarSimulationStaged: FC<{
   };
 
   const playAIQuestion = async (text: string) => {
-    // Voice output disabled
+    if (!text) return;
+    setIsAISpeaking(true);
+    try {
+      const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
+      if (voiceSample) {
+        const audioData = atob(voiceSample);
+        const arrayBuffer = new ArrayBuffer(audioData.length);
+        const view = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
+        
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        const buffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        activeAudioSource.current = source;
+        source.onended = () => {
+          setIsAISpeaking(false);
+          startListening();
+        };
+        source.start();
+      } else {
+        setIsAISpeaking(false);
+      }
+    } catch (e) {
+      console.error("AI voice failed:", e);
+      setIsAISpeaking(false);
+    }
   };
 
-  const startListening = () => {
-    // Voice input disabled
-    console.log("Voice input is disabled per user request.");
+  const startListening = async () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let finalTranscriptForTurn = '';
+
+    recognition.onstart = () => {
+      setIsUserListening(true);
+      setMicPermissionError(false);
+    };
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscriptForTurn += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      setCurrentCaption(prev => {
+        return prev.split(' (listening...)')[0] + (finalTranscriptForTurn || interimTranscript ? ' ' + (finalTranscriptForTurn || interimTranscript) : '');
+      });
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      if (event.error === 'not-allowed') setMicPermissionError(true);
+      setIsUserListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsUserListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      recognition.start();
+    } catch (e) {
+      console.error("Failed to start recognition:", e);
+      setMicPermissionError(true);
+    }
   };
 
   const stopListening = () => {
