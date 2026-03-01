@@ -776,12 +776,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                   <div className="flex items-center justify-between mb-2">
                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500">Dialogue Node</h5>
                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => handleNextNode()} 
-                          className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-full text-[8px] font-black uppercase tracking-widest transition-all"
-                        >
-                          Pass
-                        </button>
+                       
                         <button 
                           onClick={handlePauseResume} 
                           className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
