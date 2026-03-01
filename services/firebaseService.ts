@@ -19,7 +19,8 @@ import {
   Timestamp,
   deleteDoc,
   doc,
-  updateDoc
+  updateDoc,
+  memoryLocalCache
 } from "firebase/firestore";
 
 // Fix: Use wildcard import and destructuring for firebase/auth to resolve "no exported member" errors.
@@ -61,14 +62,18 @@ try {
     const app: any = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     
     // Use initializeFirestore with experimentalForceLongPolling to bypass potential WebSocket blocks
-    // Wrap in try-catch to handle cases where it's already initialized
+    // Use memoryLocalCache to avoid any local persistence issues that might cause hangs
     try {
       db = initializeFirestore(app, {
         experimentalForceLongPolling: true,
+        experimentalAutoDetectLongPolling: true,
+        localCache: memoryLocalCache(),
       });
+      console.log("Firestore initialized with long polling and memory cache.");
     } catch (e) {
       // If already initialized, just get the existing instance
       db = getFirestore(app);
+      console.warn("Firestore already initialized, using existing instance.");
     }
     
     auth = getAuth(app);
