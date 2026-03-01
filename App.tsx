@@ -185,12 +185,9 @@ const App: React.FC = () => {
     }
   };
 
-  const [isNodeStarted, setIsNodeStarted] = useState(false);
-
   const handleNodeClick = (tab: any) => {
     if (activeTab === tab) return;
     setActiveTab(tab as any);
-    setIsNodeStarted(false);
     // Redundant call removed - useEffect handles narration on activeTab change
   };
 
@@ -211,7 +208,7 @@ const App: React.FC = () => {
     if (hasInteracted && analysis && activeTab) {
       const details = NODE_DETAILS[activeTab];
       if (details) {
-        const fullText = details.audioText;
+        const fullText = `${details.label}. ${details.feature}. Purpose: ${details.purpose}. How it helps: ${details.howItHelps}. Operational Guide: ${details.guideText}`;
         playNodeAudio(fullText);
       }
     }
@@ -682,10 +679,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {activeTab === 'context' && !isNodeStarted && (
-                    <NodeBriefing details={NODE_DETAILS['context']} onStart={() => setIsNodeStarted(true)} />
-                  )}
-                  {activeTab === 'context' && isNodeStarted && (
+                  {activeTab === 'context' && (
                     <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 w-full">
                       <MeetingContextConfig 
                         context={meetingContext} 
@@ -703,26 +697,13 @@ const App: React.FC = () => {
                       />
                     </div>
                   )}
-                  {activeTab === 'avatar-staged' && !isNodeStarted && <NodeBriefing details={NODE_DETAILS['avatar-staged']} onStart={() => setIsNodeStarted(true)} />}
-                  {activeTab === 'avatar-staged' && isNodeStarted && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} />}
-                  
-                  {activeTab === 'avatar2' && !isNodeStarted && <NodeBriefing details={NODE_DETAILS['avatar2']} onStart={() => setIsNodeStarted(true)} />}
-                  {activeTab === 'avatar2' && isNodeStarted && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} />}
-                  
-                  {activeTab === 'avatar' && !isNodeStarted && <NodeBriefing details={NODE_DETAILS['avatar']} onStart={() => setIsNodeStarted(true)} />}
-                  {activeTab === 'avatar' && isNodeStarted && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} />}
-                  
-                  {activeTab === 'gpt' && !isNodeStarted && <NodeBriefing details={NODE_DETAILS['gpt']} onStart={() => setIsNodeStarted(true)} />}
-                  {activeTab === 'gpt' && isNodeStarted && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                  
-                  {activeTab === 'audio' && !isNodeStarted && <NodeBriefing details={NODE_DETAILS['audio']} onStart={() => setIsNodeStarted(true)} />}
-                  {activeTab === 'audio' && isNodeStarted && <div className="p-8 md:p-12 w-full flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
-                  
-                  {activeTab === 'practice' && !isNodeStarted && <NodeBriefing details={NODE_DETAILS['practice']} onStart={() => setIsNodeStarted(true)} />}
-                  {activeTab === 'practice' && isNodeStarted && <PracticeSession analysis={analysis!} meetingContext={meetingContext} />}
-                  
-                  {activeTab === 'qa' && !isNodeStarted && <NodeBriefing details={NODE_DETAILS['qa']} onStart={() => setIsNodeStarted(true)} />}
-                  {activeTab === 'qa' && isNodeStarted && <AssessmentLab activeDocuments={activeDocuments} />}
+                  {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} />}
+                  {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} />}
+                  {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} />}
+                  {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
+                  {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
+                  {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} />}
+                  {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
                 </div>
               )}
             </div>
@@ -758,44 +739,6 @@ const SidebarBtn = ({ active, onClick, icon, label, scale = 1 }: { active: boole
       </span>
     )}
   </button>
-);
-
-const NodeBriefing = ({ details, onStart }: { details: any; onStart: () => void }) => (
-  <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white animate-in fade-in zoom-in duration-500">
-    <div className="max-w-3xl w-full space-y-12 text-center">
-      <div className="space-y-4">
-        <div className="w-20 h-20 bg-slate-900 text-white rounded-3xl flex items-center justify-center font-black text-3xl mx-auto shadow-2xl shadow-slate-200 animate-bounce">
-          {details.stepNumber}
-        </div>
-        <h2 className="text-5xl font-black text-slate-900 tracking-tighter uppercase">{details.label}</h2>
-        <p className="text-indigo-600 font-black text-sm uppercase tracking-[0.4em]">{details.feature}</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-        <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 space-y-3">
-          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Core Purpose</h4>
-          <p className="text-lg font-bold text-slate-800 leading-tight">{details.purpose}</p>
-        </div>
-        <div className="p-8 bg-indigo-50/50 rounded-3xl border border-indigo-100/50 space-y-3">
-          <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Strategic Benefit</h4>
-          <p className="text-lg font-bold text-indigo-900 leading-tight">{details.howItHelps}</p>
-        </div>
-      </div>
-
-      <div className="p-8 bg-slate-900 rounded-3xl shadow-2xl space-y-4">
-        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Operational Protocol</h4>
-        <p className="text-xl font-bold text-white leading-relaxed italic">"{details.guideText}"</p>
-      </div>
-
-      <button 
-        onClick={onStart}
-        className="group relative inline-flex items-center gap-4 px-12 py-6 bg-indigo-600 text-white rounded-full font-black text-xl uppercase tracking-widest hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-indigo-200"
-      >
-        <span>Commence Node Operations</span>
-        <ICONS.ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-      </button>
-    </div>
-  </div>
 );
 
 export default App;
