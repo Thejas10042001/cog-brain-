@@ -184,36 +184,101 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
 
 // Analyze Audio for Vocal Persona
 export async function analyzeVocalPersona(base64Audio: string, mimeType: string): Promise<VocalPersonaStructure> {
-  // Vocal analysis disabled
-  return {
-    pitch: "Professional Neutral",
-    tempo: "Balanced",
-    cadence: "Direct",
-    accent: "Global Business",
-    emotionalBaseline: "Serious",
-    breathingPatterns: "Controlled",
-    mimicryDirective: "Direct, professional business vocal profile."
-  };
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+
+  const prompt = `Analyze this audio sample of a human voice. 
+  Extract the following vocal characteristics to create a high-fidelity "Neural Vocal Persona".
+  
+  REQUIRED JSON FIELDS:
+  - pitch: string (e.g., "Deep Baritone", "High Soprano", "Mid-range Tenor")
+  - tempo: string (e.g., "Rapid", "Measured", "Slow & Deliberate")
+  - cadence: string (e.g., "Staccato", "Fluid", "Rhythmic")
+  - accent: string (e.g., "Neutral American", "British Received Pronunciation", "Indian English")
+  - emotionalBaseline: string (e.g., "Authoritative", "Empathetic", "Skeptical")
+  - breathingPatterns: string (e.g., "Shallow", "Deep", "Frequent Pauses")
+  - mimicryDirective: string (A 2-sentence instruction for an AI to mimic this EXACT voice profile.)`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: {
+        parts: [
+          { text: prompt },
+          { inlineData: { data: base64Audio, mimeType } }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json"
+      }
+    }));
+    return safeJsonParse(response.text || "{}");
+  } catch (error) {
+    console.error("Vocal analysis failed:", error);
+    return {
+      pitch: "Professional Neutral",
+      tempo: "Balanced",
+      cadence: "Direct",
+      accent: "Global Business",
+      emotionalBaseline: "Serious",
+      breathingPatterns: "Controlled",
+      mimicryDirective: "Direct, professional business vocal profile."
+    };
+  }
 }
 
 // Suggest Vocal Persona from Document
 export async function suggestVocalPersonaFromDoc(content: string): Promise<VocalPersonaStructure> {
-  // Vocal suggestion disabled
-  return {
-    gender: 'Male',
-    baseVoice: 'Pegasus',
-    toneAdjectives: ['Measured', 'humble', 'steady'],
-    pitch: 'Low-Mid',
-    pace: 0.9,
-    stability: 80,
-    clarity: 90,
-    mimicryDirective: "Direct, professional business vocal profile.",
-    tempo: 'Slow',
-    cadence: 'Strategic',
-    accent: 'Professional',
-    emotionalBaseline: 'Steady',
-    breathingPatterns: 'Regulated'
-  };
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+
+  const prompt = `Based on the following document content, suggest the most appropriate "Neural Vocal Persona" for an AI avatar that would be most effective in this context.
+  
+  CONTENT:
+  ${content}
+
+  REQUIRED JSON FIELDS:
+  - gender: 'Male' | 'Female' | 'Neutral'
+  - baseVoice: 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Zephyr'
+  - toneAdjectives: string[]
+  - pitch: string
+  - pace: number (0.5 to 2.0)
+  - stability: number (0 to 100)
+  - clarity: number (0 to 100)
+  - mimicryDirective: string
+  - tempo: string
+  - cadence: string
+  - accent: string
+  - emotionalBaseline: string
+  - breathingPatterns: string`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    }));
+    return safeJsonParse(response.text || "{}");
+  } catch (error) {
+    console.error("Vocal suggestion failed:", error);
+    return {
+      gender: 'Male',
+      baseVoice: 'Pegasus',
+      toneAdjectives: ['Measured', 'humble', 'steady'],
+      pitch: 'Low-Mid',
+      pace: 0.9,
+      stability: 80,
+      clarity: 90,
+      mimicryDirective: "Direct, professional business vocal profile.",
+      tempo: 'Slow',
+      cadence: 'Strategic',
+      accent: 'Professional',
+      emotionalBaseline: 'Steady',
+      breathingPatterns: 'Regulated'
+    };
+  }
 }
 
 // Helper to wrap raw PCM in a WAV container
@@ -274,8 +339,37 @@ export async function generateVoiceSample(
   gender?: string,
   analysis?: VocalPersonaStructure
 ): Promise<string> {
-  // Voice generation disabled
-  return "";
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  // Clean text of markdown tags for better TTS
+  const cleanText = text.replace(/\[.*?\]/g, '').trim();
+  if (!cleanText) return "";
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: cleanText }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { 
+              voiceName: (voiceName as any) || 'Kore' 
+            },
+          },
+        },
+      },
+    });
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (base64Audio) {
+      return pcmToWav(base64Audio);
+    }
+    return "";
+  } catch (error) {
+    console.error("TTS Generation failed:", error);
+    return "";
+  }
 }
 
 // Generate response for the Cogni Voice Assistant

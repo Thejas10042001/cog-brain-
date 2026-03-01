@@ -41,9 +41,33 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const [isPlayingIdeal, setIsPlayingIdeal] = useState(false);
   const [isPlayingExplanation, setIsPlayingExplanation] = useState(false);
   const [savedGroomings, setSavedGroomings] = useState<SavedGrooming[]>([]);
-  const [showGroomingJournal, setShowGroomingJournal] = useState(false);
+  const [highlightedButton, setHighlightedButton] = useState<string | null>(null);
 
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const playGuidance = async (text: string, buttonToHighlight?: string) => {
+    if (!text) return;
+    try {
+      if (buttonToHighlight) setHighlightedButton(buttonToHighlight);
+      const audioUrl = await generatePitchAudio(text, 'Zephyr');
+      if (audioUrl) {
+        const audio = new Audio(URL.createObjectURL(new Blob([audioUrl], { type: 'audio/wav' })));
+        audio.onended = () => setHighlightedButton(null);
+        audio.play();
+      }
+    } catch (error) {
+      console.error("Guidance audio failed:", error);
+      setHighlightedButton(null);
+    }
+  };
+
+  useEffect(() => {
+    if (sessionMode === 'roleplay') {
+      playGuidance(`In Buyer Roleplay, I will act as ${buyerName}, and you will act as ${sellerName}. Use the Commence Interaction button to start the simulation and test your reflexes.`, 'commence');
+    } else if (sessionMode === 'seller-roleplay') {
+      playGuidance(`In Seller Roleplay, I will act as ${sellerName}, and you will act as ${buyerName}. Observe how an elite salesperson handles your questions.`, 'commence');
+    } else if (sessionMode === 'grooming') {
+      playGuidance(`In Bot-Led Grooming, I will ask you a high-stakes question. Use the Activate Bot-Coach button to start and receive an elite audit on your performance.`, 'commence');
+    }
+  }, [sessionMode]);
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const sessionRef = useRef<any>(null);
@@ -137,10 +161,58 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           onopen: () => {
             setStatus('active');
             setIsActive(true);
-            // Microphone input disabled
+            // Microphone input re-enabled
+            const input = inputCtx.createMediaStreamSource(stream);
+            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+            processor.onaudioprocess = (e) => {
+              const inputData = e.inputBuffer.getChannelData(0);
+              const pcmData = new Int16Array(inputData.length);
+              for (let i = 0; i < inputData.length; i++) {
+                pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+              }
+              if (sessionRef.current) {
+                sessionRef.current.sendRealtimeInput({
+                  media: { data: encode(new Uint8Array(pcmData.buffer)), mimeType: 'audio/pcm;rate=16000' }
+                });
+              }
+            };
+            input.connect(processor);
+            processor.connect(inputCtx.destination);
           },
           onmessage: async (message: LiveServerMessage) => {
-            // Audio output and transcription disabled
+            if (message.serverContent?.modelTurn) {
+              const parts = message.serverContent.modelTurn.parts;
+              for (const part of parts) {
+                if (part.inlineData) {
+                  const audioData = decode(part.inlineData.data);
+                  const buffer = await decodeAudioData(audioData, outputCtx, 24000, 1);
+                  const source = outputCtx.createBufferSource();
+                  source.buffer = buffer;
+                  source.connect(outputCtx.destination);
+                  
+                  const startTime = Math.max(outputCtx.currentTime, nextStartTimeRef.current);
+                  source.start(startTime);
+                  nextStartTimeRef.current = startTime + buffer.duration;
+                  sourcesRef.current.add(source);
+                  source.onended = () => sourcesRef.current.delete(source);
+                }
+                if (part.text) {
+                  aiTranscriptionRef.current += part.text;
+                  setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
+                }
+              }
+            }
+            if (message.serverContent?.turnComplete) {
+              setTranscription(prev => [...prev, { user: userTranscriptionRef.current, ai: aiTranscriptionRef.current }]);
+              userTranscriptionRef.current = '';
+              aiTranscriptionRef.current = '';
+              setCurrentTranscription({ user: '', ai: '' });
+            }
+            if (message.serverContent?.interrupted) {
+              sourcesRef.current.forEach(s => { try { s.stop(); } catch(e) {} });
+              sourcesRef.current.clear();
+              nextStartTimeRef.current = 0;
+            }
           },
           onerror: (e) => { setStatus('error'); stopPractice(); },
           onclose: () => stopPractice(),
@@ -281,19 +353,19 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           <div className="flex gap-2 p-1.5 bg-slate-50 border border-slate-200 rounded-2xl">
             <button 
               onClick={() => { stopPractice(); setSessionMode('roleplay'); setEvaluation(null); }}
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'} ${highlightedButton === 'roleplay' ? 'ring-4 ring-indigo-400 animate-pulse' : ''}`}
             >
               Buyer Roleplay
             </button>
             <button 
               onClick={() => { stopPractice(); setSessionMode('seller-roleplay'); setEvaluation(null); }}
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'seller-roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'seller-roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'} ${highlightedButton === 'seller-roleplay' ? 'ring-4 ring-indigo-400 animate-pulse' : ''}`}
             >
               Seller Roleplay
             </button>
             <button 
               onClick={() => { stopPractice(); setSessionMode('grooming'); }}
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'grooming' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'grooming' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'} ${highlightedButton === 'grooming' ? 'ring-4 ring-indigo-400 animate-pulse' : ''}`}
             >
               Bot-Led Grooming
             </button>
@@ -391,7 +463,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           <button 
             onClick={sessionMode === 'grooming' ? startGroomingSession : startPractice} 
             disabled={status === 'connecting'} 
-            className={`group relative overflow-hidden inline-flex items-center gap-6 px-20 py-7 rounded-full font-black text-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 ${sessionMode === 'roleplay' || sessionMode === 'seller-roleplay' ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200' : 'bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200'}`}
+            className={`group relative overflow-hidden inline-flex items-center gap-6 px-20 py-7 rounded-full font-black text-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 ${sessionMode === 'roleplay' || sessionMode === 'seller-roleplay' ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200' : 'bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200'} ${highlightedButton === 'commence' ? 'ring-8 ring-white/50 animate-pulse' : ''}`}
           >
             {status === 'connecting' ? (
               <><div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div> Connecting...</>

@@ -146,13 +146,27 @@ const App: React.FC = () => {
     }
   };
 
-  const playNodeAudio = (text: string) => {
-    // Voice assistant disabled
+  const playNodeAudio = async (text: string) => {
+    if (!text) return;
+    try {
+      const audioUrl = await generateVoiceSample(text, 'Zephyr');
+      if (audioUrl) {
+        const audio = new Audio(audioUrl);
+        audio.play();
+      }
+    } catch (error) {
+      console.error("Node audio failed:", error);
+    }
   };
 
   const handleNodeClick = (tab: any) => {
     if (activeTab === tab) return;
     setActiveTab(tab as any);
+    const details = NODE_DETAILS[tab];
+    if (details) {
+      const fullText = `${details.label}. ${details.feature}. Purpose: ${details.purpose}. How it helps: ${details.howItHelps}. Operational Guide: ${details.guideText}`;
+      playNodeAudio(fullText);
+    }
   };
 
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -167,9 +181,15 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Auto-narrate disabled
+  // Auto-narrate re-enabled
   useEffect(() => {
-    // Voice assistant disabled
+    if (hasInteracted && analysis && activeTab) {
+      const details = NODE_DETAILS[activeTab];
+      if (details) {
+        const fullText = `${details.label}. ${details.feature}. Purpose: ${details.purpose}. How it helps: ${details.howItHelps}. Operational Guide: ${details.guideText}`;
+        playNodeAudio(fullText);
+      }
+    }
   }, [activeTab, !!analysis, hasInteracted]);
 
   // Whole Screen Magnifier State

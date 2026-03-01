@@ -22,8 +22,26 @@ const MetricScale = ({ label, value, colorClass = "bg-indigo-600" }: { label: st
 );
 
 const ModelDeliveryPlayer = ({ script }: { script: string }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const playScript = async () => {
+    if (isPlaying) return;
+    setIsPlaying(true);
+    try {
+      const audioUrl = await generatePitchAudio(script, 'Zephyr');
+      if (audioUrl) {
+        const audio = new Audio(URL.createObjectURL(new Blob([audioUrl], { type: 'audio/wav' })));
+        audio.onended = () => setIsPlaying(false);
+        audio.play();
+      }
+    } catch (error) {
+      console.error("Model delivery failed:", error);
+      setIsPlaying(false);
+    }
+  };
+
   return (
-    <div className="p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl relative overflow-hidden group opacity-50">
+    <div className="p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
       <div className="absolute top-0 right-0 p-6 opacity-10">
         <ICONS.Sparkles className="w-16 h-16" />
       </div>
@@ -36,24 +54,25 @@ const ModelDeliveryPlayer = ({ script }: { script: string }) => {
             </div>
             <div>
               <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Master Model Delivery</h5>
-              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Neural Coach Disabled</p>
+              <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Neural Coach Active</p>
             </div>
           </div>
           <button 
-            disabled
-            className="flex items-center gap-2 px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-800 text-slate-500 cursor-not-allowed"
+            onClick={playScript}
+            disabled={isPlaying}
+            className={`flex items-center gap-2 px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isPlaying ? 'bg-indigo-600 text-white animate-pulse' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
           >
             <ICONS.Speaker className="w-3 h-3" />
-            Voice Disabled
+            {isPlaying ? 'Delivering...' : 'Play Model Delivery'}
           </button>
         </div>
-        <p className="text-xl font-medium leading-relaxed italic text-slate-400">
+        <p className="text-xl font-medium leading-relaxed italic text-slate-300">
           “{script}”
         </p>
         <div className="flex items-center gap-3 pt-4 border-t border-white/10">
-          <div className="w-2 h-2 rounded-full bg-slate-600" />
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">
-            Coach Standby (Voice Interaction Disabled)
+            Coach Active (Neural Vocal Profile: Zephyr)
           </span>
         </div>
       </div>
@@ -141,7 +160,52 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   };
 
   const toggleRecording = () => {
-    // Microphone input disabled
+    if (isRecording) {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      setIsRecording(false);
+    } else {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+
+        const currentQId = questions[currentIdx]?.id;
+        if (currentQId) {
+          setAnswers(prev => ({
+            ...prev,
+            [currentQId]: (prev[currentQId] || '') + finalTranscript
+          }));
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        if (event.error === 'not-allowed') setMicPermissionError(true);
+        setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        if (isRecording) recognition.start();
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsRecording(true);
+    }
   };
 
   const handleStart = async (customConfig?: typeof config) => {
@@ -307,18 +371,14 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-500 border-b border-indigo-50 pb-2">Question Parameters</h4>
-            <ConfigRow label="MCQ (Logic Gates)" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document />} />
-            <ConfigRow label="Short Answer (Tactical)" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency />} />
-            <ConfigRow label="Long Answer (Strategic)" val={config.long} set={(v) => setConfig({ ...config, long: v })} icon={<ICONS.Research />} />
-            <div className="opacity-50 pointer-events-none grayscale">
-              <ConfigRow label="Microphone (Verbal Delivery) - Disabled" val={0} set={() => {}} icon={<ICONS.Speaker />} />
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-500 border-b border-indigo-50 pb-2">Question Parameters</h4>
+              <ConfigRow label="MCQ (Logic Gates)" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document />} />
+              <ConfigRow label="Short Answer (Tactical)" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency />} />
+              <ConfigRow label="Long Answer (Strategic)" val={config.long} set={(v) => setConfig({ ...config, long: v })} icon={<ICONS.Research />} />
+              <ConfigRow label="Microphone (Verbal Delivery)" val={config.mic} set={(v) => setConfig({ ...config, mic: v })} icon={<ICONS.Speaker />} />
+              <ConfigRow label="Video Performance (Visual/Verbal)" val={config.video} set={(v) => setConfig({ ...config, video: v })} icon={<ICONS.Play className="w-4 h-4" />} />
             </div>
-            <div className="opacity-50 pointer-events-none grayscale">
-              <ConfigRow label="Video Performance (Visual/Verbal) - Disabled" val={0} set={() => {}} icon={<ICONS.Play className="w-4 h-4" />} />
-            </div>
-          </div>
 
           <div className="space-y-10">
             <div className="space-y-6">
@@ -470,11 +530,11 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
                               placeholder="Transcribed performance..."
                             />
                             <button 
-                              onClick={() => {}} 
-                              className="py-5 rounded-full font-black text-lg bg-slate-100 text-slate-400 cursor-not-allowed opacity-50"
-                              title="Voice disabled"
+                              onClick={toggleRecording} 
+                              className={`py-5 rounded-full font-black text-lg transition-all border ${isRecording ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}
                             >
-                               Voice disabled
+                               <ICONS.Ear className={`w-6 h-6 inline-block mr-2 ${isRecording ? 'animate-bounce' : ''}`} />
+                               {isRecording ? 'Listening...' : 'Activate Microphone'}
                             </button>
                          </div>
                        </div>
