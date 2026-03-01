@@ -756,22 +756,24 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                         </div>
                      </div>
                   </div>
-                  <p className="text-4xl font-bold italic leading-[1.4] text-slate-900 tracking-tight">
-                     {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
-                  </p>
+                  <div className="flex flex-col md:flex-row gap-8 items-start">
+                    <p className="flex-1 text-4xl font-bold italic leading-[1.4] text-slate-900 tracking-tight">
+                       {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
+                    </p>
 
-                  {/* Neural Strategic Hint - Integrated */}
-                  {currentHint && (
-                    <div className="mt-8 pt-8 border-t border-slate-200/60 flex items-start gap-4 animate-in slide-in-from-top-2">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
-                            <ICONS.Sparkles className="w-4 h-4 text-indigo-100" />
-                        </div>
-                        <div className="text-left flex-1">
-                          <h5 className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
-                          <p className="text-base font-bold text-slate-600 italic leading-relaxed">{currentHint}</p>
-                        </div>
-                    </div>
-                  )}
+                    {/* Neural Strategic Hint - Integrated */}
+                    {currentHint && (
+                      <div className="w-full md:w-80 p-6 bg-indigo-50 border border-indigo-100 rounded-3xl flex items-start gap-4 animate-in slide-in-from-right-4 shrink-0 shadow-sm">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
+                              <ICONS.Sparkles className="w-4 h-4 text-indigo-100" />
+                          </div>
+                          <div className="text-left flex-1">
+                            <h5 className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-1">Neural Strategic Hint</h5>
+                            <p className="text-xs font-bold text-slate-600 italic leading-relaxed">{currentHint}</p>
+                          </div>
+                      </div>
+                    )}
+                  </div>
                </div>
 
                {/* Protocol Blocked Overlay */}
