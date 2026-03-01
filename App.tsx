@@ -146,13 +146,39 @@ const App: React.FC = () => {
     }
   };
 
+  const lastAnalyzedHash = useRef<string | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRequestRef = useRef<number>(0);
+
   const playNodeAudio = async (text: string) => {
     if (!text) return;
+    
+    // Increment request ID to invalidate any pending async calls
+    const requestId = ++audioRequestRef.current;
+
+    // Immediately stop any currently playing audio
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+    }
+
     try {
       const voiceSample = await generateVoiceSample(text, 'Zephyr');
+      
+      // If a newer request has started while we were waiting, ignore this one
+      if (requestId !== audioRequestRef.current) return;
+
       if (voiceSample) {
         const audio = new Audio(`data:audio/wav;base64,${voiceSample}`);
+        currentAudioRef.current = audio;
         audio.play();
+        
+        audio.onended = () => {
+          if (currentAudioRef.current === audio) {
+            currentAudioRef.current = null;
+          }
+        };
       }
     } catch (error) {
       console.error("Node audio failed:", error);
@@ -162,11 +188,7 @@ const App: React.FC = () => {
   const handleNodeClick = (tab: any) => {
     if (activeTab === tab) return;
     setActiveTab(tab as any);
-    const details = NODE_DETAILS[tab];
-    if (details) {
-      const fullText = `${details.label}. ${details.feature}. Purpose: ${details.purpose}. How it helps: ${details.howItHelps}. Operational Guide: ${details.guideText}`;
-      playNodeAudio(fullText);
-    }
+    // Redundant call removed - useEffect handles narration on activeTab change
   };
 
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -190,6 +212,16 @@ const App: React.FC = () => {
         playNodeAudio(fullText);
       }
     }
+    
+    // Cleanup: stop audio when tab changes or component unmounts
+    return () => {
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
+      }
+      // Invalidate pending requests on cleanup
+      audioRequestRef.current++;
+    };
   }, [activeTab, !!analysis, hasInteracted]);
 
   // Whole Screen Magnifier State
@@ -200,8 +232,6 @@ const App: React.FC = () => {
   // Partition Resizer State
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
-
-  const lastAnalyzedHash = useRef<string | null>(null);
 
   const [meetingContext, setMeetingContext] = useState<MeetingContext>({
     sellerCompany: "",
