@@ -788,25 +788,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                      {messages[messages.length - 1]?.content || status || "Synchronizing Strategic Core..."}
                   </p>
 
-                  {/* User Input Area with Ear SVG */}
-                  <div className="mt-8 relative group">
-                    <textarea
-                      value={currentCaption}
-                      onChange={(e) => setCurrentCaption(e.target.value)}
-                      placeholder="User response protocol..."
-                      className="w-full bg-white border-2 border-slate-200 rounded-[2rem] p-8 text-xl font-bold italic text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none min-h-[120px]"
-                    />
-                    <button 
-                      onClick={() => isUserListening ? stopListening() : startListening()}
-                      className={`absolute right-6 top-6 p-4 rounded-2xl transition-all ${isUserListening ? 'bg-indigo-600 text-white animate-pulse shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
-                    >
-                      <ICONS.Ear className={`w-8 h-8 ${isUserListening ? 'animate-bounce' : ''}`} />
-                      <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                        {isUserListening ? 'Listening' : 'Activate Mic'}
-                      </span>
-                    </button>
-                  </div>
-
                   {/* Neural Strategic Hint - Integrated */}
                   {currentHint && (
                     <div className="mt-8 pt-8 border-t border-slate-200/60 flex items-start gap-4 animate-in slide-in-from-top-2">
