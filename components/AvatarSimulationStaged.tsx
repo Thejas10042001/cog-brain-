@@ -46,7 +46,6 @@ export const AvatarSimulationStaged: FC<{
   const [isProcessing, setIsProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [isUserListening, setIsUserListening] = useState(false);
   const [micPermissionError, setMicPermissionError] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
@@ -90,6 +89,7 @@ export const AvatarSimulationStaged: FC<{
   const audioContextRef = useRef<AudioContext | null>(null);
   const recognitionRef = useRef<any>(null);
   const activeAudioSource = useRef<AudioBufferSourceNode | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const lastAudioBytes = useRef<Uint8Array | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -186,10 +186,12 @@ export const AvatarSimulationStaged: FC<{
   }, [sessionActive, isAISpeaking, isUserListening]);
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      // We'll initialize on demand in startListening for better reliability
-    }
+    return () => {
+      if (activeAudioSource.current) {
+        try { activeAudioSource.current.stop(); } catch (e) {}
+      }
+      stopListening();
+    };
   }, []);
 
   const toggleStageExpand = (s: string) => {
@@ -202,7 +204,13 @@ export const AvatarSimulationStaged: FC<{
   const playAIQuestion = async (text: string) => {
     if (!text) return;
     setIsAISpeaking(true);
+    setIsPaused(false);
+    
     try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      }
+
       const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
       if (voiceSample) {
         const audioData = atob(voiceSample);
@@ -210,23 +218,50 @@ export const AvatarSimulationStaged: FC<{
         const view = new Uint8Array(arrayBuffer);
         for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
         
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-        const buffer = await audioCtx.decodeAudioData(arrayBuffer);
-        const source = audioCtx.createBufferSource();
+        const buffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        
+        if (activeAudioSource.current) {
+          try { activeAudioSource.current.stop(); } catch (e) {}
+        }
+
+        const source = audioContextRef.current.createBufferSource();
         source.buffer = buffer;
-        source.connect(audioCtx.destination);
+        source.connect(audioContextRef.current.destination);
         activeAudioSource.current = source;
+        
         source.onended = () => {
           setIsAISpeaking(false);
           startListening();
         };
-        source.start();
+        
+        source.start(0);
       } else {
         setIsAISpeaking(false);
       }
     } catch (e) {
       console.error("AI voice failed:", e);
       setIsAISpeaking(false);
+    }
+  };
+
+  const handlePauseResume = async () => {
+    if (!audioContextRef.current) return;
+    if (isPaused) {
+      await audioContextRef.current.resume();
+      setIsPaused(false);
+    } else {
+      await audioContextRef.current.suspend();
+      setIsPaused(true);
+    }
+  };
+
+  const handleRepeat = async () => {
+    const lastAI = messages.filter(m => m.role === 'assistant').pop();
+    if (lastAI) {
+      if (activeAudioSource.current) {
+        try { activeAudioSource.current.stop(); } catch(e) {}
+      }
+      playAIQuestion(lastAI.content);
     }
   };
 
@@ -252,16 +287,21 @@ export const AvatarSimulationStaged: FC<{
 
     recognition.onresult = (event: any) => {
       let interimTranscript = '';
+      let finalTurn = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
-          finalTranscriptForTurn += event.results[i][0].transcript;
+          finalTurn += event.results[i][0].transcript;
         } else {
           interimTranscript += event.results[i][0].transcript;
         }
       }
-      setCurrentCaption(prev => {
-        return prev.split(' (listening...)')[0] + (finalTranscriptForTurn || interimTranscript ? ' ' + (finalTranscriptForTurn || interimTranscript) : '');
-      });
+      
+      if (finalTurn) {
+        setCurrentCaption(prev => {
+          const base = prev.trim();
+          return base ? base + ' ' + finalTurn.trim() : finalTurn.trim();
+        });
+      }
     };
 
     recognition.onerror = (event: any) => {
@@ -711,27 +751,63 @@ export const AvatarSimulationStaged: FC<{
     );
   };
 
-  const BiometricDisplay = () => (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-      {[
-        { label: 'Stress Level', value: biometrics.stressLevel, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-        { label: 'Attention Focus', value: biometrics.attentionFocus, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-        { label: 'Eye Contact', value: biometrics.eyeContact, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-        { label: 'Clarity Score', value: biometrics.clarityScore, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-      ].map((stat) => (
-        <div key={stat.label} className={`${stat.bg} p-4 rounded-3xl border border-white/10 flex flex-col items-center justify-center space-y-1`}>
-          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">{stat.label}</span>
-          <div className="flex items-baseline gap-1">
-            <span className={`text-2xl font-black ${stat.color}`}>{Math.round(stat.value)}</span>
-            <span className="text-[10px] font-bold text-slate-400">%</span>
-          </div>
-          <div className="w-full h-1 bg-slate-200 rounded-full mt-2 overflow-hidden">
-            <div className={`h-full transition-all duration-1000 ${stat.color.replace('text-', 'bg-')}`} style={{ width: `${stat.value}%` }}></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const BiometricDisplay = () => {
+    const getStatusColor = (label: string, value: number) => {
+      if (label === 'Stress Level') {
+        if (value > 70) return 'text-rose-600 bg-rose-100 border-rose-200 shadow-[0_0_15px_rgba(225,29,72,0.2)]';
+        if (value > 40) return 'text-amber-600 bg-amber-100 border-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.2)]';
+        return 'text-emerald-600 bg-emerald-100 border-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+      }
+      if (label === 'Attention Focus' || label === 'Eye Contact' || label === 'Clarity Score') {
+        if (value < 60) return 'text-rose-600 bg-rose-100 border-rose-200 shadow-[0_0_15px_rgba(225,29,72,0.2)]';
+        if (value < 85) return 'text-amber-600 bg-amber-100 border-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.2)]';
+        return 'text-emerald-600 bg-emerald-100 border-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+      }
+      return 'text-slate-600 bg-slate-100 border-slate-200';
+    };
+
+    const getAlert = (label: string, value: number) => {
+      if (label === 'Stress Level' && value > 70) return "High Stress: Calm down, relax.";
+      if (label === 'Attention Focus' && value < 75) return "Low Focus: Re-engage now.";
+      if (label === 'Clarity Score' && value < 85) return "Low Clarity: Be more precise.";
+      return null;
+    };
+
+    return (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        {[
+          { label: 'Stress Level', value: biometrics.stressLevel },
+          { label: 'Attention Focus', value: biometrics.attentionFocus },
+          { label: 'Eye Contact', value: biometrics.eyeContact },
+          { label: 'Clarity Score', value: biometrics.clarityScore },
+        ].map((stat) => {
+          const colorClasses = getStatusColor(stat.label, stat.value);
+          const alert = getAlert(stat.label, stat.value);
+          
+          return (
+            <div key={stat.label} className={`${colorClasses} p-4 rounded-3xl border flex flex-col items-center justify-center space-y-1 transition-all duration-500 relative overflow-hidden`}>
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-60">{stat.label}</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black">{Math.round(stat.value)}</span>
+                <span className="text-[10px] font-bold opacity-60">%</span>
+              </div>
+              <div className="w-full h-1 bg-black/5 rounded-full mt-2 overflow-hidden">
+                <div className="h-full bg-current transition-all duration-1000" style={{ width: `${stat.value}%` }}></div>
+              </div>
+              {alert && (
+                <div className="absolute inset-0 bg-current opacity-5 animate-pulse pointer-events-none"></div>
+              )}
+              {alert && (
+                <div className="mt-2 text-[7px] font-black uppercase tracking-tighter text-center leading-none animate-bounce">
+                  {alert}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
@@ -1064,15 +1140,48 @@ export const AvatarSimulationStaged: FC<{
                     <div className="w-full max-w-6xl mx-auto bg-slate-50 border border-slate-200 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
                         <div className="flex items-center justify-between mb-2">
                            <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">{currentStage} Strategic Inquiry</h5>
-                           <div className="flex gap-1.5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/20"></div>
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                           <div className="flex items-center gap-3">
+                              <button 
+                                onClick={handlePauseResume} 
+                                className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                              >
+                                {isPaused ? <><ICONS.Play className="w-3 h-3" /> Play</> : <><ICONS.Speaker className="w-3 h-3" /> Pause</>}
+                              </button>
+                              <button 
+                                onClick={handleRepeat} 
+                                className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                              >
+                                <ICONS.Research className="w-3 h-3" /> Re-hear
+                              </button>
+                              <div className="flex gap-1.5 ml-2">
+                                <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-indigo-500/20'}`}></div>
+                                <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-75' : 'bg-indigo-500/40'}`}></div>
+                                <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse delay-150' : 'bg-indigo-500'}`}></div>
+                              </div>
                            </div>
                         </div>
                         <p className="text-4xl font-black italic leading-[1.4] text-slate-900 tracking-tight">
                            {messages[messages.length - 1]?.content || "Synchronizing Strategic Core..."}
                         </p>
+
+                        {/* User Input Area with Ear SVG */}
+                        <div className="mt-8 relative group">
+                          <textarea
+                            value={currentCaption}
+                            onChange={(e) => setCurrentCaption(e.target.value)}
+                            placeholder="User response protocol..."
+                            className="w-full bg-white border-2 border-slate-200 rounded-[2rem] p-8 text-xl font-bold italic text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none min-h-[120px]"
+                          />
+                          <button 
+                            onClick={() => isUserListening ? stopListening() : startListening()}
+                            className={`absolute right-6 top-6 p-4 rounded-2xl transition-all ${isUserListening ? 'bg-indigo-600 text-white animate-pulse shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
+                          >
+                            <ICONS.Ear className={`w-8 h-8 ${isUserListening ? 'animate-bounce' : ''}`} />
+                            <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                              {isUserListening ? 'Listening' : 'Activate Mic'}
+                            </span>
+                          </button>
+                        </div>
 
                         {/* Neural Strategic Hint - Integrated */}
                         {currentHint && (

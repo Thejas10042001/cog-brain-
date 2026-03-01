@@ -184,10 +184,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   }, [sessionActive, isAISpeaking, isUserListening]);
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      // We'll initialize on demand in startListening for better reliability
-    }
+    return () => {
+      if (activeAudioSource.current) {
+        try { activeAudioSource.current.stop(); } catch (e) {}
+      }
+      stopListening();
+    };
   }, []);
 
   const playAIQuestion = async (text: string) => {
@@ -274,21 +276,21 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
     recognition.onresult = (event: any) => {
       let interimTranscript = '';
+      let finalTurn = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
-          finalTranscriptForTurn += event.results[i][0].transcript;
+          finalTurn += event.results[i][0].transcript;
         } else {
           interimTranscript += event.results[i][0].transcript;
         }
       }
-      // Append to existing text and allow editing
-      setCurrentCaption(prev => {
-        // We only want to append the new parts of the transcript
-        // A simple way is to keep track of what we added in this session
-        // But the requirement says "dont remove the old text"
-        // So we append the turn's transcript to whatever was there
-        return prev.split(' (listening...)')[0] + (finalTranscriptForTurn || interimTranscript ? ' ' + (finalTranscriptForTurn || interimTranscript) : '');
-      });
+      
+      if (finalTurn) {
+        setCurrentCaption(prev => {
+          const base = prev.trim();
+          return base ? base + ' ' + finalTurn.trim() : finalTurn.trim();
+        });
+      }
     };
 
     recognition.onerror = (event: any) => {
@@ -550,14 +552,14 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   const BiometricDisplay = () => {
     const getStatusColor = (label: string, value: number) => {
       if (label === 'Stress Level') {
-        if (value > 70) return 'text-rose-600 bg-rose-100 border-rose-200';
-        if (value > 40) return 'text-amber-600 bg-amber-100 border-amber-200';
-        return 'text-emerald-600 bg-emerald-100 border-emerald-200';
+        if (value > 70) return 'text-rose-600 bg-rose-100 border-rose-200 shadow-[0_0_15px_rgba(225,29,72,0.2)]';
+        if (value > 40) return 'text-amber-600 bg-amber-100 border-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.2)]';
+        return 'text-emerald-600 bg-emerald-100 border-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
       }
       if (label === 'Attention Focus' || label === 'Eye Contact' || label === 'Clarity Score') {
-        if (value < 60) return 'text-rose-600 bg-rose-100 border-rose-200';
-        if (value < 85) return 'text-amber-600 bg-amber-100 border-amber-200';
-        return 'text-emerald-600 bg-emerald-100 border-emerald-200';
+        if (value < 60) return 'text-rose-600 bg-rose-100 border-rose-200 shadow-[0_0_15px_rgba(225,29,72,0.2)]';
+        if (value < 85) return 'text-amber-600 bg-amber-100 border-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.2)]';
+        return 'text-emerald-600 bg-emerald-100 border-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
       }
       return 'text-slate-600 bg-slate-100 border-slate-200';
     };
@@ -581,7 +583,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
           const alert = getAlert(stat.label, stat.value);
           
           return (
-            <div key={stat.label} className={`${colorClasses} p-4 rounded-3xl border flex flex-col items-center justify-center space-y-1 transition-colors duration-500 relative overflow-hidden`}>
+            <div key={stat.label} className={`${colorClasses} p-4 rounded-3xl border flex flex-col items-center justify-center space-y-1 transition-all duration-500 relative overflow-hidden`}>
               <span className="text-[8px] font-black uppercase tracking-widest opacity-60">{stat.label}</span>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-black">{Math.round(stat.value)}</span>
@@ -737,15 +739,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                         </button>
                         <button 
                           onClick={handlePauseResume} 
-                          className="px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-full text-[8px] font-black uppercase tracking-widest transition-all"
+                          className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
                         >
-                          {isPaused ? 'Play' : 'Pause'}
+                          {isPaused ? <><ICONS.Play className="w-3 h-3" /> Play</> : <><ICONS.Speaker className="w-3 h-3" /> Pause</>}
                         </button>
                         <button 
                           onClick={handleRepeat} 
-                          className="px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-600 rounded-full text-[8px] font-black uppercase tracking-widest transition-all"
+                          className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
                         >
-                          Re-hear
+                          <ICONS.Research className="w-3 h-3" /> Re-hear
                         </button>
                         <div className="flex gap-1 ml-2">
                           <div className={`w-1 h-1 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse' : 'bg-slate-300'}`}></div>
@@ -757,6 +759,25 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                   <p className="text-4xl font-bold italic leading-[1.4] text-slate-900 tracking-tight">
                      {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
                   </p>
+
+                  {/* User Input Area with Ear SVG */}
+                  <div className="mt-8 relative group">
+                    <textarea
+                      value={currentCaption}
+                      onChange={(e) => setCurrentCaption(e.target.value)}
+                      placeholder="User response protocol..."
+                      className="w-full bg-white border-2 border-slate-200 rounded-[2rem] p-8 text-xl font-bold italic text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none min-h-[120px]"
+                    />
+                    <button 
+                      onClick={() => isUserListening ? stopListening() : startListening()}
+                      className={`absolute right-6 top-6 p-4 rounded-2xl transition-all ${isUserListening ? 'bg-indigo-600 text-white animate-pulse shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
+                    >
+                      <ICONS.Ear className={`w-8 h-8 ${isUserListening ? 'animate-bounce' : ''}`} />
+                      <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                        {isUserListening ? 'Listening' : 'Activate Mic'}
+                      </span>
+                    </button>
+                  </div>
 
                   {/* Neural Strategic Hint - Integrated */}
                   {currentHint && (
