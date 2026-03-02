@@ -32,7 +32,7 @@ export async function generateExplanation(question: string, stageOrAnalysis: str
 }
 
 export async function generateNodeExplanation(stage: string, context: MeetingContext): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: `Provide a very brief (1-2 sentences) explanation of the "${stage}" stage in a sales simulation. 
@@ -372,7 +372,7 @@ export async function generateVoiceSample(
   gender?: string,
   analysis?: VocalPersonaStructure
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   // Clean text of markdown tags for better TTS
   const cleanText = text.replace(/\[.*?\]/g, '').trim();
@@ -1185,7 +1185,7 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
 
 // Pineapple: Image Generation using nano banana model
 export async function generatePineappleImage(prompt: string): Promise<string | null> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-2.5-flash-image';
   try {
     const strategicPrompt = `Create a high-fidelity, enterprise-grade strategic visual asset for: "${prompt}". 
@@ -1219,7 +1219,7 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
  * Uses googleSearch to find context about the brand identity and corporate aesthetic.
  */
 export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-pro-image-preview';
   
   try {
@@ -1464,7 +1464,7 @@ export async function generatePitchAudio(
   gender?: string,
   analysis?: VocalPersonaStructure
 ): Promise<Uint8Array | null> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   // Clean text of markdown tags for better TTS
   const cleanText = text.replace(/\[.*?\]/g, '').trim();
