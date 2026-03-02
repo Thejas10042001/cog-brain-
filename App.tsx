@@ -150,6 +150,15 @@ const App: React.FC = () => {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioRequestRef = useRef<number>(0);
 
+  const stopNarration = () => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+    }
+    audioRequestRef.current++;
+  };
+
   const playNodeAudio = async (text: string) => {
     if (!text) return;
     
@@ -157,11 +166,9 @@ const App: React.FC = () => {
     const requestId = ++audioRequestRef.current;
 
     // Immediately stop any currently playing audio
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current.currentTime = 0;
-      currentAudioRef.current = null;
-    }
+    stopNarration();
+    // Reset request ID after stopNarration incremented it
+    audioRequestRef.current = requestId;
 
     try {
       const voiceSample = await generateVoiceSample(text, 'Zephyr');
@@ -697,13 +704,13 @@ const App: React.FC = () => {
                       />
                     </div>
                   )}
-                  {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} />}
-                  {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} />}
-                  {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} />}
+                  {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
+                  {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
+                  {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
                   {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
                   {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
-                  {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} />}
-                  {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} />}
+                  {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
+                  {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
                 </div>
               )}
             </div>

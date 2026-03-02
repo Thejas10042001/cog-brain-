@@ -41,7 +41,8 @@ export const AvatarSimulationStaged: FC<{
   meetingContext: MeetingContext; 
   documents: StoredDocument[];
   onContextChange: (ctx: MeetingContext) => void;
-}> = ({ meetingContext, documents, onContextChange }) => {
+  onStartSimulation?: () => void;
+}> = ({ meetingContext, documents, onContextChange, onStartSimulation }) => {
   const [currentStage, setCurrentStage] = useState<StagedSimStage>('Ice Breakers');
   const [startStageChoice, setStartStageChoice] = useState<StagedSimStage>('Ice Breakers');
   const [messages, setMessages] = useState<GPTMessage[]>([]);
@@ -398,6 +399,7 @@ export const AvatarSimulationStaged: FC<{
   };
 
   const handleInitiate = async (stage?: StagedSimStage) => {
+    if (onStartSimulation) onStartSimulation();
     if (!meetingContext.kycDocId) {
       alert("Please select a KYC Document in Configuration first.");
       return;

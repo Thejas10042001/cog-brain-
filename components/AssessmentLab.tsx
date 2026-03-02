@@ -82,11 +82,12 @@ const ModelDeliveryPlayer = ({ script }: { script: string }) => {
 
 interface AssessmentLabProps {
   activeDocuments: { name: string; content: string }[];
+  onStartSimulation?: () => void;
 }
 
 type Perspective = 'document' | 'customer';
 
-export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments }) => {
+export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, onStartSimulation }) => {
   const [stage, setStage] = useState<'config' | 'running' | 'results'>('config');
   const [config, setConfig] = useState<{
     mcq: number;
@@ -216,6 +217,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments })
   };
 
   const handleStart = async (customConfig?: typeof config) => {
+    if (onStartSimulation) onStartSimulation();
     setIsGenerating(true);
     const activeConfig = customConfig || config;
     try {

@@ -8,6 +8,7 @@ import { generatePitchAudio, decodeAudioData } from '../services/geminiService';
 interface PracticeSessionProps {
   analysis: AnalysisResult;
   meetingContext: MeetingContext;
+  onStartSimulation?: () => void;
 }
 
 type SessionMode = 'roleplay' | 'seller-roleplay' | 'grooming';
@@ -27,7 +28,7 @@ interface SavedGrooming {
   timestamp: number;
 }
 
-export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meetingContext }) => {
+export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meetingContext, onStartSimulation }) => {
   const [sessionMode, setSessionMode] = useState<SessionMode>('roleplay');
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'active' | 'error' | 'analyzing'>('idle');
@@ -124,6 +125,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   };
 
   const startPractice = async () => {
+    if (onStartSimulation) onStartSimulation();
     setStatus('connecting');
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });

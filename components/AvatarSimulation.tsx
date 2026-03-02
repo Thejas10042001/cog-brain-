@@ -16,6 +16,7 @@ import { GPTMessage, MeetingContext, ComprehensiveAvatarReport, CustomerPersonaT
 interface AvatarSimulationProps {
   meetingContext: MeetingContext;
   onContextChange: (ctx: MeetingContext) => void;
+  onStartSimulation?: () => void;
 }
 
 const MEETING_FOCUS_PRESETS = [
@@ -57,7 +58,7 @@ const MEETING_FOCUS_PRESETS = [
   },
 ];
 
-export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, onContextChange }) => {
+export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, onContextChange, onStartSimulation }) => {
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [currentCaption, setCurrentCaption] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -380,6 +381,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   };
 
   const handleInitiate = async () => {
+    if (onStartSimulation) onStartSimulation();
     setSessionActive(true);
     setIsProcessing(true);
     setMessages([]);

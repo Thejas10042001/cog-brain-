@@ -16,6 +16,7 @@ import { GPTMessage, MeetingContext, SimPersonaV2, ComprehensiveAvatarReport, Bi
 interface AvatarSimulationV2Props {
   meetingContext: MeetingContext;
   onContextChange: (ctx: MeetingContext) => void;
+  onStartSimulation?: () => void;
 }
 
 const PERSONA_CONFIG: Record<SimPersonaV2, { color: string; accent: string; label: string }> = {
@@ -57,7 +58,7 @@ const SIMULATION_PRESETS = [
   }
 ];
 
-export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext, onContextChange }) => {
+export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext, onContextChange, onStartSimulation }) => {
   const [persona, setPersona] = useState<SimPersonaV2 | null>(null);
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [currentCaption, setCurrentCaption] = useState("");
@@ -377,6 +378,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   };
 
   const handleInitiate = async (selected: SimPersonaV2) => {
+    if (onStartSimulation) onStartSimulation();
     setPersona(selected);
     setSessionActive(true);
     setIsProcessing(true);
