@@ -205,7 +205,17 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     
     try {
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new AudioContextClass();
+      }
+      
+      // Ensure context is running (browsers block auto-play)
+      if (audioContextRef.current.state === 'suspended') {
+        try {
+          await audioContextRef.current.resume();
+        } catch (e) {
+          console.warn("AudioContext resume failed, will retry on next interaction:", e);
+        }
       }
 
       const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
@@ -215,7 +225,21 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         const view = new Uint8Array(arrayBuffer);
         for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
         
-        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        let audioBuffer: AudioBuffer | null = null;
+        try {
+          audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        } catch (decodeError) {
+          console.error("decodeAudioData failed, using fallback:", decodeError);
+          const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => {
+            setIsAISpeaking(false);
+            startListening();
+          };
+          audio.play().catch(e => console.error("Fallback audio play failed:", e));
+          return;
+        }
         
         if (activeAudioSource.current) {
           try { activeAudioSource.current.stop(); } catch (e) {}
@@ -776,7 +800,6 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                   <div className="flex items-center justify-between mb-2">
                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500">Dialogue Node</h5>
                      <div className="flex items-center gap-3">
-                       
                         <button 
                           onClick={handlePauseResume} 
                           className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"

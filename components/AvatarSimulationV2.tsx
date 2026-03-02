@@ -203,7 +203,17 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     
     try {
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new AudioContextClass();
+      }
+      
+      // Ensure context is running (browsers block auto-play)
+      if (audioContextRef.current.state === 'suspended') {
+        try {
+          await audioContextRef.current.resume();
+        } catch (e) {
+          console.warn("AudioContext resume failed:", e);
+        }
       }
 
       const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
@@ -213,7 +223,21 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         const view = new Uint8Array(arrayBuffer);
         for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
         
-        const buffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        let buffer: AudioBuffer | null = null;
+        try {
+          buffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        } catch (decodeError) {
+          console.error("decodeAudioData failed, using fallback:", decodeError);
+          const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => {
+            setIsAISpeaking(false);
+            startListening();
+          };
+          audio.play().catch(e => console.error("Fallback audio play failed:", e));
+          return;
+        }
         
         if (activeAudioSource.current) {
           try { activeAudioSource.current.stop(); } catch (e) {}
