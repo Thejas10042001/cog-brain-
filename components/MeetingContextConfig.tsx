@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MeetingContext, CustomerPersonaType, VoiceMode, StoredDocument, VocalPersonaStructure, UploadedFile } from '../types';
 import { ICONS } from '../constants';
 import { extractMetadataFromDocument, analyzeVocalPersona, suggestVocalPersonaFromDoc, generateVoiceSample } from '../services/geminiService';
@@ -92,6 +93,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [showVocalDirective, setShowVocalDirective] = useState(false);
+  const [showKycGuide, setShowKycGuide] = useState(false);
   const isCustomizedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -376,10 +378,21 @@ OPERATIONAL CONSTRAINTS:
               <div className="p-6 bg-indigo-600 text-white rounded-[2rem] shadow-2xl">
                 <ICONS.Shield className="w-12 h-12" />
               </div>
-              <div className="max-w-xl space-y-4">
+              <div className="max-w-xl space-y-4 w-full">
                 <h3 className="text-3xl font-black uppercase tracking-widest text-slate-900">Cognitive Mind Core</h3>
-                <p className="text-slate-500 font-medium">Know Your Customer (KYC) Document</p>
-                <div className="relative">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full px-2">
+                  <p className="text-slate-500 font-medium">Know Your Customer (KYC) Document</p>
+                  <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-indigo-100 shadow-sm">
+                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Lacking high-fidelity KYC intelligence?</span>
+                    <button 
+                      onClick={() => setShowKycGuide(true)}
+                      className="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+                    >
+                      Click Here
+                    </button>
+                  </div>
+                </div>
+                <div className="relative w-full">
                   <select 
                     value={context.kycDocId || ""} 
                     onChange={(e) => handleKycChange(e.target.value)}
@@ -709,6 +722,103 @@ OPERATIONAL CONSTRAINTS:
 
   return (
     <div className="space-y-12">
+      <AnimatePresence>
+        {showKycGuide && (
+          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center">
+                    <ICONS.Brain className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">KYC Synthesis Protocol</h3>
+                </div>
+                <button onClick={() => setShowKycGuide(false)} className="p-2 hover:bg-white rounded-full transition-colors">
+                  <ICONS.X className="w-6 h-6 text-slate-400" />
+                </button>
+              </div>
+              
+              <div className="p-10 overflow-y-auto custom-scrollbar space-y-8">
+                <div className="space-y-6">
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">01</div>
+                    <div className="space-y-1">
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Calibrate Seller Identity</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Input your LinkedIn and Company URLs to auto-populate the seller profile with high-fidelity professional data.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">02</div>
+                    <div className="space-y-1">
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Map Client/Buyer Identity</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Provide the target client's LinkedIn and Company URLs to ingest critical buyer-side intelligence.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">03</div>
+                    <div className="space-y-1">
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Initiate Intelligence Fetch</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Click 'Fetch Information' and observe the Engine Controls as the cognitive core processes the data streams.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">04</div>
+                    <div className="space-y-1">
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Validate Neural Synthesis</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Review the auto-filled parameters for accuracy and trigger 'Start Deep Analysis' to begin document generation.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">05</div>
+                    <div className="space-y-1">
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Intelligence Generation</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Allow the cognitive engine to synthesize your high-fidelity KYC document (this may take a few moments).</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">06</div>
+                    <div className="space-y-1">
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Export Intelligence</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Download your newly synthesized intelligence brief in PDF or Word format.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 font-bold text-xs">07</div>
+                    <div className="space-y-1">
+                      <p className="font-black text-indigo-600 uppercase tracking-widest text-xs">Ground the Simulation</p>
+                      <p className="text-sm text-slate-500 leading-relaxed font-medium italic">Return to this hub, upload the document to the 'Documentary Memory Store' (Step 1), then select it from the KYC dropdown in Step 2 to anchor your simulation.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6">
+                  <a 
+                    href="https://method-2.vercel.app/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-3 py-6 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all"
+                    onClick={() => setShowKycGuide(false)}
+                  >
+                    Access KYC Generator <ICONS.ExternalLink className="w-5 h-5" />
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="min-h-[600px]">
         {renderAllSections()}
       </div>
