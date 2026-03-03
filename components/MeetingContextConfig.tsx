@@ -635,15 +635,13 @@ OPERATIONAL CONSTRAINTS:
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Base Voice</label>
                     <select 
-                      value={context.vocalPersonaAnalysis?.baseVoice || 'Pegasus'}
+                      value={context.vocalPersonaAnalysis?.baseVoice || 'Puck'}
                       onChange={(e) => updateVocalAnalysis({ baseVoice: e.target.value })}
                       className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
                     >
-                      <option value="Pegasus">Pegasus (High Energy)</option>
-                      <option value="Orion">Orion (Deep Authority)</option>
+                      <option value="Puck">Puck (High Energy)</option>
+                      <option value="Charon">Charon (Deep Authority)</option>
                       <option value="Zephyr">Zephyr (Calm Strategist)</option>
-                      <option value="Puck">Puck (Persuasive)</option>
-                      <option value="Charon">Charon (Serious)</option>
                       <option value="Kore">Kore (Professional)</option>
                       <option value="Fenrir">Fenrir (Authoritative)</option>
                     </select>

@@ -298,7 +298,7 @@ export async function suggestVocalPersonaFromDoc(content: string): Promise<Vocal
     console.error("Vocal suggestion failed:", error);
     return {
       gender: 'Male',
-      baseVoice: 'Pegasus',
+      baseVoice: 'Puck',
       toneAdjectives: ['Measured', 'humble', 'steady'],
       pitch: 'Low-Mid',
       pace: 0.9,
@@ -448,7 +448,7 @@ async function performHighDepthEvaluation(
   personaUsed: string
 ): Promise<ComprehensiveAvatarReport> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-preview';
+  const modelName = 'gemini-3-flash-preview';
   
   const historyStr = history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
   
@@ -536,7 +536,7 @@ export async function* streamAvatarSimulationV2(
   context: MeetingContext
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-preview';
+  const modelName = 'gemini-3-flash-preview';
   
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -686,7 +686,7 @@ export async function* streamAvatarSimulation(
   context: MeetingContext
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-preview';
+  const modelName = 'gemini-3-flash-preview';
   
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -834,7 +834,7 @@ export async function* streamAvatarStagedSimulation(
   kycDocContent: string
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-preview';
+  const modelName = 'gemini-3-flash-preview';
 
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -943,7 +943,7 @@ export async function generateAssessmentQuestions(
   perspective: 'document' | 'customer' = 'document'
 ): Promise<AssessmentQuestion[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-preview';
+  const modelName = 'gemini-3-flash-preview';
   
   const difficulty = config.difficulty || 'Medium';
   const difficultyInstruction = {
@@ -1220,7 +1220,7 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
  */
 export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
-  const modelName = 'gemini-3-pro-image-preview';
+  const modelName = 'gemini-3.1-flash-image-preview';
   
   try {
     const prompt = `Use Google Search to perform an exhaustive look-up of the exact visual brand identity, official color hex codes, and vector logo characteristics of the company named "${company}". 
@@ -1259,8 +1259,8 @@ export async function generateClientAvatar(name: string, company: string): Promi
 // Deep Study: Advanced Reasoning Core upgraded to Pro model
 export async function* streamDeepStudy(prompt: string, history: GPTMessage[], context?: string): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  // Using gemini-3-pro-preview for complex reasoning tasks
-  const modelName = 'gemini-3-pro-preview';
+  // Using gemini-3-flash-preview for complex reasoning tasks
+  const modelName = 'gemini-3-flash-preview';
   
   const contents = [
     ...formatHistory(history),
@@ -1329,8 +1329,8 @@ export async function* performCognitiveSearchStream(
   context: MeetingContext
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  // Using gemini-3-pro-preview for advanced reasoning and complex query synthesis
-  const modelName = 'gemini-3-pro-preview';
+  // Using gemini-3-flash-preview for advanced reasoning and complex query synthesis
+  const modelName = 'gemini-3-flash-preview';
   const styleDirectives = context.answerStyles.map(style => `- Create a section exactly titled "### ${style}" and provide EXHAUSTIVE detail.`).join('\n');
 
   const responseSchema = {
@@ -1505,8 +1505,8 @@ export async function generatePitchAudio(
 // Full Context Analysis upgraded to Pro model for comprehensive reasoning
 export async function analyzeSalesContext(filesContent: string, context: MeetingContext): Promise<AnalysisResult> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  // Using gemini-3-pro-preview for exhaustive material synthesis and competitive intelligence
-  const modelName = 'gemini-3-pro-preview';
+  // Using gemini-3-flash-preview for exhaustive material synthesis and competitive intelligence
+  const modelName = 'gemini-3-flash-preview';
   const citationSchema = {
     type: Type.OBJECT,
     properties: { snippet: { type: Type.STRING }, sourceFile: { type: Type.STRING } },

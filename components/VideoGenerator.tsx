@@ -52,7 +52,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
       if (mode === 'delivery-coach') {
         setStatusMessage("Architecting Strategic Delivery Logic...");
         const coachResponse = await ai.models.generateContent({
-          model: 'gemini-3-pro-preview',
+          model: 'gemini-3-flash-preview',
           contents: `Act as an elite Speech, Body Language, and Sales Performance Coach. 
           
           STRATEGIC CONTEXT:

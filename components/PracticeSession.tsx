@@ -160,7 +160,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         : `Act as a world-class speech and sales coach. Start by stating: "I'm going to ask you a critical question. Take a breath, and give me your best structured response." Then ask exactly this question: "${groomingTarget}". Once the user provides a full answer, remain silent until the session is ended manually. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
       const sessionPromise = ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         callbacks: {
           onopen: () => {
             setStatus('active');
@@ -241,7 +241,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-3-flash-preview',
         contents: `Act as a world-class communication, linguistics, and sales coach. 
         Perform a comprehensive "Grooming Audit" for a salesperson.
         
