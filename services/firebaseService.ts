@@ -128,13 +128,31 @@ export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' |
 export const fetchSimulationHistory = async (): Promise<any[]> => {
   if (!db || !auth || !auth.currentUser) return [];
   try {
+    // 1. Try fetching from the new user-isolated subcollection
     const q = query(getUserCollection(HISTORY_COLLECTION));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    
+    let docs = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       timestamp: (doc.data().timestamp as Timestamp).toMillis()
-    })).sort((a, b) => b.timestamp - a.timestamp);
+    }));
+
+    // 2. Fallback: If new collection is empty, try fetching from the legacy top-level collection
+    if (docs.length === 0) {
+      const qLegacy = query(
+        collection(db, HISTORY_COLLECTION),
+        where("userId", "==", auth.currentUser.uid)
+      );
+      const querySnapshotLegacy = await getDocs(qLegacy);
+      docs = querySnapshotLegacy.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: (doc.data().timestamp as Timestamp).toMillis()
+      }));
+    }
+
+    return docs.sort((a, b) => b.timestamp - a.timestamp);
   } catch (error) {
     console.error("Error fetching simulation history:", error);
     return [];
@@ -185,11 +203,12 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
   if (!db || !auth || !auth.currentUser) return [];
 
   try {
+    // 1. Try fetching from the new user-isolated subcollection
     const q = query(getUserCollection(COLLECTION_NAME));
     const querySnapshot = await getDocs(q);
     internalPermissionError = false;
     
-    const docs = querySnapshot.docs.map(doc => {
+    let docs = querySnapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -200,6 +219,26 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
         updatedAt: data.updatedAt?.toMillis() || data.timestamp?.toMillis() || Date.now()
       };
     });
+
+    // 2. Fallback: If new collection is empty, try fetching from the legacy top-level collection
+    if (docs.length === 0) {
+      const qLegacy = query(
+        collection(db, COLLECTION_NAME),
+        where("userId", "==", auth.currentUser.uid)
+      );
+      const querySnapshotLegacy = await getDocs(qLegacy);
+      docs = querySnapshotLegacy.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          content: data.content,
+          type: data.type,
+          timestamp: data.timestamp?.toMillis() || Date.now(),
+          updatedAt: data.updatedAt?.toMillis() || data.timestamp?.toMillis() || Date.now()
+        };
+      });
+    }
 
     // Client-side sort by timestamp descending
     return docs.sort((a, b) => b.timestamp - a.timestamp);
@@ -257,10 +296,22 @@ export const saveMeetingContext = async (data: { meetingContext: any, selectedLi
 export const fetchMeetingContext = async (): Promise<any | null> => {
   if (!db || !auth || !auth.currentUser) return null;
   try {
+    // 1. Try fetching from the new user-isolated subcollection
     const querySnapshot = await getDocs(getUserCollection(CONTEXT_COLLECTION));
     if (!querySnapshot.empty) {
       return querySnapshot.docs[0].data();
     }
+
+    // 2. Fallback: If new collection is empty, try fetching from the legacy top-level collection
+    const qLegacy = query(
+      collection(db, CONTEXT_COLLECTION),
+      where("userId", "==", auth.currentUser.uid)
+    );
+    const querySnapshotLegacy = await getDocs(qLegacy);
+    if (!querySnapshotLegacy.empty) {
+      return querySnapshotLegacy.docs[0].data();
+    }
+
     return null;
   } catch (error) {
     console.error("Error fetching meeting context:", error);
