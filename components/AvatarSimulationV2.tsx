@@ -646,9 +646,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     };
 
     const getAlert = (label: string, value: number) => {
-      if (label === 'Stress Level' && value > 70) return "High Stress: Calm down, relax.";
-      if (label === 'Attention Focus' && value < 75) return "Low Focus: Re-engage now.";
-      if (label === 'Clarity Score' && value < 85) return "Low Clarity: Be more precise.";
       return null;
     };
 
