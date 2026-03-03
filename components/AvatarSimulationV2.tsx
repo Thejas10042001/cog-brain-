@@ -82,6 +82,10 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
   const [showExplanation, setShowExplanation] = useState(false);
+  const showExplanationRef = useRef(false);
+  useEffect(() => {
+    showExplanationRef.current = showExplanation;
+  }, [showExplanation]);
   const [explanationContent, setExplanationContent] = useState("");
   const [isExplaining, setIsExplaining] = useState(false);
 
@@ -289,12 +293,23 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     const lastAI = messages.filter(m => m.role === 'assistant').pop();
     if (!lastAI) return;
 
+    // Stop current audio immediately
+    if (activeAudioSource.current) {
+      try { activeAudioSource.current.stop(); } catch (e) {}
+    }
+    setIsAISpeaking(false);
+
+    setExplanationContent("");
+    setShowExplanation(true);
     setIsExplaining(true);
     try {
       const explanation = await generateExplanation(lastAI.content, persona || "V2 Simulation", meetingContext);
-      setExplanationContent(explanation);
-      setShowExplanation(true);
-      playAIQuestion(explanation);
+      
+      // Only proceed if the popup is still open
+      if (showExplanationRef.current) {
+        setExplanationContent(explanation);
+        playAIQuestion(explanation);
+      }
     } catch (e) {
       console.error("Explanation failed:", e);
     } finally {
@@ -646,6 +661,9 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     };
 
     const getAlert = (label: string, value: number) => {
+      if (label === 'Stress Level' && value > 70) return "High Stress: Calm down, relax.";
+      if (label === 'Attention Focus' && value < 75) return "Low Focus: Re-engage now.";
+      if (label === 'Clarity Score' && value < 85) return "Low Clarity: Be more precise.";
       return null;
     };
 

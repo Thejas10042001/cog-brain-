@@ -90,6 +90,10 @@ export const AvatarSimulationStaged: FC<{
   const [stageRatings, setStageRatings] = useState<Record<string, number | 'skipped'>>({});
   const [showCelebration, setShowCelebration] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+  const showExplanationRef = useRef(false);
+  useEffect(() => {
+    showExplanationRef.current = showExplanation;
+  }, [showExplanation]);
   const [explanationContent, setExplanationContent] = useState("");
   const [isExplaining, setIsExplaining] = useState(false);
 
@@ -300,12 +304,23 @@ export const AvatarSimulationStaged: FC<{
     const lastAI = messages.filter(m => m.role === 'assistant').pop();
     if (!lastAI) return;
 
+    // Stop current audio immediately
+    if (activeAudioSource.current) {
+      try { activeAudioSource.current.stop(); } catch (e) {}
+    }
+    setIsAISpeaking(false);
+
+    setExplanationContent("");
+    setShowExplanation(true);
     setIsExplaining(true);
     try {
       const explanation = await generateExplanation(lastAI.content, currentStage, meetingContext);
-      setExplanationContent(explanation);
-      setShowExplanation(true);
-      playAIQuestion(explanation);
+      
+      // Only proceed if the popup is still open
+      if (showExplanationRef.current) {
+        setExplanationContent(explanation);
+        playAIQuestion(explanation);
+      }
     } catch (e) {
       console.error("Explanation failed:", e);
     } finally {
