@@ -1127,48 +1127,7 @@ export const AvatarSimulationStaged: FC<{
                               <span className="text-[10px] font-black text-white uppercase tracking-widest">You (Seller)</span>
                            </div>
 
-                           {/* Real-time Cognitive Notifications */}
-                           <div className="absolute bottom-6 left-6 right-6 pointer-events-none space-y-2">
-                             {biometrics.stressLevel > 70 && (
-                               <div className="bg-rose-600/90 backdrop-blur-md border border-rose-400/50 p-4 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-2 duration-300">
-                                 <div className="flex items-center gap-3">
-                                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                                     <ICONS.Security className="w-4 h-4 text-white" />
-                                   </div>
-                                   <div>
-                                     <h6 className="text-[8px] font-black text-rose-100 uppercase tracking-widest">Stress Alert</h6>
-                                     <p className="text-xs font-bold text-white">You are too stressed, calm down. You will be okay, relax.</p>
-                                   </div>
-                                 </div>
-                               </div>
-                             )}
-                             {biometrics.attentionFocus < 75 && (
-                               <div className="bg-amber-600/90 backdrop-blur-md border border-amber-400/50 p-4 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-2 duration-300">
-                                 <div className="flex items-center gap-3">
-                                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                                     <ICONS.Research className="w-4 h-4 text-white" />
-                                   </div>
-                                   <div>
-                                     <h6 className="text-[8px] font-black text-amber-100 uppercase tracking-widest">Attention Warning</h6>
-                                     <p className="text-xs font-bold text-white">Focus deviation detected. Re-engage with the core logic.</p>
-                                   </div>
-                                 </div>
-                               </div>
-                             )}
-                             {biometrics.clarityScore < 85 && (
-                               <div className="bg-indigo-600/90 backdrop-blur-md border border-indigo-400/50 p-4 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-2 duration-300">
-                                 <div className="flex items-center gap-3">
-                                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                                     <ICONS.Efficiency className="w-4 h-4 text-white" />
-                                   </div>
-                                   <div>
-                                     <h6 className="text-[8px] font-black text-indigo-100 uppercase tracking-widest">Clarity Alert</h6>
-                                     <p className="text-xs font-bold text-white">You are not in clarity in delivery.</p>
-                                   </div>
-                                 </div>
-                               </div>
-                             )}
-                           </div>
+                           {/* Real-time Cognitive Notifications Removed per user request */}
                            {!streamRef.current && (
                              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
                                 <div className="text-center space-y-4">
