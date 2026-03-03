@@ -86,6 +86,12 @@ const COLLECTION_NAME = "cognitive_documents";
 const HISTORY_COLLECTION = "simulation_history";
 const CONTEXT_COLLECTION = "meeting_contexts";
 
+// Helper to get user-isolated collection reference
+const getUserCollection = (subCollection: string) => {
+  if (!db || !auth || !auth.currentUser) throw new Error("Firebase not initialized or user not authenticated");
+  return collection(db, "users", auth.currentUser.uid, subCollection);
+};
+
 export const getAuthInstance = () => auth;
 export const getDbInstance = () => db;
 
@@ -107,7 +113,7 @@ export const subscribeToAuth = (callback: (user: User | null) => void) => {
 export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' | 'timestamp'>): Promise<string | null> => {
   if (!db || !auth || !auth.currentUser) return null;
   try {
-    const docRef = await addDoc(collection(db, HISTORY_COLLECTION), {
+    const docRef = await addDoc(getUserCollection(HISTORY_COLLECTION), {
       ...history,
       userId: auth.currentUser.uid,
       timestamp: Timestamp.now()
@@ -122,10 +128,7 @@ export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' |
 export const fetchSimulationHistory = async (): Promise<any[]> => {
   if (!db || !auth || !auth.currentUser) return [];
   try {
-    const q = query(
-      collection(db, HISTORY_COLLECTION),
-      where("userId", "==", auth.currentUser.uid)
-    );
+    const q = query(getUserCollection(HISTORY_COLLECTION));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
@@ -143,7 +146,7 @@ export const saveDocumentToFirebase = async (name: string, content: string, type
 
   try {
     const now = Timestamp.now();
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+    const docRef = await addDoc(getUserCollection(COLLECTION_NAME), {
       userId: auth.currentUser.uid, // Tie document to unique user
       name,
       content,
@@ -165,7 +168,7 @@ export const saveDocumentToFirebase = async (name: string, content: string, type
 export const updateDocumentInFirebase = async (id: string, newContent: string): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
   try {
-    const docRef = doc(db, COLLECTION_NAME, id);
+    const docRef = doc(getUserCollection(COLLECTION_NAME), id);
     // Note: Firestore rules should prevent updating if userId doesn't match
     await updateDoc(docRef, {
       content: newContent,
@@ -182,11 +185,7 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
   if (!db || !auth || !auth.currentUser) return [];
 
   try {
-    // Filter by userId and sort results client-side to avoid composite index requirements.
-    const q = query(
-      collection(db, COLLECTION_NAME), 
-      where("userId", "==", auth.currentUser.uid)
-    );
+    const q = query(getUserCollection(COLLECTION_NAME));
     const querySnapshot = await getDocs(q);
     internalPermissionError = false;
     
@@ -216,7 +215,7 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
 export const deleteDocumentFromFirebase = async (id: string): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
   try {
-    await deleteDoc(doc(db, COLLECTION_NAME, id));
+    await deleteDoc(doc(getUserCollection(COLLECTION_NAME), id));
     internalPermissionError = false;
     return true;
   } catch (error: any) {
@@ -231,8 +230,8 @@ export const saveMeetingContext = async (data: { meetingContext: any, selectedLi
   if (!db || !auth || !auth.currentUser) return false;
   try {
     const userId = auth.currentUser.uid;
-    const q = query(collection(db, CONTEXT_COLLECTION), where("userId", "==", userId));
-    const querySnapshot = await getDocs(q);
+    const userContextCol = getUserCollection(CONTEXT_COLLECTION);
+    const querySnapshot = await getDocs(userContextCol);
     
     const contextData = {
       ...data,
@@ -243,10 +242,10 @@ export const saveMeetingContext = async (data: { meetingContext: any, selectedLi
     if (!querySnapshot.empty) {
       // Update existing
       const docId = querySnapshot.docs[0].id;
-      await updateDoc(doc(db, CONTEXT_COLLECTION, docId), contextData);
+      await updateDoc(doc(userContextCol, docId), contextData);
     } else {
       // Create new
-      await addDoc(collection(db, CONTEXT_COLLECTION), contextData);
+      await addDoc(userContextCol, contextData);
     }
     return true;
   } catch (error) {
@@ -258,11 +257,7 @@ export const saveMeetingContext = async (data: { meetingContext: any, selectedLi
 export const fetchMeetingContext = async (): Promise<any | null> => {
   if (!db || !auth || !auth.currentUser) return null;
   try {
-    const q = query(
-      collection(db, CONTEXT_COLLECTION),
-      where("userId", "==", auth.currentUser.uid)
-    );
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(getUserCollection(CONTEXT_COLLECTION));
     if (!querySnapshot.empty) {
       return querySnapshot.docs[0].data();
     }
@@ -276,13 +271,10 @@ export const fetchMeetingContext = async (): Promise<any | null> => {
 export const deleteMeetingContext = async (): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
   try {
-    const q = query(
-      collection(db, CONTEXT_COLLECTION),
-      where("userId", "==", auth.currentUser.uid)
-    );
-    const querySnapshot = await getDocs(q);
+    const userContextCol = getUserCollection(CONTEXT_COLLECTION);
+    const querySnapshot = await getDocs(userContextCol);
     if (!querySnapshot.empty) {
-      await deleteDoc(doc(db, CONTEXT_COLLECTION, querySnapshot.docs[0].id));
+      await deleteDoc(doc(userContextCol, querySnapshot.docs[0].id));
     }
     return true;
   } catch (error) {
