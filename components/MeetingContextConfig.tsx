@@ -97,6 +97,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [showVocalDirective, setShowVocalDirective] = useState(false);
   const [showKycGuide, setShowKycGuide] = useState(false);
+  const [activeSection, setActiveSection] = useState<'library' | 'core' | 'persona' | 'strategy' | 'vocal'>('library');
   const isCustomizedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -331,419 +332,404 @@ OPERATIONAL CONSTRAINTS:
     });
   };
 
+  const renderSectionNav = () => (
+    <div className="flex flex-wrap gap-2 mb-12 p-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-3xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
+      {[
+        { id: 'library', label: 'Library Hub', icon: <ICONS.Document /> },
+        { id: 'core', label: 'Cognitive Mind Core', icon: <ICONS.Brain /> },
+        { id: 'persona', label: 'Buyer Persona', icon: <ICONS.ROI /> },
+        { id: 'strategy', label: 'Strategy Finalization', icon: <ICONS.Trophy /> },
+        { id: 'vocal', label: 'Neural Vocal Sync', icon: <ICONS.Speaker /> }
+      ].map((s) => (
+        <button
+          key={s.id}
+          onClick={() => setActiveSection(s.id as any)}
+          className={`flex-1 min-w-[140px] flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all relative overflow-hidden ${
+            activeSection === s.id 
+            ? 'bg-white dark:bg-slate-900 text-indigo-600 shadow-xl shadow-indigo-500/10' 
+            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+          }`}
+        >
+          {activeSection === s.id && (
+            <motion.div 
+              layoutId="section-nav-active"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+          )}
+          <span className={`${activeSection === s.id ? 'text-indigo-600' : 'text-slate-400'}`}>{s.icon}</span>
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+
   const renderAllSections = () => {
     return (
-      <div className="space-y-16 animate-in fade-in duration-700">
-        {/* Section 1: Library */}
-        <div className="space-y-8" id="library-hub">
-          <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
-            <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">01</div>
-            <div className="flex flex-col">
-              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Cognitive Library Hub</h3>
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base for neural synthesis.</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-12">
-            <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
-              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-8">
-                <ICONS.Research /> Library Selection
-              </h3>
-              <DocumentGallery 
-                documents={documents} 
-                onRefresh={onUploadSuccess} 
-                selectedIds={selectedLibraryDocIds}
-                onToggleSelect={onToggleLibraryDoc}
-                onClearSelection={onClearLibrarySelection}
-                onSynthesize={() => {}} 
-                isAnalyzing={isAnalyzing}
-                hideSynthesize={true}
-              />
-            </div>
-            <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
-              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-8">
-                <ICONS.Document /> Documentary Memory Store
-              </h3>
-              <FileUpload files={files} onFilesChange={onFilesChange} onUploadSuccess={onUploadSuccess} />
-            </div>
-          </div>
-        </div>
-
-        {/* Section 2: Cognitive Mind Core (Renamed from Neural Anchor) */}
-        <div className="space-y-8">
-          <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
-            <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">02</div>
-            <div className="flex flex-col">
-              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Cognitive Mind Core</h3>
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Anchor the cognitive simulation by selecting a primary KYC node to calibrate seller, client, and solution parameters.</p>
-            </div>
-          </div>
-          <div className="space-y-12">
-            <div className="p-12 bg-indigo-50 border border-indigo-100 rounded-[3rem] flex flex-col items-center gap-8 shadow-inner text-center">
-              <div className="p-6 bg-indigo-600 text-white rounded-[2rem] shadow-2xl">
-                <ICONS.Shield className="w-12 h-12" />
-              </div>
-              <div className="max-w-xl space-y-4 w-full">
-                <h3 className="text-3xl font-black uppercase tracking-widest text-slate-900">Cognitive Mind Core</h3>
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full px-2">
-                  <p className="text-slate-500 font-medium">Know Your Customer (KYC) Document</p>
-                  <div className="flex items-center gap-3 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-indigo-100 shadow-sm">
-                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Lacking high-fidelity KYC intelligence?</span>
-                    <button 
-                      onClick={() => setShowKycGuide(true)}
-                      className="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md active:scale-95"
-                    >
-                      Click Here
-                    </button>
+      <div className="space-y-16">
+        {renderSectionNav()}
+        
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeSection}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {activeSection === 'library' && (
+              <div className="space-y-8" id="library-hub">
+                <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900 dark:border-white">
+                  <div className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">01</div>
+                  <div className="flex flex-col">
+                    <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Cognitive Library Hub</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mt-1">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base for neural synthesis.</p>
                   </div>
                 </div>
-                <div className="relative w-full flex gap-3">
-                  <select 
-                    value={context.kycDocId || ""} 
-                    onChange={(e) => handleKycChange(e.target.value)}
-                    className={`flex-1 bg-white border-4 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-700 outline-none transition-all shadow-xl ${isExtracting ? 'border-indigo-300 opacity-50 cursor-wait' : 'border-slate-200 focus:border-indigo-500'}`}
-                    disabled={isExtracting}
-                  >
-                    <option value="">Select grounding source...</option>
-                    {documents.map(d => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
-                  </select>
-                  {context.kycDocId && (
-                    <button 
-                      onClick={async () => {
-                        if (confirm("Permanently delete this KYC document from cloud memory?")) {
-                          const idToDelete = context.kycDocId!;
-                          handleChange('kycDocId', "");
-                          await deleteDocumentFromFirebase(idToDelete);
-                          onUploadSuccess(); // Refresh documents
-                        }
-                      }}
-                      className="px-6 bg-rose-50 text-rose-600 rounded-[2rem] hover:bg-rose-100 transition-all flex items-center justify-center shadow-lg border border-rose-100"
-                      title="Delete Selected KYC Document"
-                    >
-                      <ICONS.Trash className="w-6 h-6" />
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => {
-                      const el = document.getElementById('library-hub');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="px-6 bg-slate-100 text-slate-600 rounded-[2rem] hover:bg-slate-200 transition-all flex items-center justify-center shadow-lg border border-slate-200"
-                    title="Manage Library Documents"
-                  >
-                    <ICONS.Research className="w-6 h-6" />
-                  </button>
-                  {isExtracting && (
-                    <div className="absolute right-24 top-1/2 -translate-y-1/2">
-                      <div className="w-6 h-6 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="grid grid-cols-1 gap-12">
+                  <div className="bg-white dark:bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-200 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-8">
+                      <ICONS.Research /> Library Selection
+                    </h3>
+                    <DocumentGallery 
+                      documents={documents} 
+                      onRefresh={onUploadSuccess} 
+                      selectedIds={selectedLibraryDocIds}
+                      onToggleSelect={onToggleLibraryDoc}
+                      onClearSelection={onClearLibrarySelection}
+                      onSynthesize={() => {}} 
+                      isAnalyzing={isAnalyzing}
+                      hideSynthesize={true}
+                    />
+                  </div>
+                  <div className="bg-white dark:bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-200 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-8">
+                      <ICONS.Document /> Documentary Memory Store
+                    </h3>
+                    <FileUpload files={files} onFilesChange={onFilesChange} onUploadSuccess={onUploadSuccess} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'core' && (
+              <div className="space-y-8">
+                <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900 dark:border-white">
+                  <div className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">02</div>
+                  <div className="flex flex-col">
+                    <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Cognitive Mind Core</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mt-1">Anchor the cognitive simulation by selecting a primary KYC node to calibrate seller, client, and solution parameters.</p>
+                  </div>
+                </div>
+                <div className="space-y-12">
+                  <div className="p-12 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-[3rem] flex flex-col items-center gap-8 shadow-inner text-center">
+                    <div className="p-6 bg-indigo-600 text-white rounded-[2rem] shadow-2xl">
+                      <ICONS.Shield className="w-12 h-12" />
                     </div>
-                  )}
-                </div>
-                {isExtracting && <p className="text-indigo-600 text-xs font-black uppercase animate-pulse">Extracting Strategic Metadata...</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-200">
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                   <div className="text-indigo-500"><ICONS.Trophy /></div>
-                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Seller Side</h4>
-                </div>
-                <div className="space-y-5">
-                  <Input label="Seller Company" value={context.sellerCompany} onChange={v => handleChange('sellerCompany', v)} placeholder="e.g. Your Organization Name" />
-                  <Input label="Seller Name(s)" value={context.sellerNames} onChange={v => handleChange('sellerNames', v)} placeholder="e.g. Full names of participants" />
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                   <div className="text-rose-500"><ICONS.Search /></div>
-                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Prospect Side</h4>
-                </div>
-                <div className="space-y-5">
-                  <Input label="Client Company" value={context.clientCompany} onChange={v => handleChange('clientCompany', v)} placeholder="e.g. Prospect Organization Name" />
-                  <Input label="Client Name" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="e.g. Names and titles extracted from doc" />
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                   <div className="text-emerald-500"><ICONS.Efficiency /></div>
-                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Solution Context</h4>
-                </div>
-                <div className="space-y-5">
-                  <Input label="Target Products / Services" value={context.targetProducts} onChange={v => handleChange('targetProducts', v)} placeholder="e.g. Enterprise Solution XYZ" />
-                  <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="e.g. Cybersecurity, AI SaaS" />
-                  <Input label="Meeting Focus / Domains" value={context.meetingFocus} onChange={v => handleChange('meetingFocus', v)} placeholder="e.g. ROI presentation" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 3: Target Buyer Persona (Moved from Step 4) */}
-        <div className="space-y-8">
-          <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
-            <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">03</div>
-            <div className="flex flex-col">
-              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Target Buyer Persona</h3>
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Calibrate the psychological architecture of the target buyer to ensure behavioral alignment during interaction.</p>
-            </div>
-          </div>
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <p className="text-slate-500 font-medium">Select the psychological profile of your target buyer.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {PERSONAS.map(p => (
-                <button
-                  key={p.type}
-                  onClick={() => handleChange('persona', p.type)}
-                  className={`p-8 rounded-[3rem] border-2 text-left transition-all relative overflow-hidden group flex flex-col h-full ${context.persona === p.type ? 'bg-indigo-600 border-indigo-600 shadow-2xl scale-[1.02]' : 'bg-white border-slate-100 hover:border-indigo-300 shadow-sm'}`}
-                >
-                  <div className={`p-4 rounded-2xl mb-6 inline-block ${context.persona === p.type ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500'}`}>{p.icon}</div>
-                  <p className={`font-black text-base uppercase tracking-widest mb-3 ${context.persona === p.type ? 'text-white' : 'text-slate-800'}`}>{p.label}</p>
-                  <p className={`text-[11px] leading-relaxed font-medium ${context.persona === p.type ? 'text-indigo-100' : 'text-slate-500'}`}>{p.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Section 4: Strategy Finalization (Moved from Step 5) */}
-        <div className="space-y-8">
-          <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
-            <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">04</div>
-            <div className="flex flex-col">
-              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Strategy Finalization</h3>
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Synthesize the final strategic brief by mapping opportunity snapshots and neutralizing predicted resistance nodes.</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-[3rem] p-10 shadow-2xl border border-slate-200 space-y-6">
-              <h3 className="text-xl font-bold text-slate-800">Opportunity Snapshot</h3>
-              <textarea
-                value={context.executiveSnapshot}
-                onChange={e => handleChange('executiveSnapshot', e.target.value)}
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] p-8 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all h-48 resize-none shadow-inner leading-relaxed"
-                placeholder="e.g. Q3 renewal discussion..."
-              />
-            </div>
-
-            <div className="bg-white rounded-[3rem] p-10 shadow-2xl border border-slate-200 space-y-6 flex flex-col h-full">
-               <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                     <ICONS.Security className="text-rose-500" /> Potential Objections
-                  </h3>
-               </div>
-               <div className="flex gap-3 mb-6">
-                <input
-                  type="text"
-                  value={objectionInput}
-                  onChange={e => setObjectionInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addObjection()}
-                  placeholder="e.g. Price is too high..."
-                  className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-inner"
-                />
-                <button onClick={addObjection} className="p-4 bg-rose-600 text-white rounded-2xl hover:bg-rose-700 shadow-xl transition-all"><ICONS.X className="rotate-45" /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto max-h-48 custom-scrollbar pr-2 space-y-2">
-                {context.potentialObjections.map((obj, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 bg-rose-50/50 border border-rose-100 rounded-xl group animate-in slide-in-from-right-2 duration-300">
-                    <p className="text-[11px] font-bold text-rose-800">“{obj}”</p>
-                    <button onClick={() => handleChange('potentialObjections', context.potentialObjections.filter((_, idx) => idx !== i))} className="text-rose-300 hover:text-rose-600"><ICONS.Trash className="w-4 h-4" /></button>
+                    <div className="max-w-xl space-y-4 w-full">
+                      <h3 className="text-3xl font-black uppercase tracking-widest text-slate-900 dark:text-white">Cognitive Mind Core</h3>
+                      <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full px-2">
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Know Your Customer (KYC) Document</p>
+                        <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 shadow-sm">
+                          <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Lacking high-fidelity KYC intelligence?</span>
+                          <button 
+                            onClick={() => setShowKycGuide(true)}
+                            className="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+                          >
+                            Click Here
+                          </button>
+                        </div>
+                      </div>
+                      <div className="relative w-full flex gap-3">
+                        <select 
+                          value={context.kycDocId || ""} 
+                          onChange={(e) => handleKycChange(e.target.value)}
+                          className={`flex-1 bg-white dark:bg-slate-800 border-4 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-700 dark:text-white outline-none transition-all shadow-xl ${isExtracting ? 'border-indigo-300 opacity-50 cursor-wait' : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500'}`}
+                          disabled={isExtracting}
+                        >
+                          <option value="">Select grounding source...</option>
+                          {documents.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                          ))}
+                        </select>
+                        {context.kycDocId && (
+                          <button 
+                            onClick={async () => {
+                              if (confirm("Permanently delete this KYC document from cloud memory?")) {
+                                const idToDelete = context.kycDocId!;
+                                handleChange('kycDocId', "");
+                                await deleteDocumentFromFirebase(idToDelete);
+                                onUploadSuccess(); // Refresh documents
+                              }
+                            }}
+                            className="px-6 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-[2rem] hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all flex items-center justify-center shadow-lg border border-rose-100 dark:border-rose-900/30"
+                            title="Delete Selected KYC Document"
+                          >
+                            <ICONS.Trash className="w-6 h-6" />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => {
+                            const el = document.getElementById('library-hub');
+                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className="px-6 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-[2rem] hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center shadow-lg border border-slate-200 dark:border-slate-700"
+                          title="Manage Library Documents"
+                        >
+                          <ICONS.Research className="w-6 h-6" />
+                        </button>
+                        {isExtracting && (
+                          <div className="absolute right-24 top-1/2 -translate-y-1/2">
+                            <div className="w-6 h-6 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                          </div>
+                        )}
+                      </div>
+                      {isExtracting && <p className="text-indigo-600 dark:text-indigo-400 text-xs font-black uppercase animate-pulse">Extracting Strategic Metadata...</p>}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Section 5: Neural Vocal Sync (Moved from Step 3) */}
-        <div className="space-y-8">
-          <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
-            <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">05</div>
-            <div className="flex flex-col">
-              <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Neural Vocal Sync</h3>
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">Synchronize the neural vocal signature to match the intended professional resonance and strategic authority.</p>
-            </div>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-[3rem] flex flex-col shadow-2xl overflow-hidden">
-            <div className="flex border-b border-slate-200 p-2 bg-slate-50">
-              <button 
-                onClick={() => handleChange('voiceMode', 'upload')}
-                className={`flex-1 flex flex-col items-center py-6 rounded-3xl transition-all ${context.voiceMode === 'upload' ? 'bg-indigo-600 text-white shadow-xl scale-[1.02]' : 'text-slate-600 hover:bg-white hover:text-indigo-600'}`}
-              >
-                 <ICONS.Document className="w-6 h-6 mb-2" />
-                 <span className="text-[10px] font-black uppercase tracking-widest">Neural Vocal Sync</span>
-              </button>
-              <button 
-                onClick={() => handleChange('voiceMode', 'persona')}
-                className={`flex-1 flex flex-col items-center py-6 rounded-3xl transition-all ${context.voiceMode === 'persona' ? 'bg-indigo-600 text-white shadow-xl scale-[1.02]' : 'text-slate-600 hover:bg-white hover:text-indigo-600'}`}
-              >
-                 <ICONS.Brain className="w-6 h-6 mb-2" />
-                 <span className="text-[10px] font-black uppercase tracking-widest">Neural Presets</span>
-              </button>
-              <button 
-                onClick={() => handleChange('voiceMode', 'personality')}
-                className={`flex-1 flex flex-col items-center py-6 rounded-3xl transition-all ${context.voiceMode === 'personality' ? 'bg-indigo-600 text-white shadow-xl scale-[1.02]' : 'text-slate-600 hover:bg-white hover:text-indigo-600'}`}
-              >
-                 <ICONS.Trophy className="w-6 h-6 mb-2" />
-                 <span className="text-[10px] font-black uppercase tracking-widest">Elite Icons</span>
-              </button>
-            </div>
-
-            <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                {context.voiceMode === 'persona' && (
-                  <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto no-scrollbar pr-2">
-                    {AI_VOICE_PERSONAS.map(p => (
-                      <button 
-                        key={p.id}
-                        onClick={() => selectAIPersona(p)}
-                        className={`p-4 rounded-2xl border-2 text-left transition-all ${context.selectedPersonaId === p.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-600 hover:border-indigo-300'}`}
-                      >
-                        <h5 className="text-[10px] font-black uppercase tracking-widest mb-1">{p.label}</h5>
-                        <p className="text-[8px] font-bold opacity-70">{p.desc}</p>
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 bg-white dark:bg-slate-900/50 rounded-[3rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800">
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                         <div className="text-indigo-500"><ICONS.Trophy /></div>
+                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Seller Core</h4>
+                      </div>
+                      <Input label="Seller Company" value={context.sellerCompany} onChange={v => handleChange('sellerCompany', v)} placeholder="Acme Corp" />
+                      <Input label="Seller Names" value={context.sellerNames} onChange={v => handleChange('sellerNames', v)} placeholder="John Doe, Jane Smith" />
+                    </div>
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                         <div className="text-indigo-500"><ICONS.ROI /></div>
+                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Client Core</h4>
+                      </div>
+                      <Input label="Client Company" value={context.clientCompany} onChange={v => handleChange('clientCompany', v)} placeholder="Global Industries" />
+                      <Input label="Client Names" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="Robert Brown, Sarah Wilson" />
+                    </div>
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                         <div className="text-indigo-500"><ICONS.Efficiency /></div>
+                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Solution Core</h4>
+                      </div>
+                      <Input label="Target Products" value={context.targetProducts} onChange={v => handleChange('targetProducts', v)} placeholder="Enterprise Cloud Suite" />
+                      <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="SaaS, Cybersecurity" />
+                    </div>
                   </div>
-                )}
-                {context.voiceMode === 'personality' && (
-                  <div className="grid grid-cols-2 gap-3 max-h-[400px] overflow-y-auto no-scrollbar pr-2">
-                    {PUBLIC_PERSONALITIES.map(p => (
-                      <button 
-                        key={p.id}
-                        onClick={() => selectPersonality(p)}
-                        className={`p-4 rounded-2xl border-2 text-left transition-all ${context.selectedPersonalityId === p.id ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-600 hover:border-emerald-300'}`}
-                      >
-                        <h5 className="text-[10px] font-black uppercase tracking-widest mb-1">{p.label}</h5>
-                        <p className="text-[8px] font-bold opacity-70">{p.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {context.voiceMode === 'upload' && (
-                  <div className="p-8 bg-indigo-50 rounded-3xl border border-indigo-100 text-center space-y-4">
-                    <ICONS.Document className="w-12 h-12 mx-auto text-indigo-600" />
-                    <p className="text-sm font-bold text-indigo-900">Neural Vocal Sync Active</p>
-                    <p className="text-xs text-indigo-600">Parameters suggested from Cognitive Mind Core.</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-8 bg-slate-50 p-8 rounded-[2.5rem] border border-slate-200 shadow-inner">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">Vocal Parameters</h4>
-                  <button 
-                    onClick={handleTestVoice}
-                    disabled={isAnalyzingVoice}
-                    className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${isPlayingVoice ? 'bg-rose-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-500'} disabled:opacity-50`}
-                  >
-                    {isAnalyzingVoice ? (
-                      <>
-                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Analyzing...</span>
-                      </>
-                    ) : isPlayingVoice ? 'Stop' : 'Test Sample'}
-                  </button>
                 </div>
+              </div>
+            )}
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Gender</label>
-                    <select 
-                      value={context.vocalPersonaAnalysis?.gender || 'Male'}
-                      onChange={(e) => updateVocalAnalysis({ gender: e.target.value })}
-                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
+            {activeSection === 'persona' && (
+              <div className="space-y-8">
+                <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900 dark:border-white">
+                  <div className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">03</div>
+                  <div className="flex flex-col">
+                    <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Target Buyer Persona</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mt-1">Select the psychological profile of your primary decision-maker to calibrate the simulation's resistance level.</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {PERSONAS.map((p) => (
+                    <button
+                      key={p.type}
+                      onClick={() => handleChange('persona', p.type)}
+                      className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group ${context.persona === p.type ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl scale-[1.02]' : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-sm'}`}
                     >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Base Voice</label>
-                    <select 
-                      value={context.vocalPersonaAnalysis?.baseVoice || 'Puck'}
-                      onChange={(e) => updateVocalAnalysis({ baseVoice: e.target.value })}
-                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
-                    >
-                      <option value="Puck">Puck (High Energy)</option>
-                      <option value="Charon">Charon (Deep Authority)</option>
-                      <option value="Zephyr">Zephyr (Calm Strategist)</option>
-                      <option value="Kore">Kore (Professional)</option>
-                      <option value="Fenrir">Fenrir (Authoritative)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Pitch</label>
-                    <input 
-                      type="range" min="0.5" max="2.0" step="0.1"
-                      value={context.vocalPersonaAnalysis?.pitchValue || 1.0}
-                      onChange={(e) => updateVocalAnalysis({ pitchValue: parseFloat(e.target.value) })}
-                      className="w-full accent-indigo-600"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Pace</label>
-                    <input 
-                      type="range" min="0.5" max="2.0" step="0.1"
-                      value={context.vocalPersonaAnalysis?.pace || 1.0}
-                      onChange={(e) => updateVocalAnalysis({ pace: parseFloat(e.target.value) })}
-                      className="w-full accent-indigo-600"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Stability (%)</label>
-                    <input 
-                      type="number"
-                      value={context.vocalPersonaAnalysis?.stability || 80}
-                      onChange={(e) => updateVocalAnalysis({ stability: parseInt(e.target.value) })}
-                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Clarity (%)</label>
-                    <input 
-                      type="number"
-                      value={context.vocalPersonaAnalysis?.clarity || 90}
-                      onChange={(e) => updateVocalAnalysis({ clarity: parseInt(e.target.value) })}
-                      className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
-                    />
-                  </div>
+                      <div className={`p-4 rounded-2xl mb-6 inline-block ${context.persona === p.type ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 shadow-sm'}`}>
+                        {p.icon}
+                      </div>
+                      <h4 className={`font-black text-xs uppercase tracking-widest mb-2 ${context.persona === p.type ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{p.type}</h4>
+                      <p className={`text-[11px] leading-relaxed font-semibold ${context.persona === p.type ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>{p.desc}</p>
+                      {context.persona === p.type && (
+                        <motion.div 
+                          layoutId="persona-check"
+                          className="absolute top-6 right-6 w-6 h-6 bg-white text-indigo-600 rounded-full flex items-center justify-center shadow-lg"
+                        >
+                          <ICONS.Check className="w-4 h-4" />
+                        </motion.div>
+                      )}
+                    </button>
+                  ))}
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Tone Adjectives</label>
-                  <input 
-                    type="text"
-                    value={context.vocalPersonaAnalysis?.toneAdjectives?.join(', ') || ''}
-                    onChange={(e) => updateVocalAnalysis({ toneAdjectives: e.target.value.split(',').map(s => s.trim()) })}
-                    className="w-full bg-white border-2 border-slate-200 rounded-xl px-6 py-4 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
-                    placeholder="e.g. Measured, humble, steady"
-                  />
-                </div>
-                <button 
-                  onClick={async () => {
-                    setIsSavingVoice(true);
-                    await new Promise(r => setTimeout(r, 1200));
-                    await speak("Vocal parameters saved successfully.");
-                    setIsSavingVoice(false);
-                  }}
-                  disabled={isSavingVoice}
-                  className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isSavingVoice ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Saving...</span>
-                    </>
-                  ) : 'Save Changes'}
-                </button>
               </div>
-            </div>
-          </div>
-        </div>
+            )}
+
+            {activeSection === 'strategy' && (
+              <div className="space-y-8">
+                <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900 dark:border-white">
+                  <div className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">04</div>
+                  <div className="flex flex-col">
+                    <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Strategy Finalization</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mt-1">Define the specific focus of the meeting and anticipate potential objections to sharpen the neural response.</p>
+                  </div>
+                </div>
+                <div className="space-y-12">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Meeting Focus & Strategic Objective</label>
+                    <textarea 
+                      value={context.meetingFocus}
+                      onChange={e => handleChange('meetingFocus', e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[2rem] px-8 py-6 text-base font-semibold text-slate-800 dark:text-white outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-inner min-h-[150px] placeholder:text-slate-300"
+                      placeholder="Describe the primary goal of this interaction..."
+                    />
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Predicted Resistance Nodes (Objections)</h4>
+                      <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-lg">{context.potentialObjections.length} Active Nodes</span>
+                    </div>
+                    <div className="flex gap-4">
+                      <input 
+                        type="text"
+                        value={objectionInput}
+                        onChange={e => setObjectionInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addObjection()}
+                        className="flex-1 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-6 py-4 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition-all shadow-inner"
+                        placeholder="Add a predicted objection..."
+                      />
+                      <button 
+                        onClick={addObjection}
+                        className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-slate-100 transition-all active:scale-95 shadow-lg"
+                      >
+                        Add Node
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <AnimatePresence>
+                        {context.potentialObjections.map((obj, i) => (
+                          <motion.div 
+                            key={i}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="flex items-center gap-3 px-5 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm group"
+                          >
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{obj}</span>
+                            <button 
+                              onClick={() => handleChange('potentialObjections', context.potentialObjections.filter((_, idx) => idx !== i))}
+                              className="text-slate-300 hover:text-rose-500 transition-colors"
+                            >
+                              <ICONS.X className="w-3 h-3" />
+                            </button>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'vocal' && (
+              <div className="space-y-8">
+                <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900 dark:border-white">
+                  <div className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">05</div>
+                  <div className="flex flex-col">
+                    <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Neural Vocal Sync</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mt-1">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's emotional baseline.</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                  <div className="lg:col-span-2 space-y-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Identity Base</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'].map(voice => (
+                            <button
+                              key={voice}
+                              onClick={() => updateVocalAnalysis({ baseVoice: voice as any })}
+                              className={`py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${context.vocalPersonaAnalysis?.baseVoice === voice ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-indigo-300'}`}
+                            >
+                              {voice}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Parameters</label>
+                        <div className="space-y-6 p-8 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-inner">
+                          <div className="space-y-3">
+                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                              <span>Pace / Tempo</span>
+                              <span className="text-indigo-600 dark:text-indigo-400">{context.vocalPersonaAnalysis?.pace}x</span>
+                            </div>
+                            <input 
+                              type="range" min="0.5" max="2.0" step="0.1"
+                              value={context.vocalPersonaAnalysis?.pace}
+                              onChange={e => updateVocalAnalysis({ pace: parseFloat(e.target.value) })}
+                              className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                            />
+                          </div>
+                          <div className="space-y-3">
+                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                              <span>Neural Stability</span>
+                              <span className="text-indigo-600 dark:text-indigo-400">{context.vocalPersonaAnalysis?.stability}%</span>
+                            </div>
+                            <input 
+                              type="range" min="0" max="100"
+                              value={context.vocalPersonaAnalysis?.stability}
+                              onChange={e => updateVocalAnalysis({ stability: parseInt(e.target.value) })}
+                              className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Behavioral Mimicry Directive</label>
+                      <textarea 
+                        value={context.vocalPersonaAnalysis?.mimicryDirective}
+                        onChange={e => updateVocalAnalysis({ mimicryDirective: e.target.value })}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[2rem] px-8 py-6 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-inner min-h-[120px] placeholder:text-slate-300"
+                        placeholder="Define the behavioral signature (e.g. 'Aggressive, fast-paced, skeptical, interrupts often')..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 dark:bg-black rounded-[3rem] p-10 text-white space-y-8 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/20 blur-[100px] rounded-full -mr-32 -mt-32"></div>
+                    <div className="relative z-10">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-8">Neural Vocal Signature</h4>
+                      <div className="flex items-center gap-6 mb-12">
+                        <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center border border-white/20 shadow-2xl">
+                          <ICONS.Speaker className="w-10 h-10 text-indigo-400" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-black tracking-tight">{context.vocalPersonaAnalysis?.baseVoice}</p>
+                          <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Active Vocal Core</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <VocalTrait label="Pitch" val={context.vocalPersonaAnalysis?.pitch || 'Moderate'} color="indigo" />
+                          <VocalTrait label="Tempo" val={context.vocalPersonaAnalysis?.tempo || 'Controlled'} color="emerald" />
+                          <VocalTrait label="Cadence" val={context.vocalPersonaAnalysis?.cadence || 'Strategic'} color="amber" />
+                          <VocalTrait label="Accent" val={context.vocalPersonaAnalysis?.accent || 'Neutral'} color="rose" />
+                        </div>
+                      </div>
+
+                      <div className="pt-12">
+                        <button 
+                          onClick={() => {
+                            const text = `This is the ${context.vocalPersonaAnalysis?.baseVoice} vocal signature, calibrated for a ${context.persona} persona. Neural stability is at ${context.vocalPersonaAnalysis?.stability} percent.`;
+                            speak(text);
+                          }}
+                          className="w-full flex items-center justify-center gap-4 py-6 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 group"
+                        >
+                          <ICONS.Play className="w-5 h-5 group-hover:scale-125 transition-transform" /> Test Vocal Sync
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     );
   };
