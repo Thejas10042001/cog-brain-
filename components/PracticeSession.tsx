@@ -153,11 +153,39 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
 
       const systemInstruction = sessionMode === 'roleplay' 
         ? `Act as the buyer: ${buyerName}. Persona: ${selectedPersona}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}. 
+           
+           ===========================================================
+           CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
+           ===========================================================
+           1. For EVERY turn, follow this sequence:
+              a. EXPLAIN: Briefly explain your strategic reasoning or reaction to the seller's last point.
+              b. QUESTION: Ask your next sharp, executive-level question.
+           2. Keep the explanation and question distinct. Do NOT mix them.
+           3. Never overlap or ask multiple questions at once.
+
            Start by saying: "I will act as ${buyerName} and you need to act as ${sellerName} in this roleplay."`
         : sessionMode === 'seller-roleplay'
         ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. Persona: ${selectedPersona}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
+           
+           ===========================================================
+           CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
+           ===========================================================
+           1. For EVERY turn, follow this sequence:
+              a. EXPLAIN: Briefly explain your strategic reasoning or reaction to the seller's last point.
+              b. QUESTION: Ask your next sharp, executive-level question.
+           2. Keep the explanation and question distinct. Do NOT mix them.
+           3. Never overlap or ask multiple questions at once.
+
            Start by saying: "I will act as ${sellerName} and you need to act as ${buyerName} in this roleplay."`
-        : `Act as a world-class speech and sales coach. Start by stating: "I'm going to ask you a critical question. Take a breath, and give me your best structured response." Then ask exactly this question: "${groomingTarget}". Once the user provides a full answer, remain silent until the session is ended manually. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
+        : `Act as a world-class speech and sales coach. 
+           
+           ===========================================================
+           CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
+           ===========================================================
+           1. First, state: "I'm going to ask you a critical question. Take a breath, and give me your best structured response."
+           2. Then ask exactly this question: "${groomingTarget}". 
+           3. Once the user provides a full answer, remain silent until the session is ended manually. 
+           4. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
       const sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',

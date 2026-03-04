@@ -212,71 +212,83 @@ export const AvatarSimulationStaged: FC<{
     setExpandedStages(next);
   };
 
-  const playAIQuestion = async (text: string) => {
-    if (!text) return;
-    setIsAISpeaking(true);
-    setIsPaused(false);
-    
-    try {
-      if (!audioContextRef.current) {
-        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
-        audioContextRef.current = new AudioContextClass();
+  const playAIQuestion = (text: string): Promise<void> => {
+    return new Promise(async (resolve) => {
+      if (!text) {
+        resolve();
+        return;
       }
+      setIsAISpeaking(true);
+      setIsPaused(false);
       
-      // Ensure context is running (browsers block auto-play)
-      if (audioContextRef.current.state === 'suspended') {
-        try {
-          await audioContextRef.current.resume();
-        } catch (e) {
-          console.warn("AudioContext resume failed:", e);
+      try {
+        if (!audioContextRef.current) {
+          const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+          audioContextRef.current = new AudioContextClass();
         }
-      }
-
-      const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
-      if (voiceSample) {
-        const audioData = atob(voiceSample);
-        const arrayBuffer = new ArrayBuffer(audioData.length);
-        const view = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
         
-        let buffer: AudioBuffer | null = null;
-        try {
-          buffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
-        } catch (decodeError) {
-          console.error("decodeAudioData failed, using fallback:", decodeError);
-          const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audio.onended = () => {
+        // Ensure context is running (browsers block auto-play)
+        if (audioContextRef.current.state === 'suspended') {
+          try {
+            await audioContextRef.current.resume();
+          } catch (e) {
+            console.warn("AudioContext resume failed:", e);
+          }
+        }
+
+        const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
+        if (voiceSample) {
+          const audioData = atob(voiceSample);
+          const arrayBuffer = new ArrayBuffer(audioData.length);
+          const view = new Uint8Array(arrayBuffer);
+          for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
+          
+          let buffer: AudioBuffer | null = null;
+          try {
+            buffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+          } catch (decodeError) {
+            console.error("decodeAudioData failed, using fallback:", decodeError);
+            const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.onended = () => {
+              setIsAISpeaking(false);
+              startListening();
+              resolve();
+            };
+            audio.play().catch(e => {
+              console.error("Fallback audio play failed:", e);
+              resolve();
+            });
+            return;
+          }
+          
+          if (activeAudioSource.current) {
+            try { activeAudioSource.current.stop(); } catch (e) {}
+          }
+
+          const source = audioContextRef.current.createBufferSource();
+          source.buffer = buffer;
+          source.connect(audioContextRef.current.destination);
+          activeAudioSource.current = source;
+          
+          source.onended = () => {
             setIsAISpeaking(false);
             startListening();
+            resolve();
           };
-          audio.play().catch(e => console.error("Fallback audio play failed:", e));
-          return;
-        }
-        
-        if (activeAudioSource.current) {
-          try { activeAudioSource.current.stop(); } catch (e) {}
-        }
-
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContextRef.current.destination);
-        activeAudioSource.current = source;
-        
-        source.onended = () => {
+          
+          source.start(0);
+        } else {
           setIsAISpeaking(false);
-          startListening();
-        };
-        
-        source.start(0);
-      } else {
+          resolve();
+        }
+      } catch (e) {
+        console.error("AI voice failed:", e);
         setIsAISpeaking(false);
+        resolve();
       }
-    } catch (e) {
-      console.error("AI voice failed:", e);
-      setIsAISpeaking(false);
-    }
+    });
   };
 
   const handlePauseResume = async () => {
@@ -328,10 +340,10 @@ export const AvatarSimulationStaged: FC<{
     }
   };
 
-  const explainNode = async (stage: string) => {
+  const explainNode = async (stage: string): Promise<void> => {
     try {
       const explanation = await generateNodeExplanation(stage, meetingContext);
-      playAIQuestion(explanation);
+      await playAIQuestion(explanation);
     } catch (e) {
       console.error("Node explanation failed:", e);
     }
@@ -472,8 +484,8 @@ export const AvatarSimulationStaged: FC<{
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
       // Zero latency: play immediately
-      explainNode(targetStage);
-      playAIQuestion(cleaned);
+      await explainNode(targetStage);
+      await playAIQuestion(cleaned);
       
       setMessages([assistantMsg]);
     } catch (e: any) { 
@@ -525,8 +537,8 @@ export const AvatarSimulationStaged: FC<{
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
       // Zero latency: play immediately
-      explainNode(stage);
-      playAIQuestion(cleaned);
+      await explainNode(stage);
+      await playAIQuestion(cleaned);
       
       setMessages(prev => [...prev, aiMsg]);
     } catch (e: any) { 

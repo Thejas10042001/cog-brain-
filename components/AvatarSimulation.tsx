@@ -203,72 +203,84 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     };
   }, []);
 
-  const playAIQuestion = async (text: string) => {
-    if (!text) return;
-    setIsAISpeaking(true);
-    setIsPaused(false);
-    
-    try {
-      if (!audioContextRef.current) {
-        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
-        audioContextRef.current = new AudioContextClass();
+  const playAIQuestion = (text: string): Promise<void> => {
+    return new Promise(async (resolve) => {
+      if (!text) {
+        resolve();
+        return;
       }
+      setIsAISpeaking(true);
+      setIsPaused(false);
       
-      // Ensure context is running (browsers block auto-play)
-      if (audioContextRef.current.state === 'suspended') {
-        try {
-          await audioContextRef.current.resume();
-        } catch (e) {
-          console.warn("AudioContext resume failed, will retry on next interaction:", e);
+      try {
+        if (!audioContextRef.current) {
+          const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+          audioContextRef.current = new AudioContextClass();
         }
-      }
-
-      const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
-      if (voiceSample) {
-        const audioData = atob(voiceSample);
-        const arrayBuffer = new ArrayBuffer(audioData.length);
-        const view = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
         
-        let audioBuffer: AudioBuffer | null = null;
-        try {
-          audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
-        } catch (decodeError) {
-          console.error("decodeAudioData failed, using fallback:", decodeError);
-          const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audio.onended = () => {
+        // Ensure context is running (browsers block auto-play)
+        if (audioContextRef.current.state === 'suspended') {
+          try {
+            await audioContextRef.current.resume();
+          } catch (e) {
+            console.warn("AudioContext resume failed, will retry on next interaction:", e);
+          }
+        }
+
+        const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
+        if (voiceSample) {
+          const audioData = atob(voiceSample);
+          const arrayBuffer = new ArrayBuffer(audioData.length);
+          const view = new Uint8Array(arrayBuffer);
+          for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
+          
+          let audioBuffer: AudioBuffer | null = null;
+          try {
+            audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+          } catch (decodeError) {
+            console.error("decodeAudioData failed, using fallback:", decodeError);
+            const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.onended = () => {
+              setIsAISpeaking(false);
+              startListening();
+              resolve();
+            };
+            audio.play().catch(e => {
+              console.error("Fallback audio play failed:", e);
+              resolve();
+            });
+            return;
+          }
+          
+          if (activeAudioSource.current) {
+            try { activeAudioSource.current.stop(); } catch (e) {}
+          }
+
+          const source = audioContextRef.current.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(audioContextRef.current.destination);
+          activeAudioSource.current = source;
+          
+          source.onended = () => {
             setIsAISpeaking(false);
+            // Automatically enable microphone after agent finishes
             startListening();
+            resolve();
           };
-          audio.play().catch(e => console.error("Fallback audio play failed:", e));
-          return;
-        }
-        
-        if (activeAudioSource.current) {
-          try { activeAudioSource.current.stop(); } catch (e) {}
-        }
-
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioContextRef.current.destination);
-        activeAudioSource.current = source;
-        
-        source.onended = () => {
+          
+          source.start(0);
+        } else {
           setIsAISpeaking(false);
-          // Automatically enable microphone after agent finishes
-          startListening();
-        };
-        
-        source.start(0);
-      } else {
+          resolve();
+        }
+      } catch (error) {
+        console.error("Error playing AI question:", error);
         setIsAISpeaking(false);
+        resolve();
       }
-    } catch (error) {
-      console.error("Error playing AI question:", error);
-      setIsAISpeaking(false);
-    }
+    });
   };
 
   const handlePauseResume = async () => {
@@ -320,10 +332,10 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     }
   };
 
-  const explainNode = async (nodeName: string) => {
+  const explainNode = async (nodeName: string): Promise<void> => {
     try {
       const explanation = await generateNodeExplanation(nodeName, meetingContext);
-      playAIQuestion(explanation);
+      await playAIQuestion(explanation);
     } catch (e) {
       console.error("Node explanation failed:", e);
     }
@@ -418,8 +430,8 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
       // Zero latency: play immediately
-      explainNode("Initial Discovery");
-      playAIQuestion(cleaned);
+      await explainNode("Initial Discovery");
+      await playAIQuestion(cleaned);
       
       setMessages([assistantMsg]);
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
