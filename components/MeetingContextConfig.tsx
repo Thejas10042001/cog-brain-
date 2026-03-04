@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MeetingContext, CustomerPersonaType, VoiceMode, StoredDocument, VocalPersonaStructure, UploadedFile } from '../types';
 import { ICONS } from '../constants';
 import { extractMetadataFromDocument, analyzeVocalPersona, suggestVocalPersonaFromDoc, generateVoiceSample } from '../services/geminiService';
+import { deleteDocumentFromFirebase } from '../services/firebaseService';
 import { FileUpload } from './FileUpload';
 import { DocumentGallery } from './DocumentGallery';
 
@@ -404,6 +405,22 @@ OPERATIONAL CONSTRAINTS:
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
                   </select>
+                  {context.kycDocId && (
+                    <button 
+                      onClick={async () => {
+                        if (confirm("Permanently delete this KYC document from cloud memory?")) {
+                          const idToDelete = context.kycDocId!;
+                          handleChange('kycDocId', "");
+                          await deleteDocumentFromFirebase(idToDelete);
+                          onUploadSuccess(); // Refresh documents
+                        }
+                      }}
+                      className="px-6 bg-rose-50 text-rose-600 rounded-[2rem] hover:bg-rose-100 transition-all flex items-center justify-center shadow-lg border border-rose-100"
+                      title="Delete Selected KYC Document"
+                    >
+                      <ICONS.Trash className="w-6 h-6" />
+                    </button>
+                  )}
                   <button 
                     onClick={() => {
                       const el = document.getElementById('library-hub');
@@ -412,7 +429,7 @@ OPERATIONAL CONSTRAINTS:
                     className="px-6 bg-slate-100 text-slate-600 rounded-[2rem] hover:bg-slate-200 transition-all flex items-center justify-center shadow-lg border border-slate-200"
                     title="Manage Library Documents"
                   >
-                    <ICONS.Trash className="w-6 h-6" />
+                    <ICONS.Research className="w-6 h-6" />
                   </button>
                   {isExtracting && (
                     <div className="absolute right-24 top-1/2 -translate-y-1/2">

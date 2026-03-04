@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { UploadedFile } from '../types';
 import { ICONS } from '../constants';
 import { parseDocument } from '../services/fileService';
-import { saveDocumentToFirebase } from '../services/firebaseService';
+import { saveDocumentToFirebase, deleteDocumentFromFirebase } from '../services/firebaseService';
 
 interface FileUploadProps {
   onFilesChange: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
@@ -37,10 +37,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
         });
 
         // Push to Firebase for long-term memory
-        await saveDocumentToFirebase(file.name, text, file.type);
+        const docId = await saveDocumentToFirebase(file.name, text, file.type);
 
         onFilesChange(prev => prev.map(f => 
-          f.name === file.name ? { ...f, content: text, status: 'ready' } : f
+          f.name === file.name ? { ...f, id: docId || undefined, content: text, status: 'ready' } : f
         ));
         
         onUploadSuccess?.();
@@ -90,9 +90,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
                 <span className="text-sm font-semibold text-slate-700 truncate">{file.name}</span>
               </div>
               <button 
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
+                  if (file.id) {
+                    await deleteDocumentFromFirebase(file.id);
+                  }
                   onFilesChange(prev => prev.filter((_, i) => i !== idx));
+                  onUploadSuccess?.(); // Refresh library if needed
                 }} 
                 className="text-slate-400 hover:text-red-500 transition-colors"
               >

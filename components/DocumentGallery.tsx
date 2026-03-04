@@ -168,17 +168,11 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
             </button>
             <div className="w-px h-3 bg-slate-200"></div>
             <button 
-              onClick={() => {
-                if (confirm("Permanently delete ALL documents in your cognitive library? This cannot be undone.")) {
-                  setIsDeleting(true);
-                  Promise.all(documents.map(d => deleteDocumentFromFirebase(d.id)))
-                    .then(() => onRefresh())
-                    .finally(() => setIsDeleting(false));
-                }
-              }}
-              className="px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-600 hover:bg-white rounded-lg transition-all"
+              onClick={handleDeleteSelected}
+              disabled={selectedIds.length === 0 || isDeleting}
+              className={`px-3 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all ${selectedIds.length > 0 ? 'text-rose-600 hover:bg-white' : 'text-slate-300 cursor-not-allowed'}`}
             >
-              Delete All
+              {isDeleting ? 'Deleting...' : 'Delete Selected'}
             </button>
             <div className="w-px h-3 bg-slate-200"></div>
             <button 
