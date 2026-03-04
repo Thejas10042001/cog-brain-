@@ -9,6 +9,7 @@ interface DocumentGalleryProps {
   onRefresh: () => void;
   selectedIds: string[];
   onToggleSelect: (id: string) => void;
+  onClearSelection: () => void;
   onSynthesize: () => void;
   isAnalyzing: boolean;
   hideSynthesize?: boolean;
@@ -19,6 +20,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
   onRefresh, 
   selectedIds, 
   onToggleSelect,
+  onClearSelection,
   onSynthesize,
   isAnalyzing,
   hideSynthesize = false
@@ -57,7 +59,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
       try {
         await Promise.all(selectedIds.map(id => deleteDocumentFromFirebase(id)));
         // Clear selections after deletion
-        selectedIds.forEach(id => onToggleSelect(id));
+        onClearSelection();
         onRefresh();
       } catch (err) {
         console.error("Bulk delete failed:", err);
@@ -176,7 +178,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
             </button>
             <div className="w-px h-3 bg-slate-200"></div>
             <button 
-              onClick={() => selectedIds.forEach(id => onToggleSelect(id))}
+              onClick={onClearSelection}
               className="px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-600 hover:bg-white rounded-lg transition-all"
             >
               Clear

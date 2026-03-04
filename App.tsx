@@ -387,6 +387,10 @@ const App: React.FC = () => {
     );
   };
 
+  const clearLibrarySelection = () => {
+    setSelectedLibraryDocIds([]);
+  };
+
   const isAnyFileProcessing = useMemo(() => files.some(f => f.status === 'processing'), [files]);
   
   const activeDocuments = useMemo(() => {
@@ -633,6 +637,7 @@ const App: React.FC = () => {
                     onUploadSuccess={loadHistory}
                     selectedLibraryDocIds={selectedLibraryDocIds}
                     onToggleLibraryDoc={toggleLibraryDoc}
+                    onClearLibrarySelection={clearLibrarySelection}
                     onSynthesize={runAnalysis}
                     onSave={handleSaveContext}
                     isAnalyzing={isAnalyzing}
@@ -697,6 +702,7 @@ const App: React.FC = () => {
                         onUploadSuccess={loadHistory}
                         selectedLibraryDocIds={selectedLibraryDocIds}
                         onToggleLibraryDoc={toggleLibraryDoc}
+                        onClearLibrarySelection={clearLibrarySelection}
                         onSynthesize={runAnalysis}
                         onSave={handleSaveContext}
                         isAnalyzing={isAnalyzing}

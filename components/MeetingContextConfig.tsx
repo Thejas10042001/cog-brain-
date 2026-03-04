@@ -16,6 +16,7 @@ interface MeetingContextConfigProps {
   onUploadSuccess: () => void;
   selectedLibraryDocIds: string[];
   onToggleLibraryDoc: (id: string) => void;
+  onClearLibrarySelection: () => void;
   onSynthesize: (currentContext?: MeetingContext) => void;
   onSave?: () => void;
   isAnalyzing: boolean;
@@ -79,6 +80,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   onUploadSuccess,
   selectedLibraryDocIds,
   onToggleLibraryDoc,
+  onClearLibrarySelection,
   onSynthesize,
   onSave,
   isAnalyzing,
@@ -351,6 +353,7 @@ OPERATIONAL CONSTRAINTS:
                 onRefresh={onUploadSuccess} 
                 selectedIds={selectedLibraryDocIds}
                 onToggleSelect={onToggleLibraryDoc}
+                onClearSelection={onClearLibrarySelection}
                 onSynthesize={() => {}} 
                 isAnalyzing={isAnalyzing}
                 hideSynthesize={true}
