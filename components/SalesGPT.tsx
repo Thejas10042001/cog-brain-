@@ -161,27 +161,27 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-64px)] relative bg-slate-50 dark:bg-slate-900 transition-colors duration-500">
+    <div className="flex-1 flex flex-col h-[calc(100vh-64px)] relative bg-slate-50">
       {/* Background Ambience (Spans Edge-to-Edge) */}
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed opacity-10 pointer-events-none dark:invert"></div>
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed opacity-10 pointer-events-none"></div>
 
       {/* Header (Spans Edge-to-Edge) */}
-      <div className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 z-20">
+      <div className="w-full bg-white/80 backdrop-blur-xl border-b border-slate-200 z-20">
         <div className="max-w-5xl mx-auto px-12 py-6 flex items-center justify-between">
           <div className="flex items-center gap-5">
             <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-xl">
               <ICONS.Sparkles className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Intelligence Studio</h3>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.4em]">Fast Answer Core</p>
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Intelligence Studio</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">Fast Answer Core</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-             <button onClick={clearChat} className="px-5 py-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 text-[10px] font-black uppercase tracking-widest transition-colors">
+             <button onClick={clearChat} className="px-5 py-2 text-slate-400 hover:text-rose-500 text-[10px] font-black uppercase tracking-widest transition-colors">
                Clear Memory
              </button>
-             <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-100 dark:border-emerald-800 text-[9px] font-black uppercase tracking-widest shadow-sm">
+             <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-widest shadow-sm">
                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
                 Neural Core
              </div>
@@ -194,12 +194,12 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         <div className="max-w-5xl mx-auto px-12 py-12 space-y-12">
           {messages.length === 0 && (
             <div className="h-[50vh] flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
-               <div className="p-12 bg-white dark:bg-slate-800 rounded-[4rem] shadow-2xl border border-slate-100 dark:border-slate-700 text-indigo-100 dark:text-indigo-900/50 transform -rotate-2">
+               <div className="p-12 bg-white rounded-[4rem] shadow-2xl border border-slate-100 text-indigo-100 transform -rotate-2">
                   <ICONS.Brain className="w-24 h-24" />
                </div>
                <div className="space-y-3">
-                  <h4 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Ready for Inquiry</h4>
-                  <p className="text-slate-500 dark:text-slate-400 text-xl font-medium leading-relaxed max-w-lg mx-auto">
+                  <h4 className="text-4xl font-black text-slate-900 tracking-tight">Ready for Inquiry</h4>
+                  <p className="text-slate-500 text-xl font-medium leading-relaxed max-w-lg mx-auto">
                     The intelligence core is synced with your document nodes. Ask about specific clauses, strategic gaps, or tactical responses.
                   </p>
                </div>
@@ -209,7 +209,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           {messages.map((msg) => (
             <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
               <div className="mb-2 px-6 flex items-center gap-3">
-                <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${msg.role === 'user' ? 'text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${msg.role === 'user' ? 'text-indigo-400' : 'text-slate-400'}`}>
                    {msg.role === 'user' ? 'Strategic Architect' : 'Cognitive Core'}
                 </span>
                 {msg.isStreaming && <div className="flex gap-1"><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></div><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce delay-75"></div><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce delay-150"></div></div>}
@@ -217,19 +217,19 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               <div className={`
                 max-w-[100%] md:max-w-[85%] p-10 rounded-[3.5rem] text-2xl font-medium leading-[1.6] shadow-2xl
                 ${msg.role === 'user' 
-                  ? 'bg-indigo-50 dark:bg-indigo-900/30 text-slate-900 dark:text-white rounded-tr-none border-2 border-indigo-100 dark:border-indigo-800 shadow-sm' 
-                  : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200 dark:border-slate-700'}
+                  ? 'bg-indigo-50 text-slate-900 rounded-tr-none border-2 border-indigo-100 shadow-sm' 
+                  : 'bg-white text-slate-800 rounded-tl-none border border-slate-200'}
               `}>
                 <div className="whitespace-pre-wrap markdown-content">
                   {msg.content}
                 </div>
                 {msg.imageUrl && (
-                  <div className="mt-8 rounded-[2.5rem] overflow-hidden border-8 border-slate-50 dark:border-slate-700 shadow-2xl group/img relative">
+                  <div className="mt-8 rounded-[2.5rem] overflow-hidden border-8 border-slate-50 shadow-2xl group/img relative">
                     <img src={msg.imageUrl} alt="Strategic Asset" className="w-full h-auto object-cover" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                        <button 
                          onClick={() => downloadImage(msg.imageUrl!, 'StrategicAsset')}
-                         className="px-8 py-4 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-3"
+                         className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-3"
                        >
                          <ICONS.Efficiency className="w-5 h-5" /> Download Master
                        </button>
@@ -244,7 +244,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
       </div>
 
       {/* Input Area (Centered with white margins) */}
-      <div className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-20">
+      <div className="w-full bg-white/80 backdrop-blur-xl border-t border-slate-200 z-20">
         <div className="max-w-5xl mx-auto px-12 py-10 space-y-6">
           <div className="flex flex-wrap gap-4 justify-center">
              <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
@@ -260,12 +260,12 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type your strategic inquiry..."
-              className="w-full bg-white dark:bg-slate-800 border-4 border-slate-200 dark:border-slate-700 rounded-[3rem] px-12 py-10 text-3xl outline-none transition-all pr-48 font-bold italic shadow-2xl focus:border-indigo-500 dark:focus:border-indigo-600 placeholder:text-slate-200 dark:placeholder:text-slate-600 text-slate-900 dark:text-white"
+              className="w-full bg-white border-4 border-slate-200 rounded-[3rem] px-12 py-10 text-3xl outline-none transition-all pr-48 font-bold italic shadow-2xl focus:border-indigo-500 placeholder:text-slate-200"
             />
             <button 
               onClick={handleSend}
               disabled={!input.trim() || isProcessing}
-              className={`absolute right-6 top-6 bottom-6 px-12 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl flex items-center gap-3 transition-all active:scale-95 ${isProcessing ? 'bg-slate-100 dark:bg-slate-700 text-slate-300 dark:text-slate-500' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+              className={`absolute right-6 top-6 bottom-6 px-12 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl flex items-center gap-3 transition-all active:scale-95 ${isProcessing ? 'bg-slate-100 text-slate-300' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
             >
               {isProcessing ? 'Synthesizing' : 'Synthesize'}
             </button>
@@ -274,12 +274,12 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           <div className="flex items-center justify-between px-4">
              <button 
                onClick={() => setIncludeContext(!includeContext)}
-               className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'}`}
+               className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400'}`}
              >
-                <div className={`w-2 h-2 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                <div className={`w-2 h-2 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`}></div>
                 Strategic Context Sync: {includeContext ? 'Active' : 'Offline'}
              </button>
-             <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
+             <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
           </div>
         </div>
       </div>
@@ -289,15 +289,15 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
 const ToolToggle = ({ active, onClick, icon, label, color = 'indigo' }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; color?: string }) => {
   const activeClasses = {
-    indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-none scale-105',
-    emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 dark:shadow-none scale-105',
-    amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 dark:shadow-none scale-105',
+    indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 scale-105',
+    emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 scale-105',
+    amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 scale-105',
   }[color];
 
   return (
     <button 
       onClick={onClick}
-      className={`flex items-center gap-3 px-8 py-3 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.1em] text-[10px] shadow-sm ${active ? activeClasses : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-slate-600 dark:hover:text-slate-300'}`}
+      className={`flex items-center gap-3 px-8 py-3 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.1em] text-[10px] shadow-sm ${active ? activeClasses : 'bg-white border-slate-100 text-slate-400 hover:border-indigo-300 hover:text-slate-600'}`}
     >
       {icon}
       {label}
