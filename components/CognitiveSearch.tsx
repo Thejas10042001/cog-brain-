@@ -7,7 +7,7 @@ import { MeetingContext } from '../types';
 const FormattedText: FC<{ text: string }> = ({ text }) => {
   const lines = text.split('\n');
   return (
-    <div className="space-y-6 text-slate-700 leading-relaxed text-lg font-serif">
+    <div className="space-y-6 text-slate-700 dark:text-slate-300 leading-relaxed text-lg font-serif">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
         if (!trimmed) return <div key={idx} className="h-4" />;
@@ -15,10 +15,10 @@ const FormattedText: FC<{ text: string }> = ({ text }) => {
         if (trimmed.startsWith('### ')) {
           const title = trimmed.replace('### ', '');
           return (
-            <div key={idx} className="pt-8 pb-4 border-b-2 border-slate-100 mb-4 animate-in fade-in slide-in-from-left-4 first:pt-0">
+            <div key={idx} className="pt-8 pb-4 border-b-2 border-slate-100 dark:border-slate-800 mb-4 animate-in fade-in slide-in-from-left-4 first:pt-0">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-6 bg-indigo-600 rounded-full shadow-sm"></div>
-                <h4 className="text-[13px] font-black uppercase tracking-[0.3em] text-slate-900 drop-shadow-sm">{title}</h4>
+                <h4 className="text-[13px] font-black uppercase tracking-[0.3em] text-slate-900 dark:text-white drop-shadow-sm">{title}</h4>
               </div>
             </div>
           );
@@ -26,16 +26,16 @@ const FormattedText: FC<{ text: string }> = ({ text }) => {
 
         const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ');
         return (
-          <div key={idx} className={isBullet ? "flex gap-4 pl-6 border-l-4 border-indigo-50 py-2 bg-slate-50/40 rounded-r-xl" : "py-1"}>
+          <div key={idx} className={isBullet ? "flex gap-4 pl-6 border-l-4 border-indigo-50 dark:border-indigo-900/30 py-2 bg-slate-50/40 dark:bg-slate-800/20 rounded-r-xl" : "py-1"}>
             {isBullet && <div className="mt-2.5 w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-sm shrink-0"></div>}
             <div className="flex-1">
               {trimmed.split(/(\*\*.*?\*\*|\*.*?\*)/g).map((part, i) => {
                 if (part.startsWith('**') && part.endsWith('**')) {
                   const inner = part.slice(2, -2);
-                  return <strong key={i} className="font-extrabold text-slate-900 bg-indigo-100/50 px-2 py-0.5 rounded">{inner}</strong>;
+                  return <strong key={i} className="font-extrabold text-slate-900 dark:text-white bg-indigo-100/50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">{inner}</strong>;
                 }
                 if (part.startsWith('*') && part.endsWith('*')) {
-                  return <em key={i} className="italic text-indigo-800 font-semibold">{part.slice(1, -1)}</em>;
+                  return <em key={i} className="italic text-indigo-800 dark:text-indigo-300 font-semibold">{part.slice(1, -1)}</em>;
                 }
                 return part;
               })}
@@ -221,17 +221,17 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl border border-slate-200">
+      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-10 shadow-2xl border border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-100"><ICONS.Search className="w-5 h-5" /></div>
+            <div className="p-3.5 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20"><ICONS.Search className="w-5 h-5" /></div>
             <div>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Cognitive Answering Hub</h2>
-              <p className="text-xs text-slate-500 font-medium">Verified intelligence from <strong className="text-indigo-600">Pro Reasoning Core</strong></p>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Cognitive Answering Hub</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Verified intelligence from <strong className="text-indigo-600 dark:text-indigo-400">Pro Reasoning Core</strong></p>
             </div>
           </div>
           <div className="flex flex-col items-end">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-full text-[9px] font-black text-indigo-600 uppercase tracking-widest">
+             <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-full text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
                 <div className="w-1 h-1 bg-indigo-500 rounded-full animate-pulse"></div>
                 Intelligence Active
              </div>
@@ -244,7 +244,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`Ask about ${context.persona} drivers, gaps, or ROI targets...`}
-            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[1.8rem] px-8 py-6 text-lg focus:border-indigo-500 focus:bg-white outline-none transition-all pr-40 font-medium shadow-inner"
+            className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[1.8rem] px-8 py-6 text-lg focus:border-indigo-500 dark:focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all pr-40 font-medium shadow-inner dark:text-white dark:placeholder:text-slate-500"
           />
           <button 
             type="submit"
@@ -262,12 +262,12 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
 
         {/* Cognitive Shot (Short Answer) */}
         {result?.cognitiveShot && (
-          <div className="mt-8 p-6 bg-indigo-50 border-l-4 border-indigo-600 rounded-2xl animate-in fade-in slide-in-from-top-2">
+          <div className="mt-8 p-6 bg-indigo-50 dark:bg-indigo-900/10 border-l-4 border-indigo-600 rounded-2xl animate-in fade-in slide-in-from-top-2">
              <div className="flex items-center gap-2 mb-2">
-                <ICONS.Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                <h5 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Cognitive Shot (Executive Summary)</h5>
+                <ICONS.Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <h5 className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest">Cognitive Shot (Executive Summary)</h5>
              </div>
-             <p className="text-sm font-bold text-slate-800 italic leading-snug">“{result.cognitiveShot}”</p>
+             <p className="text-sm font-bold text-slate-800 dark:text-slate-200 italic leading-snug">“{result.cognitiveShot}”</p>
           </div>
         )}
       </div>
@@ -275,7 +275,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
       {(result || isSearching) && (
         <div className="space-y-10 animate-in slide-in-from-top-6 duration-700">
           
-          <div className="bg-indigo-950 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group border border-indigo-900">
+          <div className="bg-indigo-950 dark:bg-black rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group border border-indigo-900 dark:border-slate-800">
              <div className="absolute -top-10 -right-10 p-12 opacity-5 rotate-12 transition-transform group-hover:rotate-0 duration-1000"><ICONS.Brain className="w-56 h-56 text-white" /></div>
              <div className="relative z-10 space-y-6">
                 <div className="flex justify-between items-start">
@@ -310,13 +310,13 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
             <ProjectionCard label="Our Winning Angle" content={result?.psychologicalProjection?.strategicLever || "..."} color="indigo" icon={<ICONS.Trophy />} isSearching={isSearching} />
           </div>
 
-          <div className="bg-white rounded-[3.5rem] p-12 md:p-20 shadow-2xl border border-slate-200 relative overflow-hidden">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16 border-b border-slate-100 pb-12">
+          <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] p-12 md:p-20 shadow-2xl border border-slate-200 dark:border-slate-800 relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16 border-b border-slate-100 dark:border-slate-800 pb-12">
                <div className="flex items-center gap-5">
-                  <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100 rotate-2 transition-transform hover:rotate-0"><ICONS.Brain className="w-6 h-6" /></div>
+                  <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100 dark:shadow-indigo-900/20 rotate-2 transition-transform hover:rotate-0"><ICONS.Brain className="w-6 h-6" /></div>
                   <div>
-                    <h3 className="text-[14px] font-black uppercase tracking-[0.3em] text-slate-900">Intelligence Synthesis</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
+                    <h3 className="text-[14px] font-black uppercase tracking-[0.3em] text-slate-900 dark:text-white">Intelligence Synthesis</h3>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
                        <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping"></span>
                        Persona: {context.persona} Psychology
                     </p>
@@ -325,7 +325,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
                
                <div className="flex flex-wrap gap-2 justify-end max-w-lg">
                   {context.answerStyles.map((style, i) => (
-                    <span key={i} className="px-4 py-2 bg-indigo-50/50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest border border-indigo-100/60 shadow-sm">
+                    <span key={i} className="px-4 py-2 bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-indigo-100/60 dark:border-indigo-900/30 shadow-sm">
                       {style}
                     </span>
                   ))}
@@ -335,22 +335,22 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
             <FormattedText text={streamingText || result?.answer || (isSearching ? "Synthesizing exhaustive reasoning..." : "")} />
 
             {result?.citations && result.citations.length > 0 && (
-              <div className="mt-24 pt-16 border-t border-slate-100 space-y-12">
+              <div className="mt-24 pt-16 border-t border-slate-100 dark:border-slate-800 space-y-12">
                  <div className="flex items-center justify-between">
-                   <h5 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
+                   <h5 className="text-[12px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
                       <ICONS.Shield className="w-4 h-4 text-indigo-500" /> Verified Evidence
                    </h5>
-                   <div className="px-4 py-1.5 bg-slate-100 rounded-full text-[9px] font-black text-slate-500 tracking-widest uppercase">
+                   <div className="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full text-[9px] font-black text-slate-500 dark:text-slate-400 tracking-widest uppercase">
                      {result.citations.length} Document Links
                    </div>
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    {result.citations.map((cit, i) => (
-                     <div key={i} className="p-8 bg-slate-50/50 border border-slate-100 rounded-[2rem] group hover:bg-white hover:border-indigo-300 hover:shadow-2xl transition-all duration-500">
-                        <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                     <div key={i} className="p-8 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-[2rem] group hover:bg-white dark:hover:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-2xl transition-all duration-500">
+                        <p className="text-[9px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                           <ICONS.Document className="w-3.5 h-3.5" /> {cit.source || 'Intelligence Store'}
                         </p>
-                        <p className="text-md text-slate-600 leading-relaxed font-serif italic relative">
+                        <p className="text-md text-slate-600 dark:text-slate-400 leading-relaxed font-serif italic relative">
                            {cit.snippet}
                         </p>
                      </div>
@@ -364,12 +364,12 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
 
       {!result && !isSearching && suggestions.length > 0 && (
         <div className="space-y-8 py-6">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 text-center">Reasoning Suggestions</h4>
+          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 text-center">Reasoning Suggestions</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {suggestions.map((text, i) => (
-              <button key={i} onClick={() => {setQuery(text); handleSearch(undefined, text);}} className="p-10 bg-white border border-slate-100 rounded-[2.5rem] text-left hover:border-indigo-500 hover:shadow-2xl transition-all shadow-xl group border-b-4 border-b-indigo-50 hover:border-b-indigo-600 active:scale-95 duration-300">
-                <p className="text-indigo-400 text-[9px] font-black uppercase tracking-widest mb-4 group-hover:translate-x-1 transition-transform">Suggested Node {i + 1}</p>
-                <p className="text-lg font-bold text-slate-800 leading-tight">“{text}”</p>
+              <button key={i} onClick={() => {setQuery(text); handleSearch(undefined, text);}} className="p-10 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] text-left hover:border-indigo-500 dark:hover:border-indigo-700 hover:shadow-2xl transition-all shadow-xl group border-b-4 border-b-indigo-50 dark:border-b-indigo-900/30 hover:border-b-indigo-600 dark:hover:border-b-indigo-500 active:scale-95 duration-300">
+                <p className="text-indigo-400 dark:text-indigo-500 text-[9px] font-black uppercase tracking-widest mb-4 group-hover:translate-x-1 transition-transform">Suggested Node {i + 1}</p>
+                <p className="text-lg font-bold text-slate-800 dark:text-white leading-tight">“{text}”</p>
               </button>
             ))}
           </div>
@@ -380,18 +380,18 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
 };
 
 const ProjectionCard: FC<{ label: string; content: string; color: string; icon: React.ReactNode, isSearching?: boolean }> = ({ label, content, color, icon, isSearching }) => (
-  <div className={`p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-xl border-t-4 border-t-${color}-500 hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden`}>
-    {isSearching && <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 overflow-hidden"><div className={`h-full bg-${color}-500 animate-[progress_1.5s_infinite] w-full origin-left`}></div></div>}
+  <div className={`p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl border-t-4 border-t-${color}-500 hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden`}>
+    {isSearching && <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800 overflow-hidden"><div className={`h-full bg-${color}-500 animate-[progress_1.5s_infinite] w-full origin-left`}></div></div>}
     <div className="flex items-center gap-4 mb-6">
-       <div className={`p-4 bg-${color}-50 text-${color}-600 rounded-2xl group-hover:scale-105 transition-transform shadow-sm`}>{icon}</div>
-       <h4 className={`text-[11px] font-black uppercase tracking-[0.2em] text-${color}-600`}>{label}</h4>
+       <div className={`p-4 bg-${color}-50 dark:bg-${color}-900/20 text-${color}-600 dark:text-${color}-400 rounded-2xl group-hover:scale-105 transition-transform shadow-sm`}>{icon}</div>
+       <h4 className={`text-[11px] font-black uppercase tracking-[0.2em] text-${color}-600 dark:text-${color}-400`}>{label}</h4>
     </div>
-    <p className="text-xl font-bold text-slate-800 leading-relaxed italic tracking-tight relative z-10">
+    <p className="text-xl font-bold text-slate-800 dark:text-white leading-relaxed italic tracking-tight relative z-10">
       {content === "..." ? (
         <span className="flex gap-1">
-          <span className="w-1.5 h-1.5 bg-slate-200 rounded-full animate-bounce"></span>
-          <span className="w-1.5 h-1.5 bg-slate-200 rounded-full animate-bounce [animation-delay:0.2s] font-serif"></span>
-          <span className="w-1.5 h-1.5 bg-slate-200 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+          <span className="w-1.5 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full animate-bounce"></span>
+          <span className="w-1.5 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full animate-bounce [animation-delay:0.2s] font-serif"></span>
+          <span className="w-1.5 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full animate-bounce [animation-delay:0.4s]"></span>
         </span>
       ) : `“${content}”`}
     </p>

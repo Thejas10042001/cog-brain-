@@ -61,13 +61,22 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('spikedai-dark-mode');
+      if (saved !== null) return saved === 'true';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('spikedai-dark-mode', 'true');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('spikedai-dark-mode', 'false');
     }
   }, [darkMode]);
 
@@ -517,7 +526,7 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-white flex flex-col transition-all duration-300 ease-in-out origin-top-left"
+      className="min-h-screen bg-white dark:bg-slate-900 flex flex-col transition-all duration-300 ease-in-out origin-top-left"
       style={{ 
         zoom: zoom / 100,
         // @ts-ignore
@@ -573,16 +582,16 @@ const App: React.FC = () => {
       
       <div className="pt-16 flex flex-1 overflow-hidden text-magnifier">
         
-        <div className="flex flex-1 overflow-hidden bg-white relative">
+        <div className="flex flex-1 overflow-hidden bg-white dark:bg-slate-900 relative">
           {analysis && !isAnalyzing && (
             <>
               <aside 
                 style={{ width: sidebarWidth, fontSize: `${sidebarFontScale}rem` }}
-                className="bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all"
+                className="bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all"
               >
                 <div className={`p-2 ${sidebarWidth > 120 ? 'lg:p-6' : 'p-2'} space-y-8 flex flex-col h-full`}>
                   <div className="space-y-1">
-                    {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
+                    {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
                     <div className="flex flex-col gap-1">
                       <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "01 Settings" : ""} scale={sidebarFontScale} />
                       <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "02 Hands-on Assignment" : ""} scale={sidebarFontScale} />
@@ -596,8 +605,8 @@ const App: React.FC = () => {
                   </div>
 
                   {sidebarWidth > 180 && (
-                    <div className="mt-auto pt-6 border-t border-slate-100 space-y-4">
-                      <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200">
+                    <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                      <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 transition-all border border-slate-200 dark:border-slate-700">
                         <ICONS.X className="w-3 h-3" /> Wipe Strategy
                       </button>
                     </div>
@@ -615,15 +624,15 @@ const App: React.FC = () => {
             </>
           )}
 
-          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-white relative">
+          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900 relative">
             <div className="w-full min-h-full">
               {!analysis && !isAnalyzing && !isRestoring ? (
                 <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 w-full">
                   <div className="text-center space-y-4">
-                    <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
+                    <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">
                       SPIKED<span className="text-red-600">AI</span> Hub
                     </h1>
-                    <p className="text-xl text-slate-400 font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto">
+                    <p className="text-xl text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto">
                       Cognitive Intelligence Brain Simulation
                     </p>
                   </div>
@@ -645,47 +654,47 @@ const App: React.FC = () => {
                   />
                 </div>
               ) : (isAnalyzing || isRestoring) ? (
-                <div className="flex flex-col items-center justify-center space-y-12 h-full min-h-[600px]">
+                <div className="flex flex-col items-center justify-center space-y-12 h-full min-h-[600px] bg-white dark:bg-slate-900">
                   <div className="relative">
                     <div className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out" style={{ transform: `scale(${1 + (loadingProgress / 100)})`, opacity: 0.2 + (loadingProgress / 100) }}></div>
-                    <div className="relative w-32 h-32 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <div className="relative w-32 h-32 border-4 border-indigo-50 dark:border-indigo-900/30 border-t-indigo-600 rounded-full animate-spin"></div>
                     <div className="absolute inset-0 flex items-center justify-center text-indigo-600 transition-all duration-700" style={{ transform: `scale(${1.2 + (loadingProgress / 200)})`, filter: `drop-shadow(0 0 ${loadingProgress / 5}px rgba(79, 70, 229, ${loadingProgress / 100}))` }}><ICONS.Brain className="w-10 h-10" /></div>
                     <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-                      <span className="text-3xl font-black text-slate-800 tracking-tighter">{Math.floor(loadingProgress)}<span className="text-indigo-500 text-sm ml-0.5">%</span></span>
+                      <span className="text-3xl font-black text-slate-800 dark:text-white tracking-tighter">{Math.floor(loadingProgress)}<span className="text-indigo-500 text-sm ml-0.5">%</span></span>
                     </div>
                   </div>
                   <div className="text-center space-y-6 max-w-md">
-                    <p className="text-2xl font-black text-slate-800 tracking-tight">{loadingStatusText}</p>
-                    <div className="w-64 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden shadow-inner">
+                    <p className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">{loadingStatusText}</p>
+                    <div className="w-64 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto overflow-hidden shadow-inner">
                       <div className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full" style={{ width: `${loadingProgress}%` }}></div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="animate-in fade-in duration-500 h-full flex flex-col">
+                <div className="animate-in fade-in duration-500 h-full flex flex-col bg-white dark:bg-slate-900">
                   {/* Fixed Node Header */}
-                  <div className="px-8 py-6 bg-slate-50 border-b border-slate-100">
+                  <div className="px-8 py-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                     <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-lg">{NODE_DETAILS[activeTab].stepNumber}</div>
-                          <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{NODE_DETAILS[activeTab].label}</h2>
-                          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 text-[10px] font-black rounded-md uppercase tracking-wider">Active Node</span>
+                          <div className="w-10 h-10 bg-slate-900 dark:bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-lg">{NODE_DETAILS[activeTab].stepNumber}</div>
+                          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">{NODE_DETAILS[activeTab].label}</h2>
+                          <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black rounded-md uppercase tracking-wider">Active Node</span>
                         </div>
-                        <p className="text-indigo-600 font-bold text-xs uppercase tracking-widest">{NODE_DETAILS[activeTab].feature}</p>
+                        <p className="text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-widest">{NODE_DETAILS[activeTab].feature}</p>
                       </div>
                       <div className="flex-1 max-w-3xl grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-1">
-                          <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Purpose</h4>
-                          <p className="text-[11px] font-medium text-slate-600 leading-tight">{NODE_DETAILS[activeTab].purpose}</p>
+                          <h4 className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Purpose</h4>
+                          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">{NODE_DETAILS[activeTab].purpose}</p>
                         </div>
                         <div className="space-y-1">
-                          <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">How it helps</h4>
-                          <p className="text-[11px] font-medium text-slate-600 leading-tight">{NODE_DETAILS[activeTab].howItHelps}</p>
+                          <h4 className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">How it helps</h4>
+                          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">{NODE_DETAILS[activeTab].howItHelps}</p>
                         </div>
                         <div className="space-y-1">
-                          <h4 className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Operational Guide</h4>
-                          <p className="text-[11px] font-bold text-indigo-600 leading-tight italic">{NODE_DETAILS[activeTab].guideText}</p>
+                          <h4 className="text-[8px] font-black text-indigo-400 dark:text-indigo-500 uppercase tracking-widest">Operational Guide</h4>
+                          <p className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 leading-tight italic">{NODE_DETAILS[activeTab].guideText}</p>
                         </div>
                       </div>
                     </div>
@@ -732,13 +741,13 @@ const SidebarBtn = ({ active, onClick, icon, label, scale = 1 }: { active: boole
     onClick={onClick}
     className={`w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl font-bold transition-all text-sm group ${
       active 
-      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02]' 
-      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 dark:shadow-none scale-[1.02]' 
+      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
     }`}
     style={{ transform: active ? `scale(${1.02 * (scale > 1 ? 1 : scale)})` : 'none' }}
   >
     <div 
-      className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors shrink-0`}
+      className={`${active ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'} transition-colors shrink-0`}
       style={{ transform: `scale(${scale})` }}
     >
       {icon}

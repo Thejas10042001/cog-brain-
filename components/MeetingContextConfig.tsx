@@ -738,80 +738,80 @@ OPERATIONAL CONSTRAINTS:
     <div className="space-y-12">
       <AnimatePresence>
         {showKycGuide && (
-          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/80 dark:bg-black/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] border border-slate-200 dark:border-slate-800"
             >
-              <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
+              <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center">
                     <ICONS.Brain className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">KYC Synthesis Protocol</h3>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">KYC Synthesis Protocol</h3>
                 </div>
-                <button onClick={() => setShowKycGuide(false)} className="p-2 hover:bg-white rounded-full transition-colors">
-                  <ICONS.X className="w-6 h-6 text-slate-400" />
+                <button onClick={() => setShowKycGuide(false)} className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-full transition-colors">
+                  <ICONS.X className="w-6 h-6 text-slate-400 dark:text-slate-500" />
                 </button>
               </div>
               
               <div className="p-10 overflow-y-auto custom-scrollbar space-y-8">
                 <div className="space-y-6">
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">01</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">01</div>
                     <div className="space-y-1">
-                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Calibrate Seller Identity</p>
-                      <p className="text-sm text-slate-500 leading-relaxed">Input your LinkedIn and Company URLs to auto-populate the seller profile with high-fidelity professional data.</p>
+                      <p className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Calibrate Seller Identity</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Input your LinkedIn and Company URLs to auto-populate the seller profile with high-fidelity professional data.</p>
                     </div>
                   </div>
                   
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">02</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">02</div>
                     <div className="space-y-1">
-                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Map Client/Buyer Identity</p>
-                      <p className="text-sm text-slate-500 leading-relaxed">Provide the target client's LinkedIn and Company URLs to ingest critical buyer-side intelligence.</p>
+                      <p className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Map Client/Buyer Identity</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Provide the target client's LinkedIn and Company URLs to ingest critical buyer-side intelligence.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">03</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">03</div>
                     <div className="space-y-1">
-                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Initiate Intelligence Fetch</p>
-                      <p className="text-sm text-slate-500 leading-relaxed">Click 'Fetch Information' and observe the Engine Controls as the cognitive core processes the data streams.</p>
+                      <p className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Initiate Intelligence Fetch</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Click 'Fetch Information' and observe the Engine Controls as the cognitive core processes the data streams.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">04</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">04</div>
                     <div className="space-y-1">
-                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Validate Neural Synthesis</p>
-                      <p className="text-sm text-slate-500 leading-relaxed">Review the auto-filled parameters for accuracy and trigger 'Start Deep Analysis' to begin document generation.</p>
+                      <p className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Validate Neural Synthesis</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Review the auto-filled parameters for accuracy and trigger 'Start Deep Analysis' to begin document generation.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">05</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">05</div>
                     <div className="space-y-1">
-                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Intelligence Generation</p>
-                      <p className="text-sm text-slate-500 leading-relaxed">Allow the cognitive engine to synthesize your high-fidelity KYC document (this may take a few moments).</p>
+                      <p className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Intelligence Generation</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Allow the cognitive engine to synthesize your high-fidelity KYC document (this may take a few moments).</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">06</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">06</div>
                     <div className="space-y-1">
-                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Export Intelligence</p>
-                      <p className="text-sm text-slate-500 leading-relaxed">Download your newly synthesized intelligence brief in PDF or Word format.</p>
+                      <p className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs">Export Intelligence</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Download your newly synthesized intelligence brief in PDF or Word format.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
                     <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 font-bold text-xs">07</div>
                     <div className="space-y-1">
-                      <p className="font-black text-indigo-600 uppercase tracking-widest text-xs">Ground the Simulation</p>
-                      <p className="text-sm text-slate-500 leading-relaxed font-medium italic">Return to this hub, upload the document to the 'Documentary Memory Store' (Step 1), then select it from the KYC dropdown in Step 2 to anchor your simulation.</p>
+                      <p className="font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest text-xs">Ground the Simulation</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium italic">Return to this hub, upload the document to the 'Documentary Memory Store' (Step 1), then select it from the KYC dropdown in Step 2 to anchor your simulation.</p>
                     </div>
                   </div>
                 </div>
@@ -863,19 +863,19 @@ OPERATIONAL CONSTRAINTS:
 
 const VocalTrait = ({ label, val, color }: { label: string, val: string, color: string }) => (
   <div className={`p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:border-${color}-500/50 transition-all w-full`}>
-    <span className="text-[7px] font-black uppercase text-slate-500 tracking-widest">{label}</span>
+    <span className="text-[7px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">{label}</span>
     <span className="text-[10px] font-bold text-white truncate">{val}</span>
   </div>
 );
 
 const Input = ({ label, value, onChange, placeholder, isLarge }: { label: string; value: string; onChange: (v: string) => void; placeholder: string, isLarge?: boolean }) => (
   <div className="space-y-2">
-    {label && <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">{label}</label>}
+    {label && <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] ml-1">{label}</label>}
     <input
       type="text"
       value={value}
       onChange={e => onChange(e.target.value)}
-      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-300 shadow-inner ${isLarge ? 'text-lg py-6' : ''}`}
+      className={`w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 dark:focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all font-semibold text-slate-800 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-inner ${isLarge ? 'text-lg py-6' : ''}`}
       placeholder={placeholder}
     />
   </div>

@@ -60,14 +60,14 @@ const CognitiveRadarChart = ({ data, size = 320 }: { data: { label: string, valu
 };
 
 const SWOTItem = ({ label, items, color, symbol }: { label: string, items: string[], color: string, symbol: string }) => (
-  <div className={`p-5 rounded-3xl bg-${color}-50/30 border border-${color}-100/50 flex flex-col h-full`}>
+  <div className={`p-5 rounded-3xl bg-${color}-50/30 dark:bg-${color}-900/10 border border-${color}-100/50 dark:border-${color}-900/30 flex flex-col h-full`}>
     <div className="flex items-center gap-2 mb-3">
        <div className={`w-6 h-6 rounded-lg bg-${color}-500 text-white flex items-center justify-center font-black text-[10px]`}>{symbol}</div>
-       <h5 className={`text-[10px] font-black uppercase tracking-widest text-${color}-600`}>{label}</h5>
+       <h5 className={`text-[10px] font-black uppercase tracking-widest text-${color}-600 dark:text-${color}-400`}>{label}</h5>
     </div>
     <ul className="space-y-2">
       {items.map((item, idx) => (
-        <li key={idx} className="flex gap-2 text-[10px] text-slate-600 leading-relaxed font-medium">
+        <li key={idx} className="flex gap-2 text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
           <span className={`text-${color}-500 mt-1 shrink-0`}>•</span>
           <span>{item}</span>
         </li>
@@ -77,29 +77,29 @@ const SWOTItem = ({ label, items, color, symbol }: { label: string, items: strin
 );
 
 const CompetitorCard: React.FC<{ comp: CompetitorInsight, name: string }> = ({ comp, name }) => (
-  <div className="p-10 rounded-[4rem] bg-white border border-slate-100 hover:border-indigo-300 hover:shadow-[0_40px_80px_-15px_rgba(79,70,229,0.12)] transition-all duration-700 group flex flex-col h-full relative overflow-hidden">
+  <div className="p-10 rounded-[4rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-[0_40px_80px_-15px_rgba(79,70,229,0.12)] transition-all duration-700 group flex flex-col h-full relative overflow-hidden">
     <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-       <ICONS.Trophy className="w-48 h-48" />
+       <ICONS.Trophy className="w-48 h-48 dark:text-white" />
     </div>
     
     <div className="flex items-center justify-between mb-8 relative z-10">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-xl shadow-indigo-100">{name[0]}</div>
+        <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-xl shadow-indigo-100 dark:shadow-indigo-900/20">{name[0]}</div>
         <div>
-           <h4 className="text-2xl font-black text-slate-900 tracking-tight">{name}</h4>
+           <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{name}</h4>
            <div className="flex items-center gap-2 mt-1">
               <span className={`w-2 h-2 rounded-full ${comp.threatProfile === 'Direct' ? 'bg-rose-500' : 'bg-emerald-500'}`}></span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{comp.threatProfile} Threat Profile</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{comp.threatProfile} Threat Profile</span>
            </div>
         </div>
       </div>
       <div className="text-right">
-         <p className="text-[9px] font-black uppercase text-indigo-500 tracking-widest mb-1">Our Displacement Wedge</p>
-         <p className="text-sm font-bold text-slate-900 border-b-2 border-indigo-100 pb-1">{comp.ourWedge}</p>
+         <p className="text-[9px] font-black uppercase text-indigo-500 dark:text-indigo-400 tracking-widest mb-1">Our Displacement Wedge</p>
+         <p className="text-sm font-bold text-slate-900 dark:text-white border-b-2 border-indigo-100 dark:border-indigo-900/30 pb-1">{comp.ourWedge}</p>
       </div>
     </div>
 
-    <p className="text-xs text-slate-500 font-medium mb-8 leading-relaxed italic border-l-4 border-slate-100 pl-4">“{comp.overview}”</p>
+    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-8 leading-relaxed italic border-l-4 border-slate-100 dark:border-slate-800 pl-4">“{comp.overview}”</p>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
       <SWOTItem label="Strengths" items={comp.strengths || []} color="emerald" symbol="S" />
@@ -108,12 +108,12 @@ const CompetitorCard: React.FC<{ comp: CompetitorInsight, name: string }> = ({ c
       <SWOTItem label="Threats" items={comp.threats || []} color="amber" symbol="T" />
     </div>
 
-    <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
+    <div className="mt-8 pt-6 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
        <div className="flex items-center gap-2">
-          <ICONS.Document className="w-3 h-3 text-slate-300" />
-          <span className="text-[8px] font-bold text-slate-400 truncate max-w-[150px]">{comp.citation.sourceFile}</span>
+          <ICONS.Document className="w-3 h-3 text-slate-300 dark:text-slate-600" />
+          <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 truncate max-w-[150px]">{comp.citation.sourceFile}</span>
        </div>
-       <button className="text-[9px] font-black uppercase text-indigo-600 tracking-widest hover:text-indigo-800 transition-colors">View Citation Details</button>
+       <button className="text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">View Citation Details</button>
     </div>
   </div>
 );
@@ -355,29 +355,29 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
   };
 
   const renderSection = (title: string, content: string) => (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-      <h4 className="text-[10px] font-black uppercase text-indigo-500 tracking-widest mb-4">{title}</h4>
-      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{content}</p>
+    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+      <h4 className="text-[10px] font-black uppercase text-indigo-500 dark:text-indigo-400 tracking-widest mb-4">{title}</h4>
+      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{content}</p>
     </div>
   );
 
   return (
     <div className="space-y-12 pb-20">
       <div className="flex justify-end items-center gap-6">
-        <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm">
-           <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Active Voice</span>
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+           <span className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">Active Voice</span>
            <select 
              value={selectedVoice} 
              onChange={(e) => setSelectedVoice(e.target.value)}
-             className="bg-transparent text-[11px] font-black uppercase text-indigo-600 outline-none cursor-pointer"
+             className="bg-transparent text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 outline-none cursor-pointer"
            >
-             {VOICES.map(v => <option key={v.name} value={v.name}>{v.label}</option>)}
+             {VOICES.map(v => <option key={v.name} value={v.name} className="bg-white dark:bg-slate-900">{v.label}</option>)}
            </select>
         </div>
         <button 
           onClick={generateReportPDF} 
           disabled={isExporting} 
-          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 ${isExporting ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 ${isExporting ? 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
         >
           {isExporting ? (
             <>
@@ -396,17 +396,17 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       </div>
 
       {/* Strategic Opening Hooks Section */}
-      <section className="bg-indigo-950 rounded-[4rem] p-12 shadow-2xl relative overflow-hidden group border border-indigo-900">
+      <section className="bg-indigo-950 dark:bg-black rounded-[4rem] p-12 shadow-2xl relative overflow-hidden group border border-indigo-900 dark:border-slate-800">
         <div className="absolute top-0 right-0 p-16 opacity-[0.05] translate-x-1/4 -translate-y-1/4 group-hover:translate-x-0 transition-transform duration-1000"><ICONS.Sparkles className="w-96 h-96 text-white" /></div>
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-12">
             <div>
               <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-2">Psychological Priming</h3>
               <h2 className="text-4xl font-black text-white tracking-tight">Strategic Opening Hooks</h2>
-              <p className="text-indigo-200/70 mt-3 text-sm font-medium max-w-2xl">Use these persona-aligned openers to establish authority and empathy immediately. Grounded in document analysis of {context.clientCompany}'s core priorities.</p>
+              <p className="text-indigo-200/70 dark:text-slate-400 mt-3 text-sm font-medium max-w-2xl">Use these persona-aligned openers to establish authority and empathy immediately. Grounded in document analysis of {context.clientCompany}'s core priorities.</p>
             </div>
             <div className="hidden lg:flex flex-col items-end gap-2">
-               <div className="px-4 py-2 bg-indigo-900/50 border border-indigo-500/30 rounded-xl text-[10px] font-black text-indigo-300 uppercase tracking-widest">
+               <div className="px-4 py-2 bg-indigo-900/50 dark:bg-slate-800/50 border border-indigo-500/30 dark:border-slate-700 rounded-xl text-[10px] font-black text-indigo-300 dark:text-slate-300 uppercase tracking-widest">
                   Target: {context.persona}
                </div>
                <div className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-[10px] font-black text-emerald-400 uppercase tracking-widest">
@@ -453,16 +453,16 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
       {/* NEW: Vocal Identity Fingerprint Section */}
       {context.vocalPersonaAnalysis && (
-        <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-100 overflow-hidden relative group">
+        <section className="bg-white dark:bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden relative group">
           <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform duration-1000">
              <ICONS.Speaker className="w-64 h-64 text-indigo-400" />
           </div>
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                <div>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 mb-2">Neural Audio Analysis</h3>
-                  <h2 className="text-4xl font-black text-white tracking-tight">Vocal Identity Fingerprint</h2>
-                  <p className="text-slate-400 mt-2 font-medium max-w-2xl italic">Biological vocal traits extracted for behavioral mirroring and psychological alignment.</p>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 dark:text-indigo-400 mb-2">Neural Audio Analysis</h3>
+                  <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Vocal Identity Fingerprint</h2>
+                  <p className="text-slate-400 dark:text-slate-500 mt-2 font-medium max-w-2xl italic">Biological vocal traits extracted for behavioral mirroring and psychological alignment.</p>
                </div>
                <div className="flex items-center gap-3 px-6 py-3 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-900/20">
                   <span className="text-[10px] font-black uppercase tracking-widest">Mirroring Engine: Primed</span>
@@ -479,7 +479,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
                <TraitChip label="Pacing" value={context.vocalPersonaAnalysis.breathingPatterns} />
             </div>
 
-            <div className="p-10 bg-white/5 border border-white/10 rounded-[3rem] shadow-inner flex flex-col lg:flex-row items-center gap-10">
+            <div className="p-10 bg-slate-900 dark:bg-black border border-white/10 rounded-[3rem] shadow-inner flex flex-col lg:flex-row items-center gap-10">
                <div className="flex-1 space-y-4">
                   <div className="flex items-center gap-2">
                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
@@ -515,29 +515,29 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       )}
 
       {/* Ground Matrix Hero Section */}
-      <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-12 opacity-5"><ICONS.Shield className="w-64 h-64 text-indigo-900" /></div>
+      <section className="bg-white dark:bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-12 opacity-5"><ICONS.Shield className="w-64 h-64 text-indigo-900 dark:text-white" /></div>
         <div className="relative z-10">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 mb-2">Source Grounding</h3>
-          <h2 className="text-4xl font-black text-slate-900 mb-10">Cognitive Ground Matrix</h2>
+          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 dark:text-indigo-400 mb-2">Source Grounding</h3>
+          <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-10">Cognitive Ground Matrix</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {result.groundMatrix.map((item, idx) => (
-              <div key={idx} className="bg-slate-50 border border-slate-100 p-8 rounded-[2.5rem] flex flex-col hover:bg-white hover:border-indigo-300 hover:shadow-xl transition-all group">
-                <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500 mb-3 px-2 py-1 bg-white border border-indigo-50 rounded-full inline-block w-fit">
+              <div key={idx} className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-8 rounded-[2.5rem] flex flex-col hover:bg-white dark:hover:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-xl transition-all group">
+                <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400 mb-3 px-2 py-1 bg-white dark:bg-slate-900 border border-indigo-50 dark:border-indigo-900/30 rounded-full inline-block w-fit">
                   {item.category}
                 </span>
-                <p className="text-md font-bold text-slate-900 mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
+                <p className="text-md font-bold text-slate-900 dark:text-white mb-4 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {item.observation}
                 </p>
                 <div className="mt-auto space-y-3">
-                   <p className="text-[10px] text-slate-500 font-medium italic leading-relaxed">
+                   <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium italic leading-relaxed">
                      “{item.significance}”
                    </p>
-                   <div className="pt-4 border-t border-slate-200">
-                      <p className="text-[7px] font-black uppercase text-slate-400 tracking-widest mb-1 flex items-center gap-1">
+                   <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <p className="text-[7px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-1 flex items-center gap-1">
                         <ICONS.Document className="w-2 h-2" /> Evidence Source
                       </p>
-                      <p className="text-[8px] font-bold text-slate-600 truncate">{item.evidence.sourceFile}</p>
+                      <p className="text-[8px] font-bold text-slate-600 dark:text-slate-300 truncate">{item.evidence.sourceFile}</p>
                    </div>
                 </div>
               </div>
@@ -547,24 +547,24 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       </section>
 
       {/* Psychology Matrix Enhanced */}
-      <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200">
+      <section className="bg-white dark:bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800">
         <div className="flex flex-col lg:flex-row gap-16 items-start">
           <div className="w-full lg:w-1/2 space-y-10">
             <div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 mb-2">Neural Matrix</h3>
-              <h2 className="text-4xl font-black text-slate-900 mb-6">Buyer Psychology Identity</h2>
-              <div className="space-y-6 text-slate-600 italic border-l-4 border-indigo-100 pl-6">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 dark:text-indigo-400 mb-2">Neural Matrix</h3>
+              <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-6">Buyer Psychology Identity</h2>
+              <div className="space-y-6 text-slate-600 dark:text-slate-400 italic border-l-4 border-indigo-100 dark:border-indigo-900/30 pl-6">
                 <p><strong>Persona:</strong> {result.snapshot.personaIdentity}</p>
                 <p><strong>Logic:</strong> {result.snapshot.decisionLogic}</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
                 {radarData.map((d, i) => (
                   <div key={i} className="space-y-2">
-                    <div className="flex justify-between text-[9px] font-black uppercase text-slate-400">
+                    <div className="flex justify-between text-[9px] font-black uppercase text-slate-400 dark:text-slate-500">
                       <span>{d.label}</span>
                       <span>{d.value}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                       <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${d.value}%` }}></div>
                     </div>
                   </div>
@@ -573,22 +573,22 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
             </div>
 
             {/* Anticipated Resistance Nodes */}
-            <div className="pt-10 border-t border-slate-100">
+            <div className="pt-10 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3 mb-6">
-                 <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center">
+                 <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 flex items-center justify-center">
                     <ICONS.Security className="w-4 h-4" />
                  </div>
-                 <h4 className="text-[11px] font-black uppercase text-slate-900 tracking-widest">Anticipated Resistance Nodes</h4>
+                 <h4 className="text-[11px] font-black uppercase text-slate-900 dark:text-white tracking-widest">Anticipated Resistance Nodes</h4>
               </div>
               <div className="space-y-4">
                 {result.snapshot.likelyObjections.slice(0, 3).map((objection, i) => {
                   const handle = result.objectionHandling.find(oh => oh.objection.toLowerCase().includes(objection.text.toLowerCase().substring(0, 10)));
                   return (
-                    <div key={i} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-rose-200 transition-all group">
-                       <p className="text-xs font-black text-slate-800 mb-2 tracking-tight group-hover:text-rose-600 transition-colors">“{objection.text}”</p>
+                    <div key={i} className="p-6 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-3xl hover:border-rose-200 dark:hover:border-rose-800 transition-all group">
+                       <p className="text-xs font-black text-slate-800 dark:text-white mb-2 tracking-tight group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">“{objection.text}”</p>
                        <div className="flex items-start gap-2">
-                          <span className="text-[9px] font-black uppercase text-indigo-500 mt-0.5 tracking-widest shrink-0">Strategy:</span>
-                          <p className="text-[10px] font-bold text-slate-500 leading-snug">
+                          <span className="text-[9px] font-black uppercase text-indigo-500 dark:text-indigo-400 mt-0.5 tracking-widest shrink-0">Strategy:</span>
+                          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-snug">
                             {handle?.strategy || "Leverage grounded ROI proof and persona-specific empathy nodes."}
                           </p>
                        </div>
@@ -600,9 +600,9 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
           </div>
           <div className="w-full lg:w-1/2 flex flex-col items-center justify-center sticky top-24">
             <CognitiveRadarChart data={radarData} />
-            <div className="mt-4 p-6 bg-indigo-50 rounded-[2.5rem] border border-indigo-100 text-center max-w-sm">
-               <p className="text-[9px] font-black uppercase text-indigo-600 tracking-widest mb-1">Synthesized Decision Driver</p>
-               <p className="text-xs font-bold text-slate-700 italic">“Anchored in high {radarData.sort((a,b) => b.value - a.value)[0].label.toLowerCase()}—responses must prioritize structural validation.”</p>
+            <div className="mt-4 p-6 bg-indigo-50 dark:bg-indigo-900/10 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30 text-center max-w-sm">
+               <p className="text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest mb-1">Synthesized Decision Driver</p>
+               <p className="text-xs font-bold text-slate-700 dark:text-slate-300 italic">“Anchored in high {radarData.sort((a,b) => b.value - a.value)[0].label.toLowerCase()}—responses must prioritize structural validation.”</p>
             </div>
           </div>
         </div>
@@ -616,18 +616,18 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       </section>
 
       {/* Competitive Intelligence Hub with Comparative SWOT */}
-      <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200 relative overflow-hidden">
+      <section className="bg-white dark:bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 via-indigo-600 to-emerald-500"></div>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div>
             <div className="flex items-center gap-4 mb-3">
-               <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100"><ICONS.Trophy /></div>
-               <h3 className="text-[11px] font-black uppercase tracking-[0.5em] text-indigo-500">Market Intelligence Hub</h3>
+               <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100 dark:shadow-indigo-900/20"><ICONS.Trophy /></div>
+               <h3 className="text-[11px] font-black uppercase tracking-[0.5em] text-indigo-500 dark:text-indigo-400">Market Intelligence Hub</h3>
             </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">Comparative SWOT Analysis</h2>
-            <p className="text-slate-500 mt-2 font-medium max-w-2xl">Deep-dive into inferred and explicit competitive dynamics. This matrix identifies specific vulnerabilities and threat vectors grounded in your documentary data.</p>
+            <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Comparative SWOT Analysis</h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium max-w-2xl">Deep-dive into inferred and explicit competitive dynamics. This matrix identifies specific vulnerabilities and threat vectors grounded in your documentary data.</p>
           </div>
-          <div className="flex items-center gap-3 px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100 shadow-sm">
+          <div className="flex items-center gap-3 px-6 py-3 bg-indigo-50 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 shadow-sm">
              <span className="text-[10px] font-black uppercase tracking-widest">Wedge Logic: Enabled</span>
              <ICONS.Shield className="w-3 h-3" />
           </div>
@@ -641,18 +641,18 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       </section>
 
       {/* Battle Drills with Tactical Playbook Layout */}
-      <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200">
+      <section className="bg-white dark:bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between mb-10">
           <div>
             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-rose-500 mb-2">Tactical Playbook</h3>
-            <h2 className="text-3xl font-black text-slate-900">Objection Defense Drills</h2>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white">Objection Defense Drills</h2>
           </div>
         </div>
         
         <div className="space-y-16">
           {result.objectionHandling.map((o, i) => (
             <div key={i} className="relative group">
-              <div className="p-10 rounded-[3.5rem] bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:bg-white hover:shadow-2xl transition-all duration-500 overflow-hidden relative">
+              <div className="p-10 rounded-[3.5rem] bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl transition-all duration-500 overflow-hidden relative">
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12">
                   <div className="lg:col-span-5 space-y-8">
                     <div>
@@ -660,27 +660,27 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
                          <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
                          <h4 className="text-[11px] font-black uppercase text-rose-500 tracking-widest">Incoming Objection</h4>
                       </div>
-                      <p className="text-2xl font-black text-slate-900 leading-tight tracking-tight">“{o.objection}”</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white leading-tight tracking-tight">“{o.objection}”</p>
                     </div>
 
-                    <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm italic text-slate-600 text-sm leading-relaxed border-l-4 border-l-rose-200">
-                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 not-italic mb-2">Neural Translation</p>
+                    <div className="p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] shadow-sm italic text-slate-600 dark:text-slate-400 text-sm leading-relaxed border-l-4 border-l-rose-200 dark:border-l-rose-900">
+                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 not-italic mb-2">Neural Translation</p>
                        “{o.realMeaning}”
                     </div>
                   </div>
 
                   <div className="lg:col-span-7 space-y-8">
-                     <div className="p-8 bg-indigo-950 text-white rounded-[2.5rem] shadow-xl relative overflow-hidden group/strat">
+                     <div className="p-8 bg-indigo-950 dark:bg-black text-white rounded-[2.5rem] shadow-xl relative overflow-hidden group/strat">
                         <h5 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-3">Strategic Maneuver</h5>
                         <p className="text-lg font-bold text-white/90 leading-snug">{o.strategy}</p>
                      </div>
 
-                     <div className="p-10 bg-white border border-indigo-100 rounded-[3rem] shadow-inner flex flex-col items-center text-center relative">
-                        <p className="text-xl font-bold text-slate-900 leading-relaxed italic mt-4">“{o.exactWording}”</p>
+                     <div className="p-10 bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/30 rounded-[3rem] shadow-inner flex flex-col items-center text-center relative">
+                        <p className="text-xl font-bold text-slate-900 dark:text-white leading-relaxed italic mt-4">“{o.exactWording}”</p>
                         <div className="mt-8 flex items-center gap-4">
                            <button 
                              onClick={() => playAudioForText(o.exactWording, `obj-${i}`)} 
-                             className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
+                             className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 dark:shadow-indigo-900/20"
                            >
                              {playingAudioId === `obj-${i}` ? 'Terminate' : <><ICONS.Speaker className="w-4 h-4" /> Listen</>}
                            </button>
@@ -708,8 +708,8 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 };
 
 const TraitChip = ({ label, value }: { label: string, value: string }) => (
-  <div className="p-6 bg-white/5 border border-white/10 rounded-[2rem] hover:border-indigo-500 transition-all group/chip">
-     <h5 className="text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] mb-2 group-hover/chip:text-indigo-400">{label}</h5>
-     <p className="text-xs font-bold text-slate-200 line-clamp-1">{value}</p>
+  <div className="p-6 bg-white/5 dark:bg-slate-800/50 border border-white/10 dark:border-slate-700 rounded-[2rem] hover:border-indigo-500 dark:hover:border-indigo-400 transition-all group/chip">
+     <h5 className="text-[8px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-[0.2em] mb-2 group-hover/chip:text-indigo-400">{label}</h5>
+     <p className="text-xs font-bold text-slate-200 dark:text-slate-300 line-clamp-1">{value}</p>
   </div>
 );

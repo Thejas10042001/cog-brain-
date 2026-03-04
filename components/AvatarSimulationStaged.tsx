@@ -55,6 +55,7 @@ export const AvatarSimulationStaged: FC<{
   const [sessionActive, setSessionActive] = useState(false);
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
+  const [showVocalControls, setShowVocalControls] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);
   const [status, setStatus] = useState("");
@@ -166,22 +167,30 @@ export const AvatarSimulationStaged: FC<{
       const interval = setInterval(() => {
         setBiometrics(prev => {
           // More "accurate" simulation logic
-          const stressDelta = !isAISpeaking ? (Math.random() * 2) : -(Math.random() * 1.5);
-          const newStress = Math.max(10, Math.min(85, prev.stressLevel + stressDelta));
+          const isTyping = currentCaption.length > 0;
           
-          const attentionDelta = isAISpeaking ? (Math.random() * 1) : (Math.random() * 4 - 2.5);
-          const newAttention = Math.max(70, Math.min(100, prev.attentionFocus + attentionDelta));
+          // Stress increases if user is typing a lot or if AI is silent for too long
+          const stressDelta = isTyping ? (Math.random() * 3) : (isAISpeaking ? -(Math.random() * 2) : (Math.random() * 1));
+          const newStress = Math.max(10, Math.min(90, prev.stressLevel + stressDelta));
           
-          const eyeDelta = isAISpeaking ? (Math.random() * 2) : (Math.random() * 5 - 3);
-          const newEye = Math.max(60, Math.min(98, prev.eyeContact + eyeDelta));
+          // Attention focus drops if user is not typing and AI is not speaking
+          const attentionDelta = (isAISpeaking || isTyping) ? (Math.random() * 2) : -(Math.random() * 3);
+          const newAttention = Math.max(60, Math.min(100, prev.attentionFocus + attentionDelta));
           
-          const newClarity = Math.max(80, Math.min(100, 90 + (Math.random() * 10 - 5)));
+          // Eye contact drops if user is typing (looking at keyboard/screen)
+          const eyeDelta = isTyping ? -(Math.random() * 4) : (isAISpeaking ? (Math.random() * 3) : (Math.random() * 1));
+          const newEye = Math.max(50, Math.min(98, prev.eyeContact + eyeDelta));
+          
+          // Clarity score based on length and punctuation of current caption
+          const clarityBase = currentCaption.length > 50 ? 95 : (currentCaption.length > 10 ? 85 : 70);
+          const newClarity = Math.max(60, Math.min(100, clarityBase + (Math.random() * 10 - 5)));
 
           let audit = prev.behavioralAudit;
-          if (newStress > 60) audit = "High cognitive load detected. Maintain steady breathing.";
-          else if (newAttention < 80) audit = "Focus deviation detected. Re-engage with the core logic.";
-          else if (isAISpeaking) audit = "Active listening protocol engaged. Analyzing prospect cues.";
-          else audit = "Strategic delivery in progress. Maintaining executive presence.";
+          if (newStress > 75) audit = "CRITICAL: High cognitive stress detected. Simplify your logic.";
+          else if (newAttention < 75) audit = "WARNING: Attention drift detected. Refocus on the client objective.";
+          else if (isTyping) audit = "STRATEGIC INPUT: Constructing narrative response. Maintaining focus.";
+          else if (isAISpeaking) audit = "ACTIVE LISTENING: Analyzing prospect vocal cues and strategic intent.";
+          else audit = "EXECUTIVE PRESENCE: Maintaining authoritative posture and readiness.";
 
           return {
             stressLevel: newStress,
@@ -236,7 +245,12 @@ export const AvatarSimulationStaged: FC<{
           }
         }
 
-        const voiceSample = await generateVoiceSample(text, meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore');
+        const voiceSample = await generateVoiceSample(
+          text, 
+          meetingContext.vocalPersonaAnalysis?.baseVoice || 'Kore',
+          meetingContext.vocalPersonaAnalysis?.gender,
+          meetingContext.vocalPersonaAnalysis
+        );
         if (voiceSample) {
           const audioData = atob(voiceSample);
           const arrayBuffer = new ArrayBuffer(audioData.length);
@@ -817,9 +831,49 @@ export const AvatarSimulationStaged: FC<{
 
       if (report) {
          addHeader("Final Performance Audit");
-         addLine(`Deal Readiness Score: ${report.deal_readiness_score}/10`);
+         addLine(`Deal Readiness Score: ${report.deal_readiness_score}/10`, 12, "bold", [79, 70, 229]);
+         addLine(`Next Step Likelihood: ${report.next_step_likelihood.toUpperCase()}`, 10, "bold");
+         y += 4;
+
+         addHeader("Strategic Summary", 11);
          addLine(`Main Themes: ${report.conversation_summary.main_themes.join(', ')}`);
-         addLine(`Executive Summary: ${report.sentiment_analysis.narrative}`);
+         addLine(`Decisions Reached: ${report.conversation_summary.decisions_reached.join(', ')}`);
+         addLine(`Executive Narrative: ${report.sentiment_analysis.narrative}`);
+         y += 4;
+
+         addHeader("Sentiment & Trust Analysis", 11);
+         addLine(`Sentiment Trend: ${report.sentiment_analysis.trend.toUpperCase()}`);
+         addLine(`Value Alignment: ${report.value_alignment_score}/10`);
+         addLine(`Confidence & Clarity: ${report.confidence_clarity_analysis.score}/10 - ${report.confidence_clarity_analysis.narrative}`);
+         y += 4;
+
+         if (report.objection_mapping.length > 0) {
+           addHeader("Objection Handling Audit", 11);
+           report.objection_mapping.forEach(obj => {
+             addLine(`Objection: "${obj.objection}"`, 9, "bold");
+             addLine(`Handled Effectively: ${obj.handled_effectively ? 'YES' : 'NO'} (Score: ${obj.quality_score}/10)`, 9, "italic", obj.handled_effectively ? [16, 185, 129] : [220, 38, 38]);
+             addLine(`Coaching: ${obj.coaching_note}`, 8);
+             addLine(`Suggested Alternative: "${obj.suggested_alternative}"`, 8, "italic", [79, 70, 229]);
+             y += 2;
+           });
+           y += 4;
+         }
+
+         if (report.risk_signals.length > 0 || report.trust_signals.length > 0) {
+           addHeader("Risk & Trust Signals", 11);
+           if (report.risk_signals.length > 0) addLine(`Risk Signals: ${report.risk_signals.join('; ')}`, 9, "normal", [220, 38, 38]);
+           if (report.trust_signals.length > 0) addLine(`Trust Signals: ${report.trust_signals.join('; ')}`, 9, "normal", [16, 185, 129]);
+           y += 4;
+         }
+
+         if (report.missed_opportunities.length > 0) {
+           addHeader("Missed Opportunities", 11);
+           report.missed_opportunities.forEach(opp => addLine(`- ${opp}`, 9, "normal", [245, 158, 11]));
+           y += 4;
+         }
+
+         addHeader("Actionable Coaching Recommendations", 11);
+         report.coaching_recommendations.forEach(rec => addLine(`- ${rec}`, 9, "bold", [79, 70, 229]));
       }
 
       doc.save(`Simulation-History-${meetingContext.clientCompany.replace(/\s+/g, '-')}.pdf`);
@@ -1117,10 +1171,78 @@ export const AvatarSimulationStaged: FC<{
                          <div className="flex items-center gap-3">
                             <div className={`w-1.5 h-1.5 rounded-full ${isAISpeaking ? 'bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(79,70,229,0.8)]' : 'bg-slate-300'}`}></div>
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{isAISpeaking ? 'Synchronizing Neural Link' : 'Awaiting Input'}</span>
+                            <div className="h-3 w-px bg-slate-200 mx-2"></div>
+                            <button 
+                              onClick={() => setShowVocalControls(!showVocalControls)}
+                              className="text-[9px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-700 transition-colors flex items-center gap-1"
+                            >
+                              <ICONS.Speaker className="w-3 h-3" /> Vocal Sync Controls
+                            </button>
                          </div>
                       </div>
                    </div>
                 </div>
+
+                <AnimatePresence>
+                  {showVocalControls && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-6 bg-indigo-50/50 border-t border-indigo-100 grid grid-cols-1 md:grid-cols-3 gap-8">
+                         <div className="space-y-3">
+                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Vocal Identity</label>
+                           <div className="flex flex-wrap gap-2">
+                             {['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'].map(v => (
+                               <button 
+                                 key={v}
+                                 onClick={() => onContextChange({
+                                   ...meetingContext,
+                                   vocalPersonaAnalysis: { ...(meetingContext.vocalPersonaAnalysis || {}), baseVoice: v as any } as any
+                                 })}
+                                 className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${meetingContext.vocalPersonaAnalysis?.baseVoice === v ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-400 hover:border-indigo-300'}`}
+                               >
+                                 {v}
+                               </button>
+                             ))}
+                           </div>
+                         </div>
+                         <div className="space-y-3">
+                           <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
+                             <span>Pace / Tempo</span>
+                             <span className="text-indigo-600">{meetingContext.vocalPersonaAnalysis?.pace || 1.0}x</span>
+                           </div>
+                           <input 
+                             type="range" min="0.5" max="2.0" step="0.1"
+                             value={meetingContext.vocalPersonaAnalysis?.pace || 1.0}
+                             onChange={e => onContextChange({
+                               ...meetingContext,
+                               vocalPersonaAnalysis: { ...(meetingContext.vocalPersonaAnalysis || {}), pace: parseFloat(e.target.value) } as any
+                             })}
+                             className="w-full h-1 bg-slate-200 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                           />
+                         </div>
+                         <div className="space-y-3">
+                           <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
+                             <span>Neural Stability</span>
+                             <span className="text-indigo-600">{meetingContext.vocalPersonaAnalysis?.stability || 80}%</span>
+                           </div>
+                           <input 
+                             type="range" min="0" max="100"
+                             value={meetingContext.vocalPersonaAnalysis?.stability || 80}
+                             onChange={e => onContextChange({
+                               ...meetingContext,
+                               vocalPersonaAnalysis: { ...(meetingContext.vocalPersonaAnalysis || {}), stability: parseInt(e.target.value) } as any
+                             })}
+                             className="w-full h-1 bg-slate-200 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                           />
+                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
              </div>
 
                  {/* Main Visual Core - Meeting Environment */}
