@@ -44,16 +44,16 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-3">
             <motion.div 
               whileHover={{ rotate: 180, scale: 1.1 }}
-              className="w-9 h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(79,70,229,0.4)]"
+              className="w-9 h-9 bg-red-600 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(220,38,38,0.4)]"
             >
-              <ICONS.Brain className="w-5 h-5" />
+              !
             </motion.div>
-            <span className="font-black text-2xl tracking-tighter text-slate-900 dark:text-white uppercase">
-              STRATEGIC<span className="text-indigo-600 drop-shadow-[0_0_10px_rgba(79,70,229,0.3)]">AI</span>
+            <span className="font-black text-2xl tracking-tighter text-slate-900 dark:text-white">
+              SPIKED<span className="text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.3)]">AI</span>
             </span>
           </div>
           <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-1.5 ml-1 hidden md:block">
-            Neural Sales Intelligence Protocol
+            Cognitive Intelligence Brain Simulation
           </span>
         </div>
 
