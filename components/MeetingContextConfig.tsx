@@ -332,7 +332,7 @@ OPERATIONAL CONSTRAINTS:
     return (
       <div className="space-y-16 animate-in fade-in duration-700">
         {/* Section 1: Library */}
-        <div className="space-y-8">
+        <div className="space-y-8" id="library-hub">
           <div className="flex items-center gap-4 pb-4 border-b-4 border-slate-900">
             <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">01</div>
             <div className="flex flex-col">
@@ -392,11 +392,11 @@ OPERATIONAL CONSTRAINTS:
                     </button>
                   </div>
                 </div>
-                <div className="relative w-full">
+                <div className="relative w-full flex gap-3">
                   <select 
                     value={context.kycDocId || ""} 
                     onChange={(e) => handleKycChange(e.target.value)}
-                    className={`w-full bg-white border-4 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-700 outline-none transition-all shadow-xl ${isExtracting ? 'border-indigo-300 opacity-50 cursor-wait' : 'border-slate-200 focus:border-indigo-500'}`}
+                    className={`flex-1 bg-white border-4 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-700 outline-none transition-all shadow-xl ${isExtracting ? 'border-indigo-300 opacity-50 cursor-wait' : 'border-slate-200 focus:border-indigo-500'}`}
                     disabled={isExtracting}
                   >
                     <option value="">Select grounding source...</option>
@@ -404,8 +404,18 @@ OPERATIONAL CONSTRAINTS:
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
                   </select>
+                  <button 
+                    onClick={() => {
+                      const el = document.getElementById('library-hub');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-6 bg-slate-100 text-slate-600 rounded-[2rem] hover:bg-slate-200 transition-all flex items-center justify-center shadow-lg border border-slate-200"
+                    title="Manage Library Documents"
+                  >
+                    <ICONS.Trash className="w-6 h-6" />
+                  </button>
                   {isExtracting && (
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                    <div className="absolute right-24 top-1/2 -translate-y-1/2">
                       <div className="w-6 h-6 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}

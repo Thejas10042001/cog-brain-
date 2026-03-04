@@ -168,6 +168,20 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
             </button>
             <div className="w-px h-3 bg-slate-200"></div>
             <button 
+              onClick={() => {
+                if (confirm("Permanently delete ALL documents in your cognitive library? This cannot be undone.")) {
+                  setIsDeleting(true);
+                  Promise.all(documents.map(d => deleteDocumentFromFirebase(d.id)))
+                    .then(() => onRefresh())
+                    .finally(() => setIsDeleting(false));
+                }
+              }}
+              className="px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-600 hover:bg-white rounded-lg transition-all"
+            >
+              Delete All
+            </button>
+            <div className="w-px h-3 bg-slate-200"></div>
+            <button 
               onClick={() => selectedIds.forEach(id => onToggleSelect(id))}
               className="px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-rose-600 hover:bg-white rounded-lg transition-all"
             >
@@ -219,8 +233,8 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     </button>
                     <button 
                       onClick={(e) => handleDelete(e, doc.id)}
-                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                      title="Delete"
+                      className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      title="Delete Intelligence Node"
                     >
                       <ICONS.Trash className="w-4 h-4" />
                     </button>
