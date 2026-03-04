@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Header } from './components/Header';
 import { Auth } from './components/Auth';
 import { FileUpload } from './components/FileUpload';
@@ -517,7 +518,7 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-white flex flex-col transition-all duration-300 ease-in-out origin-top-left"
+      className="min-h-screen bg-white dark:bg-slate-950 flex flex-col transition-all duration-300 ease-in-out origin-top-left bg-mesh"
       style={{ 
         zoom: zoom / 100,
         // @ts-ignore
@@ -571,153 +572,237 @@ const App: React.FC = () => {
         onDarkModeToggle={() => setDarkMode(!darkMode)}
       />
       
-      <div className="pt-16 flex flex-1 overflow-hidden text-magnifier">
+      <div className="pt-16 flex flex-1 overflow-hidden text-magnifier relative z-10">
         
-        <div className="flex flex-1 overflow-hidden bg-white relative">
+        <div className="flex flex-1 overflow-hidden relative">
           {analysis && !isAnalyzing && (
             <>
               <aside 
                 style={{ width: sidebarWidth, fontSize: `${sidebarFontScale}rem` }}
-                className="bg-white border-r border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all"
+                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all shadow-2xl shadow-slate-200/50 dark:shadow-none"
               >
                 <div className={`p-2 ${sidebarWidth > 120 ? 'lg:p-6' : 'p-2'} space-y-8 flex flex-col h-full`}>
                   <div className="space-y-1">
-                    {sidebarWidth > 180 && <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-2">Intelligence Nodes</p>}
-                    <div className="flex flex-col gap-1">
-                      <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "01 Settings" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "02 Hands-on Assignment" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "03 Stage Simulation" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "04 Avatar 1.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "05 Avatar 2.0" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "06 Spiked GPT" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "07 Grooming Lab" : ""} scale={sidebarFontScale} />
-                      <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "08 Studio" : ""} scale={sidebarFontScale} />
+                    {sidebarWidth > 180 && (
+                      <motion.p 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-6 ml-2"
+                      >
+                        Intelligence Nodes
+                      </motion.p>
+                    )}
+                    <div className="flex flex-col gap-2">
+                      <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "01 Settings" : ""} scale={sidebarFontScale} step="01" />
+                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "02 Hands-on Assignment" : ""} scale={sidebarFontScale} step="02" />
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "03 Stage Simulation" : ""} scale={sidebarFontScale} step="03" />
+                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "04 Avatar 1.0" : ""} scale={sidebarFontScale} step="04" />
+                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "05 Avatar 2.0" : ""} scale={sidebarFontScale} step="05" />
+                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "06 Spiked GPT" : ""} scale={sidebarFontScale} step="06" />
+                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "07 Grooming Lab" : ""} scale={sidebarFontScale} step="07" />
+                      <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "08 Studio" : ""} scale={sidebarFontScale} step="08" />
                     </div>
                   </div>
 
                   {sidebarWidth > 180 && (
-                    <div className="mt-auto pt-6 border-t border-slate-100 space-y-4">
-                      <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4"
+                    >
+                      <button onClick={reset} className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 transition-all border border-slate-200 dark:border-slate-700 active:scale-95">
                         <ICONS.X className="w-3 h-3" /> Wipe Strategy
                       </button>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
               </aside>
               
               <div 
                 onMouseDown={startResizing}
-                className="w-1.5 h-full cursor-col-resize hover:bg-indigo-400 active:bg-indigo-600 z-40 relative group transition-colors"
+                className="w-1 h-full cursor-col-resize hover:bg-indigo-400 active:bg-indigo-600 z-40 relative group transition-colors"
                 title="Drag to adjust node partition"
               >
-                <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-indigo-400/10"></div>
+                <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-indigo-400/20"></div>
               </div>
             </>
           )}
 
-          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar bg-white relative">
-            <div className="w-full min-h-full">
+          <main className="flex-1 transition-all duration-300 overflow-y-auto custom-scrollbar relative">
+            <div className="w-full min-h-full flex flex-col">
               {!analysis && !isAnalyzing && !isRestoring ? (
-                <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 animate-in fade-in slide-in-from-top-4 duration-500 w-full">
-                  <div className="text-center space-y-4">
-                    <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
-                      SPIKED<span className="text-red-600">AI</span> Hub
-                    </h1>
-                    <p className="text-xl text-slate-400 font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="px-4 md:px-8 py-12 md:py-20 space-y-16 w-full max-w-7xl mx-auto"
+                >
+                  <div className="text-center space-y-6">
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <h1 className="text-7xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
+                        SPIKED<span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.3)]">AI</span>
+                      </h1>
+                    </motion.div>
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                      className="text-xl text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.4em] max-w-2xl mx-auto"
+                    >
                       Cognitive Intelligence Brain Simulation
-                    </p>
+                    </motion.p>
                   </div>
 
-                  <MeetingContextConfig 
-                    context={meetingContext} 
-                    onContextChange={setMeetingContext} 
-                    documents={history}
-                    files={files}
-                    onFilesChange={setFiles}
-                    onUploadSuccess={loadHistory}
-                    selectedLibraryDocIds={selectedLibraryDocIds}
-                    onToggleLibraryDoc={toggleLibraryDoc}
-                    onClearLibrarySelection={clearLibrarySelection}
-                    onSynthesize={runAnalysis}
-                    onSave={handleSaveContext}
-                    isAnalyzing={isAnalyzing}
-                    hasAnalysis={!!analysis}
-                  />
-                </div>
+                  <div className="glass dark:glass-dark rounded-[3rem] p-1 md:p-2 shadow-2xl shadow-indigo-500/5">
+                    <MeetingContextConfig 
+                      context={meetingContext} 
+                      onContextChange={setMeetingContext} 
+                      documents={history}
+                      files={files}
+                      onFilesChange={setFiles}
+                      onUploadSuccess={loadHistory}
+                      selectedLibraryDocIds={selectedLibraryDocIds}
+                      onToggleLibraryDoc={toggleLibraryDoc}
+                      onClearLibrarySelection={clearLibrarySelection}
+                      onSynthesize={runAnalysis}
+                      onSave={handleSaveContext}
+                      isAnalyzing={isAnalyzing}
+                      hasAnalysis={!!analysis}
+                    />
+                  </div>
+                </motion.div>
               ) : (isAnalyzing || isRestoring) ? (
-                <div className="flex flex-col items-center justify-center space-y-12 h-full min-h-[600px]">
+                <div className="flex flex-col items-center justify-center space-y-12 h-full min-h-[600px] flex-1">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-indigo-500/20 blur-[60px] rounded-full transition-all duration-700 ease-out" style={{ transform: `scale(${1 + (loadingProgress / 100)})`, opacity: 0.2 + (loadingProgress / 100) }}></div>
-                    <div className="relative w-32 h-32 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
-                    <div className="absolute inset-0 flex items-center justify-center text-indigo-600 transition-all duration-700" style={{ transform: `scale(${1.2 + (loadingProgress / 200)})`, filter: `drop-shadow(0 0 ${loadingProgress / 5}px rgba(79, 70, 229, ${loadingProgress / 100}))` }}><ICONS.Brain className="w-10 h-10" /></div>
-                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-                      <span className="text-3xl font-black text-slate-800 tracking-tighter">{Math.floor(loadingProgress)}<span className="text-indigo-500 text-sm ml-0.5">%</span></span>
+                    <motion.div 
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.1, 0.3, 0.1]
+                      }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                      className="absolute inset-0 bg-indigo-500/20 blur-[80px] rounded-full"
+                    ></motion.div>
+                    <div className="relative w-40 h-40 border-4 border-indigo-50 dark:border-slate-800 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <motion.div 
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 flex items-center justify-center text-indigo-600"
+                    >
+                      <ICONS.Brain className="w-12 h-12" />
+                    </motion.div>
+                    <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+                      <span className="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">
+                        {Math.floor(loadingProgress)}
+                        <span className="text-indigo-500 text-sm ml-1 font-bold">%</span>
+                      </span>
                     </div>
                   </div>
-                  <div className="text-center space-y-6 max-w-md">
-                    <p className="text-2xl font-black text-slate-800 tracking-tight">{loadingStatusText}</p>
-                    <div className="w-64 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden shadow-inner">
-                      <div className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full" style={{ width: `${loadingProgress}%` }}></div>
+                  <div className="text-center space-y-8 max-w-md px-6">
+                    <motion.p 
+                      key={loadingStatusText}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-tight"
+                    >
+                      {loadingStatusText}
+                    </motion.p>
+                    <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                      <motion.div 
+                        className="h-full bg-indigo-600 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.5)]" 
+                        animate={{ width: `${loadingProgress}%` }}
+                        transition={{ type: "spring", stiffness: 50 }}
+                      ></motion.div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="animate-in fade-in duration-500 h-full flex flex-col">
-                  {/* Fixed Node Header */}
-                  <div className="px-8 py-6 bg-slate-50 border-b border-slate-100">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-lg shadow-lg">{NODE_DETAILS[activeTab].stepNumber}</div>
-                          <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{NODE_DETAILS[activeTab].label}</h2>
-                          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 text-[10px] font-black rounded-md uppercase tracking-wider">Active Node</span>
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={activeTab}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="h-full flex flex-col"
+                  >
+                    {/* Fixed Node Header */}
+                    <div className="px-8 py-10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 sticky top-0 z-20">
+                      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-4">
+                            <motion.div 
+                              whileHover={{ scale: 1.05, rotate: 5 }}
+                              className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-2xl"
+                            >
+                              {NODE_DETAILS[activeTab].stepNumber}
+                            </motion.div>
+                            <div>
+                              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">{NODE_DETAILS[activeTab].label}</h2>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[9px] font-black rounded-md uppercase tracking-wider">Neural Node Active</span>
+                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-indigo-600 dark:text-indigo-400 font-black text-[10px] uppercase tracking-[0.2em]">{NODE_DETAILS[activeTab].feature}</p>
                         </div>
-                        <p className="text-indigo-600 font-bold text-xs uppercase tracking-widest">{NODE_DETAILS[activeTab].feature}</p>
-                      </div>
-                      <div className="flex-1 max-w-3xl grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-1">
-                          <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Purpose</h4>
-                          <p className="text-[11px] font-medium text-slate-600 leading-tight">{NODE_DETAILS[activeTab].purpose}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">How it helps</h4>
-                          <p className="text-[11px] font-medium text-slate-600 leading-tight">{NODE_DETAILS[activeTab].howItHelps}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Operational Guide</h4>
-                          <p className="text-[11px] font-bold text-indigo-600 leading-tight italic">{NODE_DETAILS[activeTab].guideText}</p>
+                        <div className="flex-1 max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8">
+                          <div className="space-y-2">
+                            <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Strategic Purpose</h4>
+                            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">{NODE_DETAILS[activeTab].purpose}</p>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Competitive Edge</h4>
+                            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">{NODE_DETAILS[activeTab].howItHelps}</p>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Operational Protocol</h4>
+                            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 leading-relaxed italic">{NODE_DETAILS[activeTab].guideText}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {activeTab === 'context' && (
-                    <div className="px-4 md:px-8 py-8 md:py-12 space-y-12 w-full">
-                      <MeetingContextConfig 
-                        context={meetingContext} 
-                        onContextChange={setMeetingContext} 
-                        documents={history}
-                        files={files}
-                        onFilesChange={setFiles}
-                        onUploadSuccess={loadHistory}
-                        selectedLibraryDocIds={selectedLibraryDocIds}
-                        onToggleLibraryDoc={toggleLibraryDoc}
-                        onClearLibrarySelection={clearLibrarySelection}
-                        onSynthesize={runAnalysis}
-                        onSave={handleSaveContext}
-                        isAnalyzing={isAnalyzing}
-                        hasAnalysis={!!analysis}
-                      />
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                      {activeTab === 'context' && (
+                        <div className="px-4 md:px-8 py-12 space-y-12 w-full max-w-7xl mx-auto">
+                          <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="glass dark:glass-dark rounded-[3rem] p-1 shadow-2xl"
+                          >
+                            <MeetingContextConfig 
+                              context={meetingContext} 
+                              onContextChange={setMeetingContext} 
+                              documents={history}
+                              files={files}
+                              onFilesChange={setFiles}
+                              onUploadSuccess={loadHistory}
+                              selectedLibraryDocIds={selectedLibraryDocIds}
+                              onToggleLibraryDoc={toggleLibraryDoc}
+                              onClearLibrarySelection={clearLibrarySelection}
+                              onSynthesize={runAnalysis}
+                              onSave={handleSaveContext}
+                              isAnalyzing={isAnalyzing}
+                              hasAnalysis={!!analysis}
+                            />
+                          </motion.div>
+                        </div>
+                      )}
+                      {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
+                      {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
+                      {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
+                      {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
+                      {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1"><AudioGenerator analysis={analysis!} /></div>}
+                      {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
+                      {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
                     </div>
-                  )}
-                  {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
-                  {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
-                  {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
-                  {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                  {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1 overflow-y-auto"><AudioGenerator analysis={analysis!} /></div>}
-                  {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
-                  {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
-                </div>
+                  </motion.div>
+                </AnimatePresence>
               )}
             </div>
           </main>
@@ -727,31 +812,51 @@ const App: React.FC = () => {
   );
 };
 
-const SidebarBtn = ({ active, onClick, icon, label, scale = 1 }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string, scale?: number }) => (
-  <button 
+const SidebarBtn = ({ active, onClick, icon, label, scale = 1, step }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string, scale?: number, step?: string }) => (
+  <motion.button 
+    whileHover={{ x: 8, backgroundColor: active ? '' : 'rgba(79, 70, 229, 0.1)' }}
+    whileTap={{ scale: 0.96 }}
     onClick={onClick}
-    className={`w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl font-bold transition-all text-sm group ${
+    className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-black transition-all text-sm group relative overflow-hidden ${
       active 
-      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02]' 
-      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+      ? 'bg-indigo-600 text-white shadow-[0_20px_50px_rgba(79,70,229,0.3)]' 
+      : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'
     }`}
-    style={{ transform: active ? `scale(${1.02 * (scale > 1 ? 1 : scale)})` : 'none' }}
   >
+    {active && (
+      <motion.div 
+        layoutId="sidebar-active"
+        className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-500 -z-10"
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      />
+    )}
     <div 
-      className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors shrink-0`}
-      style={{ transform: `scale(${scale})` }}
+      className={`relative ${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors shrink-0`}
+      style={{ transform: `scale(${scale * 1.1})` }}
     >
       {icon}
+      {!active && step && (
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center text-[6px] font-black text-slate-500 dark:text-slate-400 border border-white dark:border-slate-900">
+          {step}
+        </span>
+      )}
     </div>
     {label && (
       <span 
-        className="tracking-tight truncate"
-        style={{ fontSize: `${scale * 0.875}rem` }}
+        className="tracking-tighter truncate uppercase"
+        style={{ fontSize: `${scale * 0.75}rem` }}
       >
-        {label}
+        {label.replace(/^\d+\s/, '')}
       </span>
     )}
-  </button>
+    {active && (
+      <motion.div 
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className="ml-auto w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+      />
+    )}
+  </motion.button>
 );
 
 export default App;
