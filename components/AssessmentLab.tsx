@@ -347,16 +347,16 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 
   if (stage === 'config') {
     return (
-      <div className="bg-white p-12 border-y border-slate-200 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-64px)]">
+      <div className="bg-white dark:bg-slate-900 p-12 border-y border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-64px)]">
         {micPermissionError && (
-          <div className="mb-8 bg-rose-50 border border-rose-200 p-6 rounded-[2rem] flex items-center justify-between animate-in slide-in-from-top-4">
+          <div className="mb-8 bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-900/30 p-6 rounded-[2.5rem] flex items-center justify-between animate-in slide-in-from-top-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-rose-600 text-white rounded-xl shadow-lg">
                 <ICONS.Security className="w-6 h-6" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-black uppercase tracking-widest text-rose-900">Microphone Access Denied</span>
-                <span className="text-xs font-bold text-rose-600 opacity-80">Enable microphone permissions in your browser to use voice-based assignments.</span>
+                <span className="text-sm font-black uppercase tracking-widest text-rose-900 dark:text-rose-100">Microphone Access Denied</span>
+                <span className="text-xs font-bold text-rose-600 dark:text-rose-400 opacity-80">Enable microphone permissions in your browser to use voice-based assignments.</span>
               </div>
             </div>
             <button 
@@ -367,53 +367,53 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
             </button>
           </div>
         )}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100">
-              <ICONS.Trophy className="w-8 h-8" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          <div className="flex items-center gap-6">
+            <div className="p-5 bg-indigo-600 text-white rounded-[1.5rem] shadow-2xl shadow-indigo-200 dark:shadow-none">
+              <ICONS.Trophy className="w-10 h-10" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Assignment Lab Configuration</h2>
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Pressure-test your document mastery</p>
+              <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Assignment Lab Configuration</h2>
+              <p className="text-slate-400 dark:text-slate-500 font-black uppercase text-[11px] tracking-[0.4em] mt-2">Pressure-test your document mastery</p>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
             <div className="space-y-6">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-500 border-b border-indigo-50 pb-2">Question Parameters</h4>
-              <ConfigRow label="MCQ (Logic Gates)" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document />} />
-              <ConfigRow label="Short Answer (Tactical)" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency />} />
-              <ConfigRow label="Long Answer (Strategic)" val={config.long} set={(v) => setConfig({ ...config, long: v })} icon={<ICONS.Research />} />
-              <ConfigRow label="Microphone (Verbal Delivery)" val={config.mic} set={(v) => setConfig({ ...config, mic: v })} icon={<ICONS.Speaker />} />
-              <ConfigRow label="Video Performance (Visual/Verbal)" val={config.video} set={(v) => setConfig({ ...config, video: v })} icon={<ICONS.Play className="w-4 h-4" />} />
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-50 dark:border-indigo-900/30 pb-3">Question Parameters</h4>
+              <ConfigRow label="MCQ (Logic Gates)" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document className="w-5 h-5" />} />
+              <ConfigRow label="Short Answer (Tactical)" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency className="w-5 h-5" />} />
+              <ConfigRow label="Long Answer (Strategic)" val={config.long} set={(v) => setConfig({ ...config, long: v })} icon={<ICONS.Research className="w-5 h-5" />} />
+              <ConfigRow label="Microphone (Verbal Delivery)" val={config.mic} set={(v) => setConfig({ ...config, mic: v })} icon={<ICONS.Speaker className="w-5 h-5" />} />
+              <ConfigRow label="Video Performance (Visual/Verbal)" val={config.video} set={(v) => setConfig({ ...config, video: v })} icon={<ICONS.Play className="w-5 h-5" />} />
             </div>
 
-          <div className="space-y-10">
+          <div className="space-y-12">
             <div className="space-y-6">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-500 border-b border-rose-50 pb-2">Environment Controls</h4>
-              <div className="p-8 bg-slate-50 rounded-[2.5rem] space-y-4 shadow-inner">
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-rose-600 dark:text-rose-400 border-b-2 border-rose-50 dark:border-rose-900/30 pb-3">Environment Controls</h4>
+              <div className="p-10 bg-slate-50 dark:bg-slate-800/50 rounded-[3rem] space-y-6 shadow-inner border border-slate-100 dark:border-slate-800">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-black uppercase text-slate-500">Session Timer</span>
-                  <span className="text-2xl font-black text-indigo-600">{config.timer}m</span>
+                  <span className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Session Timer</span>
+                  <span className="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">{config.timer}m</span>
                 </div>
                 <input 
                   type="range" min="1" max="60" 
                   value={config.timer} 
                   onChange={(e) => setConfig({ ...config, timer: parseInt(e.target.value) })}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                 />
               </div>
             </div>
 
             <div className="space-y-6">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 border-b border-amber-50 pb-2">Cognitive Challenge Depth</h4>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-amber-600 dark:text-amber-400 border-b-2 border-amber-50 dark:border-amber-900/30 pb-3">Cognitive Challenge Depth</h4>
               <div className="grid grid-cols-3 gap-4">
                 {(['Easy', 'Medium', 'Hard'] as DifficultyLevel[]).map((level) => (
                   <button
                     key={level}
                     onClick={() => setConfig({ ...config, difficulty: level })}
-                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${config.difficulty === level ? 'bg-amber-500 border-amber-400 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 text-slate-400 hover:border-amber-200'}`}
+                    className={`py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] border-2 transition-all ${config.difficulty === level ? 'bg-amber-500 border-amber-500 text-white shadow-2xl shadow-amber-200 dark:shadow-none scale-[1.05]' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-amber-200 dark:hover:border-amber-800'}`}
                   >
                     {level}
                   </button>
@@ -422,25 +422,25 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
             </div>
 
             <div className="space-y-6">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600 border-b border-indigo-50 pb-2">Synthesis Perspective</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-50 dark:border-indigo-900/30 pb-3">Synthesis Perspective</h4>
+              <div className="grid grid-cols-2 gap-6">
                 <button 
                   onClick={() => setPerspective('document')}
-                  className={`flex flex-col items-center gap-3 p-6 rounded-[2rem] border-2 transition-all group ${perspective === 'document' ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 hover:border-indigo-300 text-slate-500'}`}
+                  className={`flex flex-col items-center gap-4 p-8 rounded-[2.5rem] border-2 transition-all group ${perspective === 'document' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-none scale-[1.05]' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-300 text-slate-500'}`}
                 >
-                  <ICONS.Document className={`w-6 h-6 ${perspective === 'document' ? 'text-white' : 'text-indigo-500 group-hover:scale-110 transition-transform'}`} />
+                  <ICONS.Document className={`w-8 h-8 ${perspective === 'document' ? 'text-white' : 'text-indigo-500 group-hover:scale-110 transition-transform'}`} />
                   <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest">Document Focused</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.2em]">Document Focused</p>
                   </div>
                 </button>
 
                 <button 
                   onClick={() => setPerspective('customer')}
-                  className={`flex flex-col items-center gap-3 p-6 rounded-[2rem] border-2 transition-all group ${perspective === 'customer' ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 hover:border-indigo-300 text-slate-500'}`}
+                  className={`flex flex-col items-center gap-4 p-8 rounded-[2.5rem] border-2 transition-all group ${perspective === 'customer' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-none scale-[1.05]' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-300 text-slate-500'}`}
                 >
-                  <ICONS.Brain className={`w-6 h-6 ${perspective === 'customer' ? 'text-white' : 'text-rose-500 group-hover:scale-110 transition-transform'}`} />
+                  <ICONS.Brain className={`w-8 h-8 ${perspective === 'customer' ? 'text-white' : 'text-rose-500 group-hover:scale-110 transition-transform'}`} />
                   <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest">Buyer Centric</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.2em]">Buyer Centric</p>
                   </div>
                 </button>
               </div>
@@ -451,9 +451,19 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
         <button 
           onClick={() => handleStart()}
           disabled={isGenerating || activeDocuments.length === 0}
-          className={`w-full py-8 rounded-[2rem] font-black text-xl uppercase tracking-widest transition-all shadow-2xl flex items-center justify-center gap-4 ${isGenerating ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.01] active:scale-95 shadow-indigo-200'}`}
+          className={`w-full py-10 rounded-[3rem] font-black text-2xl uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center justify-center gap-6 ${isGenerating ? 'bg-slate-100 dark:bg-slate-800 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.01] active:scale-95 shadow-indigo-500/20'}`}
         >
-          {isGenerating ? "Synthesizing..." : "Initiate Neural Assignment"}
+          {isGenerating ? (
+            <>
+              <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+              Synthesizing...
+            </>
+          ) : (
+            <>
+              <ICONS.Brain className="w-8 h-8" />
+              Initiate Neural Assignment
+            </>
+          )}
         </button>
       </div>
     );
@@ -732,15 +742,25 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 };
 
 const ConfigRow = ({ label, val, set, icon }: { label: string; val: number; set: (v: number) => void; icon: React.ReactNode }) => (
-  <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-transparent group">
-    <div className="flex items-center gap-4">
-      <div className="text-slate-400 group-hover:text-indigo-600 transition-colors">{icon}</div>
-      <span className="text-[11px] font-black uppercase text-slate-500 tracking-tight">{label}</span>
+  <div className="flex items-center justify-between p-8 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/30 group transition-all">
+    <div className="flex items-center gap-5">
+      <div className="text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors transform group-hover:scale-110 duration-300">{icon}</div>
+      <span className="text-[12px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">{label}</span>
     </div>
-    <div className="flex items-center gap-4">
-       <button onClick={() => set(Math.max(0, val - 1))} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center hover:bg-indigo-50 transition-colors font-black text-slate-400">-</button>
-       <span className="w-8 text-center font-black text-indigo-600">{val}</span>
-       <button onClick={() => set(val + 1)} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center hover:bg-indigo-50 transition-colors font-black text-slate-400">+</button>
+    <div className="flex items-center gap-6">
+       <button 
+        onClick={() => set(Math.max(0, val - 1))} 
+        className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-600 transition-all font-black text-slate-400 shadow-sm active:scale-90"
+       >
+        -
+       </button>
+       <span className="w-10 text-center font-black text-xl text-indigo-600 dark:text-indigo-400 tabular-nums">{val}</span>
+       <button 
+        onClick={() => set(val + 1)} 
+        className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 transition-all font-black text-slate-400 shadow-sm active:scale-90"
+       >
+        +
+       </button>
     </div>
   </div>
 );

@@ -366,375 +366,475 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   };
 
   return (
-    <div className="bg-white border-y border-slate-200 p-6 md:p-12 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
-        <div className="flex items-center gap-4">
-          <div className="p-3.5 bg-rose-600 text-white rounded-2xl shadow-xl shadow-rose-100"><ICONS.Speaker /></div>
+    <div className="h-full flex flex-col bg-white dark:bg-slate-950 rounded-[3rem] shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative">
+      <div className="absolute inset-0 bg-mesh opacity-10 pointer-events-none"></div>
+      
+      <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl z-10">
+        <div className="flex items-center gap-6">
+          <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl shadow-xl">
+            <ICONS.Brain className="w-8 h-8" />
+          </div>
           <div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Performance Grooming Lab</h3>
-            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Master Your Verbal Architecture</p>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Neural Simulation Lab</h2>
+            <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.3em] mt-1">High-Fidelity Cognitive Roleplay & Performance Auditing</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
-          <button 
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setShowGroomingJournal(!showGroomingJournal)}
-            className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${showGroomingJournal ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600 border-indigo-100'}`}
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${showGroomingJournal ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30'}`}
           >
             {showGroomingJournal ? 'Close Journal' : 'Self-Grooming Journal'}
-          </button>
-          <div className="flex gap-2 p-1.5 bg-slate-50 border border-slate-200 rounded-2xl">
-            <button 
-              onClick={() => { stopPractice(); setSessionMode('roleplay'); setEvaluation(null); }}
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'} ${highlightedButton === 'roleplay' ? 'ring-4 ring-indigo-400 animate-pulse' : ''}`}
-            >
-              Buyer Roleplay
-            </button>
-            <button 
-              onClick={() => { stopPractice(); setSessionMode('seller-roleplay'); setEvaluation(null); }}
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'seller-roleplay' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'} ${highlightedButton === 'seller-roleplay' ? 'ring-4 ring-indigo-400 animate-pulse' : ''}`}
-            >
-              Seller Roleplay
-            </button>
-            <button 
-              onClick={() => { stopPractice(); setSessionMode('grooming'); }}
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === 'grooming' ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'} ${highlightedButton === 'grooming' ? 'ring-4 ring-indigo-400 animate-pulse' : ''}`}
-            >
-              Bot-Led Grooming
-            </button>
+          </motion.button>
+          <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+            {(['roleplay', 'seller-roleplay', 'grooming'] as SessionMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => {
+                  stopPractice();
+                  setSessionMode(m);
+                  setEvaluation(null);
+                }}
+                className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === m ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-lg scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              >
+                {m === 'roleplay' ? 'Buyer Roleplay' : m === 'seller-roleplay' ? 'Seller Roleplay' : 'Bot-Led Grooming'}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {showGroomingJournal ? (
-        <div className="flex-1 space-y-8 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto custom-scrollbar pb-12">
-           <div className="flex items-center justify-between border-b border-slate-100 pb-6">
-              <h4 className="text-xl font-black text-slate-900 tracking-tight">Your Self-Grooming Journal</h4>
-              <span className="text-[9px] font-black uppercase text-indigo-500 tracking-widest bg-indigo-50 px-3 py-1 rounded-lg">{savedGroomings.length} Saved Protocols</span>
-           </div>
-           {savedGroomings.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-24 opacity-30 text-center space-y-4">
-                <ICONS.Document className="w-16 h-16" />
-                <p className="text-sm font-bold uppercase tracking-widest">Journal Empty. Add your first audit for self-grooming.</p>
-             </div>
-           ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {savedGroomings.map(saved => (
-                  <div key={saved.id} className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] relative group hover:bg-white hover:border-indigo-200 transition-all hover:shadow-2xl">
-                     <div className="flex items-center justify-between mb-4">
-                        <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full">{new Date(saved.timestamp).toLocaleDateString()}</span>
-                        <button 
-                          onClick={() => setSavedGroomings(prev => prev.filter(p => p.id !== saved.id))}
-                          className="text-slate-300 hover:text-rose-500"
-                        ><ICONS.X className="w-4 h-4" /></button>
-                     </div>
-                     <p className="text-sm font-black text-slate-900 mb-2 truncate">Q: {saved.question}</p>
-                     <p className="text-[11px] font-bold text-slate-500 italic mb-6 line-clamp-2">"{saved.evaluation.idealWording}"</p>
-                     <button 
-                       onClick={() => { setEvaluation(saved.evaluation); setShowGroomingJournal(false); }}
-                       className="text-[10px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform"
-                     >
-                       Rehearse & Correct <ICONS.Play className="w-3 h-3" />
-                     </button>
-                  </div>
-                ))}
-             </div>
-           )}
-        </div>
-      ) : !isActive && status !== 'analyzing' && !evaluation ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto py-12">
-          <div className="space-y-4">
-            <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-2xl transition-transform hover:scale-105 duration-500 ${sessionMode === 'roleplay' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'}`}>
-               {sessionMode === 'roleplay' ? <ICONS.Brain className="w-10 h-10" /> : <ICONS.Trophy className="w-10 h-10" />}
-            </div>
-            <h4 className="text-4xl font-black text-slate-900 tracking-tight">
-              {sessionMode === 'roleplay' ? `Simulate a Live ${buyerName} Meeting` : sessionMode === 'seller-roleplay' ? `Simulate an Elite ${sellerName} Pitch` : 'Initiate Speech Mastery Protocol'}
-            </h4>
-            <p className="text-slate-500 text-lg leading-relaxed max-w-2xl mx-auto font-medium">
-              {sessionMode === 'roleplay' 
-                ? `Test your strategic reflexes in a real-time, low-latency dialogue with ${buyerName}.`
-                : sessionMode === 'seller-roleplay'
-                ? `Observe how an elite salesperson (${sellerName}) handles your questions. You act as ${buyerName}, the AI acts as ${sellerName}.`
-                : 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit.'}
-            </p>
-          </div>
-
-          <div className="w-full space-y-10">
-             {sessionMode === 'grooming' ? (
-               <div className="space-y-4 max-w-2xl mx-auto text-left">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-2">Target Objection / Question</label>
-                  <select 
-                    value={groomingTarget}
-                    onChange={(e) => setGroomingTarget(e.target.value)}
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] px-8 py-5 text-base font-bold text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-inner"
-                  >
-                    <optgroup label="Critical Objections">
-                      {analysis.objectionHandling.map((o, i) => <option key={i} value={o.objection}>{o.objection}</option>)}
-                    </optgroup>
-                    <optgroup label="Anticipated Questions">
-                      {analysis.predictedQuestions.map((q, i) => <option key={i} value={q.customerAsks}>{q.customerAsks}</option>)}
-                    </optgroup>
-                  </select>
-               </div>
-             ) : (
-               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 px-12">
-                 {PERSONA_OPTIONS.map((option) => (
-                   <button
-                     key={option.type}
-                     onClick={() => setSelectedPersona(option.type)}
-                     className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-[1.03]' : 'bg-white border-slate-100 hover:border-indigo-300 shadow-sm'}`}
-                   >
-                     <div className={`p-4 rounded-2xl mb-6 inline-block w-fit ${selectedPersona === option.type ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600 shadow-sm'}`}>{option.icon}</div>
-                     <h5 className={`font-black text-xs uppercase tracking-widest mb-2 ${selectedPersona === option.type ? 'text-white' : 'text-slate-900'}`}>{option.label}</h5>
-                     <p className={`text-[11px] leading-relaxed font-semibold ${selectedPersona === option.type ? 'text-indigo-100' : 'text-slate-500'}`}>{option.desc}</p>
-                   </button>
-                 ))}
-               </div>
-             )}
-          </div>
-
-          <button 
-            onClick={sessionMode === 'grooming' ? startGroomingSession : startPractice} 
-            disabled={status === 'connecting'} 
-            className={`group relative overflow-hidden inline-flex items-center gap-6 px-20 py-7 rounded-full font-black text-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 ${sessionMode === 'roleplay' || sessionMode === 'seller-roleplay' ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200' : 'bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200'} ${highlightedButton === 'commence' ? 'ring-8 ring-white/50 animate-pulse' : ''}`}
+      <AnimatePresence mode="wait">
+        {showGroomingJournal ? (
+          <motion.div 
+            key="journal"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="flex-1 space-y-12 overflow-y-auto custom-scrollbar p-12"
           >
-            {status === 'connecting' ? (
-              <><div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div> Connecting...</>
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-8">
+              <div>
+                <h4 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Self-Grooming Journal</h4>
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Archived Performance Protocols</p>
+              </div>
+              <div className="px-6 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-900/30">
+                {savedGroomings.length} Saved Protocols
+              </div>
+            </div>
+
+            {savedGroomings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-32 opacity-20 text-center space-y-8">
+                <ICONS.Document className="w-24 h-24" />
+                <p className="text-sm font-black uppercase tracking-[0.4em]">Journal Empty. Add your first audit for self-grooming.</p>
+              </div>
             ) : (
-              <><ICONS.Play className="w-8 h-8" /> {sessionMode === 'grooming' ? 'Activate Bot-Coach' : 'Commence Interaction'}</>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {savedGroomings.map(saved => (
+                  <motion.div 
+                    key={saved.id} 
+                    whileHover={{ y: -8 }}
+                    className="p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] relative group hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all hover:shadow-2xl"
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/20 px-4 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-900/30">
+                        {new Date(saved.timestamp).toLocaleDateString()}
+                      </span>
+                      <button 
+                        onClick={() => setSavedGroomings(prev => prev.filter(p => p.id !== saved.id))}
+                        className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                      >
+                        <ICONS.X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="space-y-4 mb-8">
+                      <p className="text-sm font-black text-slate-900 dark:text-white line-clamp-1">Q: {saved.question}</p>
+                      <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 italic line-clamp-2 leading-relaxed">"{saved.evaluation.idealWording}"</p>
+                    </div>
+                    <button 
+                      onClick={() => { setEvaluation(saved.evaluation); setShowGroomingJournal(false); }}
+                      className="w-full py-4 bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-indigo-600 hover:text-white transition-all group"
+                    >
+                      Rehearse & Correct <ICONS.Play className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-          </button>
-        </div>
-      ) : status === 'analyzing' ? (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-8 animate-in fade-in duration-700">
-           <div className="relative">
-              <div className="w-24 h-24 border-8 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center text-indigo-600 scale-125"><ICONS.Brain /></div>
-           </div>
-           <div className="text-center">
-              <p className="text-3xl font-black text-slate-900 tracking-tight mb-2">Cognitive Mastery Audit In Progress</p>
-              <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.4em] animate-pulse">Analyzing Grammar • Tone • Structure • Pacing</p>
-           </div>
-        </div>
-      ) : evaluation ? (
-        <div className="flex-1 space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-20 w-full px-12">
-          <div className="flex items-center justify-between">
-             <button onClick={() => setEvaluation(null)} className="text-[11px] font-black uppercase text-indigo-600 tracking-widest flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
-               <ICONS.X /> Close Mastery Review
-             </button>
-             <div className="flex items-center gap-4">
-                <button 
-                  onClick={addToGroomingJournal}
-                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 flex items-center gap-2"
-                >
-                  <ICONS.Efficiency className="w-4 h-4" /> Add to Journal
-                </button>
-                <div className="px-6 py-2.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                  Grooming Score: {evaluation.grammarScore}%
-                </div>
-             </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            <div className="space-y-8">
-               <div className="p-10 bg-slate-50 border border-slate-100 rounded-[3rem] shadow-inner relative overflow-hidden group">
-                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">Recorded Performance</h4>
-                  <p className="text-lg font-medium leading-relaxed italic text-slate-700">“{evaluation.transcription}”</p>
-               </div>
-
-                <div className="p-10 bg-slate-50 border border-slate-200 text-slate-900 rounded-[3rem] shadow-2xl relative overflow-hidden group">
-                  <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest mb-6 flex items-center gap-2">
-                    <ICONS.Sparkles className="w-4 h-4" /> Tactical Breathing & Pacing Guide
-                  </h4>
-                  <p className="text-xl font-medium leading-[2.2] text-slate-700 font-serif italic">
-                    {evaluation.breathPacingGuide.split(/(\[Take Breath\]|\[Pause - \d+s\]|\[Slow Down\])/g).map((part, i) => (
-                      (part.startsWith('[Take Breath]') || part.startsWith('[Pause') || part.startsWith('[Slow'))
-                      ? <span key={i} className="bg-indigo-600/10 text-indigo-600 px-3 py-1 rounded-xl mx-1 font-black text-[10px] uppercase tracking-widest not-italic border border-indigo-200 shadow-sm">{part}</span>
-                      : part
-                    ))}
-                  </p>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[2.5rem] space-y-4">
-                    <h5 className="text-[9px] font-black uppercase text-indigo-600 tracking-widest">Sentence Formation Audit</h5>
-                    <p className="text-[11px] font-bold text-slate-700 leading-relaxed italic">{evaluation.sentenceFormation}</p>
-                 </div>
-                 <div className="p-8 bg-rose-50 border border-rose-100 rounded-[2.5rem] space-y-4">
-                    <h5 className="text-[9px] font-black uppercase text-rose-600 tracking-widest">Vocal Tone & Pace Audit</h5>
-                    <p className="text-[11px] font-bold text-slate-700 leading-relaxed italic">{evaluation.toneAnalysis}</p>
-                 </div>
-               </div>
-            </div>
-
-            <div className="space-y-8">
-               <div className="p-12 bg-white border-4 border-indigo-50 rounded-[4rem] shadow-2xl relative overflow-hidden group/master">
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-12">
-                       <h4 className="text-[13px] font-black uppercase text-indigo-600 tracking-[0.4em]">Optimized Ideal wording</h4>
-                       <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-full uppercase border border-emerald-100">Validated Logic</span>
-                    </div>
-                    
-                    <p className="text-3xl font-black text-slate-900 leading-tight mb-12 tracking-tight">“{evaluation.idealWording}”</p>
-                    
-                    <div className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] mb-12">
-                       <h5 className="text-[10px] font-black uppercase text-slate-500 mb-4">Linguistic Corrections</h5>
-                       <p className="text-sm font-bold text-slate-700 leading-relaxed whitespace-pre-wrap">{evaluation.grammarFeedback}</p>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                       <button 
-                         onClick={playIdealVersion}
-                         disabled={isPlayingIdeal || isPlayingExplanation}
-                         className={`w-full flex items-center justify-center gap-5 py-7 rounded-[2rem] font-black text-base uppercase tracking-widest shadow-2xl transition-all active:scale-95 ${isPlayingIdeal ? 'bg-indigo-400 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'}`}
-                       >
-                         {isPlayingIdeal ? 'Synthesizing Audio...' : <><ICONS.Speaker className="w-6 h-6" /> Rehearse Ideal wording</>}
-                       </button>
-
-                       <button 
-                         onClick={playCorrectionExplanation}
-                         disabled={isPlayingIdeal || isPlayingExplanation}
-                         className={`w-full flex items-center justify-center gap-5 py-7 rounded-[2rem] font-black text-[11px] uppercase tracking-widest border-2 transition-all active:scale-95 ${isPlayingExplanation ? 'text-slate-400' : 'text-slate-700 hover:text-indigo-600 border-slate-200 hover:border-indigo-200 shadow-lg'}`}
-                       >
-                         {isPlayingExplanation ? 'Coach Explaining...' : <><ICONS.Brain className="w-5 h-5" /> Detailed Improvement rationale</>}
-                       </button>
-                    </div>
-                  </div>
-               </div>
-
-               <div className="p-10 bg-emerald-50 border border-emerald-100 rounded-[3.5rem] animate-in fade-in zoom-in-95 duration-1000 shadow-sm">
-                  <div className="flex items-center gap-3 mb-6">
-                     <div className="p-3 bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-100"><ICONS.Brain /></div>
-                     <h4 className="text-[11px] font-black uppercase text-emerald-600 tracking-[0.3em]">Self-Grooming Explanation</h4>
-                  </div>
-                  <p className="text-base font-medium text-emerald-950 leading-relaxed whitespace-pre-wrap italic">
-                    {evaluation.correctionExplanation}
-                  </p>
-               </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden h-full">
-          <div className="lg:col-span-2 bg-white p-12 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
-            <div className={`absolute inset-0 opacity-10 blur-[150px] transition-colors duration-2000 ${selectedPersona === 'Technical' ? 'bg-blue-600' : selectedPersona === 'Financial' ? 'bg-emerald-600' : 'bg-indigo-600'}`}></div>
+          </motion.div>
+        ) : !isActive && status !== 'analyzing' && !evaluation ? (
+          <motion.div 
+            key="idle"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="flex-1 flex flex-col items-center justify-center p-12 space-y-12 relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 dark:from-indigo-950/20 to-transparent pointer-events-none"></div>
             
-            <div className="relative w-80 h-80 mb-12 flex items-center justify-center">
-               <div className={`absolute inset-0 bg-indigo-50 rounded-full ${isActive ? 'animate-ping' : 'animate-pulse'} scale-[1.4]`}></div>
-               <div className={`w-40 h-40 bg-indigo-600 rounded-full flex items-center justify-center text-white scale-[1.7] shadow-[0_0_80px_rgba(79,70,229,0.5)] z-10 border-8 border-white transition-transform ${isActive ? 'animate-pulse' : ''}`}>
-                  {sessionMode === 'roleplay' ? <ICONS.Brain className="w-16 h-16" /> : <ICONS.Speaker className="w-16 h-16" />}
-               </div>
-               {isActive && (
-                 <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-2 bg-rose-600 rounded-full shadow-2xl animate-bounce">
-                    <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></div>
-                    <span className="text-[11px] font-black uppercase text-white tracking-widest">Active Audit Trace</span>
+            <div className="text-center space-y-6 max-w-3xl relative z-10">
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-2xl ${sessionMode === 'roleplay' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}
+              >
+                 {sessionMode === 'roleplay' ? <ICONS.Brain className="w-10 h-10" /> : <ICONS.Trophy className="w-10 h-10" />}
+              </motion.div>
+              <h4 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight">
+                {sessionMode === 'roleplay' ? `Simulate a Live ${buyerName} Meeting` : sessionMode === 'seller-roleplay' ? `Simulate an Elite ${sellerName} Pitch` : 'Initiate Speech Mastery Protocol'}
+              </h4>
+              <p className="text-slate-500 dark:text-slate-400 text-xl leading-relaxed font-medium italic">
+                {sessionMode === 'roleplay' 
+                  ? `Test your strategic reflexes in a real-time, low-latency dialogue with ${buyerName}.`
+                  : sessionMode === 'seller-roleplay'
+                  ? `Observe how an elite salesperson (${sellerName}) handles your questions. You act as ${buyerName}, the AI acts as ${sellerName}.`
+                  : 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit.'}
+              </p>
+            </div>
+
+            <div className="w-full max-w-6xl relative z-10">
+               {sessionMode === 'grooming' ? (
+                 <div className="space-y-6 max-w-2xl mx-auto">
+                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 ml-4">Target Objection / Question</label>
+                    <div className="relative group">
+                      <select 
+                        value={groomingTarget}
+                        onChange={(e) => setGroomingTarget(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border-4 border-slate-100 dark:border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-slate-800 dark:text-white outline-none focus:border-indigo-500 dark:focus:border-indigo-600 transition-all shadow-2xl appearance-none"
+                      >
+                        <optgroup label="Critical Objections">
+                          {analysis.objectionHandling.map((o, i) => <option key={i} value={o.objection}>{o.objection}</option>)}
+                        </optgroup>
+                        <optgroup label="Anticipated Questions">
+                          {analysis.predictedQuestions.map((q, i) => <option key={i} value={q.customerAsks}>{q.customerAsks}</option>)}
+                        </optgroup>
+                      </select>
+                      <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ICONS.ChevronDown className="w-6 h-6" />
+                      </div>
+                    </div>
+                 </div>
+               ) : (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                   {PERSONA_OPTIONS.map((option) => (
+                     <motion.button
+                       key={option.type}
+                       whileHover={{ y: -8 }}
+                       whileTap={{ scale: 0.98 }}
+                       onClick={() => setSelectedPersona(option.type)}
+                       className={`p-8 rounded-[2.5rem] border-4 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-400 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900/50 shadow-xl'}`}
+                     >
+                       <div className={`p-4 rounded-2xl mb-6 inline-block w-fit shadow-lg transition-transform group-hover:scale-110 ${selectedPersona === option.type ? 'bg-white text-indigo-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>{option.icon}</div>
+                       <h5 className={`font-black text-xs uppercase tracking-widest mb-2 ${selectedPersona === option.type ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{option.label}</h5>
+                       <p className={`text-[11px] leading-relaxed font-semibold ${selectedPersona === option.type ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>{option.desc}</p>
+                     </motion.button>
+                   ))}
                  </div>
                )}
             </div>
-            
-            <div className="text-center space-y-6 relative z-10 max-w-xl">
-                <span className="px-5 py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[0.3em] rounded-xl border border-indigo-100 mb-4 inline-block">
+
+            <motion.button 
+              whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(79, 70, 229, 0.5)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={sessionMode === 'grooming' ? startGroomingSession : startPractice} 
+              disabled={status === 'connecting'} 
+              className={`group relative px-20 py-8 rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl transition-all overflow-hidden ${sessionMode === 'grooming' ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white'} ${highlightedButton === 'commence' ? 'ring-8 ring-indigo-400 animate-pulse' : ''}`}
+            >
+              <div className="relative z-10 flex items-center gap-4">
+                {status === 'connecting' ? (
+                  <><div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div> Connecting...</>
+                ) : (
+                  <><ICONS.Play className="w-10 h-10" /> {sessionMode === 'grooming' ? 'Activate Bot-Coach' : 'Commence Interaction'}</>
+                )}
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            </motion.button>
+          </motion.div>
+        ) : status === 'analyzing' ? (
+          <motion.div 
+            key="analyzing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-center space-y-12"
+          >
+            <div className="relative">
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="w-40 h-40 border-8 border-indigo-100 dark:border-indigo-900/30 border-t-indigo-600 rounded-full"
+              ></motion.div>
+              <div className="absolute inset-0 flex items-center justify-center text-indigo-600 scale-[2.5]"><ICONS.Brain /></div>
+            </div>
+            <div className="text-center space-y-4">
+              <p className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Cognitive Mastery Audit</p>
+              <p className="text-[12px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.5em] animate-pulse">Analyzing Grammar • Tone • Structure • Pacing</p>
+            </div>
+          </motion.div>
+        ) : evaluation ? (
+          <motion.div 
+            key="evaluation"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -40 }}
+            className="flex-1 overflow-y-auto custom-scrollbar p-12 space-y-16"
+          >
+            <div className="flex items-center justify-between sticky top-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl z-20 py-4 -mx-12 px-12 border-b border-slate-100 dark:border-slate-800">
+              <button onClick={() => setEvaluation(null)} className="text-[12px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest flex items-center gap-3 group">
+                <ICONS.X className="group-hover:rotate-90 transition-transform" /> Close Mastery Review
+              </button>
+              <div className="flex items-center gap-6">
+                <button 
+                  onClick={addToGroomingJournal}
+                  className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 dark:shadow-emerald-900/20 flex items-center gap-3 transition-all active:scale-95"
+                >
+                  <ICONS.Efficiency className="w-5 h-5" /> Add to Journal
+                </button>
+                <div className="px-8 py-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                  Grooming Score: {evaluation.grammarScore}%
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+              <div className="space-y-12">
+                <section className="space-y-6">
+                  <h4 className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-[0.3em] ml-2">Recorded Performance</h4>
+                  <div className="p-12 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-[3.5rem] shadow-inner">
+                    <p className="text-2xl font-medium leading-relaxed italic text-slate-700 dark:text-slate-300">“{evaluation.transcription}”</p>
+                  </div>
+                </section>
+
+                <section className="space-y-6">
+                  <h4 className="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.3em] ml-2 flex items-center gap-3">
+                    <ICONS.Sparkles className="w-5 h-5" /> Tactical Breathing & Pacing Guide
+                  </h4>
+                  <div className="p-12 bg-white dark:bg-slate-900 border-4 border-indigo-50 dark:border-indigo-900/20 text-slate-900 dark:text-white rounded-[3.5rem] shadow-2xl">
+                    <p className="text-2xl font-medium leading-[2.4] text-slate-700 dark:text-slate-300 font-serif italic">
+                      {evaluation.breathPacingGuide.split(/(\[Take Breath\]|\[Pause - \d+s\]|\[Slow Down\])/g).map((part, i) => (
+                        (part.startsWith('[Take Breath]') || part.startsWith('[Pause') || part.startsWith('[Slow'))
+                        ? <span key={i} className="bg-indigo-600 text-white px-4 py-1.5 rounded-xl mx-2 font-black text-[11px] uppercase tracking-widest not-italic shadow-lg inline-block align-middle">{part}</span>
+                        : part
+                      ))}
+                    </p>
+                  </div>
+                </section>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="p-10 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-[3rem] space-y-4">
+                    <h5 className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest">Sentence Formation Audit</h5>
+                    <p className="text-[12px] font-bold text-slate-700 dark:text-slate-400 leading-relaxed italic">{evaluation.sentenceFormation}</p>
+                  </div>
+                  <div className="p-10 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30 rounded-[3rem] space-y-4">
+                    <h5 className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-widest">Vocal Tone & Pace Audit</h5>
+                    <p className="text-[12px] font-bold text-slate-700 dark:text-slate-400 leading-relaxed italic">{evaluation.toneAnalysis}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-12">
+                <section className="space-y-6">
+                  <h4 className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-[0.3em] ml-2">Optimized Ideal Wording</h4>
+                  <div className="p-16 bg-white dark:bg-slate-900 border-4 border-emerald-50 dark:border-emerald-900/20 rounded-[4.5rem] shadow-2xl relative overflow-hidden group/master">
+                    <div className="absolute top-0 right-0 p-8">
+                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-6 py-2 rounded-full uppercase border border-emerald-100 dark:border-emerald-900/30">Validated Logic</span>
+                    </div>
+                    
+                    <p className="text-4xl font-black text-slate-900 dark:text-white leading-tight mb-16 tracking-tighter">“{evaluation.idealWording}”</p>
+                    
+                    <div className="p-10 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-[3rem] mb-16">
+                      <h5 className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 mb-6">Linguistic Corrections</h5>
+                      <p className="text-base font-bold text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{evaluation.grammarFeedback}</p>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                      <motion.button 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={playIdealVersion}
+                        disabled={isPlayingIdeal || isPlayingExplanation}
+                        className={`w-full flex items-center justify-center gap-6 py-8 rounded-[2.5rem] font-black text-lg uppercase tracking-widest shadow-2xl transition-all ${isPlayingIdeal ? 'bg-indigo-400 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100 dark:shadow-indigo-900/20'}`}
+                      >
+                        {isPlayingIdeal ? 'Synthesizing Audio...' : <><ICONS.Speaker className="w-8 h-8" /> Rehearse Ideal wording</>}
+                      </motion.button>
+
+                      <motion.button 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={playCorrectionExplanation}
+                        disabled={isPlayingIdeal || isPlayingExplanation}
+                        className={`w-full flex items-center justify-center gap-6 py-8 rounded-[2.5rem] font-black text-[12px] uppercase tracking-widest border-4 transition-all ${isPlayingExplanation ? 'text-slate-400 border-slate-200' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900/50 shadow-xl'}`}
+                      >
+                        {isPlayingExplanation ? 'Coach Explaining...' : <><ICONS.Brain className="w-6 h-6" /> Detailed Improvement rationale</>}
+                      </motion.button>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-6">
+                  <h4 className="text-[11px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-[0.3em] ml-2 flex items-center gap-3">
+                    <ICONS.Brain className="w-5 h-5" /> Self-Grooming Explanation
+                  </h4>
+                  <div className="p-12 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-[3.5rem] shadow-sm">
+                    <p className="text-lg font-medium text-emerald-950 dark:text-emerald-100 leading-relaxed whitespace-pre-wrap italic">
+                      {evaluation.correctionExplanation}
+                    </p>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="active"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden h-full"
+          >
+            <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-16 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
+              <div className={`absolute inset-0 opacity-10 dark:opacity-20 blur-[150px] transition-colors duration-2000 ${selectedPersona === 'Technical' ? 'bg-blue-600' : selectedPersona === 'Financial' ? 'bg-emerald-600' : 'bg-indigo-600'}`}></div>
+              
+              <div className="relative w-96 h-96 mb-16 flex items-center justify-center">
+                <motion.div 
+                  animate={{ scale: isActive ? [1.4, 1.6, 1.4] : 1.4 }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-full"
+                ></motion.div>
+                <motion.div 
+                  animate={{ scale: isActive ? [1.7, 1.8, 1.7] : 1.7 }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="w-48 h-48 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-[0_0_100px_rgba(79,70,229,0.6)] z-10 border-[10px] border-white dark:border-slate-800 transition-transform"
+                >
+                  {sessionMode === 'roleplay' ? <ICONS.Brain className="w-20 h-20" /> : <ICONS.Speaker className="w-20 h-20" />}
+                </motion.div>
+                {isActive && (
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="absolute -bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-6 px-8 py-3 bg-rose-600 rounded-full shadow-2xl"
+                  >
+                    <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                    <span className="text-[12px] font-black uppercase text-white tracking-[0.2em]">Active Audit Trace</span>
+                  </motion.div>
+                )}
+              </div>
+              
+              <div className="text-center space-y-8 relative z-10 max-w-2xl">
+                <span className="px-6 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl border border-indigo-100 dark:border-indigo-900/30 mb-6 inline-block">
                   {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : sessionMode === 'seller-roleplay' ? 'Elite Seller Simulation' : 'Bot-Led Grooming Active'}
                 </span>
-                <h5 className="text-slate-900 text-4xl font-black tracking-tight leading-tight">
+                <h5 className="text-slate-900 dark:text-white text-5xl font-black tracking-tighter leading-tight uppercase">
                   {sessionMode === 'roleplay' ? buyerName : sessionMode === 'seller-roleplay' ? sellerName : 'Neural Bot-Coach'}
                 </h5>
-                <p className="text-slate-500 text-lg italic font-medium leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-400 text-2xl italic font-medium leading-relaxed max-w-lg mx-auto">
                   {sessionMode === 'roleplay' 
                     ? `"Speak directly to our business value drivers."` 
                     : sessionMode === 'seller-roleplay'
                     ? `"I am ready to address your concerns and demonstrate our value."`
                     : `Bot Question: "${groomingTarget}"`}
                 </p>
-            </div>
+              </div>
 
-            {isActive && (
-              <div className="absolute bottom-12 right-12 flex gap-4">
-                 {sessionMode === 'grooming' && (
-                    <button 
+              {isActive && (
+                <div className="absolute bottom-16 right-16 flex gap-6">
+                  {sessionMode === 'grooming' && (
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={runGroomingAudit}
-                      className="px-12 py-5 bg-emerald-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-emerald-700 transition-all border border-emerald-500/50"
+                      className="px-16 py-6 bg-emerald-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest shadow-2xl hover:bg-emerald-700 transition-all border border-emerald-500/50"
                     >
                       Audit My Performance
-                    </button>
-                 )}
-                 <button 
-                   onClick={stopPractice}
-                   className="px-10 py-5 bg-rose-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all active:scale-95 border border-rose-500/50"
-                 >
-                   End Interaction
-                 </button>
-              </div>
-            )}
-          </div>
-          
-          <div className="bg-slate-50 p-10 flex flex-col border-l border-slate-200 overflow-hidden shadow-inner relative h-full">
-            <div className="flex items-center justify-between mb-8">
-              <h6 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 flex items-center gap-3">
-                 <ICONS.Efficiency className="w-4 h-4" /> Mastery Log
-              </h6>
-              <div className="flex gap-2">
-                {isActive && (
-                  <button 
+                    </motion.button>
+                  )}
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={stopPractice}
-                    className="p-2 bg-rose-100 text-rose-600 rounded-lg hover:bg-rose-200 transition-colors"
-                    title="End Session"
+                    className="px-12 py-6 bg-rose-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all active:scale-95 border border-rose-500/50"
                   >
-                    <ICONS.X className="w-4 h-4" />
+                    End Interaction
+                  </motion.button>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-slate-50 dark:bg-slate-950 p-12 flex flex-col border-l border-slate-200 dark:border-slate-800 overflow-hidden shadow-inner relative h-full">
+              <div className="flex items-center justify-between mb-12">
+                <h6 className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-400 dark:text-slate-500 flex items-center gap-4">
+                  <ICONS.Efficiency className="w-5 h-5" /> Mastery Log
+                </h6>
+                <div className="flex gap-3">
+                  {isActive && (
+                    <button 
+                      onClick={stopPractice}
+                      className="p-3 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl hover:bg-rose-200 dark:hover:bg-rose-900/50 transition-colors"
+                      title="End Session"
+                    >
+                      <ICONS.X className="w-5 h-5" />
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => { setTranscription([]); setCurrentTranscription({ user: '', ai: '' }); userTranscriptionRef.current = ''; aiTranscriptionRef.current = ''; }}
+                    className="p-3 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                    title="Clear Log"
+                  >
+                    <ICONS.Trash className="w-5 h-5" />
                   </button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-10 custom-scrollbar pr-8">
+                {transcription.length === 0 && !currentTranscription.user && !currentTranscription.ai && (
+                  <div className="py-32 text-center space-y-8 opacity-20">
+                    <ICONS.Speaker className="mx-auto w-20 h-20" />
+                    <p className="text-[12px] font-black uppercase tracking-[0.5em]">Voice Interaction Disabled</p>
+                  </div>
                 )}
-                <button 
-                  onClick={() => { setTranscription([]); setCurrentTranscription({ user: '', ai: '' }); userTranscriptionRef.current = ''; aiTranscriptionRef.current = ''; }}
-                  className="p-2 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition-colors"
-                  title="Clear Log"
-                >
-                  <ICONS.Trash className="w-4 h-4" />
-                </button>
+                {transcription.map((turn, i) => (
+                  <motion.div 
+                    key={i} 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex flex-col items-end text-right">
+                      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Your input</p>
+                      <p className="text-base text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] rounded-tr-none border border-slate-200 dark:border-slate-800 shadow-lg leading-relaxed font-medium w-full">“{turn.user}”</p>
+                    </div>
+                    {turn.ai && (
+                      <div className="flex flex-col items-start text-left">
+                        <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mb-2">AI Response</p>
+                        <p className="text-base text-indigo-950 dark:text-indigo-100 bg-indigo-50 dark:bg-indigo-900/30 p-8 rounded-[2.5rem] rounded-tl-none border border-indigo-200 dark:border-indigo-900/50 font-bold shadow-lg leading-relaxed w-full">“{turn.ai}”</p>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+                {(currentTranscription.user || currentTranscription.ai) && (
+                  <div className="space-y-4">
+                    {currentTranscription.user && (
+                      <div className="flex flex-col items-end text-right animate-pulse">
+                        <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mb-2">Hearing...</p>
+                        <p className="text-base text-slate-400 dark:text-slate-600 bg-white/50 dark:bg-slate-900/30 p-8 rounded-[2.5rem] rounded-tr-none border border-dashed border-slate-200 dark:border-slate-800 leading-relaxed italic w-full">“{currentTranscription.user}”</p>
+                      </div>
+                    )}
+                    {currentTranscription.ai && (
+                      <div className="flex flex-col items-start text-left animate-pulse">
+                        <p className="text-[10px] font-black text-indigo-300 dark:text-indigo-600 uppercase tracking-widest mb-2">Responding...</p>
+                        <p className="text-base text-indigo-300 dark:text-indigo-600 bg-indigo-50/30 dark:bg-indigo-900/10 p-8 rounded-[2.5rem] rounded-tl-none border border-dashed border-indigo-100 dark:border-indigo-900/30 leading-relaxed italic w-full">“{currentTranscription.ai}”</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto space-y-8 custom-scrollbar pr-6">
-              {transcription.length === 0 && !currentTranscription.user && !currentTranscription.ai && (
-                <div className="py-24 text-center space-y-6 opacity-20">
-                   <ICONS.Speaker className="mx-auto w-14 h-14" />
-                   <p className="text-[11px] font-black uppercase tracking-[0.4em]">Voice Interaction Disabled</p>
-                </div>
-              )}
-              {transcription.map((turn, i) => (
-                <div key={i} className="space-y-3 animate-in slide-in-from-bottom-4 duration-500">
-                  <div className="flex flex-col items-end text-right">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Your input</p>
-                    <p className="text-sm text-slate-700 bg-white p-6 rounded-[2rem] rounded-tr-none border border-slate-200 shadow-md leading-relaxed font-medium w-full">“{turn.user}”</p>
-                  </div>
-                  {turn.ai && (
-                    <div className="flex flex-col items-start text-left">
-                      <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1.5">AI Response</p>
-                      <p className="text-sm text-indigo-950 bg-indigo-50 p-6 rounded-[2rem] rounded-tl-none border border-indigo-200 font-bold shadow-md leading-relaxed w-full">“{turn.ai}”</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {(currentTranscription.user || currentTranscription.ai) && (
-                <div className="space-y-3 animate-pulse">
-                  {currentTranscription.user && (
-                    <div className="flex flex-col items-end text-right">
-                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5">Hearing...</p>
-                      <p className="text-sm text-slate-400 bg-white/50 p-6 rounded-[2rem] rounded-tr-none border border-dashed border-slate-200 leading-relaxed italic w-full">“{currentTranscription.user}”</p>
-                    </div>
-                  )}
-                  {currentTranscription.ai && (
-                    <div className="flex flex-col items-start text-left">
-                      <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest mb-1.5">Responding...</p>
-                      <p className="text-sm text-indigo-300 bg-indigo-50/30 p-6 rounded-[2rem] rounded-tl-none border border-dashed border-indigo-100 leading-relaxed italic w-full">“{currentTranscription.ai}”</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

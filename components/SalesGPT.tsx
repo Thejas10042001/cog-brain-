@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect, FC } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ICONS } from '../constants';
 import { streamSalesGPT, generatePineappleImage, streamDeepStudy, performCognitiveSearchStream } from '../services/geminiService';
 import { GPTMessage, GPTToolMode, MeetingContext } from '../types';
@@ -161,96 +162,123 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-64px)] relative bg-slate-50">
-      {/* Background Ambience (Spans Edge-to-Edge) */}
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed opacity-10 pointer-events-none"></div>
-
-      {/* Header (Spans Edge-to-Edge) */}
-      <div className="w-full bg-white/80 backdrop-blur-xl border-b border-slate-200 z-20">
-        <div className="max-w-5xl mx-auto px-12 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-xl">
-              <ICONS.Sparkles className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Intelligence Studio</h3>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">Fast Answer Core</p>
-            </div>
+    <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative overflow-hidden">
+      {/* Header */}
+      <div className="w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 z-20">
+        <div className="max-w-5xl mx-auto px-12 py-8 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+             <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40">
+                <ICONS.Brain className="w-8 h-8" />
+             </div>
+             <div>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Strategic Intelligence</h3>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.4em]">Neural Sales Copilot v3.1</p>
+             </div>
           </div>
-          <div className="flex items-center gap-4">
-             <button onClick={clearChat} className="px-5 py-2 text-slate-400 hover:text-rose-500 text-[10px] font-black uppercase tracking-widest transition-colors">
+          <div className="flex items-center gap-6">
+             <motion.button 
+               whileHover={{ scale: 1.05 }}
+               whileTap={{ scale: 0.95 }}
+               onClick={clearChat} 
+               className="px-6 py-3 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 text-[11px] font-black uppercase tracking-widest transition-colors"
+             >
                Clear Memory
-             </button>
-             <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-widest shadow-sm">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                Neural Core
+             </motion.button>
+             <div className="flex items-center gap-3 px-6 py-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                Neural Core Active
              </div>
           </div>
         </div>
       </div>
 
-      {/* Conversation Area (Centered with white margins) */}
-      <div className="flex-1 overflow-y-auto no-scrollbar relative">
-        <div className="max-w-5xl mx-auto px-12 py-12 space-y-12">
-          {messages.length === 0 && (
-            <div className="h-[50vh] flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
-               <div className="p-12 bg-white rounded-[4rem] shadow-2xl border border-slate-100 text-indigo-100 transform -rotate-2">
-                  <ICONS.Brain className="w-24 h-24" />
-               </div>
-               <div className="space-y-3">
-                  <h4 className="text-4xl font-black text-slate-900 tracking-tight">Ready for Inquiry</h4>
-                  <p className="text-slate-500 text-xl font-medium leading-relaxed max-w-lg mx-auto">
-                    The intelligence core is synced with your document nodes. Ask about specific clauses, strategic gaps, or tactical responses.
-                  </p>
-               </div>
-            </div>
-          )}
-
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
-              <div className="mb-2 px-6 flex items-center gap-3">
-                <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${msg.role === 'user' ? 'text-indigo-400' : 'text-slate-400'}`}>
-                   {msg.role === 'user' ? 'Strategic Architect' : 'Cognitive Core'}
-                </span>
-                {msg.isStreaming && <div className="flex gap-1"><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></div><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce delay-75"></div><div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce delay-150"></div></div>}
-              </div>
-              <div className={`
-                max-w-[100%] md:max-w-[85%] p-10 rounded-[3.5rem] text-2xl font-medium leading-[1.6] shadow-2xl
-                ${msg.role === 'user' 
-                  ? 'bg-indigo-50 text-slate-900 rounded-tr-none border-2 border-indigo-100 shadow-sm' 
-                  : 'bg-white text-slate-800 rounded-tl-none border border-slate-200'}
-              `}>
-                <div className="whitespace-pre-wrap markdown-content">
-                  {msg.content}
-                </div>
-                {msg.imageUrl && (
-                  <div className="mt-8 rounded-[2.5rem] overflow-hidden border-8 border-slate-50 shadow-2xl group/img relative">
-                    <img src={msg.imageUrl} alt="Strategic Asset" className="w-full h-auto object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                       <button 
-                         onClick={() => downloadImage(msg.imageUrl!, 'StrategicAsset')}
-                         className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-3"
-                       >
-                         <ICONS.Efficiency className="w-5 h-5" /> Download Master
-                       </button>
-                    </div>
+      {/* Conversation Area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+        <div className="max-w-5xl mx-auto px-12 py-16 space-y-16">
+          <AnimatePresence mode="popLayout">
+            {messages.length === 0 ? (
+              <motion.div 
+                key="empty"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="h-[50vh] flex flex-col items-center justify-center text-center space-y-12"
+              >
+                 <div className="p-16 bg-white dark:bg-slate-900 rounded-[5rem] shadow-2xl border border-slate-100 dark:border-slate-800 text-indigo-100 dark:text-indigo-900 transform -rotate-3">
+                    <ICONS.Brain className="w-32 h-32" />
+                 </div>
+                 <div className="space-y-4">
+                    <h4 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Ready for Inquiry</h4>
+                    <p className="text-slate-500 dark:text-slate-400 text-2xl font-medium leading-relaxed max-w-xl mx-auto italic">
+                      The intelligence core is synced with your document nodes. Ask about specific clauses, strategic gaps, or tactical responses.
+                    </p>
+                 </div>
+              </motion.div>
+            ) : (
+              messages.map((msg) => (
+                <motion.div 
+                  key={msg.id} 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                >
+                  <div className={`mb-4 px-8 flex items-center gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <span className={`text-[11px] font-black uppercase tracking-[0.4em] ${msg.role === 'user' ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'}`}>
+                       {msg.role === 'user' ? 'Strategic Architect' : 'Cognitive Core'}
+                    </span>
+                    {msg.isStreaming && (
+                      <div className="flex gap-1.5">
+                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></motion.div>
+                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></motion.div>
+                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></motion.div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
-          <div ref={chatEndRef} className="h-24" />
+                  <div className={`
+                    max-w-[90%] p-12 rounded-[4rem] text-2xl font-medium leading-relaxed shadow-2xl
+                    ${msg.role === 'user' 
+                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-slate-900 dark:text-white rounded-tr-none border-2 border-indigo-100 dark:border-indigo-900/30' 
+                      : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200 dark:border-slate-800'}
+                  `}>
+                    <div className="whitespace-pre-wrap markdown-content">
+                      {msg.content}
+                    </div>
+                    {msg.imageUrl && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mt-12 rounded-[3.5rem] overflow-hidden border-[12px] border-slate-50 dark:border-slate-800 shadow-2xl group/img relative"
+                      >
+                        <img src={msg.imageUrl} alt="Strategic Asset" className="w-full h-auto object-cover" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center backdrop-blur-md">
+                           <motion.button 
+                             whileHover={{ scale: 1.1 }}
+                             whileTap={{ scale: 0.9 }}
+                             onClick={() => downloadImage(msg.imageUrl!, 'StrategicAsset')}
+                             className="px-10 py-5 bg-white text-slate-900 rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-4"
+                           >
+                             <ICONS.Efficiency className="w-6 h-6" /> Download Master
+                           </motion.button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </AnimatePresence>
+          <div ref={chatEndRef} className="h-32" />
         </div>
       </div>
 
-      {/* Input Area (Centered with white margins) */}
-      <div className="w-full bg-white/80 backdrop-blur-xl border-t border-slate-200 z-20">
-        <div className="max-w-5xl mx-auto px-12 py-10 space-y-6">
+      {/* Input Area */}
+      <div className="w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800 z-20">
+        <div className="max-w-5xl mx-auto px-12 py-12 space-y-8">
           <div className="flex flex-wrap gap-4 justify-center">
-             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
-             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" />
-             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-4 h-4" />} label="Deep Study" color="amber" />
-             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-4 h-4" />} label="Visual Logic" color="emerald" />
+             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-5 h-5" />} label="Fast Pulse" />
+             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-5 h-5" />} label="Cognitive" />
+             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-5 h-5" />} label="Deep Study" color="amber" />
+             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-5 h-5" />} label="Visual Logic" color="emerald" />
           </div>
 
           <div className="relative group">
@@ -260,26 +288,29 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type your strategic inquiry..."
-              className="w-full bg-white border-4 border-slate-200 rounded-[3rem] px-12 py-10 text-3xl outline-none transition-all pr-48 font-bold italic shadow-2xl focus:border-indigo-500 placeholder:text-slate-200"
+              className="w-full bg-white dark:bg-slate-900 border-4 border-slate-100 dark:border-slate-800 rounded-[3.5rem] px-16 py-12 text-3xl outline-none transition-all pr-64 font-bold italic shadow-2xl focus:border-indigo-500 dark:focus:border-indigo-400 placeholder:text-slate-200 dark:placeholder:text-slate-700 text-slate-900 dark:text-white"
             />
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleSend}
               disabled={!input.trim() || isProcessing}
-              className={`absolute right-6 top-6 bottom-6 px-12 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl flex items-center gap-3 transition-all active:scale-95 ${isProcessing ? 'bg-slate-100 text-slate-300' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+              className={`absolute right-8 top-8 bottom-8 px-16 rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-sm shadow-2xl flex items-center gap-4 transition-all ${isProcessing ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-indigo-900/40'}`}
             >
               {isProcessing ? 'Synthesizing' : 'Synthesize'}
-            </button>
+            </motion.button>
           </div>
           
-          <div className="flex items-center justify-between px-4">
-             <button 
+          <div className="flex items-center justify-between px-8">
+             <motion.button 
+               whileHover={{ x: 5 }}
                onClick={() => setIncludeContext(!includeContext)}
-               className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400'}`}
+               className={`flex items-center gap-4 text-[11px] font-black uppercase tracking-[0.4em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-600'}`}
              >
-                <div className={`w-2 h-2 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`}></div>
+                <div className={`w-2.5 h-2.5 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.6)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
                 Strategic Context Sync: {includeContext ? 'Active' : 'Offline'}
-             </button>
-             <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
+             </motion.button>
+             <p className="text-[11px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.5em]">Intelligence Node v3.1 Grounded</p>
           </div>
         </div>
       </div>
@@ -289,19 +320,21 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
 const ToolToggle = ({ active, onClick, icon, label, color = 'indigo' }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; color?: string }) => {
   const activeClasses = {
-    indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 scale-105',
-    emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 scale-105',
-    amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 scale-105',
+    indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-110',
+    emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 dark:shadow-emerald-900/40 scale-110',
+    amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 dark:shadow-amber-900/40 scale-110',
   }[color];
 
   return (
-    <button 
+    <motion.button 
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`flex items-center gap-3 px-8 py-3 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.1em] text-[10px] shadow-sm ${active ? activeClasses : 'bg-white border-slate-100 text-slate-400 hover:border-indigo-300 hover:text-slate-600'}`}
+      className={`flex items-center gap-4 px-10 py-4 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.2em] text-[11px] shadow-sm ${active ? activeClasses : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-indigo-300 dark:hover:border-indigo-900/50 hover:text-slate-600 dark:hover:text-slate-300'}`}
     >
       {icon}
       {label}
-    </button>
+    </motion.button>
   );
 };
 

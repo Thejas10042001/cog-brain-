@@ -221,18 +221,18 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl border border-slate-200">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-100"><ICONS.Search className="w-5 h-5" /></div>
+      <div className="bg-white dark:bg-slate-900 rounded-[3rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-xl">
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-6">
+            <div className="p-4 bg-indigo-600 text-white rounded-[1.5rem] shadow-2xl shadow-indigo-200 dark:shadow-none"><ICONS.Search className="w-6 h-6" /></div>
             <div>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Cognitive Answering Hub</h2>
-              <p className="text-xs text-slate-500 font-medium">Verified intelligence from <strong className="text-indigo-600">Pro Reasoning Core</strong></p>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Cognitive Answering Hub</h2>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.4em] mt-2">Verified intelligence from <strong className="text-indigo-600 dark:text-indigo-400">Pro Reasoning Core</strong></p>
             </div>
           </div>
           <div className="flex flex-col items-end">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-full text-[9px] font-black text-indigo-600 uppercase tracking-widest">
-                <div className="w-1 h-1 bg-indigo-500 rounded-full animate-pulse"></div>
+             <div className="flex items-center gap-3 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-full text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em]">
+                <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
                 Intelligence Active
              </div>
           </div>
@@ -244,30 +244,35 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`Ask about ${context.persona} drivers, gaps, or ROI targets...`}
-            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[1.8rem] px-8 py-6 text-lg focus:border-indigo-500 focus:bg-white outline-none transition-all pr-40 font-medium shadow-inner"
+            className="w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-800 rounded-[2.2rem] px-10 py-8 text-xl focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition-all pr-48 font-medium shadow-inner text-slate-900 dark:text-white"
           />
           <button 
             type="submit"
             disabled={isSearching || !query.trim()}
-            className="absolute right-3 top-3 bottom-3 px-10 rounded-[1.4rem] bg-indigo-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl flex items-center gap-2"
+            className="absolute right-4 top-4 bottom-4 px-12 rounded-[1.8rem] bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-[11px] hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-indigo-500/20 flex items-center gap-3"
           >
             {isSearching ? (
               <>
-                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 Thinking
               </>
-            ) : 'Analyze'}
+            ) : (
+              <>
+                <ICONS.Search className="w-4 h-4" />
+                Analyze
+              </>
+            )}
           </button>
         </form>
 
         {/* Cognitive Shot (Short Answer) */}
         {result?.cognitiveShot && (
-          <div className="mt-8 p-6 bg-indigo-50 border-l-4 border-indigo-600 rounded-2xl animate-in fade-in slide-in-from-top-2">
-             <div className="flex items-center gap-2 mb-2">
-                <ICONS.Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                <h5 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Cognitive Shot (Executive Summary)</h5>
+          <div className="mt-10 p-8 bg-indigo-50 dark:bg-indigo-900/20 border-l-8 border-indigo-600 rounded-[2rem] animate-in fade-in slide-in-from-top-2 shadow-inner">
+             <div className="flex items-center gap-3 mb-3">
+                <ICONS.Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <h5 className="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.3em]">Cognitive Shot (Executive Summary)</h5>
              </div>
-             <p className="text-sm font-bold text-slate-800 italic leading-snug">“{result.cognitiveShot}”</p>
+             <p className="text-lg font-black text-slate-800 dark:text-slate-200 italic leading-relaxed">“{result.cognitiveShot}”</p>
           </div>
         )}
       </div>
