@@ -525,11 +525,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                        whileHover={{ y: -8 }}
                        whileTap={{ scale: 0.98 }}
                        onClick={() => setSelectedPersona(option.type)}
-                       className={`p-8 rounded-[2.5rem] border-4 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-400 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900/50 shadow-xl'}`}
+                       className={`p-10 rounded-[3rem] border-4 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-400 text-white shadow-[0_30px_60px_rgba(79,70,229,0.4)] dark:shadow-none' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900/50 shadow-xl shadow-slate-200/50 dark:shadow-none'}`}
                      >
-                       <div className={`p-4 rounded-2xl mb-6 inline-block w-fit shadow-lg transition-transform group-hover:scale-110 ${selectedPersona === option.type ? 'bg-white text-indigo-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>{option.icon}</div>
-                       <h5 className={`font-black text-xs uppercase tracking-widest mb-2 ${selectedPersona === option.type ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{option.label}</h5>
-                       <p className={`text-[11px] leading-relaxed font-semibold ${selectedPersona === option.type ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>{option.desc}</p>
+                       <div className={`p-5 rounded-2xl mb-8 inline-block w-fit shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3 ${selectedPersona === option.type ? 'bg-white text-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>{option.icon}</div>
+                       <h5 className={`font-black text-sm uppercase tracking-[0.2em] mb-4 ${selectedPersona === option.type ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{option.label}</h5>
+                       <p className={`text-[12px] leading-relaxed font-bold italic ${selectedPersona === option.type ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>{option.desc}</p>
+                    {selectedPersona === option.type && (
+                      <motion.div layoutId="persona-active" className="absolute top-6 right-6 w-3 h-3 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]"></motion.div>
+                    )}
                      </motion.button>
                    ))}
                  </div>
@@ -609,15 +612,24 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   </div>
                 </section>
 
-                <section className="space-y-6">
-                  <h4 className="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.3em] ml-2 flex items-center gap-3">
-                    <ICONS.Sparkles className="w-5 h-5" /> Tactical Breathing & Pacing Guide
+                <section className="space-y-8">
+                  <h4 className="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.4em] ml-4 flex items-center gap-4">
+                    <ICONS.Sparkles className="w-6 h-6" /> Tactical Breathing & Pacing Guide
                   </h4>
-                  <div className="p-12 bg-white dark:bg-slate-900 border-4 border-indigo-50 dark:border-indigo-900/20 text-slate-900 dark:text-white rounded-[3.5rem] shadow-2xl">
-                    <p className="text-2xl font-medium leading-[2.4] text-slate-700 dark:text-slate-300 font-serif italic">
+                  <div className="p-16 bg-white dark:bg-slate-900 border-4 border-indigo-50 dark:border-indigo-900/20 text-slate-900 dark:text-white rounded-[4.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] dark:shadow-none relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-indigo-600/10"></div>
+                    <p className="text-3xl font-medium leading-[2.6] text-slate-700 dark:text-slate-300 font-serif italic relative z-10">
                       {evaluation.breathPacingGuide.split(/(\[Take Breath\]|\[Pause - \d+s\]|\[Slow Down\])/g).map((part, i) => (
                         (part.startsWith('[Take Breath]') || part.startsWith('[Pause') || part.startsWith('[Slow'))
-                        ? <span key={i} className="bg-indigo-600 text-white px-4 py-1.5 rounded-xl mx-2 font-black text-[11px] uppercase tracking-widest not-italic shadow-lg inline-block align-middle">{part}</span>
+                        ? <motion.span 
+                            key={i} 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="bg-indigo-600 text-white px-6 py-2 rounded-2xl mx-3 font-black text-[12px] uppercase tracking-widest not-italic shadow-xl inline-block align-middle border border-indigo-400/50"
+                          >
+                            {part}
+                          </motion.span>
                         : part
                       ))}
                     </p>

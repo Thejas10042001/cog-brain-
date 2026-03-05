@@ -161,23 +161,44 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       startWebcam();
       const interval = setInterval(() => {
         setBiometrics(prev => {
-          // More "accurate" simulation logic
-          const stressDelta = !isAISpeaking ? (Math.random() * 2) : -(Math.random() * 1.5);
-          const newStress = Math.max(10, Math.min(85, prev.stressLevel + stressDelta));
+          // Enhanced dynamic biometric simulation logic
+          // AI Speaking = User Listening | !AI Speaking & User Listening = User Speaking/Thinking
           
-          const attentionDelta = isAISpeaking ? (Math.random() * 1) : (Math.random() * 4 - 2.5);
-          const newAttention = Math.max(70, Math.min(100, prev.attentionFocus + attentionDelta));
+          let stressDelta = 0;
+          let attentionDelta = 0;
+          let eyeDelta = 0;
           
-          const eyeDelta = isAISpeaking ? (Math.random() * 2) : (Math.random() * 5 - 3);
-          const newEye = Math.max(60, Math.min(98, prev.eyeContact + eyeDelta));
-          
-          const newClarity = Math.max(80, Math.min(100, 90 + (Math.random() * 10 - 5)));
+          if (isAISpeaking) {
+            // User is listening: Stress decreases, Focus increases, Eye contact stabilizes
+            stressDelta = prev.stressLevel > 20 ? -1.2 : (Math.random() * 0.5 - 0.25);
+            attentionDelta = prev.attentionFocus < 95 ? 0.8 : (Math.random() * 0.4 - 0.2);
+            eyeDelta = prev.eyeContact < 92 ? 0.6 : (Math.random() * 0.4 - 0.2);
+          } else if (isUserListening) {
+            // User is speaking/thinking: Stress increases with cognitive load, Focus fluctuates, Eye contact drops (thinking)
+            const difficultyMultiplier = meetingContext.difficulty === 'Hard' ? 1.5 : meetingContext.difficulty === 'Medium' ? 1.0 : 0.7;
+            stressDelta = (Math.random() * 2.5) * difficultyMultiplier;
+            attentionDelta = (Math.random() * 4 - 2.5);
+            eyeDelta = (Math.random() * 6 - 4.5); // People look away more when speaking
+          } else {
+            // Idle state
+            stressDelta = prev.stressLevel > 15 ? -0.5 : 0.2;
+            attentionDelta = prev.attentionFocus > 85 ? -0.3 : 0.3;
+            eyeDelta = prev.eyeContact > 80 ? -0.3 : 0.3;
+          }
+
+          const newStress = Math.max(10, Math.min(95, prev.stressLevel + stressDelta));
+          const newAttention = Math.max(65, Math.min(100, prev.attentionFocus + attentionDelta));
+          const newEye = Math.max(55, Math.min(98, prev.eyeContact + eyeDelta));
+          const newClarity = Math.max(80, Math.min(100, 92 + (Math.random() * 8 - 4)));
 
           let audit = prev.behavioralAudit;
-          if (newStress > 60) audit = "High cognitive load detected. Maintain steady breathing.";
-          else if (newAttention < 80) audit = "Focus deviation detected. Re-engage with the core logic.";
-          else if (isAISpeaking) audit = "Active listening protocol engaged. Analyzing prospect cues.";
-          else audit = "Strategic delivery in progress. Maintaining executive presence.";
+          if (newStress > 75) audit = "CRITICAL: High autonomic arousal. Pause and reset breathing.";
+          else if (newStress > 55) audit = "Elevated cognitive load. Simplify your current logic.";
+          else if (newAttention < 75) audit = "Focus drift detected. Re-center on the prospect's last cue.";
+          else if (newEye < 65) audit = "Eye contact deficit. Re-establish visual connection to build trust.";
+          else if (isAISpeaking) audit = "Active listening protocol engaged. Mirroring prospect sentiment.";
+          else if (isUserListening) audit = "Strategic delivery active. Maintaining high-authority presence.";
+          else audit = "Neural baseline established. Ready for next tactical node.";
 
           return {
             stressLevel: newStress,
@@ -187,7 +208,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
             behavioralAudit: audit
           };
         });
-      }, 1500);
+      }, 1000); // Increased frequency for "real-time" feel
       return () => clearInterval(interval);
     }
   }, [sessionActive, isAISpeaking, isUserListening]);

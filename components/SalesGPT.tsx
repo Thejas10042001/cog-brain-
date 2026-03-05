@@ -204,13 +204,14 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="h-[50vh] flex flex-col items-center justify-center text-center space-y-12"
               >
-                 <div className="p-16 bg-white dark:bg-slate-900 rounded-[5rem] shadow-2xl border border-slate-100 dark:border-slate-800 text-indigo-100 dark:text-indigo-900 transform -rotate-3">
-                    <ICONS.Brain className="w-32 h-32" />
+                 <div className="p-20 bg-white dark:bg-slate-900 rounded-[6rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] dark:shadow-none border border-slate-100 dark:border-slate-800 text-indigo-100 dark:text-indigo-900 transform -rotate-2 relative">
+                    <div className="absolute -top-10 -left-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-3xl"></div>
+                    <ICONS.Brain className="w-40 h-40 relative z-10" />
                  </div>
-                 <div className="space-y-4">
-                    <h4 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Ready for Inquiry</h4>
-                    <p className="text-slate-500 dark:text-slate-400 text-2xl font-medium leading-relaxed max-w-xl mx-auto italic">
-                      The intelligence core is synced with your document nodes. Ask about specific clauses, strategic gaps, or tactical responses.
+                 <div className="space-y-6">
+                    <h4 className="text-7xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">Neural Core<br/>Standby</h4>
+                    <p className="text-slate-500 dark:text-slate-400 text-3xl font-medium leading-relaxed max-w-2xl mx-auto italic">
+                      Intelligence core is synced with active document nodes. Awaiting strategic inquiry.
                     </p>
                  </div>
               </motion.div>
@@ -235,7 +236,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     )}
                   </div>
                   <div className={`
-                    max-w-[90%] p-12 rounded-[4rem] text-2xl font-medium leading-relaxed shadow-2xl
+                    max-w-[85%] p-14 rounded-[4.5rem] text-3xl font-medium leading-relaxed shadow-[0_30px_60px_rgba(0,0,0,0.05)] dark:shadow-none
                     ${msg.role === 'user' 
                       ? 'bg-indigo-50 dark:bg-indigo-900/20 text-slate-900 dark:text-white rounded-tr-none border-2 border-indigo-100 dark:border-indigo-900/30' 
                       : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200 dark:border-slate-800'}

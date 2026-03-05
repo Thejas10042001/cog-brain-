@@ -572,34 +572,34 @@ const App: React.FC = () => {
         onDarkModeToggle={() => setDarkMode(!darkMode)}
       />
       
-      <div className="pt-16 flex flex-1 overflow-hidden text-magnifier relative z-10">
+      <div className="pt-20 flex flex-1 overflow-hidden text-magnifier relative z-10">
         
         <div className="flex flex-1 overflow-hidden relative">
           {analysis && !isAnalyzing && (
             <>
               <aside 
                 style={{ width: sidebarWidth, fontSize: `${sidebarFontScale}rem` }}
-                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all shadow-2xl shadow-slate-200/50 dark:shadow-none"
+                className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-3xl border-r border-slate-200/50 dark:border-slate-800/50 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all shadow-[20px_0_50px_rgba(0,0,0,0.02)] dark:shadow-none"
               >
-                <div className={`p-2 ${sidebarWidth > 120 ? 'lg:p-6' : 'p-2'} space-y-8 flex flex-col h-full`}>
-                  <div className="space-y-1">
+                <div className={`p-4 ${sidebarWidth > 120 ? 'lg:p-8' : 'p-4'} space-y-12 flex flex-col h-full`}>
+                  <div className="space-y-2">
                     {sidebarWidth > 180 && (
                       <motion.p 
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-6 ml-2"
+                        className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] mb-8 ml-4"
                       >
-                        Intelligence Nodes
+                        Neural Nodes
                       </motion.p>
                     )}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                       <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "01 Settings" : ""} scale={sidebarFontScale} step="01" />
-                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "02 Hands-on Assignment" : ""} scale={sidebarFontScale} step="02" />
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "03 Stage Simulation" : ""} scale={sidebarFontScale} step="03" />
+                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "02 Assignment" : ""} scale={sidebarFontScale} step="02" />
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "03 Simulation" : ""} scale={sidebarFontScale} step="03" />
                       <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "04 Avatar 1.0" : ""} scale={sidebarFontScale} step="04" />
                       <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "05 Avatar 2.0" : ""} scale={sidebarFontScale} step="05" />
                       <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "06 Spiked GPT" : ""} scale={sidebarFontScale} step="06" />
-                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "07 Grooming Lab" : ""} scale={sidebarFontScale} step="07" />
+                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "07 Grooming" : ""} scale={sidebarFontScale} step="07" />
                       <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "08 Studio" : ""} scale={sidebarFontScale} step="08" />
                     </div>
                   </div>
@@ -637,24 +637,25 @@ const App: React.FC = () => {
                   exit={{ opacity: 0, y: -20 }}
                   className="px-4 md:px-8 py-12 md:py-20 space-y-16 w-full max-w-7xl mx-auto"
                 >
-                  <div className="text-center space-y-6">
+                  <div className="text-center space-y-8">
                     <motion.div
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.2 }}
+                      className="space-y-4"
                     >
-                      <h1 className="text-7xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
-                        SPIKED<span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.3)]">AI</span>
+                      <h1 className="text-8xl md:text-9xl font-black text-slate-900 dark:text-white tracking-tighter leading-none uppercase">
+                        SPIKED<span className="text-red-600 drop-shadow-[0_0_20px_rgba(220,38,38,0.5)]">AI</span>
                       </h1>
+                      <motion.p 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-2xl text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.6em] max-w-3xl mx-auto"
+                      >
+                        Neural Sales Intelligence Protocol
+                      </motion.p>
                     </motion.div>
-                    <motion.p 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                      className="text-xl text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.4em] max-w-2xl mx-auto"
-                    >
-                      Cognitive Intelligence Brain Simulation
-                    </motion.p>
                   </div>
 
                   <div className="glass dark:glass-dark rounded-[3rem] p-1 md:p-2 shadow-2xl shadow-indigo-500/5">
