@@ -28,25 +28,46 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
     scrollToBottom();
   }, [messages]);
 
-  const extractFieldFromPartialJson = (json: string, field: string): string => {
+  const extractFieldFromPartialJson = (json: string, field: string): any => {
     try {
+      // Handle simple string fields
       const fieldMarker = `"${field}": "`;
       const startIdx = json.indexOf(fieldMarker);
-      if (startIdx === -1) return "";
-      
-      const contentStart = startIdx + fieldMarker.length;
-      let content = "";
-      
-      for (let i = contentStart; i < json.length; i++) {
-        if (json[i] === '"' && (i === 0 || json[i-1] !== '\\')) {
-          break;
+      if (startIdx !== -1) {
+        const contentStart = startIdx + fieldMarker.length;
+        let content = "";
+        for (let i = contentStart; i < json.length; i++) {
+          if (json[i] === '"' && (i === 0 || json[i-1] !== '\\')) {
+            break;
+          }
+          content += json[i];
         }
-        content += json[i];
+        return content.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      }
+
+      // Handle object fields (very basic extraction)
+      const objMarker = `"${field}": {`;
+      const objStartIdx = json.indexOf(objMarker);
+      if (objStartIdx !== -1) {
+        const contentStart = objStartIdx + objMarker.length - 1; // include the {
+        let balance = 0;
+        let content = "";
+        for (let i = contentStart; i < json.length; i++) {
+          if (json[i] === '{') balance++;
+          if (json[i] === '}') balance--;
+          content += json[i];
+          if (balance === 0) break;
+        }
+        try {
+          return JSON.parse(content);
+        } catch (e) {
+          return null;
+        }
       }
       
-      return content.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      return null;
     } catch (e) {
-      return "";
+      return null;
     }
   };
 
@@ -117,11 +138,34 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           fullBuffer += chunk;
           const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
           const partialShot = extractFieldFromPartialJson(fullBuffer, "cognitiveShot");
+          const partialProjection = extractFieldFromPartialJson(fullBuffer, "psychologicalProjection");
+          const partialChain = extractFieldFromPartialJson(fullBuffer, "reasoningChain");
           
-          if (partialAnswer || partialShot) {
+          if (partialAnswer || partialShot || partialProjection || partialChain) {
             let displayContent = "";
-            if (partialShot) displayContent += `**Strategic Shot:** ${partialShot}\n\n`;
-            displayContent += partialAnswer;
+            
+            if (partialShot) {
+              displayContent += `> **STRATEGIC SHOT:** ${partialShot}\n\n`;
+            }
+
+            if (partialProjection) {
+              displayContent += `### 🧠 Psychological Projection\n`;
+              if (partialProjection.buyerFear) displayContent += `- **Buyer Fear:** ${partialProjection.buyerFear}\n`;
+              if (partialProjection.buyerIncentive) displayContent += `- **Incentive:** ${partialProjection.buyerIncentive}\n`;
+              if (partialProjection.strategicLever) displayContent += `- **Strategic Lever:** ${partialProjection.strategicLever}\n`;
+              displayContent += `\n`;
+            }
+
+            if (partialAnswer) {
+              displayContent += `### 🎯 Intelligence Synthesis\n${partialAnswer}\n\n`;
+            }
+
+            if (partialChain) {
+              displayContent += `### ⛓️ Reasoning Chain\n`;
+              if (partialChain.painPoint) displayContent += `- **Pain Point:** ${partialChain.painPoint}\n`;
+              if (partialChain.capability) displayContent += `- **Capability:** ${partialChain.capability}\n`;
+              if (partialChain.strategicValue) displayContent += `- **Strategic Value:** ${partialChain.strategicValue}\n`;
+            }
             
             setMessages(prev => prev.map(m => 
               m.id === assistantId ? { ...m, content: displayContent } : m

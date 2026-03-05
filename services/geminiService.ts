@@ -1408,7 +1408,9 @@ export async function* performCognitiveSearchStream(
       model: modelName,
       contents: prompt,
       config: {
-        systemInstruction: `You are a Senior Cognitive Brain Strategist. Provide technical rigor and grounded depth in JSON.`,
+        systemInstruction: `You are a Senior Cognitive Brain Strategist. 
+        Provide technical rigor and grounded depth in JSON. 
+        Inside the "answer" field, use rich Markdown formatting (bolding, lists, headers) to make the content highly structured and professional.`,
         responseMimeType: "application/json",
         responseSchema,
         thinkingConfig: { thinkingBudget: 32768 }
