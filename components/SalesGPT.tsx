@@ -1,6 +1,8 @@
 
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ICONS } from '../constants';
 import { streamSalesGPT, generatePineappleImage, streamDeepStudy, performCognitiveSearchStream } from '../services/geminiService';
 import { GPTMessage, GPTToolMode, MeetingContext } from '../types';
@@ -241,8 +243,10 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                       ? 'bg-indigo-50 dark:bg-indigo-900/20 text-slate-900 dark:text-white rounded-tr-none border-2 border-indigo-100 dark:border-indigo-900/30' 
                       : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200 dark:border-slate-800'}
                   `}>
-                    <div className="whitespace-pre-wrap markdown-content">
-                      {msg.content}
+                    <div className="markdown-content">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
                     {msg.imageUrl && (
                       <motion.div 

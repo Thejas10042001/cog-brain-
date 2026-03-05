@@ -1177,6 +1177,8 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
   2. If the user's question relates to specific data in the documents, use that data and cite the source.
   3. If the question is general or the data isn't in the docs, do NOT refuse to answer. Instead, use your world-class general knowledge to provide a strategic, authoritative response.
   
+  FORMATTING: Use Markdown (bolding, lists, tables, headers) to make your response highly readable, structured, and professional.
+  
   STYLE: Direct, authoritative, and strategic. No fluff.
   
   ${context ? `--- DOCUMENT GROUNDING DATA ---
@@ -1295,6 +1297,8 @@ export async function* streamDeepStudy(prompt: string, history: GPTMessage[], co
   2. OUT-OF-THE-BOX THINKING: Infuse creative, non-obvious sales maneuvers and global market trends.
   3. CUSTOMER PSYCHOLOGY: Analyze the situation from the CUSTOMER'S point of view (their fears, personal incentives, and organizational pressures).
   4. STRATEGIC ROADMAP: Provide a step-by-step execution plan for the salesperson.
+  
+  FORMATTING: Use exhaustive Markdown formatting (headers, bullet points, bold text, and tables) to structure your deep analysis for maximum readability and impact.
   
   STYLE: Exhaustive, professional, academic but actionable.
   
