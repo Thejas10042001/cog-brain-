@@ -11,7 +11,6 @@ interface HeaderProps {
   textZoom: number;
   onTextZoomChange: (newZoom: number) => void;
   darkMode: boolean;
-  onDarkModeToggle: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -20,8 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   onZoomChange, 
   textZoom, 
   onTextZoomChange,
-  darkMode,
-  onDarkModeToggle
+  darkMode
 }) => {
   const [showUtility, setShowUtility] = useState(false);
   const [activeMagnifierTab, setActiveMagnifierTab] = useState<'simulation' | 'typography'>('simulation');
@@ -58,45 +56,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center gap-6">
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={onDarkModeToggle}
-            className="relative w-14 h-7 bg-slate-100 dark:bg-slate-800 rounded-full p-1 transition-colors duration-500 focus:outline-none shadow-inner border border-slate-200 dark:border-slate-700"
-            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          >
-            <div className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
-              <ICONS.Sun className="w-3 h-3 text-amber-500 opacity-40" />
-              <ICONS.Moon className="w-3 h-3 text-indigo-400 opacity-40" />
-            </div>
-            <motion.div
-              className="w-5 h-5 bg-white dark:bg-slate-900 rounded-full shadow-lg z-10 relative flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50"
-              animate={{ x: darkMode ? 28 : 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {darkMode ? (
-                  <motion.div
-                    key="moon"
-                    initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                    exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-                  >
-                    <ICONS.Moon className="w-3 h-3 text-indigo-400" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="sun"
-                    initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                    exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-                  >
-                    <ICONS.Sun className="w-3 h-3 text-amber-500" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </button>
-
           {user && (
             <div className="hidden lg:flex items-center gap-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm px-5 py-2 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 transition-all shadow-sm hover:shadow-md">
               <div className="flex flex-col items-end">
