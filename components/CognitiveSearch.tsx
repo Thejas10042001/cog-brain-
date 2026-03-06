@@ -7,7 +7,7 @@ import { MeetingContext } from '../types';
 const FormattedText: FC<{ text: string }> = ({ text }) => {
   const lines = text.split('\n');
   return (
-    <div className="space-y-6 text-slate-700 leading-relaxed text-lg font-serif">
+    <div className="space-y-6 text-slate-300 leading-relaxed text-lg font-serif">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
         if (!trimmed) return <div key={idx} className="h-4" />;
@@ -15,10 +15,10 @@ const FormattedText: FC<{ text: string }> = ({ text }) => {
         if (trimmed.startsWith('### ')) {
           const title = trimmed.replace('### ', '');
           return (
-            <div key={idx} className="pt-8 pb-4 border-b-2 border-slate-100 mb-4 animate-in fade-in slide-in-from-left-4 first:pt-0">
+            <div key={idx} className="pt-8 pb-4 border-b-2 border-slate-800 mb-4 animate-in fade-in slide-in-from-left-4 first:pt-0">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-6 bg-indigo-600 rounded-full shadow-sm"></div>
-                <h4 className="text-[13px] font-black uppercase tracking-[0.3em] text-slate-900 drop-shadow-sm">{title}</h4>
+                <h4 className="text-[13px] font-black uppercase tracking-[0.3em] text-white drop-shadow-sm">{title}</h4>
               </div>
             </div>
           );
@@ -315,7 +315,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
             <ProjectionCard label="Our Winning Angle" content={result?.psychologicalProjection?.strategicLever || "..."} color="indigo" icon={<ICONS.Trophy />} isSearching={isSearching} />
           </div>
 
-          <div className="bg-white rounded-[3.5rem] p-12 md:p-20 shadow-2xl border border-slate-200 relative overflow-hidden">
+          <div className="bg-slate-900 rounded-[3.5rem] p-12 md:p-20 shadow-2xl border border-slate-800 relative overflow-hidden">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16 border-b border-slate-100 pb-12">
                <div className="flex items-center gap-5">
                   <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-100 rotate-2 transition-transform hover:rotate-0"><ICONS.Brain className="w-6 h-6" /></div>
@@ -351,7 +351,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    {result.citations.map((cit, i) => (
-                     <div key={i} className="p-8 bg-slate-50/50 border border-slate-100 rounded-[2rem] group hover:bg-white hover:border-indigo-300 hover:shadow-2xl transition-all duration-500">
+                     <div key={i} className="p-8 bg-slate-800/50 border border-slate-800 rounded-[2rem] group hover:bg-slate-800 hover:border-indigo-500/50 transition-all duration-500">
                         <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                           <ICONS.Document className="w-3.5 h-3.5" /> {cit.source || 'Intelligence Store'}
                         </p>
@@ -372,7 +372,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
           <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 text-center">Reasoning Suggestions</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {suggestions.map((text, i) => (
-              <button key={i} onClick={() => {setQuery(text); handleSearch(undefined, text);}} className="p-10 bg-white border border-slate-100 rounded-[2.5rem] text-left hover:border-indigo-500 hover:shadow-2xl transition-all shadow-xl group border-b-4 border-b-indigo-50 hover:border-b-indigo-600 active:scale-95 duration-300">
+              <button key={i} onClick={() => {setQuery(text); handleSearch(undefined, text);}} className="p-10 bg-slate-900 border border-slate-800 rounded-[2.5rem] text-left hover:border-indigo-500 hover:shadow-2xl transition-all shadow-xl group border-b-4 border-b-indigo-900 hover:border-b-indigo-600 active:scale-95 duration-300">
                 <p className="text-indigo-400 text-[9px] font-black uppercase tracking-widest mb-4 group-hover:translate-x-1 transition-transform">Suggested Node {i + 1}</p>
                 <p className="text-lg font-bold text-slate-800 leading-tight">“{text}”</p>
               </button>
@@ -385,7 +385,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
 };
 
 const ProjectionCard: FC<{ label: string; content: string; color: string; icon: React.ReactNode, isSearching?: boolean }> = ({ label, content, color, icon, isSearching }) => (
-  <div className={`p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-xl border-t-4 border-t-${color}-500 hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden`}>
+  <div className={`p-8 rounded-[2.5rem] bg-slate-900 border border-slate-800 shadow-xl border-t-4 border-t-${color}-500 hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden`}>
     {isSearching && <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 overflow-hidden"><div className={`h-full bg-${color}-500 animate-[progress_1.5s_infinite] w-full origin-left`}></div></div>}
     <div className="flex items-center gap-4 mb-6">
        <div className={`p-4 bg-${color}-50 text-${color}-600 rounded-2xl group-hover:scale-105 transition-transform shadow-sm`}>{icon}</div>

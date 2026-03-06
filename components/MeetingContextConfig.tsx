@@ -348,7 +348,7 @@ OPERATIONAL CONSTRAINTS:
           onClick={() => setActiveSection(s.id as any)}
           className={`flex-1 min-w-[140px] flex items-center justify-center gap-3 py-5 px-8 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden ${
             activeSection === s.id 
-            ? 'bg-white dark:bg-slate-900 text-indigo-600 shadow-2xl shadow-indigo-500/20' 
+            ? 'bg-slate-900 text-indigo-400 shadow-2xl shadow-indigo-500/20' 
             : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
@@ -382,7 +382,7 @@ OPERATIONAL CONSTRAINTS:
             {activeSection === 'library' && (
               <div className="space-y-12" id="library-hub">
                 <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">01</div>
+                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">01</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Cognitive Library Hub</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base.</p>
@@ -417,7 +417,7 @@ OPERATIONAL CONSTRAINTS:
             {activeSection === 'core' && (
               <div className="space-y-12">
                 <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">02</div>
+                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">02</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Cognitive Mind Core</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Anchor the cognitive simulation by selecting a primary KYC node to calibrate strategic parameters.</p>
@@ -432,7 +432,7 @@ OPERATIONAL CONSTRAINTS:
                       <h3 className="text-3xl font-black uppercase tracking-widest text-slate-900 dark:text-white">Cognitive Mind Core</h3>
                       <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full px-2">
                         <p className="text-slate-500 dark:text-slate-400 font-medium">Know Your Customer (KYC) Document</p>
-                        <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 shadow-sm">
+                        <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-indigo-900/30 shadow-sm">
                           <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Lacking high-fidelity KYC intelligence?</span>
                           <button 
                             onClick={() => setShowKycGuide(true)}
@@ -446,7 +446,7 @@ OPERATIONAL CONSTRAINTS:
                         <select 
                           value={context.kycDocId || ""} 
                           onChange={(e) => handleKycChange(e.target.value)}
-                          className={`flex-1 bg-white dark:bg-slate-800 border-4 rounded-[2rem] px-8 py-6 text-xl font-bold text-slate-700 dark:text-white outline-none transition-all shadow-xl ${isExtracting ? 'border-indigo-300 opacity-50 cursor-wait' : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500'}`}
+                          className={`flex-1 bg-slate-800 border-4 rounded-[2rem] px-8 py-6 text-xl font-bold text-white outline-none transition-all shadow-xl ${isExtracting ? 'border-indigo-300 opacity-50 cursor-wait' : 'border-slate-700 focus:border-indigo-500'}`}
                           disabled={isExtracting}
                         >
                           <option value="">Select grounding source...</option>
@@ -490,7 +490,7 @@ OPERATIONAL CONSTRAINTS:
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 bg-white dark:bg-slate-900/50 rounded-[3rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 bg-slate-900/50 rounded-[3rem] p-12 shadow-2xl border border-slate-800">
                     <div className="space-y-6">
                       <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                          <div className="text-indigo-500"><ICONS.Trophy /></div>
@@ -523,7 +523,7 @@ OPERATIONAL CONSTRAINTS:
             {activeSection === 'persona' && (
               <div className="space-y-12">
                 <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">03</div>
+                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">03</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Target Buyer Persona</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Select the psychological profile of your primary decision-maker to calibrate resistance levels.</p>
@@ -534,7 +534,7 @@ OPERATIONAL CONSTRAINTS:
                     <button
                       key={p.type}
                       onClick={() => handleChange('persona', p.type)}
-                      className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group ${context.persona === p.type ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl scale-[1.02]' : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-sm'}`}
+                      className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group ${context.persona === p.type ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl scale-[1.02]' : 'bg-slate-900/50 border-slate-800 hover:border-indigo-700 shadow-sm'}`}
                     >
                       <div className={`p-4 rounded-2xl mb-6 inline-block ${context.persona === p.type ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 shadow-sm'}`}>
                         {p.icon}
@@ -558,7 +558,7 @@ OPERATIONAL CONSTRAINTS:
             {activeSection === 'strategy' && (
               <div className="space-y-12">
                 <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">04</div>
+                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">04</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Strategy Finalization</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Define the specific focus of the meeting and anticipate potential objections to sharpen neural response.</p>
@@ -570,7 +570,7 @@ OPERATIONAL CONSTRAINTS:
                     <textarea 
                       value={context.meetingFocus}
                       onChange={e => handleChange('meetingFocus', e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[2rem] px-8 py-6 text-base font-semibold text-slate-800 dark:text-white outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-inner min-h-[150px] placeholder:text-slate-300"
+                      className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2rem] px-8 py-6 text-base font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[150px] placeholder:text-slate-600"
                       placeholder="Describe the primary goal of this interaction..."
                     />
                   </div>
@@ -591,7 +591,7 @@ OPERATIONAL CONSTRAINTS:
                       />
                       <button 
                         onClick={addObjection}
-                        className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-slate-100 transition-all active:scale-95 shadow-lg"
+                        className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95 shadow-lg"
                       >
                         Add Node
                       </button>
@@ -604,7 +604,7 @@ OPERATIONAL CONSTRAINTS:
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.8 }}
-                            className="flex items-center gap-3 px-5 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm group"
+                            className="flex items-center gap-3 px-5 py-3 bg-slate-800 border border-slate-700 rounded-xl shadow-sm group"
                           >
                             <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{obj}</span>
                             <button 
@@ -625,7 +625,7 @@ OPERATIONAL CONSTRAINTS:
             {activeSection === 'vocal' && (
               <div className="space-y-12">
                 <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
-                  <div className="w-16 h-16 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">05</div>
+                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">05</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Neural Vocal Sync</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's baseline.</p>
@@ -642,7 +642,7 @@ OPERATIONAL CONSTRAINTS:
                             <button
                               key={voice}
                               onClick={() => updateVocalAnalysis({ baseVoice: voice as any })}
-                              className={`py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${context.vocalPersonaAnalysis?.baseVoice === voice ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-indigo-300'}`}
+                              className={`py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${context.vocalPersonaAnalysis?.baseVoice === voice ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-300'}`}
                             >
                               {voice}
                             </button>
@@ -685,7 +685,7 @@ OPERATIONAL CONSTRAINTS:
                       <textarea 
                         value={context.vocalPersonaAnalysis?.mimicryDirective}
                         onChange={e => updateVocalAnalysis({ mimicryDirective: e.target.value })}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-[2rem] px-8 py-6 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-inner min-h-[120px] placeholder:text-slate-300"
+                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2rem] px-8 py-6 text-sm font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[120px] placeholder:text-slate-600"
                         placeholder="Define the behavioral signature (e.g. 'Aggressive, fast-paced, skeptical, interrupts often')..."
                       />
                     </div>
@@ -745,7 +745,7 @@ OPERATIONAL CONSTRAINTS:
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-slate-900 rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
                 <div className="flex items-center gap-3">
@@ -754,7 +754,7 @@ OPERATIONAL CONSTRAINTS:
                   </div>
                   <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">KYC Synthesis Protocol</h3>
                 </div>
-                <button onClick={() => setShowKycGuide(false)} className="p-2 hover:bg-white rounded-full transition-colors">
+                <button onClick={() => setShowKycGuide(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
                   <ICONS.X className="w-6 h-6 text-slate-400" />
                 </button>
               </div>
@@ -877,7 +877,7 @@ const Input = ({ label, value, onChange, placeholder, isLarge }: { label: string
       type="text"
       value={value}
       onChange={e => onChange(e.target.value)}
-      className={`w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 focus:bg-white outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-300 shadow-inner ${isLarge ? 'text-lg py-6' : ''}`}
+      className={`w-full bg-slate-800 border-2 border-slate-700 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 focus:bg-slate-900 outline-none transition-all font-semibold text-white placeholder:text-slate-600 shadow-inner ${isLarge ? 'text-lg py-6' : ''}`}
       placeholder={placeholder}
     />
   </div>

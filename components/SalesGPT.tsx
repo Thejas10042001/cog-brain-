@@ -208,9 +208,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950 relative overflow-hidden">
+    <div className="flex flex-col h-full bg-slate-950 relative overflow-hidden">
       {/* Header */}
-      <div className="w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 z-20">
+      <div className="w-full bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 z-20">
         <div className="max-w-5xl mx-auto px-12 py-8 flex items-center justify-between">
           <div className="flex items-center gap-6">
              <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40">
@@ -250,7 +250,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="h-[50vh] flex flex-col items-center justify-center text-center space-y-12"
               >
-                 <div className="p-20 bg-white dark:bg-slate-900 rounded-[6rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] dark:shadow-none border border-slate-100 dark:border-slate-800 text-indigo-100 dark:text-indigo-900 transform -rotate-2 relative">
+                 <div className="p-20 bg-slate-900 rounded-[6rem] shadow-none border border-slate-800 text-indigo-900 transform -rotate-2 relative">
                     <div className="absolute -top-10 -left-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-3xl"></div>
                     <ICONS.Brain className="w-40 h-40 relative z-10" />
                  </div>
@@ -285,7 +285,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     max-w-[85%] p-14 rounded-[4.5rem] text-3xl font-medium leading-relaxed shadow-[0_30px_60px_rgba(0,0,0,0.05)] dark:shadow-none
                     ${msg.role === 'user' 
                       ? 'bg-indigo-50 dark:bg-indigo-900/20 text-slate-900 dark:text-white rounded-tr-none border-2 border-indigo-100 dark:border-indigo-900/30' 
-                      : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200 dark:border-slate-800'}
+                      : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800'}
                   `}>
                     <div className="markdown-content">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -304,7 +304,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                              whileHover={{ scale: 1.1 }}
                              whileTap={{ scale: 0.9 }}
                              onClick={() => downloadImage(msg.imageUrl!, 'StrategicAsset')}
-                             className="px-10 py-5 bg-white text-slate-900 rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-4"
+                             className="px-10 py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-600 transition-all flex items-center gap-4"
                            >
                              <ICONS.Efficiency className="w-6 h-6" /> Download Master
                            </motion.button>
@@ -321,7 +321,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
       </div>
 
       {/* Input Area */}
-      <div className="w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800 z-20">
+      <div className="w-full bg-slate-950/80 backdrop-blur-2xl border-t border-slate-800 z-20">
         <div className="max-w-5xl mx-auto px-12 py-12 space-y-8">
           <div className="flex flex-wrap gap-4 justify-center">
              <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-5 h-5" />} label="Fast Pulse" />
@@ -337,7 +337,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type your strategic inquiry..."
-              className="w-full bg-white dark:bg-slate-900 border-4 border-slate-100 dark:border-slate-800 rounded-[3.5rem] px-16 py-12 text-3xl outline-none transition-all pr-64 font-bold italic shadow-2xl focus:border-indigo-500 dark:focus:border-indigo-400 placeholder:text-slate-200 dark:placeholder:text-slate-700 text-slate-900 dark:text-white"
+              className="w-full bg-slate-900 border-4 border-slate-800 rounded-[3.5rem] px-16 py-12 text-3xl outline-none transition-all pr-64 font-bold italic shadow-2xl focus:border-indigo-400 placeholder:text-slate-700 text-white"
             />
             <motion.button 
               whileHover={{ scale: 1.05 }}
@@ -379,7 +379,7 @@ const ToolToggle = ({ active, onClick, icon, label, color = 'indigo' }: { active
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`flex items-center gap-4 px-10 py-4 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.2em] text-[11px] shadow-sm ${active ? activeClasses : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-indigo-300 dark:hover:border-indigo-900/50 hover:text-slate-600 dark:hover:text-slate-300'}`}
+      className={`flex items-center gap-4 px-10 py-4 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.2em] text-[11px] shadow-sm ${active ? activeClasses : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-indigo-900/50 hover:text-slate-300'}`}
     >
       {icon}
       {label}

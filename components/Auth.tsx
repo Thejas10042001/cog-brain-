@@ -64,7 +64,7 @@ export const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-12 transition-colors duration-500 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12 transition-colors duration-500 relative overflow-hidden">
       {/* Background Accents */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-rose-500/10 dark:bg-rose-500/5 rounded-full blur-[120px] pointer-events-none"></div>
@@ -95,7 +95,7 @@ export const Auth: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-slate-900/80 backdrop-blur-2xl p-12 rounded-[4rem] shadow-[0_40px_100px_rgba(0,0,0,0.1)] dark:shadow-[0_40px_100px_rgba(0,0,0,0.3)] border border-white/50 dark:border-slate-800/50 relative overflow-hidden"
+          className="bg-slate-900/80 backdrop-blur-2xl p-12 rounded-[4rem] shadow-[0_40px_100px_rgba(0,0,0,0.3)] border border-slate-800/50 relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 opacity-50"></div>
 

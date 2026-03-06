@@ -347,7 +347,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 
   if (stage === 'config') {
     return (
-      <div className="bg-white dark:bg-slate-900 p-12 border-y border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-64px)]">
+      <div className="bg-slate-950 p-12 border-y border-slate-800 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-64px)]">
         {micPermissionError && (
           <div className="mb-8 bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-900/30 p-6 rounded-[2.5rem] flex items-center justify-between animate-in slide-in-from-top-4">
             <div className="flex items-center gap-4">
@@ -413,7 +413,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                   <button
                     key={level}
                     onClick={() => setConfig({ ...config, difficulty: level })}
-                    className={`py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] border-2 transition-all ${config.difficulty === level ? 'bg-amber-500 border-amber-500 text-white shadow-2xl shadow-amber-200 dark:shadow-none scale-[1.05]' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-amber-200 dark:hover:border-amber-800'}`}
+                    className={`py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] border-2 transition-all ${config.difficulty === level ? 'bg-amber-500 border-amber-500 text-white shadow-2xl scale-[1.05]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-amber-800'}`}
                   >
                     {level}
                   </button>
@@ -426,7 +426,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
               <div className="grid grid-cols-2 gap-6">
                 <button 
                   onClick={() => setPerspective('document')}
-                  className={`flex flex-col items-center gap-4 p-8 rounded-[2.5rem] border-2 transition-all group ${perspective === 'document' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-none scale-[1.05]' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-300 text-slate-500'}`}
+                  className={`flex flex-col items-center gap-4 p-8 rounded-[2.5rem] border-2 transition-all group ${perspective === 'document' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl scale-[1.05]' : 'bg-slate-800 border-slate-700 hover:border-indigo-300 text-slate-500'}`}
                 >
                   <ICONS.Document className={`w-8 h-8 ${perspective === 'document' ? 'text-white' : 'text-indigo-500 group-hover:scale-110 transition-transform'}`} />
                   <div className="text-center">
@@ -436,7 +436,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 
                 <button 
                   onClick={() => setPerspective('customer')}
-                  className={`flex flex-col items-center gap-4 p-8 rounded-[2.5rem] border-2 transition-all group ${perspective === 'customer' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-none scale-[1.05]' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-indigo-300 text-slate-500'}`}
+                  className={`flex flex-col items-center gap-4 p-8 rounded-[2.5rem] border-2 transition-all group ${perspective === 'customer' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl scale-[1.05]' : 'bg-slate-800 border-slate-700 hover:border-indigo-300 text-slate-500'}`}
                 >
                   <ICONS.Brain className={`w-8 h-8 ${perspective === 'customer' ? 'text-white' : 'text-rose-500 group-hover:scale-110 transition-transform'}`} />
                   <div className="text-center">
@@ -475,7 +475,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 
     return (
       <div className="animate-in fade-in duration-500 min-h-[calc(100vh-64px)] flex flex-col">
-        <div className="bg-white border-b border-slate-200 overflow-hidden">
+        <div className="bg-slate-900 border-b border-slate-800 overflow-hidden">
           <div className="h-1 w-full bg-slate-100">
              <div className="h-full bg-indigo-500" style={{ width: `${progressPercent}%` }}></div>
           </div>
@@ -494,7 +494,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
           </div>
         </div>
 
-        <div className="flex-1 bg-white p-16 relative overflow-hidden flex flex-col">
+        <div className="flex-1 bg-slate-900 p-16 relative overflow-hidden flex flex-col">
            <div className="relative z-10 space-y-12 flex-1 flex flex-col justify-center">
               <div className="space-y-4 text-center">
                  <span className="px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-400">
@@ -601,7 +601,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
   if (stage === 'results') {
     const totalScore = Math.round(results.reduce((acc, r) => acc + r.evaluation.score, 0) / (results.length || 1));
     return (
-      <div className="animate-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] flex flex-col bg-white text-slate-900">
+      <div className="animate-in slide-in-from-bottom-8 duration-700 min-h-[calc(100vh-64px)] flex flex-col bg-slate-950 text-white">
         <div className="p-16 flex flex-col md:flex-row items-center justify-between gap-12 text-left">
            <div className="space-y-8 flex-1">
               <h2 className="text-5xl font-black tracking-tight">Assignment Audit Result</h2>
@@ -634,7 +634,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
            {questions.map((q, idx) => {
              const res = results.find(r => r.questionId === q.id);
              return (
-               <div key={q.id} className="bg-white p-12 border border-slate-200 rounded-[3.5rem] text-slate-900 flex flex-col gap-10 shadow-sm relative overflow-hidden group">
+               <div key={q.id} className="bg-slate-900 p-12 border border-slate-800 rounded-[3.5rem] text-white flex flex-col gap-10 shadow-sm relative overflow-hidden group">
                   {/* Source Attribution Badge */}
                   <div className="flex items-center gap-3 px-6 py-2 bg-indigo-50 border border-indigo-100 rounded-full w-fit">
                      <ICONS.Document className="w-3.5 h-3.5 text-indigo-600" />
@@ -666,7 +666,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 
                          {/* Performance Metrics for Video/Mic */}
                          {(q.type === 'video' || q.type === 'mic') && res?.evaluation && (
-                           <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] space-y-6 shadow-sm">
+                           <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-6 shadow-sm">
                               <div className="flex items-center justify-between border-b border-slate-50 pb-3">
                                  <h6 className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Biometric & Cognitive Trace</h6>
                                  <div className="flex items-center gap-3">

@@ -725,7 +725,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
   return (
-    <div className="bg-white shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-slate-900 animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto px-12">
            <div className="w-80 h-80 bg-slate-50 rounded-[4rem] border border-slate-200 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
@@ -746,7 +746,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                          meetingFocus: preset.value,
                          persona: preset.persona
                        })}
-                       className={`flex items-center gap-4 p-6 rounded-[2rem] text-left transition-all border-2 ${meetingContext.meetingFocus === preset.value ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 text-slate-600 hover:border-indigo-300 hover:bg-slate-50'}`}
+                       className={`flex items-center gap-4 p-6 rounded-[2rem] text-left transition-all border-2 ${meetingContext.meetingFocus === preset.value ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-[1.02]' : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'}`}
                      >
                        <div className={`p-3 rounded-xl ${meetingContext.meetingFocus === preset.value ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500'}`}>
                          {preset.icon}
@@ -767,7 +767,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                     <button
                       key={level}
                       onClick={() => onContextChange({ ...meetingContext, difficulty: level as any })}
-                      className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${meetingContext.difficulty === level ? 'bg-amber-500 border-amber-400 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 text-slate-400 hover:border-amber-200'}`}
+                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${meetingContext.difficulty === level ? 'bg-amber-500 border-amber-400 text-white shadow-xl scale-[1.02]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-amber-200'}`}
                     >
                       {level}
                     </button>
@@ -903,7 +903,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
                      <button 
                        onClick={() => setShowCoachingDetails(!showCoachingDetails)}
-                       className="w-full group flex items-center justify-between p-10 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
+                       className="w-full group flex items-center justify-between p-10 bg-slate-900 hover:bg-slate-800 border-2 border-slate-800 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
                      >
                         <span className="text-xl font-black text-indigo-600 italic group-hover:text-indigo-700 text-left pr-6">
                           Initialize Neural Alignment: Access Strategic Correction & Master Logic Node
@@ -1028,7 +1028,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
                 {messages.map((msg, idx) => (
-                  <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-white border-slate-200' : 'bg-indigo-50 border-indigo-100'}`}>
+                  <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-slate-900 border-slate-800' : 'bg-indigo-900/20 border-indigo-900/30'}`}>
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${msg.role === 'assistant' ? 'bg-slate-900 text-white' : 'bg-indigo-600 text-white'}`}>
                         {msg.role === 'assistant' ? 'Client' : 'Seller'}
@@ -1042,7 +1042,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
              </div>
 
              {historyWidth > 150 && (
-               <div className="p-6 bg-white border-t border-slate-100">
+               <div className="p-6 bg-slate-950 border-t border-slate-800">
                   <button 
                     onClick={handleEndSession}
                     className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all"
@@ -1063,7 +1063,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-200 custom-scrollbar"
+              className="bg-slate-900 rounded-[3rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-800 custom-scrollbar"
             >
               <div className="p-10 space-y-8">
                 <div className="flex items-center justify-between">

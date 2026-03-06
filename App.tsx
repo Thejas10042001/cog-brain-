@@ -570,7 +570,7 @@ const App: React.FC = () => {
             <>
               <aside 
                 style={{ width: sidebarWidth, fontSize: `${sidebarFontScale}rem` }}
-                className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-3xl border-r border-slate-200/50 dark:border-slate-800/50 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all shadow-[20px_0_50px_rgba(0,0,0,0.02)] dark:shadow-none"
+                className="bg-slate-900/90 backdrop-blur-3xl border-r border-slate-800/50 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all shadow-none"
               >
                 <div className={`p-4 ${sidebarWidth > 120 ? 'lg:p-8' : 'p-4'} space-y-12 flex flex-col h-full`}>
                   <div className="space-y-2">

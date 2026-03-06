@@ -366,12 +366,12 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   };
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-slate-950 rounded-[3rem] shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative">
+    <div className="h-full flex flex-col bg-slate-950 rounded-[3rem] shadow-2xl border border-slate-800 overflow-hidden relative">
       <div className="absolute inset-0 bg-mesh opacity-10 pointer-events-none"></div>
       
-      <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl z-10">
+      <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-900/50 backdrop-blur-xl z-10">
         <div className="flex items-center gap-6">
-          <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl shadow-xl">
+          <div className="p-4 bg-white text-slate-900 rounded-2xl shadow-xl">
             <ICONS.Brain className="w-8 h-8" />
           </div>
           <div>
@@ -385,7 +385,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowGroomingJournal(!showGroomingJournal)}
-            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${showGroomingJournal ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30'}`}
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${showGroomingJournal ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-800 text-indigo-400 border-indigo-900/30'}`}
           >
             {showGroomingJournal ? 'Close Journal' : 'Self-Grooming Journal'}
           </motion.button>
@@ -398,7 +398,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   setSessionMode(m);
                   setEvaluation(null);
                 }}
-                className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === m ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-lg scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === m ? 'bg-slate-700 text-indigo-400 shadow-lg scale-105' : 'text-slate-400 hover:text-slate-300'}`}
               >
                 {m === 'roleplay' ? 'Buyer Roleplay' : m === 'seller-roleplay' ? 'Seller Roleplay' : 'Bot-Led Grooming'}
               </button>
@@ -437,7 +437,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   <motion.div 
                     key={saved.id} 
                     whileHover={{ y: -8 }}
-                    className="p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] relative group hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all hover:shadow-2xl"
+                    className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] relative group hover:border-indigo-900/50 transition-all hover:shadow-2xl"
                   >
                     <div className="flex items-center justify-between mb-6">
                       <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/20 px-4 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-900/30">
@@ -503,7 +503,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                       <select 
                         value={groomingTarget}
                         onChange={(e) => setGroomingTarget(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border-4 border-slate-100 dark:border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-slate-800 dark:text-white outline-none focus:border-indigo-500 dark:focus:border-indigo-600 transition-all shadow-2xl appearance-none"
+                        className="w-full bg-slate-900 border-4 border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-white outline-none focus:border-indigo-600 transition-all shadow-2xl appearance-none"
                       >
                         <optgroup label="Critical Objections">
                           {analysis.objectionHandling.map((o, i) => <option key={i} value={o.objection}>{o.objection}</option>)}
@@ -525,9 +525,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                        whileHover={{ y: -8 }}
                        whileTap={{ scale: 0.98 }}
                        onClick={() => setSelectedPersona(option.type)}
-                       className={`p-10 rounded-[3rem] border-4 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-400 text-white shadow-[0_30px_60px_rgba(79,70,229,0.4)] dark:shadow-none' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900/50 shadow-xl shadow-slate-200/50 dark:shadow-none'}`}
+                       className={`p-10 rounded-[3rem] border-4 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-400 text-white shadow-none' : 'bg-slate-900 border-slate-800 hover:border-indigo-900/50 shadow-none'}`}
                      >
-                       <div className={`p-5 rounded-2xl mb-8 inline-block w-fit shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3 ${selectedPersona === option.type ? 'bg-white text-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>{option.icon}</div>
+                       <div className={`p-5 rounded-2xl mb-8 inline-block w-fit shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3 ${selectedPersona === option.type ? 'bg-white text-indigo-600' : 'bg-slate-800 text-slate-400'}`}>{option.icon}</div>
                        <h5 className={`font-black text-sm uppercase tracking-[0.2em] mb-4 ${selectedPersona === option.type ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{option.label}</h5>
                        <p className={`text-[12px] leading-relaxed font-bold italic ${selectedPersona === option.type ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>{option.desc}</p>
                     {selectedPersona === option.type && (
@@ -585,7 +585,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             exit={{ opacity: 0, y: -40 }}
             className="flex-1 overflow-y-auto custom-scrollbar p-12 space-y-16"
           >
-            <div className="flex items-center justify-between sticky top-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl z-20 py-4 -mx-12 px-12 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between sticky top-0 bg-slate-950/80 backdrop-blur-xl z-20 py-4 -mx-12 px-12 border-b border-slate-800">
               <button onClick={() => setEvaluation(null)} className="text-[12px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest flex items-center gap-3 group">
                 <ICONS.X className="group-hover:rotate-90 transition-transform" /> Close Mastery Review
               </button>
@@ -616,7 +616,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   <h4 className="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.4em] ml-4 flex items-center gap-4">
                     <ICONS.Sparkles className="w-6 h-6" /> Tactical Breathing & Pacing Guide
                   </h4>
-                  <div className="p-16 bg-white dark:bg-slate-900 border-4 border-indigo-50 dark:border-indigo-900/20 text-slate-900 dark:text-white rounded-[4.5rem] shadow-[0_50px_100px_rgba(0,0,0,0.1)] dark:shadow-none relative overflow-hidden">
+                  <div className="p-16 bg-slate-900 border-4 border-indigo-900/20 text-white rounded-[4.5rem] shadow-none relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-2 bg-indigo-600/10"></div>
                     <p className="text-3xl font-medium leading-[2.6] text-slate-700 dark:text-slate-300 font-serif italic relative z-10">
                       {evaluation.breathPacingGuide.split(/(\[Take Breath\]|\[Pause - \d+s\]|\[Slow Down\])/g).map((part, i) => (
@@ -651,7 +651,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
               <div className="space-y-12">
                 <section className="space-y-6">
                   <h4 className="text-[11px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-[0.3em] ml-2">Optimized Ideal Wording</h4>
-                  <div className="p-16 bg-white dark:bg-slate-900 border-4 border-emerald-50 dark:border-emerald-900/20 rounded-[4.5rem] shadow-2xl relative overflow-hidden group/master">
+                  <div className="p-16 bg-slate-900 border-4 border-emerald-900/20 rounded-[4.5rem] shadow-2xl relative overflow-hidden group/master">
                     <div className="absolute top-0 right-0 p-8">
                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-6 py-2 rounded-full uppercase border border-emerald-100 dark:border-emerald-900/30">Validated Logic</span>
                     </div>
@@ -708,7 +708,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             exit={{ opacity: 0 }}
             className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden h-full"
           >
-            <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-16 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
+            <div className="lg:col-span-2 bg-slate-900 p-16 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
               <div className={`absolute inset-0 opacity-10 dark:opacity-20 blur-[150px] transition-colors duration-2000 ${selectedPersona === 'Technical' ? 'bg-blue-600' : selectedPersona === 'Financial' ? 'bg-emerald-600' : 'bg-indigo-600'}`}></div>
               
               <div className="relative w-96 h-96 mb-16 flex items-center justify-center">
@@ -816,7 +816,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   >
                     <div className="flex flex-col items-end text-right">
                       <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Your input</p>
-                      <p className="text-base text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] rounded-tr-none border border-slate-200 dark:border-slate-800 shadow-lg leading-relaxed font-medium w-full">“{turn.user}”</p>
+                      <p className="text-base text-slate-300 bg-slate-900 p-8 rounded-[2.5rem] rounded-tr-none border border-slate-800 shadow-lg leading-relaxed font-medium w-full">“{turn.user}”</p>
                     </div>
                     {turn.ai && (
                       <div className="flex flex-col items-start text-left">
@@ -831,7 +831,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                     {currentTranscription.user && (
                       <div className="flex flex-col items-end text-right animate-pulse">
                         <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest mb-2">Hearing...</p>
-                        <p className="text-base text-slate-400 dark:text-slate-600 bg-white/50 dark:bg-slate-900/30 p-8 rounded-[2.5rem] rounded-tr-none border border-dashed border-slate-200 dark:border-slate-800 leading-relaxed italic w-full">“{currentTranscription.user}”</p>
+                        <p className="text-base text-slate-600 bg-slate-900/30 p-8 rounded-[2.5rem] rounded-tr-none border border-dashed border-slate-800 leading-relaxed italic w-full">“{currentTranscription.user}”</p>
                       </div>
                     )}
                     {currentTranscription.ai && (

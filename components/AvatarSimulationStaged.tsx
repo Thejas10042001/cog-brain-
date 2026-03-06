@@ -926,7 +926,7 @@ export const AvatarSimulationStaged: FC<{
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
   return (
-    <div className="bg-white shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-slate-900 animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {quotaExceeded.exceeded && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[120] bg-amber-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <ICONS.Shield className="w-5 h-5" />
@@ -956,7 +956,7 @@ export const AvatarSimulationStaged: FC<{
 
       {showTransitionModal && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-500">
-              <div className="bg-white border border-slate-200 rounded-[3rem] p-12 max-w-2xl w-full shadow-2xl space-y-10 animate-in zoom-in-95 duration-300">
+              <div className="bg-slate-900 border border-slate-800 rounded-[3rem] p-12 max-w-2xl w-full shadow-2xl space-y-10 animate-in zoom-in-95 duration-300">
                   <div className="text-center space-y-4">
                       <div className="w-20 h-20 bg-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto shadow-xl">
                           <ICONS.Sparkles className="w-10 h-10" />
@@ -1043,7 +1043,7 @@ export const AvatarSimulationStaged: FC<{
                   <button
                     key={level}
                     onClick={() => onContextChange({ ...meetingContext, difficulty: level as any })}
-                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${meetingContext.difficulty === level ? 'bg-amber-500 border-amber-400 text-white shadow-xl scale-[1.02]' : 'bg-white border-slate-100 text-slate-400 hover:border-amber-200'}`}
+                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${meetingContext.difficulty === level ? 'bg-amber-500 border-amber-400 text-white shadow-xl scale-[1.02]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-amber-200'}`}
                   >
                     {level}
                   </button>
@@ -1087,7 +1087,7 @@ export const AvatarSimulationStaged: FC<{
       ) : (
         <div className="flex-1 flex overflow-hidden">
           {/* Main Dashboard Panel - EDGE TO EDGE */}
-          <div className="flex-1 flex flex-col bg-white overflow-hidden">
+          <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
              
              {/* Header Layer (Fixed) */}
              <div className="p-8 border-b border-slate-100 bg-slate-50/50 backdrop-blur-md">
@@ -1117,7 +1117,7 @@ export const AvatarSimulationStaged: FC<{
 
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-6">
-                      <div className="p-3 bg-white border border-slate-200 rounded-2xl">
+                      <div className="p-3 bg-slate-900 border border-slate-800 rounded-2xl">
                          {isGeneratingAvatar ? (
                            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center animate-pulse">
                                <ICONS.Efficiency className="w-5 h-5 text-indigo-500" />
@@ -1271,7 +1271,7 @@ export const AvatarSimulationStaged: FC<{
 
                           <button 
                             onClick={() => setShowCoachingDetails(!showCoachingDetails)}
-                            className="w-full group flex items-center justify-between p-10 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
+                            className="w-full group flex items-center justify-between p-10 bg-slate-900 hover:bg-slate-800 border-2 border-slate-800 hover:border-indigo-500/40 rounded-[2.5rem] transition-all shadow-inner"
                           >
                              <span className="text-xl font-black text-indigo-600 italic group-hover:text-indigo-700 text-left pr-6">
                                Initialize Neural Alignment: Access Strategic Correction & Master Logic Node
@@ -1388,7 +1388,7 @@ export const AvatarSimulationStaged: FC<{
                    const isSkipped = attempts.some(a => a.result === 'SKIPPED');
 
                    return (
-                     <div key={s} className={`rounded-3xl border transition-all duration-500 ${isExpanded ? 'bg-white border-slate-200 shadow-sm' : 'bg-transparent border-slate-100 opacity-60'}`}>
+                     <div key={s} className={`rounded-3xl border transition-all duration-500 ${isExpanded ? 'bg-slate-900 border-slate-800 shadow-sm' : 'bg-transparent border-slate-800 opacity-60'}`}>
                         <button 
                           onClick={() => !isLocked && toggleStageExpand(s)}
                           disabled={isLocked}
@@ -1458,7 +1458,7 @@ export const AvatarSimulationStaged: FC<{
              </div>
 
              {historyWidth > 150 && (
-               <div className="p-6 bg-white border-t border-slate-100">
+               <div className="p-6 bg-slate-950 border-t border-slate-800">
                   <button 
                     onClick={handleEndSession}
                     className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all"
@@ -1479,7 +1479,7 @@ export const AvatarSimulationStaged: FC<{
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-200 custom-scrollbar"
+              className="bg-slate-900 rounded-[3rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-800 custom-scrollbar"
             >
               <div className="p-10 space-y-8">
                 <div className="flex items-center justify-between">

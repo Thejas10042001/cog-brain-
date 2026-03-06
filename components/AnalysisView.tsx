@@ -77,7 +77,7 @@ const SWOTItem = ({ label, items, color, symbol }: { label: string, items: strin
 );
 
 const CompetitorCard: React.FC<{ comp: CompetitorInsight, name: string }> = ({ comp, name }) => (
-  <div className="p-10 rounded-[4rem] bg-white border border-slate-100 hover:border-indigo-300 hover:shadow-[0_40px_80px_-15px_rgba(79,70,229,0.12)] transition-all duration-700 group flex flex-col h-full relative overflow-hidden">
+  <div className="p-10 rounded-[4rem] bg-slate-900 border border-slate-800 hover:border-indigo-500/50 transition-all duration-700 group flex flex-col h-full relative overflow-hidden">
     <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
        <ICONS.Trophy className="w-48 h-48" />
     </div>
@@ -355,7 +355,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
   };
 
   const renderSection = (title: string, content: string) => (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+    <div className="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 shadow-sm">
       <h4 className="text-[10px] font-black uppercase text-indigo-500 tracking-widest mb-4">{title}</h4>
       <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{content}</p>
     </div>
@@ -364,7 +364,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
   return (
     <div className="space-y-12 pb-20">
       <div className="flex justify-end items-center gap-6">
-        <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3 bg-slate-900 px-6 py-3 rounded-2xl border border-slate-800 shadow-sm">
            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Active Voice</span>
            <select 
              value={selectedVoice} 
@@ -453,7 +453,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
       {/* NEW: Vocal Identity Fingerprint Section */}
       {context.vocalPersonaAnalysis && (
-        <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-100 overflow-hidden relative group">
+        <section className="bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-800 overflow-hidden relative group">
           <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform duration-1000">
              <ICONS.Speaker className="w-64 h-64 text-indigo-400" />
           </div>
@@ -515,7 +515,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       )}
 
       {/* Ground Matrix Hero Section */}
-      <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200 overflow-hidden relative">
+      <section className="bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-800 overflow-hidden relative">
         <div className="absolute top-0 right-0 p-12 opacity-5"><ICONS.Shield className="w-64 h-64 text-indigo-900" /></div>
         <div className="relative z-10">
           <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500 mb-2">Source Grounding</h3>
@@ -616,7 +616,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
       </section>
 
       {/* Competitive Intelligence Hub with Comparative SWOT */}
-      <section className="bg-white rounded-[4rem] p-12 shadow-2xl border border-slate-200 relative overflow-hidden">
+      <section className="bg-slate-900 rounded-[4rem] p-12 shadow-2xl border border-slate-800 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 via-indigo-600 to-emerald-500"></div>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
           <div>
@@ -652,7 +652,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
         <div className="space-y-16">
           {result.objectionHandling.map((o, i) => (
             <div key={i} className="relative group">
-              <div className="p-10 rounded-[3.5rem] bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:bg-white hover:shadow-2xl transition-all duration-500 overflow-hidden relative">
+              <div className="p-10 rounded-[3.5rem] bg-slate-800/50 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800 transition-all duration-500 overflow-hidden relative">
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12">
                   <div className="lg:col-span-5 space-y-8">
                     <div>

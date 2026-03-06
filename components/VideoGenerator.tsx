@@ -169,7 +169,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-[3rem] p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-slate-900">
+    <div className="bg-slate-950 border border-slate-800 rounded-[3rem] p-12 shadow-2xl overflow-hidden relative min-h-[850px] flex flex-col text-white">
       {/* Background Ambience */}
       <div className="absolute top-0 right-0 p-32 opacity-[0.02] pointer-events-none">
          <ICONS.Play className="w-96 h-96" />
@@ -191,7 +191,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
         <div className="flex gap-4">
            <button 
              onClick={() => window.aistudio.openSelectKey()}
-             className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-[9px] font-black uppercase tracking-widest text-slate-400 rounded-2xl transition-all"
+             className="px-6 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[9px] font-black uppercase tracking-widest text-slate-400 rounded-2xl transition-all"
            >
              API Project Settings
            </button>
@@ -398,7 +398,7 @@ export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ context }) => {
                   </p>
                </div>
 
-               <div className="p-16 bg-white text-slate-950 rounded-[4rem] flex flex-col justify-center items-center text-center shadow-2xl relative overflow-hidden group">
+               <div className="p-16 bg-slate-900 text-white rounded-[4rem] flex flex-col justify-center items-center text-center shadow-2xl relative overflow-hidden group">
                   <div className="absolute inset-0 bg-indigo-50 scale-0 group-hover:scale-100 transition-transform duration-1000 origin-center rounded-full opacity-40"></div>
                   <div className="relative z-10">
                     <div className="p-6 bg-indigo-600 text-white rounded-3xl mb-10 inline-block shadow-2xl shadow-indigo-100">

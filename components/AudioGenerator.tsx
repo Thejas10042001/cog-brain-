@@ -179,7 +179,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10 shadow-xl overflow-hidden relative">
+    <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-10 shadow-xl overflow-hidden relative">
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-lg">
@@ -258,7 +258,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
           </div>
 
           <div className="relative z-10 w-full max-w-md text-center space-y-10">
-            <div className={`w-40 h-40 mx-auto rounded-full bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] flex items-center justify-center transition-transform duration-700 ${isPlaying ? 'scale-110 shadow-indigo-200' : 'hover:scale-105'}`}>
+            <div className={`w-40 h-40 mx-auto rounded-full bg-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex items-center justify-center transition-transform duration-700 ${isPlaying ? 'scale-110 shadow-indigo-900' : 'hover:scale-105'}`}>
                <div className={`w-32 h-32 rounded-full border-4 ${isPlaying ? 'border-indigo-500 border-t-transparent animate-spin' : 'border-slate-100'} flex items-center justify-center`}>
                   <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-inner transition-colors ${isPlaying ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-300'}`}>
                     {isPlaying ? <ICONS.Speaker /> : <ICONS.Brain />}
@@ -277,7 +277,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
                       value={customQuestion}
                       onChange={(e) => setCustomQuestion(e.target.value)}
                       placeholder="e.g. How do I handle a CEO focused on EBITDA?"
-                      className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 outline-none transition-all shadow-sm pr-12"
+                      className="w-full bg-slate-900 border-2 border-slate-800 rounded-2xl px-6 py-4 text-sm focus:border-indigo-500 outline-none transition-all shadow-sm pr-12 text-white"
                       onKeyDown={(e) => e.key === 'Enter' && handleCustomQuestion()}
                     />
                     <button 
@@ -288,13 +288,13 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
                     </button>
                   </div>
                   {customResponse && (
-                    <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl border border-white/80 shadow-sm animate-in fade-in slide-in-from-top-2 italic text-slate-500 text-xs leading-relaxed text-left">
+                    <div className="bg-slate-800/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700 shadow-sm animate-in fade-in slide-in-from-top-2 italic text-slate-400 text-xs leading-relaxed text-left">
                       "{customResponse}"
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl border border-white/80 shadow-sm max-h-[120px] overflow-y-auto custom-scrollbar italic text-slate-500 text-xs leading-relaxed">
+                <div className="bg-slate-800/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700 shadow-sm max-h-[120px] overflow-y-auto custom-scrollbar italic text-slate-400 text-xs leading-relaxed">
                   "{tracks[activeTrack].script}"
                 </div>
               )}
