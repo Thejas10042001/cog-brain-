@@ -333,7 +333,7 @@ OPERATIONAL CONSTRAINTS:
   };
 
   const renderSectionNav = () => (
-    <div className="flex flex-wrap gap-3 mb-16 p-3 bg-slate-800/50 rounded-[2.5rem] backdrop-blur-xl border border-slate-700/50 shadow-inner">
+    <div className="flex flex-wrap gap-3 mb-16 p-3 bg-slate-100/50 dark:bg-slate-800/50 rounded-[2.5rem] backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
       {[
         { id: 'library', label: 'Library Hub', icon: <ICONS.Document className="w-4 h-4" /> },
         { id: 'core', label: 'Mind Core', icon: <ICONS.Brain className="w-4 h-4" /> },
@@ -349,7 +349,7 @@ OPERATIONAL CONSTRAINTS:
           className={`flex-1 min-w-[140px] flex items-center justify-center gap-3 py-5 px-8 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden ${
             activeSection === s.id 
             ? 'bg-slate-900 text-indigo-400 shadow-2xl shadow-indigo-500/20' 
-            : 'text-slate-400 hover:text-slate-300'
+            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
           {activeSection === s.id && (
@@ -381,16 +381,16 @@ OPERATIONAL CONSTRAINTS:
           >
             {activeSection === 'library' && (
               <div className="space-y-12" id="library-hub">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
                   <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">01</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Cognitive Library Hub</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base.</p>
+                    <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Cognitive Library Hub</h3>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-12">
-                  <div className="bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-800">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-8">
+                  <div className="bg-white dark:bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-200 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-8">
                       <ICONS.Research /> Library Selection
                     </h3>
                     <DocumentGallery 
@@ -404,8 +404,8 @@ OPERATIONAL CONSTRAINTS:
                       hideSynthesize={true}
                     />
                   </div>
-                  <div className="bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-800">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-8">
+                  <div className="bg-white dark:bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-200 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-8">
                       <ICONS.Document /> Documentary Memory Store
                     </h3>
                     <FileUpload files={files} onFilesChange={onFilesChange} onUploadSuccess={onUploadSuccess} />
@@ -416,24 +416,24 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'core' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
                   <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">02</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Cognitive Mind Core</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Anchor the cognitive simulation by selecting a primary KYC node to calibrate strategic parameters.</p>
+                    <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Cognitive Mind Core</h3>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Anchor the cognitive simulation by selecting a primary KYC node to calibrate strategic parameters.</p>
                   </div>
                 </div>
                 <div className="space-y-12">
-                  <div className="p-12 bg-indigo-900/10 border border-indigo-900/30 rounded-[3rem] flex flex-col items-center gap-8 shadow-inner text-center">
+                  <div className="p-12 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-[3rem] flex flex-col items-center gap-8 shadow-inner text-center">
                     <div className="p-6 bg-indigo-600 text-white rounded-[2rem] shadow-2xl">
                       <ICONS.Shield className="w-12 h-12" />
                     </div>
                     <div className="max-w-xl space-y-4 w-full">
-                      <h3 className="text-3xl font-black uppercase tracking-widest text-white">Cognitive Mind Core</h3>
+                      <h3 className="text-3xl font-black uppercase tracking-widest text-slate-900 dark:text-white">Cognitive Mind Core</h3>
                       <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full px-2">
-                        <p className="text-slate-400 font-medium">Know Your Customer (KYC) Document</p>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Know Your Customer (KYC) Document</p>
                         <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-2xl border border-indigo-900/30 shadow-sm">
-                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Lacking high-fidelity KYC intelligence?</span>
+                          <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Lacking high-fidelity KYC intelligence?</span>
                           <button 
                             onClick={() => setShowKycGuide(true)}
                             className="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md active:scale-95"
@@ -464,7 +464,7 @@ OPERATIONAL CONSTRAINTS:
                                 onUploadSuccess(); // Refresh documents
                               }
                             }}
-                            className="px-6 bg-rose-900/20 text-rose-400 rounded-[2rem] hover:bg-rose-900/30 transition-all flex items-center justify-center shadow-lg border border-rose-900/30"
+                            className="px-6 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-[2rem] hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all flex items-center justify-center shadow-lg border border-rose-100 dark:border-rose-900/30"
                             title="Delete Selected KYC Document"
                           >
                             <ICONS.Trash className="w-6 h-6" />
@@ -475,7 +475,7 @@ OPERATIONAL CONSTRAINTS:
                             const el = document.getElementById('library-hub');
                             if (el) el.scrollIntoView({ behavior: 'smooth' });
                           }}
-                          className="px-6 bg-slate-800 text-slate-400 rounded-[2rem] hover:bg-slate-700 transition-all flex items-center justify-center shadow-lg border border-slate-700"
+                          className="px-6 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-[2rem] hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center shadow-lg border border-slate-200 dark:border-slate-700"
                           title="Manage Library Documents"
                         >
                           <ICONS.Research className="w-6 h-6" />
@@ -486,7 +486,7 @@ OPERATIONAL CONSTRAINTS:
                           </div>
                         )}
                       </div>
-                      {isExtracting && <p className="text-indigo-400 text-xs font-black uppercase animate-pulse">Extracting Strategic Metadata...</p>}
+                      {isExtracting && <p className="text-indigo-600 dark:text-indigo-400 text-xs font-black uppercase animate-pulse">Extracting Strategic Metadata...</p>}
                     </div>
                   </div>
 
@@ -522,11 +522,11 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'persona' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
                   <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">03</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Target Buyer Persona</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Select the psychological profile of your primary decision-maker to calibrate resistance levels.</p>
+                    <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Target Buyer Persona</h3>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Select the psychological profile of your primary decision-maker to calibrate resistance levels.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -536,11 +536,11 @@ OPERATIONAL CONSTRAINTS:
                       onClick={() => handleChange('persona', p.type)}
                       className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group ${context.persona === p.type ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl scale-[1.02]' : 'bg-slate-900/50 border-slate-800 hover:border-indigo-700 shadow-sm'}`}
                     >
-                      <div className={`p-4 rounded-2xl mb-6 inline-block ${context.persona === p.type ? 'bg-white/20 text-white' : 'bg-indigo-900/30 text-indigo-400 shadow-sm'}`}>
+                      <div className={`p-4 rounded-2xl mb-6 inline-block ${context.persona === p.type ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 shadow-sm'}`}>
                         {p.icon}
                       </div>
-                      <h4 className={`font-black text-xs uppercase tracking-widest mb-2 text-white`}>{p.type}</h4>
-                      <p className={`text-[11px] leading-relaxed font-semibold ${context.persona === p.type ? 'text-indigo-100' : 'text-slate-400'}`}>{p.desc}</p>
+                      <h4 className={`font-black text-xs uppercase tracking-widest mb-2 ${context.persona === p.type ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{p.type}</h4>
+                      <p className={`text-[11px] leading-relaxed font-semibold ${context.persona === p.type ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>{p.desc}</p>
                       {context.persona === p.type && (
                         <motion.div 
                           layoutId="persona-check"
@@ -557,16 +557,16 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'strategy' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
                   <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">04</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Strategy Finalization</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Define the specific focus of the meeting and anticipate potential objections to sharpen neural response.</p>
+                    <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Strategy Finalization</h3>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Define the specific focus of the meeting and anticipate potential objections to sharpen neural response.</p>
                   </div>
                 </div>
                 <div className="space-y-12">
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Meeting Focus & Strategic Objective</label>
+                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Meeting Focus & Strategic Objective</label>
                     <textarea 
                       value={context.meetingFocus}
                       onChange={e => handleChange('meetingFocus', e.target.value)}
@@ -577,8 +577,8 @@ OPERATIONAL CONSTRAINTS:
 
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Predicted Resistance Nodes (Objections)</h4>
-                      <span className="text-[10px] font-black text-indigo-400 bg-indigo-900/30 px-3 py-1 rounded-lg">{context.potentialObjections.length} Active Nodes</span>
+                      <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Predicted Resistance Nodes (Objections)</h4>
+                      <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-lg">{context.potentialObjections.length} Active Nodes</span>
                     </div>
                     <div className="flex gap-4">
                       <input 
@@ -586,7 +586,7 @@ OPERATIONAL CONSTRAINTS:
                         value={objectionInput}
                         onChange={e => setObjectionInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && addObjection()}
-                        className="flex-1 bg-slate-800 border-2 border-slate-700 rounded-2xl px-6 py-4 text-sm font-semibold text-white outline-none focus:border-indigo-500 transition-all shadow-inner"
+                        className="flex-1 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-6 py-4 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition-all shadow-inner"
                         placeholder="Add a predicted objection..."
                       />
                       <button 
@@ -606,7 +606,7 @@ OPERATIONAL CONSTRAINTS:
                             exit={{ opacity: 0, scale: 0.8 }}
                             className="flex items-center gap-3 px-5 py-3 bg-slate-800 border border-slate-700 rounded-xl shadow-sm group"
                           >
-                            <span className="text-xs font-bold text-slate-300">{obj}</span>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{obj}</span>
                             <button 
                               onClick={() => handleChange('potentialObjections', context.potentialObjections.filter((_, idx) => idx !== i))}
                               className="text-slate-300 hover:text-rose-500 transition-colors"
@@ -624,11 +624,11 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'vocal' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-900 dark:border-white">
                   <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">05</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Neural Vocal Sync</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's baseline.</p>
+                    <h3 className="text-5xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Neural Vocal Sync</h3>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 mt-2">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's baseline.</p>
                   </div>
                 </div>
                 
@@ -636,7 +636,7 @@ OPERATIONAL CONSTRAINTS:
                   <div className="lg:col-span-2 space-y-12">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Identity Base</label>
+                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Identity Base</label>
                         <div className="grid grid-cols-2 gap-3">
                           {['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'].map(voice => (
                             <button
@@ -650,30 +650,30 @@ OPERATIONAL CONSTRAINTS:
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Parameters</label>
-                        <div className="space-y-6 p-8 bg-slate-800/50 rounded-[2rem] border border-slate-700 shadow-inner">
+                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Parameters</label>
+                        <div className="space-y-6 p-8 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-inner">
                           <div className="space-y-3">
                             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
                               <span>Pace / Tempo</span>
-                              <span className="text-indigo-400">{context.vocalPersonaAnalysis?.pace}x</span>
+                              <span className="text-indigo-600 dark:text-indigo-400">{context.vocalPersonaAnalysis?.pace}x</span>
                             </div>
                             <input 
                               type="range" min="0.5" max="2.0" step="0.1"
                               value={context.vocalPersonaAnalysis?.pace}
                               onChange={e => updateVocalAnalysis({ pace: parseFloat(e.target.value) })}
-                              className="w-full h-1.5 bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                              className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
                             />
                           </div>
                           <div className="space-y-3">
                             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
                               <span>Neural Stability</span>
-                              <span className="text-indigo-400">{context.vocalPersonaAnalysis?.stability}%</span>
+                              <span className="text-indigo-600 dark:text-indigo-400">{context.vocalPersonaAnalysis?.stability}%</span>
                             </div>
                             <input 
                               type="range" min="0" max="100"
                               value={context.vocalPersonaAnalysis?.stability}
                               onChange={e => updateVocalAnalysis({ stability: parseInt(e.target.value) })}
-                              className="w-full h-1.5 bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                              className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
                             />
                           </div>
                         </div>
@@ -740,19 +740,19 @@ OPERATIONAL CONSTRAINTS:
     <div className="space-y-12">
       <AnimatePresence>
         {showKycGuide && (
-          <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-slate-900 rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] border border-slate-800"
+              className="bg-slate-900 rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="p-8 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+              <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center">
                     <ICONS.Brain className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-black text-white tracking-tight uppercase">KYC Synthesis Protocol</h3>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">KYC Synthesis Protocol</h3>
                 </div>
                 <button onClick={() => setShowKycGuide(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
                   <ICONS.X className="w-6 h-6 text-slate-400" />
@@ -762,42 +762,42 @@ OPERATIONAL CONSTRAINTS:
               <div className="p-10 overflow-y-auto custom-scrollbar space-y-8">
                 <div className="space-y-6">
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">01</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">01</div>
                     <div className="space-y-1">
-                      <p className="font-black text-white uppercase tracking-widest text-xs">Calibrate Seller Identity</p>
-                      <p className="text-sm text-slate-400 leading-relaxed">Input your LinkedIn and Company URLs to auto-populate the seller profile with high-fidelity professional data.</p>
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Calibrate Seller Identity</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Input your LinkedIn and Company URLs to auto-populate the seller profile with high-fidelity professional data.</p>
                     </div>
                   </div>
                   
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">02</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">02</div>
                     <div className="space-y-1">
-                      <p className="font-black text-white uppercase tracking-widest text-xs">Map Client/Buyer Identity</p>
-                      <p className="text-sm text-slate-400 leading-relaxed">Provide the target client's LinkedIn and Company URLs to ingest critical buyer-side intelligence.</p>
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Map Client/Buyer Identity</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Provide the target client's LinkedIn and Company URLs to ingest critical buyer-side intelligence.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">03</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">03</div>
                     <div className="space-y-1">
-                      <p className="font-black text-white uppercase tracking-widest text-xs">Initiate Intelligence Fetch</p>
-                      <p className="text-sm text-slate-400 leading-relaxed">Click 'Fetch Information' and observe the Engine Controls as the cognitive core processes the data streams.</p>
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Initiate Intelligence Fetch</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Click 'Fetch Information' and observe the Engine Controls as the cognitive core processes the data streams.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">04</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">04</div>
                     <div className="space-y-1">
-                      <p className="font-black text-white uppercase tracking-widest text-xs">Validate Neural Synthesis</p>
-                      <p className="text-sm text-slate-400 leading-relaxed">Review the auto-filled parameters for accuracy and trigger 'Start Deep Analysis' to begin document generation.</p>
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Validate Neural Synthesis</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Review the auto-filled parameters for accuracy and trigger 'Start Deep Analysis' to begin document generation.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">05</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">05</div>
                     <div className="space-y-1">
-                      <p className="font-black text-white uppercase tracking-widest text-xs">Intelligence Generation</p>
-                      <p className="text-sm text-slate-400 leading-relaxed">Allow the cognitive engine to synthesize your high-fidelity KYC document (this may take a few moments).</p>
+                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Intelligence Generation</p>
+                      <p className="text-sm text-slate-500 leading-relaxed">Allow the cognitive engine to synthesize your high-fidelity KYC document (this may take a few moments).</p>
                     </div>
                   </div>
 

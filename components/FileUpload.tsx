@@ -85,7 +85,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`relative border-2 border-dashed rounded-[3rem] p-16 text-center cursor-pointer transition-all duration-500 group overflow-hidden ${isDragging ? 'border-indigo-500 bg-indigo-900/40 shadow-2xl shadow-indigo-500/20' : 'border-slate-800 bg-slate-900/50 hover:border-indigo-500 hover:shadow-none'}`} 
+        className={`relative border-2 border-dashed rounded-[3rem] p-16 text-center cursor-pointer transition-all duration-500 group overflow-hidden ${isDragging ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/40 shadow-2xl shadow-indigo-500/20' : 'border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none'}`} 
         onClick={() => fileInputRef.current?.click()}
       >
         <input 
@@ -107,15 +107,15 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
           <motion.div 
             animate={isDragging ? { y: [0, -15, 0], scale: [1, 1.1, 1] } : {}}
             transition={{ repeat: Infinity, duration: 2 }}
-            className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-6 transition-all shadow-2xl ${isDragging ? 'bg-indigo-600 text-white shadow-none' : 'bg-indigo-900/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-none'}`}
+            className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-6 transition-all shadow-2xl ${isDragging ? 'bg-indigo-600 text-white shadow-indigo-500/40 dark:shadow-none' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-indigo-500/40 dark:group-hover:shadow-none'}`}
           >
             <ICONS.Document className="w-10 h-10" />
           </motion.div>
-          <h4 className="text-2xl font-black text-white uppercase tracking-tighter">Cognitive Intake Hub</h4>
-          <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.4em] mt-3">Drag & Drop or Click to Ingest Intelligence</p>
+          <h4 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Cognitive Intake Hub</h4>
+          <p className="text-slate-400 dark:text-slate-500 text-[11px] font-black uppercase tracking-[0.4em] mt-3">Drag & Drop or Click to Ingest Intelligence</p>
           <div className="mt-8 flex gap-3">
             {['PDF', 'DOCX', 'TXT', 'IMG', 'MD'].map(ext => (
-              <span key={ext} className="px-4 py-1.5 bg-slate-800 text-[9px] font-black text-slate-400 rounded-xl border border-slate-700 shadow-sm">{ext}</span>
+              <span key={ext} className="px-4 py-1.5 bg-white dark:bg-slate-800 text-[9px] font-black text-slate-500 dark:text-slate-400 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">{ext}</span>
             ))}
           </div>
         </div>
@@ -130,16 +130,16 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: -20 }}
               layout
-              className="p-5 bg-slate-900 border border-slate-800 rounded-[1.8rem] shadow-sm hover:shadow-2xl hover:border-indigo-800 transition-all group"
+              className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[1.8rem] shadow-sm hover:shadow-2xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-all group"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4 overflow-hidden">
-                  <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner ${file.status === 'ready' ? 'bg-emerald-900/20 text-emerald-500' : file.status === 'error' ? 'bg-rose-900/20 text-rose-500' : 'bg-indigo-900/20 text-indigo-500'}`}>
+                  <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner ${file.status === 'ready' ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-900/20' : file.status === 'error' ? 'bg-rose-50 text-rose-500 dark:bg-rose-900/20' : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-900/20'}`}>
                     <ICONS.Document className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col overflow-hidden">
-                    <span className="text-[12px] font-black text-white truncate leading-tight uppercase tracking-tight">{file.name}</span>
-                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">{(file.type.split('/')[1] || 'DOC').toUpperCase()}</span>
+                    <span className="text-[12px] font-black text-slate-900 dark:text-white truncate leading-tight uppercase tracking-tight">{file.name}</span>
+                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">{(file.type.split('/')[1] || 'DOC').toUpperCase()}</span>
                   </div>
                 </div>
                 <button 
@@ -151,7 +151,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
                     onFilesChange(prev => prev.filter((_, i) => i !== idx));
                     onUploadSuccess?.();
                   }} 
-                  className="p-1.5 text-slate-700 hover:text-rose-500 hover:bg-rose-900/30 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                  className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                 >
                   <ICONS.X className="w-4 h-4" />
                 </button>
@@ -160,12 +160,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
               {file.status === 'processing' && (
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest animate-pulse">
+                    <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest animate-pulse">
                       {isCognitiveOcr ? `Neural Scan` : 'Grounded Parsing...'}
                     </span>
-                    <span className="text-[9px] font-black text-indigo-400">{ocrProgress}%</span>
+                    <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400">{ocrProgress}%</span>
                   </div>
-                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${ocrProgress}%` }}
