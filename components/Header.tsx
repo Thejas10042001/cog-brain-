@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-slate-200/50 dark:border-slate-800/50 h-20 transition-all duration-500">
+    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-slate-800/50 h-20 transition-all duration-500">
       <div className="w-full px-12 h-full flex items-center justify-between max-w-[1800px] mx-auto">
         <div className="flex flex-col items-start leading-none group cursor-pointer">
           <div className="flex items-center gap-4">
@@ -78,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowUtility(!showUtility)}
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all border shadow-sm ${showUtility ? 'bg-indigo-600 border-indigo-700 text-white shadow-indigo-200 dark:shadow-none' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all border shadow-sm ${showUtility ? 'bg-indigo-600 border-indigo-700 text-white shadow-indigo-200 dark:shadow-none' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}`}
               title="Cognitive Magnifier"
             >
               <ICONS.Efficiency className="w-6 h-6" />
@@ -90,10 +90,10 @@ export const Header: React.FC<HeaderProps> = ({
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-4 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden z-50"
+                  className="absolute right-0 mt-4 w-80 bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden z-50"
                 >
                   {/* Tab Switcher */}
-                  <div className="flex border-b border-slate-100 dark:border-slate-800 p-2 gap-2 bg-slate-50/50 dark:bg-slate-800/50">
+                  <div className="flex border-b border-slate-800 p-2 gap-2 bg-slate-800/50">
                     <button 
                       onClick={() => setActiveMagnifierTab('simulation')}
                       className={`flex-1 py-3 px-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${activeMagnifierTab === 'simulation' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
@@ -167,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
                       </div>
                     )}
                   </div>
-                  <div className="p-5 bg-slate-50 dark:bg-slate-800/50 text-center border-t border-slate-100 dark:border-slate-800">
+                  <div className="p-5 bg-slate-800/50 text-center border-t border-slate-800">
                      <p className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-[0.4em]">Neural Interface v3.1</p>
                   </div>
                 </motion.div>

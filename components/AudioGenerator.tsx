@@ -186,8 +186,8 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
             <ICONS.Speaker />
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Cognitive Coaching Studio</h3>
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Auditory Strategic Briefings</p>
+            <h3 className="text-2xl font-bold text-white tracking-tight">Cognitive Coaching Studio</h3>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Auditory Strategic Briefings</p>
           </div>
         </div>
       </div>
@@ -208,12 +208,12 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
                     setActiveTrack(key); 
                     if (key !== 'custom') setCustomResponse("");
                   }}
-                  className={`w-full p-5 rounded-2xl border text-left transition-all relative group ${activeTrack === key ? 'bg-indigo-600 border-indigo-600 shadow-lg' : 'bg-slate-50 border-slate-100 hover:border-indigo-300'}`}
+                  className={`w-full p-5 rounded-2xl border text-left transition-all relative group ${activeTrack === key ? 'bg-indigo-600 border-indigo-600 shadow-lg' : 'bg-slate-800 border-slate-700 hover:border-indigo-500'}`}
                 >
-                  <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${activeTrack === key ? 'text-indigo-200' : 'text-indigo-500'}`}>
+                  <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${activeTrack === key ? 'text-indigo-200' : 'text-indigo-400'}`}>
                     Track {TRACK_NUMBERS[key]}
                   </div>
-                  <p className={`font-black text-sm mb-1 ${activeTrack === key ? 'text-white' : 'text-slate-800'}`}>{tracks[key].title}</p>
+                  <p className={`font-black text-sm mb-1 ${activeTrack === key ? 'text-white' : 'text-slate-200'}`}>{tracks[key].title}</p>
                   <p className={`text-[10px] leading-tight ${activeTrack === key ? 'text-indigo-100' : 'text-slate-500'}`}>{tracks[key].description}</p>
                 </button>
               ))}
@@ -227,12 +227,12 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
                 <button
                   key={v.name}
                   onClick={() => setSelectedVoice(v.name)}
-                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${selectedVoice === v.name ? 'bg-indigo-50 border-indigo-400' : 'hover:bg-slate-50 border-transparent'}`}
+                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${selectedVoice === v.name ? 'bg-indigo-900/30 border-indigo-500' : 'hover:bg-slate-800 border-transparent'}`}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black ${selectedVoice === v.name ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>{v.name[0]}</div>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black ${selectedVoice === v.name ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-400'}`}>{v.name[0]}</div>
                   <div className="text-left">
-                    <p className={`text-xs font-black uppercase tracking-widest ${selectedVoice === v.name ? 'text-indigo-600' : 'text-slate-600'}`}>{v.label}</p>
-                    <p className="text-[9px] text-slate-400 font-medium">{v.desc}</p>
+                    <p className={`text-xs font-black uppercase tracking-widest ${selectedVoice === v.name ? 'text-indigo-400' : 'text-slate-400'}`}>{v.label}</p>
+                    <p className="text-[9px] text-slate-500 font-medium">{v.desc}</p>
                   </div>
                 </button>
               ))}
@@ -241,7 +241,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
         </div>
 
         {/* Right Column: Player & Visualizer */}
-        <div className="lg:col-span-8 flex flex-col items-center justify-center p-12 bg-slate-50 rounded-[3rem] border border-slate-100 relative overflow-hidden">
+        <div className="lg:col-span-8 flex flex-col items-center justify-center p-12 bg-slate-800/50 rounded-[3rem] border border-slate-800 relative overflow-hidden">
           {/* Animated Waveform Background */}
           <div className={`absolute bottom-0 left-0 right-0 h-40 flex items-end justify-center gap-1.5 px-10 transition-opacity duration-1000 ${isPlaying ? 'opacity-100' : 'opacity-20'}`}>
             {[...Array(40)].map((_, i) => (
@@ -258,16 +258,16 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
           </div>
 
           <div className="relative z-10 w-full max-w-md text-center space-y-10">
-            <div className={`w-40 h-40 mx-auto rounded-full bg-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex items-center justify-center transition-transform duration-700 ${isPlaying ? 'scale-110 shadow-indigo-900' : 'hover:scale-105'}`}>
-               <div className={`w-32 h-32 rounded-full border-4 ${isPlaying ? 'border-indigo-500 border-t-transparent animate-spin' : 'border-slate-100'} flex items-center justify-center`}>
-                  <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-inner transition-colors ${isPlaying ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-300'}`}>
+            <div className={`w-40 h-40 mx-auto rounded-full bg-slate-900 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex items-center justify-center transition-transform duration-700 ${isPlaying ? 'scale-110 shadow-indigo-900' : 'hover:scale-105'}`}>
+               <div className={`w-32 h-32 rounded-full border-4 ${isPlaying ? 'border-indigo-500 border-t-transparent animate-spin' : 'border-slate-800'} flex items-center justify-center`}>
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-inner transition-colors ${isPlaying ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-600'}`}>
                     {isPlaying ? <ICONS.Speaker /> : <ICONS.Brain />}
                   </div>
                </div>
             </div>
 
             <div className="space-y-6">
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">{tracks[activeTrack].title}</h2>
+              <h2 className="text-2xl font-black text-white tracking-tight">{tracks[activeTrack].title}</h2>
               
               {activeTrack === 'custom' ? (
                 <div className="space-y-4">
@@ -319,8 +319,8 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
               </button>
               
               <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-ping' : 'bg-slate-300'}`}></span>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isPlaying ? 'Streaming Intelligence' : 'Ready to Synthesize'}</span>
+                <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-ping' : 'bg-slate-700'}`}></span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{isPlaying ? 'Streaming Intelligence' : 'Ready to Synthesize'}</span>
               </div>
             </div>
           </div>

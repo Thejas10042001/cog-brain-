@@ -111,7 +111,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         <p className="text-sm text-rose-700 dark:text-rose-300 leading-relaxed">
           The cloud memory is locked. If you've updated your <strong>Firebase Rules</strong>, click the button below to establish the connection.
         </p>
-        <div className="bg-slate-50 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 p-4 rounded-2xl font-mono text-[10px] shadow-inner overflow-x-auto border border-slate-100 dark:border-slate-800">
+        <div className="bg-slate-900 text-indigo-400 p-4 rounded-2xl font-mono text-[10px] shadow-inner overflow-x-auto border border-slate-800">
           <code>{`match /cognitive_documents/{doc=**} { allow read, write: if true; }`}</code>
         </div>
         <button 
@@ -176,25 +176,25 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
             )}
           </AnimatePresence>
           
-          <div className="flex items-center gap-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-1 bg-slate-50 dark:bg-slate-900">
+          <div className="flex items-center gap-1 border border-slate-800 rounded-2xl p-1 bg-slate-900">
             <button 
               onClick={() => documents.forEach(d => !selectedIds.includes(d.id) && onToggleSelect(d.id))}
-              className="px-3 py-2 text-[8px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all"
+              className="px-3 py-2 text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-xl transition-all"
             >
               Select All
             </button>
-            <div className="w-px h-3 bg-slate-200 dark:bg-slate-800"></div>
+            <div className="w-px h-3 bg-slate-800"></div>
             <button 
               onClick={handleDeleteSelected}
               disabled={selectedIds.length === 0 || isDeleting}
-              className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all ${selectedIds.length > 0 ? 'text-rose-600 dark:text-rose-400 hover:bg-white dark:hover:bg-slate-800' : 'text-slate-300 dark:text-slate-700 cursor-not-allowed'}`}
+              className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all ${selectedIds.length > 0 ? 'text-rose-400 hover:bg-slate-800' : 'text-slate-700 cursor-not-allowed'}`}
             >
               {isDeleting ? 'Deleting...' : 'Delete Selected'}
             </button>
-            <div className="w-px h-3 bg-slate-200 dark:bg-slate-800"></div>
+            <div className="w-px h-3 bg-slate-800"></div>
             <button 
               onClick={onClearSelection}
-              className="px-3 py-2 text-[8px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all"
+              className="px-3 py-2 text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all"
             >
               Clear
             </button>
@@ -202,7 +202,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
 
           <button 
             onClick={onRefresh}
-            className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-slate-500 border border-slate-100 dark:border-slate-800"
+            className="p-2.5 hover:bg-slate-800 rounded-xl transition-colors text-slate-500 border border-slate-800"
             title="Refresh Library"
           >
             <ICONS.Efficiency className="w-4 h-4" />
@@ -214,10 +214,10 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="py-20 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem] text-center bg-slate-50/30 dark:bg-slate-900/30"
+          className="py-20 border-2 border-dashed border-slate-800 rounded-[3rem] text-center bg-slate-900/30"
         >
-          <ICONS.Document className="w-12 h-12 mx-auto text-slate-200 dark:text-slate-800 mb-4" />
-          <p className="text-slate-400 dark:text-slate-600 text-xs font-black uppercase tracking-widest">The global cognitive library is currently empty.</p>
+          <ICONS.Document className="w-12 h-12 mx-auto text-slate-800 mb-4" />
+          <p className="text-slate-600 text-xs font-black uppercase tracking-widest">The global cognitive library is currently empty.</p>
         </motion.div>
       ) : (
         <motion.div 
@@ -237,26 +237,26 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                   whileHover={{ y: -5 }}
                   onClick={() => onToggleSelect(doc.id)}
                   className={`
-                    bg-white dark:bg-slate-900 border p-6 rounded-[2.5rem] transition-all cursor-pointer group relative h-full flex flex-col
-                    ${isSelected ? 'border-indigo-600 ring-8 ring-indigo-50 dark:ring-indigo-900/20 shadow-2xl scale-[1.02]' : 'border-slate-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-sm'}
+                    bg-slate-900 border p-6 rounded-[2.5rem] transition-all cursor-pointer group relative h-full flex flex-col
+                    ${isSelected ? 'border-indigo-600 ring-8 ring-indigo-900/20 shadow-2xl scale-[1.02]' : 'border-slate-800 hover:border-indigo-700 shadow-sm'}
                   `}
                 >
                   <div className="flex items-start justify-between mb-5">
-                    <div className={`p-4 rounded-2xl transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200 dark:shadow-none' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-xl group-hover:shadow-indigo-200 dark:group-hover:shadow-none'}`}>
+                    <div className={`p-4 rounded-2xl transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-xl shadow-none' : 'bg-indigo-900/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-xl group-hover:shadow-none'}`}>
                       <ICONS.Document className="w-5 h-5" />
                     </div>
                     
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={(e) => { e.stopPropagation(); setViewingDoc(doc); }}
-                        className="p-2.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all"
+                        className="p-2.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-900/30 rounded-xl transition-all"
                         title="View & Edit Content"
                       >
                         <ICONS.Search className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={(e) => handleDelete(e, doc.id)}
-                        className="p-2.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-all"
+                        className="p-2.5 text-slate-400 hover:text-rose-400 hover:bg-rose-900/30 rounded-xl transition-all"
                         title="Delete Intelligence Node"
                       >
                         <ICONS.Trash className="w-4 h-4" />
@@ -273,27 +273,27 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-5 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                  <div className="mt-6 pt-5 border-t border-slate-800 flex items-center justify-between">
                     {isSelected ? (
-                      <span className="text-[8px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800 flex items-center gap-2">
+                      <span className="text-[8px] font-black uppercase text-emerald-400 bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-800 flex items-center gap-2">
                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
                         Ready for Strategy
                       </span>
                     ) : (
                       <div className="flex flex-col gap-1">
-                         <span className="text-[8px] font-black uppercase text-slate-400 dark:text-slate-500 px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg">Stored In Cloud</span>
+                         <span className="text-[8px] font-black uppercase text-slate-500 px-3 py-1 bg-slate-800 rounded-lg">Stored In Cloud</span>
                          {doc.updatedAt && doc.updatedAt !== doc.timestamp && (
-                           <span className="text-[7px] font-black text-indigo-400 dark:text-indigo-500 px-1">Modified: {formatDate(doc.updatedAt)}</span>
+                           <span className="text-[7px] font-black text-indigo-500 px-1">Modified: {formatDate(doc.updatedAt)}</span>
                          )}
                       </div>
                     )}
-                    <span className="text-[9px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest">{(doc.type.split('/')[1] || 'DOC').toUpperCase()}</span>
+                    <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest">{(doc.type.split('/')[1] || 'DOC').toUpperCase()}</span>
                   </div>
 
                   {/* Selection Indicator */}
                   <div className={`
                     absolute top-6 right-6 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center
-                    ${isSelected ? 'bg-indigo-600 border-indigo-600 scale-110' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 group-hover:border-indigo-400'}
+                    ${isSelected ? 'bg-indigo-600 border-indigo-600 scale-110' : 'border-slate-800 bg-slate-900 group-hover:border-indigo-400'}
                   `}>
                     {isSelected && (
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
