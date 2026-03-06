@@ -10,9 +10,9 @@ const MetricScale = ({ label, value, colorClass = "bg-indigo-600" }: { label: st
         <div className={`w-1.5 h-1.5 rounded-full ${colorClass}`} />
         <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{label}</span>
       </div>
-      <span className="text-[10px] font-black text-slate-900">{value}%</span>
+      <span className="text-[10px] font-black text-white">{value}%</span>
     </div>
-    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
       <div 
         className={`h-full ${colorClass} transition-all duration-1000 ease-out`} 
         style={{ width: `${value}%` }}
@@ -349,14 +349,14 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
     return (
       <div className="bg-slate-950 p-12 border-y border-slate-800 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-64px)]">
         {micPermissionError && (
-          <div className="mb-8 bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-900/30 p-6 rounded-[2.5rem] flex items-center justify-between animate-in slide-in-from-top-4">
+          <div className="mb-8 bg-rose-900/10 border border-rose-900/30 p-6 rounded-[2.5rem] flex items-center justify-between animate-in slide-in-from-top-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-rose-600 text-white rounded-xl shadow-lg">
                 <ICONS.Security className="w-6 h-6" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-black uppercase tracking-widest text-rose-900 dark:text-rose-100">Microphone Access Denied</span>
-                <span className="text-xs font-bold text-rose-600 dark:text-rose-400 opacity-80">Enable microphone permissions in your browser to use voice-based assignments.</span>
+                <span className="text-sm font-black uppercase tracking-widest text-rose-100">Microphone Access Denied</span>
+                <span className="text-xs font-bold text-rose-300 opacity-90">Enable microphone permissions in your browser to use voice-based assignments.</span>
               </div>
             </div>
             <button 
@@ -369,19 +369,19 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
         )}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div className="flex items-center gap-6">
-            <div className="p-5 bg-indigo-600 text-white rounded-[1.5rem] shadow-2xl shadow-indigo-200 dark:shadow-none">
+            <div className="p-5 bg-indigo-600 text-white rounded-[1.5rem] shadow-2xl shadow-indigo-900/40">
               <ICONS.Trophy className="w-10 h-10" />
             </div>
             <div>
-              <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Assignment Lab Configuration</h2>
-              <p className="text-slate-400 dark:text-slate-500 font-black uppercase text-[11px] tracking-[0.4em] mt-2">Pressure-test your document mastery</p>
+              <h2 className="text-4xl font-black text-white tracking-tighter uppercase">Assignment Lab Configuration</h2>
+              <p className="text-slate-400 font-black uppercase text-[11px] tracking-[0.4em] mt-2">Pressure-test your document mastery</p>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
             <div className="space-y-6">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-50 dark:border-indigo-900/30 pb-3">Question Parameters</h4>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 border-b-2 border-indigo-900/30 pb-3">Question Parameters</h4>
               <ConfigRow label="MCQ (Logic Gates)" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document className="w-5 h-5" />} />
               <ConfigRow label="Short Answer (Tactical)" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency className="w-5 h-5" />} />
               <ConfigRow label="Long Answer (Strategic)" val={config.long} set={(v) => setConfig({ ...config, long: v })} icon={<ICONS.Research className="w-5 h-5" />} />
@@ -391,23 +391,23 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 
           <div className="space-y-12">
             <div className="space-y-6">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-rose-600 dark:text-rose-400 border-b-2 border-rose-50 dark:border-rose-900/30 pb-3">Environment Controls</h4>
-              <div className="p-10 bg-slate-50 dark:bg-slate-800/50 rounded-[3rem] space-y-6 shadow-inner border border-slate-100 dark:border-slate-800">
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-rose-400 border-b-2 border-rose-900/30 pb-3">Environment Controls</h4>
+              <div className="p-10 bg-slate-800/50 rounded-[3rem] space-y-6 shadow-inner border border-slate-800">
                 <div className="flex justify-between items-center">
-                  <span className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Session Timer</span>
-                  <span className="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">{config.timer}m</span>
+                  <span className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Session Timer</span>
+                  <span className="text-3xl font-black text-indigo-400 tracking-tighter">{config.timer}m</span>
                 </div>
                 <input 
                   type="range" min="1" max="60" 
                   value={config.timer} 
                   onChange={(e) => setConfig({ ...config, timer: parseInt(e.target.value) })}
-                  className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                 />
               </div>
             </div>
 
             <div className="space-y-6">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-amber-600 dark:text-amber-400 border-b-2 border-amber-50 dark:border-amber-900/30 pb-3">Cognitive Challenge Depth</h4>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-amber-400 border-b-2 border-amber-900/30 pb-3">Cognitive Challenge Depth</h4>
               <div className="grid grid-cols-3 gap-4">
                 {(['Easy', 'Medium', 'Hard'] as DifficultyLevel[]).map((level) => (
                   <button
@@ -422,7 +422,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
             </div>
 
             <div className="space-y-6">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-50 dark:border-indigo-900/30 pb-3">Synthesis Perspective</h4>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 border-b-2 border-indigo-900/30 pb-3">Synthesis Perspective</h4>
               <div className="grid grid-cols-2 gap-6">
                 <button 
                   onClick={() => setPerspective('document')}
@@ -451,7 +451,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
         <button 
           onClick={() => handleStart()}
           disabled={isGenerating || activeDocuments.length === 0}
-          className={`w-full py-10 rounded-[3rem] font-black text-2xl uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center justify-center gap-6 ${isGenerating ? 'bg-slate-100 dark:bg-slate-800 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.01] active:scale-95 shadow-indigo-500/20'}`}
+          className={`w-full py-10 rounded-[3rem] font-black text-2xl uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center justify-center gap-6 ${isGenerating ? 'bg-slate-800 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.01] active:scale-95 shadow-indigo-500/20'}`}
         >
           {isGenerating ? (
             <>
@@ -474,9 +474,9 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
     const progressPercent = totalSessionTime > 0 ? (timeLeft / totalSessionTime) * 100 : 100;
 
     return (
-      <div className="animate-in fade-in duration-500 min-h-[calc(100vh-64px)] flex flex-col">
+      <div className="animate-in fade-in duration-500 min-h-[calc(100vh-64px)] flex flex-col bg-slate-950">
         <div className="bg-slate-900 border-b border-slate-800 overflow-hidden">
-          <div className="h-1 w-full bg-slate-100">
+          <div className="h-1 w-full bg-slate-800">
              <div className="h-full bg-indigo-500" style={{ width: `${progressPercent}%` }}></div>
           </div>
           <div className="flex items-center justify-between px-10 py-6">
@@ -484,23 +484,23 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                 <div className="px-4 py-1.5 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
                   Question {currentIdx + 1} / {questions.length}
                 </div>
-                <div className="text-lg font-black text-slate-800">
+                <div className="text-lg font-black text-white">
                    {formatTime(timeLeft)}
                 </div>
             </div>
-            <button onClick={handleSubmit} className="px-8 py-2.5 bg-emerald-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
+            <button onClick={handleSubmit} className="px-8 py-2.5 bg-emerald-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-colors">
                 Submit Assignment
             </button>
           </div>
         </div>
 
-        <div className="flex-1 bg-slate-900 p-16 relative overflow-hidden flex flex-col">
+        <div className="flex-1 bg-slate-950 p-16 relative overflow-hidden flex flex-col">
            <div className="relative z-10 space-y-12 flex-1 flex flex-col justify-center">
               <div className="space-y-4 text-center">
-                 <span className="px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-400">
+                 <span className="px-4 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-900 text-slate-300">
                     {currentQ.type.toUpperCase()} MODE
                  </span>
-                 <h3 className="text-4xl font-black text-slate-900 tracking-tight max-w-4xl mx-auto">
+                 <h3 className="text-4xl font-black text-white tracking-tight max-w-4xl mx-auto leading-tight">
                    {currentQ.text}
                  </h3>
               </div>
@@ -512,9 +512,9 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                       <button
                         key={i}
                         onClick={() => setAnswers(prev => ({ ...prev, [currentQ.id]: opt }))}
-                        className={`p-8 rounded-[2rem] border-2 text-left transition-all flex items-center gap-6 ${answers[currentQ.id] === opt ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-50 border-slate-100 hover:border-indigo-300'}`}
+                        className={`p-8 rounded-[2rem] border-2 text-left transition-all flex items-center gap-6 ${answers[currentQ.id] === opt ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-900 border-slate-800 text-slate-100 hover:border-indigo-500/50'}`}
                       >
-                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${answers[currentQ.id] === opt ? 'bg-white/20 text-white' : 'bg-white text-indigo-600'}`}>
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${answers[currentQ.id] === opt ? 'bg-white/20 text-white' : 'bg-slate-800 text-indigo-300'}`}>
                            {String.fromCharCode(65 + i)}
                          </div>
                          <span className="text-lg font-bold">{opt}</span>
@@ -528,7 +528,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                     <textarea 
                       value={answers[currentQ.id] || ""}
                       onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-10 text-2xl outline-none transition-all h-80"
+                      className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2.5rem] p-10 text-2xl outline-none transition-all h-80 text-white"
                       placeholder="Response..."
                     />
                   </div>
@@ -538,19 +538,19 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                   <div className="flex flex-col items-center justify-center gap-10 w-full max-w-5xl">
                      {currentQ.type === 'video' ? (
                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
-                         <div className="relative rounded-[3rem] overflow-hidden bg-slate-100 aspect-video flex items-center justify-center">
+                         <div className="relative rounded-[3rem] overflow-hidden bg-slate-800 aspect-video flex items-center justify-center">
                             <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                          </div>
                          <div className="flex flex-col justify-center gap-6">
                             <textarea 
                               value={answers[currentQ.id] || ""}
                               onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
-                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-10 text-lg h-60"
+                              className="w-full bg-slate-800/50 border-2 border-slate-800 rounded-[2.5rem] p-10 text-lg h-60 text-white"
                               placeholder="Transcribed performance..."
                             />
                             <button 
                               onClick={toggleRecording} 
-                              className={`py-5 rounded-full font-black text-lg transition-all border ${isRecording ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}
+                              className={`py-5 rounded-full font-black text-lg transition-all border ${isRecording ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700'}`}
                             >
                                <ICONS.Ear className={`w-6 h-6 inline-block mr-2 ${isRecording ? 'animate-bounce' : ''}`} />
                                {isRecording ? 'Listening...' : 'Activate Microphone'}
@@ -561,7 +561,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                        <div className="space-y-10 flex flex-col items-center w-full">
                           <button 
                             onClick={() => {}} 
-                            className="w-32 h-32 rounded-full flex items-center justify-center bg-slate-100 text-slate-400 cursor-not-allowed opacity-50"
+                            className="w-32 h-32 rounded-full flex items-center justify-center bg-slate-800 text-slate-500 cursor-not-allowed opacity-50"
                             title="Voice disabled"
                           >
                              <ICONS.Speaker className="w-12 h-12" />
@@ -569,7 +569,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                           <textarea 
                              value={answers[currentQ.id] || ""}
                              onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
-                             className="w-full p-10 bg-slate-50 rounded-[3rem] border-2 border-slate-100 text-lg h-48"
+                             className="w-full p-10 bg-slate-800 rounded-[3rem] border-2 border-slate-700 text-lg h-48 text-white"
                              placeholder="Voice trace..."
                           />
                        </div>
@@ -579,7 +579,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
               </div>
 
               <div className="flex items-center justify-between pt-12">
-                <button onClick={handlePrevious} disabled={currentIdx === 0} className="px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30">
+                <button onClick={handlePrevious} disabled={currentIdx === 0} className="px-8 py-4 bg-slate-800 text-slate-500 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30">
                   Previous Node
                 </button>
                 {currentIdx < questions.length - 1 ? (
@@ -609,7 +609,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                  <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${config.difficulty === 'Easy' ? 'bg-emerald-100 text-emerald-600' : config.difficulty === 'Medium' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
                     {config.difficulty} Mode Active
                  </div>
-                 <div className="px-4 py-1.5 bg-indigo-100 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                 <div className="px-4 py-1.5 bg-indigo-900/30 text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest">
                     {perspective === 'document' ? 'Document Focused' : 'Buyer Centric'}
                  </div>
               </div>
@@ -630,15 +630,15 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
               <span className="text-7xl font-black text-white">{totalScore}%</span>
            </div>
         </div>
-        <div className="bg-slate-50 p-12 space-y-12">
+        <div className="bg-slate-950 p-12 space-y-12">
            {questions.map((q, idx) => {
              const res = results.find(r => r.questionId === q.id);
              return (
                <div key={q.id} className="bg-slate-900 p-12 border border-slate-800 rounded-[3.5rem] text-white flex flex-col gap-10 shadow-sm relative overflow-hidden group">
                   {/* Source Attribution Badge */}
-                  <div className="flex items-center gap-3 px-6 py-2 bg-indigo-50 border border-indigo-100 rounded-full w-fit">
-                     <ICONS.Document className="w-3.5 h-3.5 text-indigo-600" />
-                     <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">
+                  <div className="flex items-center gap-3 px-6 py-2 bg-indigo-900/20 border border-indigo-800 rounded-full w-fit">
+                     <ICONS.Document className="w-3.5 h-3.5 text-indigo-400" />
+                     <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">
                        Source Node: {q.citation?.sourceFile || 'Grounded Core'} 
                        {q.citation?.pageNumber ? ` • Page ${q.citation.pageNumber}` : ''}
                      </span>
@@ -646,8 +646,8 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 
                   <div className="space-y-4">
                      <div className="flex justify-between items-start">
-                        <h4 className="text-3xl font-black tracking-tight text-slate-900 max-w-4xl">{idx + 1}. {q.text}</h4>
-                        <div className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${res?.evaluation.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                        <h4 className="text-3xl font-black tracking-tight text-white max-w-4xl">{idx + 1}. {q.text}</h4>
+                        <div className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${res?.evaluation.isCorrect ? 'bg-emerald-900/30 text-emerald-400' : 'bg-rose-900/30 text-rose-400'}`}>
                            {res?.evaluation.isCorrect ? 'Logic Match' : 'Logic Deficit'} • {res?.evaluation.score}%
                         </div>
                      </div>
@@ -660,14 +660,14 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                             <ICONS.Chat className="w-4 h-4 text-slate-400" />
                             <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Your Protocol Delivery</h5>
                          </div>
-                         <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 italic text-slate-600 leading-relaxed font-medium">
+                         <div className="p-8 bg-slate-800 rounded-[2.5rem] border border-slate-700 italic text-slate-100 leading-relaxed font-medium">
                             “{res?.userAnswer || "System encountered a null response node."}”
                          </div>
 
                          {/* Performance Metrics for Video/Mic */}
                          {(q.type === 'video' || q.type === 'mic') && res?.evaluation && (
                            <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-6 shadow-sm">
-                              <div className="flex items-center justify-between border-b border-slate-50 pb-3">
+                              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                                  <h6 className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Biometric & Cognitive Trace</h6>
                                  <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-1">
@@ -687,9 +687,9 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                                  <MetricScale label="Clarity Score" value={res.evaluation.score} colorClass="bg-indigo-600" />
                               </div>
                               {res.evaluation.behavioralAnalysis && (
-                                <div className="pt-4 border-t border-slate-50">
-                                   <p className="text-[10px] font-bold text-slate-500 leading-relaxed italic">
-                                      <span className="text-indigo-600 not-italic mr-1">Behavioral Audit:</span>
+                                <div className="pt-4 border-t border-slate-800">
+                                   <p className="text-[10px] font-bold text-slate-400 leading-relaxed italic">
+                                      <span className="text-indigo-400 not-italic mr-1">Behavioral Audit:</span>
                                       {res.evaluation.behavioralAnalysis}
                                    </p>
                                 </div>
@@ -701,15 +701,15 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                       {/* Correct Answer Column */}
                       <div className="space-y-6">
                          <div className="flex items-center gap-2 mb-2">
-                            <ICONS.Shield className="w-4 h-4 text-indigo-600" />
-                            <h5 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Master Logic Node</h5>
+                            <ICONS.Shield className="w-4 h-4 text-indigo-300" />
+                            <h5 className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Master Logic Node</h5>
                          </div>
                          
                          {res?.evaluation.modelDeliveryScript ? (
                            <ModelDeliveryPlayer script={res.evaluation.modelDeliveryScript} />
                          ) : (
-                           <div className="p-8 bg-indigo-50 text-slate-900 rounded-[2.5rem] border border-indigo-100 shadow-sm leading-relaxed">
-                              <p className="text-[11px] font-black uppercase tracking-widest text-indigo-600 mb-3">Protocol Blocked: That was not the target answer. The master logic is as follows:</p>
+                           <div className="p-8 bg-indigo-900/20 text-white rounded-[2.5rem] border border-indigo-900/30 shadow-sm leading-relaxed">
+                              <p className="text-[11px] font-black uppercase tracking-widest text-indigo-300 mb-3">Protocol Blocked: That was not the target answer. The master logic is as follows:</p>
                               <p className="text-xl font-bold">“{q.correctAnswer}”</p>
                            </div>
                          )}
@@ -717,17 +717,17 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                    </div>
 
                   {/* Strategic Insight Full Width */}
-                  <div className="p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100 space-y-4">
+                  <div className="p-10 bg-emerald-900/10 rounded-[3rem] border border-emerald-900/30 space-y-4">
                      <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-lg"><ICONS.Brain className="w-4 h-4" /></div>
-                        <h5 className="text-[11px] font-black uppercase text-emerald-800 tracking-[0.2em]">Cognitive Strategic Insight</h5>
+                        <h5 className="text-[11px] font-black uppercase text-emerald-400 tracking-[0.2em]">Cognitive Strategic Insight</h5>
                      </div>
-                     <p className="text-md font-bold text-emerald-900 leading-relaxed italic">
+                     <p className="text-md font-bold text-emerald-100 leading-relaxed italic">
                         {q.explanation}
                      </p>
-                     <div className="pt-4 border-t border-emerald-100 flex items-center gap-3">
-                        <span className="text-[9px] font-black uppercase text-emerald-600 tracking-widest">Coach Assignment:</span>
-                        <p className="text-sm font-medium text-emerald-700">{res?.evaluation.feedback}</p>
+                     <div className="pt-4 border-t border-emerald-900/30 flex items-center gap-3">
+                        <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest">Coach Assignment:</span>
+                        <p className="text-sm font-medium text-emerald-300">{res?.evaluation.feedback}</p>
                      </div>
                   </div>
                </div>
@@ -742,22 +742,22 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 };
 
 const ConfigRow = ({ label, val, set, icon }: { label: string; val: number; set: (v: number) => void; icon: React.ReactNode }) => (
-  <div className="flex items-center justify-between p-8 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/30 group transition-all">
+  <div className="flex items-center justify-between p-8 bg-slate-900 rounded-[2rem] border border-slate-800 hover:border-indigo-900/30 group transition-all">
     <div className="flex items-center gap-5">
-      <div className="text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors transform group-hover:scale-110 duration-300">{icon}</div>
-      <span className="text-[12px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">{label}</span>
+      <div className="text-slate-400 group-hover:text-indigo-400 transition-colors transform group-hover:scale-110 duration-300">{icon}</div>
+      <span className="text-[12px] font-black uppercase text-slate-300 tracking-widest">{label}</span>
     </div>
     <div className="flex items-center gap-6">
        <button 
         onClick={() => set(Math.max(0, val - 1))} 
-        className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-600 transition-all font-black text-slate-400 shadow-sm active:scale-90"
+        className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center hover:bg-rose-900/30 hover:text-rose-400 transition-all font-black text-slate-300 shadow-sm active:scale-90"
        >
         -
        </button>
-       <span className="w-10 text-center font-black text-xl text-indigo-600 dark:text-indigo-400 tabular-nums">{val}</span>
+       <span className="w-10 text-center font-black text-xl text-indigo-400 tabular-nums">{val}</span>
        <button 
         onClick={() => set(val + 1)} 
-        className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 transition-all font-black text-slate-400 shadow-sm active:scale-90"
+        className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center hover:bg-emerald-900/30 hover:text-emerald-400 transition-all font-black text-slate-300 shadow-sm active:scale-90"
        >
         +
        </button>

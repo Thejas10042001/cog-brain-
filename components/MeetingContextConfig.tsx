@@ -381,11 +381,11 @@ OPERATIONAL CONSTRAINTS:
           >
             {activeSection === 'library' && (
               <div className="space-y-12" id="library-hub">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
-                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">01</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
+                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">01</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Cognitive Library Hub</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base.</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-12">
@@ -416,11 +416,11 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'core' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
-                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">02</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
+                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">02</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Cognitive Mind Core</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Anchor the cognitive simulation by selecting a primary KYC node to calibrate strategic parameters.</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Anchor the cognitive simulation by selecting a primary KYC node to calibrate strategic parameters.</p>
                   </div>
                 </div>
                 <div className="space-y-12">
@@ -522,11 +522,11 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'persona' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
-                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">03</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
+                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">03</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Target Buyer Persona</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Select the psychological profile of your primary decision-maker to calibrate resistance levels.</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Select the psychological profile of your primary decision-maker to calibrate resistance levels.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -557,11 +557,11 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'strategy' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
-                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">04</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
+                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">04</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Strategy Finalization</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Define the specific focus of the meeting and anticipate potential objections to sharpen neural response.</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Define the specific focus of the meeting and anticipate potential objections to sharpen neural response.</p>
                   </div>
                 </div>
                 <div className="space-y-12">
@@ -591,7 +591,7 @@ OPERATIONAL CONSTRAINTS:
                       />
                       <button 
                         onClick={addObjection}
-                        className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95 shadow-lg"
+                        className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95 shadow-lg"
                       >
                         Add Node
                       </button>
@@ -624,11 +624,11 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'vocal' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-white">
-                  <div className="w-16 h-16 bg-white text-slate-900 rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl">05</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
+                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">05</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Neural Vocal Sync</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 mt-2">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's baseline.</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's baseline.</p>
                   </div>
                 </div>
                 
@@ -692,15 +692,15 @@ OPERATIONAL CONSTRAINTS:
                   </div>
 
                   <div className="bg-slate-900 dark:bg-black rounded-[3rem] p-10 text-white space-y-8 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/20 blur-[100px] rounded-full -mr-32 -mt-32"></div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[100px] rounded-full -mr-32 -mt-32"></div>
                     <div className="relative z-10">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-8">Neural Vocal Signature</h4>
                       <div className="flex items-center gap-6 mb-12">
-                        <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center border border-white/20 shadow-2xl">
+                        <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700 shadow-2xl">
                           <ICONS.Speaker className="w-10 h-10 text-indigo-400" />
                         </div>
                         <div>
-                          <p className="text-2xl font-black tracking-tight">{context.vocalPersonaAnalysis?.baseVoice}</p>
+                          <p className="text-2xl font-black tracking-tight text-white">{context.vocalPersonaAnalysis?.baseVoice}</p>
                           <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Active Vocal Core</p>
                         </div>
                       </div>
@@ -762,7 +762,7 @@ OPERATIONAL CONSTRAINTS:
               <div className="p-10 overflow-y-auto custom-scrollbar space-y-8">
                 <div className="space-y-6">
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">01</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs border border-slate-700">01</div>
                     <div className="space-y-1">
                       <p className="font-black text-white uppercase tracking-widest text-xs">Calibrate Seller Identity</p>
                       <p className="text-sm text-slate-400 leading-relaxed">Input your LinkedIn and Company URLs to auto-populate the seller profile with high-fidelity professional data.</p>
@@ -770,31 +770,31 @@ OPERATIONAL CONSTRAINTS:
                   </div>
                   
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">02</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs border border-slate-700">02</div>
                     <div className="space-y-1">
                       <p className="font-black text-white uppercase tracking-widest text-xs">Map Client/Buyer Identity</p>
                       <p className="text-sm text-slate-400 leading-relaxed">Provide the target client's LinkedIn and Company URLs to ingest critical buyer-side intelligence.</p>
                     </div>
                   </div>
-
+ 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">03</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs border border-slate-700">03</div>
                     <div className="space-y-1">
                       <p className="font-black text-white uppercase tracking-widest text-xs">Initiate Intelligence Fetch</p>
                       <p className="text-sm text-slate-400 leading-relaxed">Click 'Fetch Information' and observe the Engine Controls as the cognitive core processes the data streams.</p>
                     </div>
                   </div>
-
+ 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">04</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs border border-slate-700">04</div>
                     <div className="space-y-1">
                       <p className="font-black text-white uppercase tracking-widest text-xs">Validate Neural Synthesis</p>
                       <p className="text-sm text-slate-400 leading-relaxed">Review the auto-filled parameters for accuracy and trigger 'Start Deep Analysis' to begin document generation.</p>
                     </div>
                   </div>
-
+ 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 font-bold text-xs">05</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs border border-slate-700">05</div>
                     <div className="space-y-1">
                       <p className="font-black text-white uppercase tracking-widest text-xs">Intelligence Generation</p>
                       <p className="text-sm text-slate-400 leading-relaxed">Allow the cognitive engine to synthesize your high-fidelity KYC document (this may take a few moments).</p>
@@ -802,18 +802,18 @@ OPERATIONAL CONSTRAINTS:
                   </div>
 
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 font-bold text-xs">06</div>
+                    <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs border border-slate-700">06</div>
                     <div className="space-y-1">
-                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Export Intelligence</p>
-                      <p className="text-sm text-slate-500 leading-relaxed">Download your newly synthesized intelligence brief in PDF or Word format.</p>
+                      <p className="font-black text-white uppercase tracking-widest text-xs">Export Intelligence</p>
+                      <p className="text-sm text-slate-400 leading-relaxed">Download your newly synthesized intelligence brief in PDF or Word format.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
                     <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 font-bold text-xs">07</div>
                     <div className="space-y-1">
-                      <p className="font-black text-indigo-600 uppercase tracking-widest text-xs">Ground the Simulation</p>
-                      <p className="text-sm text-slate-500 leading-relaxed font-medium italic">Return to this hub, upload the document to the 'Documentary Memory Store' (Step 1), then select it from the KYC dropdown in Step 2 to anchor your simulation.</p>
+                      <p className="font-black text-indigo-400 uppercase tracking-widest text-xs">Ground the Simulation</p>
+                      <p className="text-sm text-slate-400 leading-relaxed font-medium italic">Return to this hub, upload the document to the 'Documentary Memory Store' (Step 1), then select it from the KYC dropdown in Step 2 to anchor your simulation.</p>
                     </div>
                   </div>
                 </div>

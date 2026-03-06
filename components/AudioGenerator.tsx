@@ -282,7 +282,7 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
                     />
                     <button 
                       onClick={handleCustomQuestion}
-                      className="absolute right-3 top-3 p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                      className="absolute right-3 top-3 p-2 text-indigo-400 hover:bg-indigo-900/30 rounded-lg transition-colors"
                     >
                       <ICONS.Play />
                     </button>

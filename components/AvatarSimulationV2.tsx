@@ -762,7 +762,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
            {/* Simulation Protocol Preset Selection */}
            <div className="w-full max-w-5xl bg-slate-50 p-8 rounded-[3rem] border border-slate-200 space-y-6">
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Select Simulation Protocol Preset</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Select Simulation Protocol Preset(Optional)</h4>
                 <span className="px-3 py-1 bg-indigo-100 text-indigo-600 text-[8px] font-black uppercase rounded-full">Strategic Context</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
