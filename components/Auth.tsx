@@ -83,10 +83,10 @@ export const Auth: React.FC = () => {
               !
             </motion.div>
           </div>
-          <h2 className="text-6xl font-black tracking-tighter text-slate-900 dark:text-white uppercase leading-none">
+          <h2 className="text-6xl font-black tracking-tighter text-white uppercase leading-none">
             SPIKED<span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.4)]">AI</span>
           </h2>
-          <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] mt-4">
+          <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] mt-4">
             Neural Sales Intelligence Protocol
           </p>
         </motion.div>
@@ -99,16 +99,16 @@ export const Auth: React.FC = () => {
         >
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 opacity-50"></div>
 
-          <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-[2rem] mb-12 border border-slate-200/50 dark:border-slate-700/50">
+          <div className="flex p-1.5 bg-slate-800/50 rounded-[2rem] mb-12 border border-slate-700/50">
             <button 
               onClick={() => { setIsLogin(true); setError(null); }}
-              className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-[1.5rem] transition-all duration-300 ${isLogin ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xl scale-[1.02]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-[1.5rem] transition-all duration-300 ${isLogin ? 'bg-slate-700 text-indigo-400 shadow-xl scale-[1.02]' : 'text-slate-400 hover:text-slate-300'}`}
             >
               Neural Access
             </button>
             <button 
               onClick={() => { setIsLogin(false); setError(null); }}
-              className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-[1.5rem] transition-all duration-300 ${!isLogin ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xl scale-[1.02]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-[1.5rem] transition-all duration-300 ${!isLogin ? 'bg-slate-700 text-indigo-400 shadow-xl scale-[1.02]' : 'text-slate-400 hover:text-slate-300'}`}
             >
               Join the Core
             </button>
@@ -125,7 +125,7 @@ export const Auth: React.FC = () => {
                 className="space-y-8"
               >
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] ml-4">Neural Identifier</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-4">Neural Identifier</label>
                   <div className="relative group">
                     <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                       <ICONS.User className="w-5 h-5" />
@@ -135,14 +135,14 @@ export const Auth: React.FC = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-16 pr-8 py-5 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 rounded-[2rem] text-sm focus:border-indigo-500 dark:focus:border-indigo-400 outline-none transition-all font-bold text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-inner"
+                      className="w-full pl-16 pr-8 py-5 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-sm focus:border-indigo-400 outline-none transition-all font-bold text-white placeholder:text-slate-600 shadow-inner"
                       placeholder="architect@spikedai.io"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] ml-4">Secure Protocol Key</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-4">Secure Protocol Key</label>
                   <div className="relative group">
                     <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                       <ICONS.Brain className="w-5 h-5" />
@@ -152,7 +152,7 @@ export const Auth: React.FC = () => {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-16 pr-8 py-5 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700 rounded-[2rem] text-sm focus:border-indigo-500 dark:focus:border-indigo-400 outline-none transition-all font-bold text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-inner"
+                      className="w-full pl-16 pr-8 py-5 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-sm focus:border-indigo-400 outline-none transition-all font-bold text-white placeholder:text-slate-600 shadow-inner"
                       placeholder="••••••••"
                     />
                   </div>
@@ -184,7 +184,7 @@ export const Auth: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={loading}
-                  className="w-full py-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] shadow-2xl hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 flex items-center justify-center gap-4 transition-all"
+                  className="w-full py-6 bg-white text-slate-900 rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] shadow-2xl hover:bg-slate-100 disabled:opacity-50 flex items-center justify-center gap-4 transition-all"
                 >
                   {loading ? (
                     <div className="w-6 h-6 border-3 border-white/30 border-t-white dark:border-slate-900/30 dark:border-t-slate-900 rounded-full animate-spin"></div>

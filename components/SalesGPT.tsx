@@ -213,12 +213,12 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
       <div className="w-full bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 z-20">
         <div className="max-w-5xl mx-auto px-12 py-8 flex items-center justify-between">
           <div className="flex items-center gap-6">
-             <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40">
+             <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-2xl">
                 <ICONS.Brain className="w-8 h-8" />
              </div>
              <div>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Strategic Intelligence</h3>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.4em]">Neural Sales Copilot v3.1</p>
+                <h3 className="text-2xl font-black text-white tracking-tighter uppercase">Strategic Intelligence</h3>
+                <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.4em]">Neural Sales Copilot v3.1</p>
              </div>
           </div>
           <div className="flex items-center gap-6">
@@ -226,11 +226,11 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                whileHover={{ scale: 1.05 }}
                whileTap={{ scale: 0.95 }}
                onClick={clearChat} 
-               className="px-6 py-3 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 text-[11px] font-black uppercase tracking-widest transition-colors"
+               className="px-6 py-3 text-slate-500 hover:text-rose-400 text-[11px] font-black uppercase tracking-widest transition-colors"
              >
                Clear Memory
              </motion.button>
-             <div className="flex items-center gap-3 px-6 py-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 text-[10px] font-black uppercase tracking-widest shadow-sm">
+             <div className="flex items-center gap-3 px-6 py-3 bg-emerald-900/20 text-emerald-400 rounded-2xl border border-emerald-900/30 text-[10px] font-black uppercase tracking-widest shadow-sm">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                 Neural Core Active
              </div>
@@ -282,9 +282,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     )}
                   </div>
                   <div className={`
-                    max-w-[85%] p-14 rounded-[4.5rem] text-3xl font-medium leading-relaxed shadow-[0_30px_60px_rgba(0,0,0,0.05)] dark:shadow-none
+                    max-w-[85%] p-14 rounded-[4.5rem] text-3xl font-medium leading-relaxed shadow-none
                     ${msg.role === 'user' 
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-slate-900 dark:text-white rounded-tr-none border-2 border-indigo-100 dark:border-indigo-900/30' 
+                      ? 'bg-indigo-900/20 text-white rounded-tr-none border-2 border-indigo-900/30' 
                       : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800'}
                   `}>
                     <div className="markdown-content">
@@ -296,7 +296,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="mt-12 rounded-[3.5rem] overflow-hidden border-[12px] border-slate-50 dark:border-slate-800 shadow-2xl group/img relative"
+                        className="mt-12 rounded-[3.5rem] overflow-hidden border-[12px] border-slate-800 shadow-2xl group/img relative"
                       >
                         <img src={msg.imageUrl} alt="Strategic Asset" className="w-full h-auto object-cover" />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center backdrop-blur-md">
@@ -344,7 +344,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               whileTap={{ scale: 0.95 }}
               onClick={handleSend}
               disabled={!input.trim() || isProcessing}
-              className={`absolute right-8 top-8 bottom-8 px-16 rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-sm shadow-2xl flex items-center gap-4 transition-all ${isProcessing ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-indigo-900/40'}`}
+              className={`absolute right-8 top-8 bottom-8 px-16 rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-sm shadow-2xl flex items-center gap-4 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
             >
               {isProcessing ? 'Synthesizing' : 'Synthesize'}
             </motion.button>

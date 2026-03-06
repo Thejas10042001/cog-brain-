@@ -494,9 +494,9 @@ const App: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p className="mt-6 text-[10px] font-black uppercase text-slate-400 tracking-widest animate-pulse">Establishing Secure Neural Link...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950">
+        <div className="w-16 h-16 border-4 border-slate-800 border-t-indigo-600 rounded-full animate-spin"></div>
+        <p className="mt-6 text-[10px] font-black uppercase text-slate-500 tracking-widest animate-pulse">Establishing Secure Neural Link...</p>
       </div>
     );
   }
@@ -510,7 +510,7 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-white dark:bg-slate-950 flex flex-col transition-all duration-300 ease-in-out origin-top-left bg-mesh"
+      className="min-h-screen bg-slate-950 flex flex-col transition-all duration-300 ease-in-out origin-top-left bg-mesh"
       style={{ 
         zoom: zoom / 100,
         // @ts-ignore
@@ -722,7 +722,7 @@ const App: React.FC = () => {
                     className="h-full flex flex-col"
                   >
                     {/* Fixed Node Header */}
-                    <div className="px-8 py-10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 sticky top-0 z-20">
+                    <div className="px-8 py-10 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-20">
                       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                         <div className="space-y-3">
                           <div className="flex items-center gap-4">
