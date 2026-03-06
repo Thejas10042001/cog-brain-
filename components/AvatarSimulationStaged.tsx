@@ -1026,17 +1026,17 @@ export const AvatarSimulationStaged: FC<{
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 w-full mx-auto px-12 py-12">
            <div className="space-y-6 w-full">
-              <h2 className="text-6xl font-black tracking-tight text-slate-900">Staged Simulation Hub</h2>
-              <p className="text-slate-500 text-2xl font-medium leading-relaxed w-full">
+              <h2 className="text-6xl font-black tracking-tight text-white">Staged Simulation Hub</h2>
+              <p className="text-slate-400 text-2xl font-medium leading-relaxed w-full">
                 Advance through 6 tactical stages. Select your starting point below to begin the challenge.
               </p>
            </div>
 
            {/* Cognitive Challenge Depth Selection */}
-           <div className="w-full max-w-2xl bg-slate-50 p-8 rounded-[3rem] border border-slate-200 space-y-6">
+           <div className="w-full max-w-2xl bg-slate-900/50 p-8 rounded-[3rem] border border-slate-800 space-y-6">
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Cognitive Challenge Depth</h4>
-                <span className="px-3 py-1 bg-amber-100 text-amber-600 text-[8px] font-black uppercase rounded-full">Adaptive Engine</span>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Cognitive Challenge Depth</h4>
+                <span className="px-3 py-1 bg-amber-900/30 text-amber-300 text-[8px] font-black uppercase rounded-full border border-amber-900/50">Adaptive Engine</span>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 {['Easy', 'Medium', 'Hard'].map((level) => (
@@ -1058,14 +1058,14 @@ export const AvatarSimulationStaged: FC<{
                   <button 
                     key={s} 
                     onClick={() => handleInitiate(s)}
-                    className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-slate-50 border-slate-200 hover:border-indigo-400'}`}
+                    className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-slate-900 border-slate-800 hover:border-indigo-400'}`}
                   >
                     <div className="flex items-center justify-between">
-                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>Stage 0{i+1}</span>
+                       <span className={`text-[12px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>Stage 0{i+1}</span>
                        {isSelected && <div className="w-3 h-3 rounded-full bg-white animate-pulse"></div>}
                     </div>
-                    <h4 className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-slate-900'}`}>{s}</h4>
-                    <p className={`text-sm font-medium leading-relaxed ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
+                    <h4 className={`text-2xl font-black ${isSelected ? 'text-white' : 'text-slate-100'}`}>{s}</h4>
+                    <p className={`text-sm font-medium leading-relaxed ${isSelected ? 'text-indigo-100' : 'text-slate-400'}`}>
                       {STAGE_DESCRIPTIONS[s]}
                     </p>
                   </button>
@@ -1090,7 +1090,7 @@ export const AvatarSimulationStaged: FC<{
           <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
              
              {/* Header Layer (Fixed) */}
-             <div className="p-8 border-b border-slate-100 bg-slate-50/50 backdrop-blur-md">
+             <div className="p-8 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md">
                 {/* Stage Progress Tracker */}
                 <div className="grid grid-cols-6 gap-4 w-full mb-8">
                    {STAGES.map((s, i) => {
@@ -1321,7 +1321,7 @@ export const AvatarSimulationStaged: FC<{
                     {/* User Interaction Layer */}
                     <div className="w-full max-w-6xl mx-auto space-y-8 pb-24">
                        <div className="relative group">
-                          <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-slate-900 shadow-inner h-48 resize-none placeholder:text-slate-400 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || "Client"}...`} />
+                          <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-white shadow-inner h-48 resize-none placeholder:text-slate-500 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || "Client"}...`} />
                           <button 
                           onClick={() => isUserListening ? stopListening() : startListening()} 
                           className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}
@@ -1354,15 +1354,15 @@ export const AvatarSimulationStaged: FC<{
               fontSize: `${historyFontScale}rem`,
               transition: isResizing ? 'none' : 'all 0.3s ease'
             }}
-            className="border-l border-slate-100 bg-slate-50/50 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
+            className="border-l border-slate-800 bg-slate-900/50 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
           >
-             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-50">
+             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900">
                 <div className="flex items-center gap-3">
                    <div className="p-2 bg-indigo-600 rounded-lg text-white" style={{ transform: `scale(${historyFontScale})` }}><ICONS.Research className="w-4 h-4" /></div>
                    {historyWidth > 180 && (
                      <div className="overflow-hidden">
-                        <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-900 truncate" style={{ fontSize: `${historyFontScale * 0.75}rem` }}>Simulation History</h4>
-                        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest truncate" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Mastery Trace Log</p>
+                        <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-white truncate" style={{ fontSize: `${historyFontScale * 0.75}rem` }}>Simulation History</h4>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest truncate" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Mastery Trace Log</p>
                      </div>
                    )}
                 </div>

@@ -728,15 +728,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto px-12">
-           <div className="w-80 h-80 bg-slate-50 rounded-[4rem] border border-slate-200 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
+           <div className="w-80 h-80 bg-slate-900/50 rounded-[4rem] border border-slate-800 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
               <AIAnimatedBotCIO />
            </div>
            <div className="space-y-6">
-              <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
-              <p className="text-slate-500 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
+              <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-white via-indigo-200 to-slate-400 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
+              <p className="text-slate-400 text-2xl font-medium leading-relaxed">Connect with an animated AI Human Bot mapped to {meetingContext.clientNames || 'your target client'}. Internal neural audits active.</p>
               
               <div className="pt-4 space-y-6 w-full">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Select Simulation Protocol Preset</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Select Simulation Protocol Preset</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                    {MEETING_FOCUS_PRESETS.map(preset => (
                      <button
@@ -748,7 +748,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                        })}
                        className={`flex items-center gap-4 p-6 rounded-[2rem] text-left transition-all border-2 ${meetingContext.meetingFocus === preset.value ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl scale-[1.02]' : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'}`}
                      >
-                       <div className={`p-3 rounded-xl ${meetingContext.meetingFocus === preset.value ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-500'}`}>
+                       <div className={`p-3 rounded-xl ${meetingContext.meetingFocus === preset.value ? 'bg-white/20 text-white' : 'bg-indigo-900/30 text-indigo-300'}`}>
                          {preset.icon}
                        </div>
                        <div>
@@ -761,7 +761,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
               </div>
 
               <div className="pt-8 space-y-6 w-full">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Cognitive Challenge Depth</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Cognitive Challenge Depth</p>
                 <div className="grid grid-cols-3 gap-4">
                   {['Easy', 'Medium', 'Hard'].map((level) => (
                     <button
