@@ -587,14 +587,7 @@ const App: React.FC = () => {
         .text-magnifier .text-[12px] { font-size: calc(12px * var(--text-zoom-multiplier)); }
       `}</style>
 
-      <Header 
-        user={user} 
-        zoom={zoom} 
-        onZoomChange={setZoom}
-        textZoom={textZoom}
-        onTextZoomChange={setTextZoom}
-        darkMode={darkMode}
-      />
+      <Header user={user} />
       
       <div className="pt-20 flex flex-1 overflow-hidden text-magnifier relative z-10">
         
