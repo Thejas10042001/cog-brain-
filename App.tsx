@@ -13,6 +13,7 @@ import { StrategyLab } from './components/StrategyLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
+import { HelpCenter } from './components/HelpCenter';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
 import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
@@ -61,7 +62,7 @@ const App: React.FC = () => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
+  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [darkMode] = useState(true);
 
@@ -146,6 +147,15 @@ const App: React.FC = () => {
       howItHelps: 'Allows you to hear the ideal delivery and use it for rehearsal or internal alignment.',
       audioText: 'This is the Studio. The purpose is to generate professional-grade audio samples of your winning pitches. It helps by allowing you to hear the ideal delivery and use it for rehearsal or internal alignment.',
       guideText: 'Synthesize high-fidelity audio samples of your winning pitches to establish a baseline for elite delivery. Generate professional-grade vocal signatures for rehearsal and strategic alignment.'
+    },
+    'help': {
+      stepNumber: '10',
+      label: 'Help Center',
+      feature: 'Operational Documentation & Support',
+      purpose: 'Access comprehensive guides and strategic frameworks for the SPIKED AI protocol.',
+      howItHelps: 'Ensures you are maximizing the neural intelligence capabilities of the platform.',
+      audioText: 'Welcome to the Help Center. This node provides comprehensive guides and strategic frameworks for the SPIKED AI protocol. It ensures you are maximizing the neural intelligence capabilities of the platform.',
+      guideText: 'Review the operational documentation to master the neural sales intelligence protocol. Access strategic frameworks and support nodes for complex configurations.'
     }
   };
 
@@ -603,6 +613,7 @@ const App: React.FC = () => {
                       <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "07 Spiked GPT" : ""} scale={sidebarFontScale} step="07" />
                       <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "08 Grooming" : ""} scale={sidebarFontScale} step="08" />
                       <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "09 Studio" : ""} scale={sidebarFontScale} step="09" />
+                      <SidebarBtn active={activeTab === 'help'} onClick={() => handleNodeClick('help')} icon={<ICONS.Help />} label={sidebarWidth > 180 ? "10 Help" : ""} scale={sidebarFontScale} step="10" />
                     </div>
                   </div>
 
@@ -804,6 +815,7 @@ const App: React.FC = () => {
                       {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1"><AudioGenerator analysis={analysis!} /></div>}
                       {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
+                      {activeTab === 'help' && <HelpCenter />}
                     </div>
                   </motion.div>
                 </AnimatePresence>
