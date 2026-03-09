@@ -114,7 +114,10 @@ export const HelpCenter: React.FC = () => {
           <h3 className="text-xl font-black text-white tracking-tight uppercase">Need further assistance?</h3>
           <p className="text-slate-400 text-sm font-medium">Our neural support nodes are standing by to assist with complex strategic configurations.</p>
         </div>
-        <button className="px-8 py-4 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 active:scale-95">
+        <button 
+          onClick={() => window.open(window.location.origin + '?page=support', '_blank')}
+          className="px-8 py-4 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 active:scale-95"
+        >
           Contact Support
         </button>
       </div>

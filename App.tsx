@@ -14,6 +14,7 @@ import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
+import { SupportChatbot } from './components/SupportChatbot';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
 import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
@@ -64,7 +65,15 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [isSupportPage, setIsSupportPage] = useState(false);
   const [darkMode] = useState(true);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('page') === 'support') {
+      setIsSupportPage(true);
+    }
+  }, []);
 
   const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string; stepNumber: string }> = {
     'context': {
@@ -519,6 +528,10 @@ const App: React.FC = () => {
         <p className="mt-6 text-[10px] font-black uppercase text-slate-500 tracking-widest animate-pulse">Establishing Secure Neural Link...</p>
       </div>
     );
+  }
+
+  if (isSupportPage) {
+    return <SupportChatbot />;
   }
 
   if (!user) {
