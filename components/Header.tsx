@@ -11,7 +11,6 @@ interface HeaderProps {
   textZoom: number;
   onTextZoomChange: (newZoom: number) => void;
   darkMode: boolean;
-  onDarkModeToggle: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -20,8 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   onZoomChange, 
   textZoom, 
   onTextZoomChange,
-  darkMode,
-  onDarkModeToggle
+  darkMode
 }) => {
   const [showUtility, setShowUtility] = useState(false);
   const [activeMagnifierTab, setActiveMagnifierTab] = useState<'simulation' | 'typography'>('simulation');
@@ -38,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass border-b dark:border-slate-800/50 border-slate-200 h-20 transition-all duration-500">
+    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-slate-800/50 h-20 transition-all duration-500">
       <div className="w-full px-12 h-full flex items-center justify-between max-w-[1800px] mx-auto">
         <div className="flex flex-col items-start leading-none group cursor-pointer">
           <div className="flex items-center gap-4">
@@ -48,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               !
             </motion.div>
-            <span className="font-black text-3xl tracking-tighter dark:text-white text-slate-900 uppercase">
+            <span className="font-black text-3xl tracking-tighter text-white uppercase">
               SPIKED<span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.4)]">AI</span>
             </span>
           </div>
@@ -75,22 +73,12 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          <div className="relative flex items-center gap-3" ref={utilityRef}>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onDarkModeToggle}
-              className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all border dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm"
-              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {darkMode ? <ICONS.Sun className="w-5 h-5" /> : <ICONS.Moon className="w-5 h-5" />}
-            </motion.button>
-
+          <div className="relative" ref={utilityRef}>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowUtility(!showUtility)}
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all border shadow-sm ${showUtility ? 'bg-indigo-600 border-indigo-700 text-white shadow-none' : 'dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all border shadow-sm ${showUtility ? 'bg-indigo-600 border-indigo-700 text-white shadow-none' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}`}
               title="Cognitive Magnifier"
             >
               <ICONS.Efficiency className="w-6 h-6" />

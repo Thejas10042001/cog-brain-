@@ -64,17 +64,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.style.colorScheme = 'dark';
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.style.colorScheme = 'light';
-    }
-  }, [darkMode]);
+  const [darkMode] = useState(true);
 
   const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string; stepNumber: string }> = {
     'context': {
@@ -524,7 +514,7 @@ const App: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center dark:bg-slate-950 bg-slate-50">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950">
         <div className="w-16 h-16 border-4 border-slate-800 border-t-indigo-600 rounded-full animate-spin"></div>
         <p className="mt-6 text-[10px] font-black uppercase text-slate-500 tracking-widest animate-pulse">Establishing Secure Neural Link...</p>
       </div>
@@ -540,7 +530,7 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen dark:bg-slate-950 bg-slate-50 flex flex-col transition-all duration-300 ease-in-out origin-top-left bg-mesh"
+      className="min-h-screen bg-slate-950 flex flex-col transition-all duration-300 ease-in-out origin-top-left bg-mesh"
       style={{ 
         zoom: zoom / 100,
         // @ts-ignore
@@ -591,7 +581,6 @@ const App: React.FC = () => {
         textZoom={textZoom}
         onTextZoomChange={setTextZoom}
         darkMode={darkMode}
-        onDarkModeToggle={() => setDarkMode(!darkMode)}
       />
       
       <div className="pt-20 flex flex-1 overflow-hidden text-magnifier relative z-10">
@@ -601,7 +590,7 @@ const App: React.FC = () => {
             <>
               <aside 
                 style={{ width: sidebarWidth, fontSize: `${sidebarFontScale}rem` }}
-                className="dark:bg-slate-900/90 bg-white/90 backdrop-blur-3xl border-r dark:border-slate-800/50 border-slate-200 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all shadow-none"
+                className="bg-slate-900/90 backdrop-blur-3xl border-r border-slate-800/50 flex flex-col sticky top-0 h-full overflow-y-auto no-scrollbar z-30 transition-all shadow-none"
               >
                 <div className={`p-4 ${sidebarWidth > 120 ? 'lg:p-8' : 'p-4'} space-y-12 flex flex-col h-full`}>
                   <div className="space-y-2">
@@ -755,7 +744,7 @@ const App: React.FC = () => {
                     className="h-full flex flex-col"
                   >
                     {/* Fixed Node Header */}
-                    <div className="px-8 py-10 dark:bg-slate-900/50 bg-white/50 backdrop-blur-md border-b dark:border-slate-800 border-slate-200 sticky top-0 z-20">
+                    <div className="px-8 py-10 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-20">
                       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                         <div className="space-y-3">
                           <div className="flex items-center gap-4">
