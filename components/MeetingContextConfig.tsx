@@ -6,6 +6,7 @@ import { extractMetadataFromDocument, analyzeVocalPersona, suggestVocalPersonaFr
 import { deleteDocumentFromFirebase } from '../services/firebaseService';
 import { FileUpload } from './FileUpload';
 import { DocumentGallery } from './DocumentGallery';
+import { GoogleIntegration } from './GoogleIntegration';
 
 interface MeetingContextConfigProps {
   context: MeetingContext;
@@ -97,8 +98,8 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [showVocalDirective, setShowVocalDirective] = useState(false);
   const [showKycGuide, setShowKycGuide] = useState(false);
-  const [activeSection, setActiveSection] = useState<'library' | 'core' | 'persona' | 'strategy' | 'vocal'>('library');
-  const SECTIONS: ('library' | 'core' | 'persona' | 'strategy' | 'vocal')[] = ['library', 'core', 'persona', 'strategy', 'vocal'];
+  const [activeSection, setActiveSection] = useState<'library' | 'core' | 'persona' | 'strategy' | 'vocal' | 'google'>('library');
+  const SECTIONS: ('library' | 'core' | 'persona' | 'strategy' | 'vocal' | 'google')[] = ['library', 'core', 'persona', 'strategy', 'vocal', 'google'];
   const isCustomizedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -351,7 +352,8 @@ OPERATIONAL CONSTRAINTS:
         { id: 'core', label: 'Mind Core', icon: <ICONS.Brain className="w-4 h-4" /> },
         { id: 'persona', label: 'Buyer Persona', icon: <ICONS.ROI className="w-4 h-4" /> },
         { id: 'strategy', label: 'Strategy', icon: <ICONS.Trophy className="w-4 h-4" /> },
-        { id: 'vocal', label: 'Vocal Sync', icon: <ICONS.Speaker className="w-4 h-4" /> }
+        { id: 'vocal', label: 'Vocal Sync', icon: <ICONS.Speaker className="w-4 h-4" /> },
+        { id: 'google', label: 'Google Sync', icon: <ICONS.Calendar className="w-4 h-4" /> }
       ].map((s) => (
         <motion.button
           key={s.id}
@@ -654,7 +656,7 @@ OPERATIONAL CONSTRAINTS:
                             <button
                               key={voice}
                               onClick={() => updateVocalAnalysis({ baseVoice: voice as any })}
-                              className={`py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${context.vocalPersonaAnalysis?.baseVoice === voice ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-300'}`}
+                              className={`py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${context.vocalPersonaAnalysis?.baseVoice === voice ? 'bg-indigo-600 border-indigo-700 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-300'}`}
                             >
                               {voice}
                             </button>
@@ -740,6 +742,19 @@ OPERATIONAL CONSTRAINTS:
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeSection === 'google' && (
+              <div className="space-y-12">
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
+                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">06</div>
+                  <div className="flex flex-col">
+                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Google Workspace Sync</h3>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Integrate with Google Calendar to track meetings and Gmail to send strategic reports.</p>
+                  </div>
+                </div>
+                <GoogleIntegration />
               </div>
             )}
           </motion.div>
