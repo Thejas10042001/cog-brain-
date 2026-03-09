@@ -98,6 +98,7 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   const [showVocalDirective, setShowVocalDirective] = useState(false);
   const [showKycGuide, setShowKycGuide] = useState(false);
   const [activeSection, setActiveSection] = useState<'library' | 'core' | 'persona' | 'strategy' | 'vocal'>('library');
+  const SECTIONS: ('library' | 'core' | 'persona' | 'strategy' | 'vocal')[] = ['library', 'core', 'persona', 'strategy', 'vocal'];
   const isCustomizedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -330,6 +331,17 @@ OPERATIONAL CONSTRAINTS:
       selectedPersonalityId: undefined,
       vocalPersonaAnalysis: { ...current, ...updates }
     });
+  };
+
+  const handleNext = () => {
+    if (onSave) onSave();
+    const currentIndex = SECTIONS.indexOf(activeSection);
+    if (currentIndex < SECTIONS.length - 1) {
+      setActiveSection(SECTIONS[currentIndex + 1]);
+      // Scroll to top of the config container
+      const el = document.getElementById('config-top');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const renderSectionNav = () => (
@@ -737,7 +749,7 @@ OPERATIONAL CONSTRAINTS:
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12" id="config-top">
       <AnimatePresence>
         {showKycGuide && (
           <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
@@ -840,14 +852,24 @@ OPERATIONAL CONSTRAINTS:
       </div>
 
       <div className="flex justify-center pb-12">
-        <button
-          onClick={() => onSynthesize(context)}
-          disabled={isAnalyzing}
-          className="flex items-center gap-4 px-20 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl shadow-2xl hover:bg-indigo-700 hover:scale-105 transition-all active:scale-95"
-        >
-          <ICONS.Brain className="w-8 h-8" />
-          {isAnalyzing ? 'Synthesizing...' : 'Synthesize Strategy Core'}
-        </button>
+        {activeSection === 'vocal' ? (
+          <button
+            onClick={() => onSynthesize(context)}
+            disabled={isAnalyzing}
+            className="flex items-center gap-4 px-20 py-8 bg-indigo-600 text-white rounded-full font-black text-2xl shadow-2xl hover:bg-indigo-700 hover:scale-105 transition-all active:scale-95"
+          >
+            <ICONS.Brain className="w-8 h-8" />
+            {isAnalyzing ? 'Synthesizing...' : 'Synthesize Strategy Core'}
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            className="flex items-center gap-4 px-20 py-8 bg-slate-800 text-white rounded-full font-black text-2xl shadow-2xl hover:bg-slate-700 hover:scale-105 transition-all active:scale-95 border border-slate-700"
+          >
+            Save & Next Step
+            <ICONS.ArrowRight className="w-8 h-8" />
+          </button>
+        )}
       </div>
 
       <style>{`
