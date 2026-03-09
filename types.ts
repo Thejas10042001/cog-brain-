@@ -336,3 +336,21 @@ export interface SimulationHistory {
 }
 
 export type StagedSimStage = 'Ice Breakers' | 'About Business' | 'Pricing' | 'Technical' | 'Legal' | 'Closing';
+
+export interface SalesStrategy {
+  executiveSummary: string;
+  strategicPillars: Array<{
+    title: string;
+    description: string;
+    tacticalActions: string[];
+  }>;
+  competitiveWedge: string;
+  objectionDefense: Array<{
+    objection: string;
+    counterStrategy: string;
+  }>;
+  roadmap: Array<{
+    phase: string;
+    milestones: string[];
+  }>;
+}

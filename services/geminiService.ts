@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { AnalysisResult, MeetingContext, ThinkingLevel, DifficultyLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure } from "../types";
+import { AnalysisResult, MeetingContext, ThinkingLevel, DifficultyLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure, SalesStrategy } from "../types";
 
 // Upgraded thinking budget map for gemini-3-pro-preview capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
@@ -438,6 +438,71 @@ export async function generateAssistantResponse(query: string, context?: string)
   } catch (error) {
     console.error("Assistant response failed:", error);
     return "I encountered a neural link error. How else can I assist you?";
+  }
+}
+
+export async function generateSalesStrategy(
+  combinedContent: string, 
+  context: MeetingContext,
+  refinementPrompt?: string
+): Promise<SalesStrategy> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-pro-preview';
+  
+  const prompt = `Act as an Elite Enterprise Sales Strategist and Competitive Intelligence Officer. 
+  Your goal is to generate a high-fidelity, actionable sales strategy for the following deal context.
+
+  STRATEGIC CONTEXT:
+  Seller: ${context.sellerCompany} (${context.sellerNames})
+  Client: ${context.clientCompany} (${context.clientNames})
+  Product: ${context.targetProducts}
+  Meeting Focus: ${context.meetingFocus}
+  
+  DOCUMENT INTELLIGENCE:
+  ${combinedContent}
+
+  ${refinementPrompt ? `REFINEMENT DIRECTIVE: ${refinementPrompt}` : ""}
+
+  REQUIRED OUTPUT STRUCTURE (JSON):
+  {
+    "executiveSummary": "A concise, high-impact summary of the strategic approach.",
+    "strategicPillars": [
+      {
+        "title": "Pillar Title (e.g., Operational Efficiency)",
+        "description": "Why this pillar is critical for this specific client.",
+        "tacticalActions": ["Specific action 1", "Specific action 2"]
+      }
+    ],
+    "competitiveWedge": "The unique differentiator that separates us from the competition in this deal.",
+    "objectionDefense": [
+      {
+        "objection": "Likely objection from the client.",
+        "counterStrategy": "The strategic and tactical response to neutralize this objection."
+      }
+    ],
+    "roadmap": [
+      {
+        "phase": "Phase Name (e.g., Discovery, POC, Implementation)",
+        "milestones": ["Milestone 1", "Milestone 2"]
+      }
+    ]
+  }
+
+  Return ONLY the JSON object. Be hyper-strategic, specific to the client's industry, and focused on ROI and value realization.`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 16000 }
+      }
+    }));
+    return safeJsonParse(response.text || "{}") as SalesStrategy;
+  } catch (error) {
+    console.error("Strategy generation failed:", error);
+    throw error;
   }
 }
 

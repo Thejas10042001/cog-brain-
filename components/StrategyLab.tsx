@@ -1,0 +1,290 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ICONS } from '../constants';
+import { MeetingContext, SalesStrategy } from '../types';
+import { generateSalesStrategy } from '../services/geminiService';
+
+interface StrategyLabProps {
+  activeDocuments: Array<{ name: string; content: string }>;
+  meetingContext: MeetingContext;
+}
+
+export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meetingContext }) => {
+  const [strategy, setStrategy] = useState<SalesStrategy | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [refinementPrompt, setRefinementPrompt] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<'summary' | 'pillars' | 'wedge' | 'objections' | 'roadmap'>('summary');
+
+  const handleGenerate = async (refine: boolean = false) => {
+    if (activeDocuments.length === 0) {
+      setError("No document intelligence detected. Please upload documents in Settings.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+    try {
+      const combinedContent = activeDocuments.map(d => `DOC: ${d.name}\n${d.content}`).join('\n\n');
+      const result = await generateSalesStrategy(combinedContent, meetingContext, refine ? refinementPrompt : undefined);
+      setStrategy(result);
+      if (refine) setRefinementPrompt('');
+    } catch (err: any) {
+      setError(err.message || "Failed to generate strategic core.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!strategy && activeDocuments.length > 0) {
+      handleGenerate();
+    }
+  }, [activeDocuments.length]);
+
+  if (activeDocuments.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 text-center space-y-8">
+        <div className="w-24 h-24 bg-slate-900 rounded-full flex items-center justify-center border border-slate-800">
+          <ICONS.Research className="w-10 h-10 text-slate-500" />
+        </div>
+        <div className="space-y-4">
+          <h3 className="text-3xl font-black text-white tracking-tight">Intelligence Deficit Detected</h3>
+          <p className="text-slate-400 max-w-md mx-auto font-medium">
+            The Strategy Lab requires documentary intelligence to synthesize a winning approach. Please upload deal documents in the Settings node.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-slate-950">
+      <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar">
+        <div className="max-w-7xl mx-auto space-y-12">
+          
+          {/* Header & Controls */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-900/20">
+                  <ICONS.Brain className="w-5 h-5" />
+                </div>
+                <h2 className="text-4xl font-black text-white tracking-tighter uppercase">Strategy Lab</h2>
+              </div>
+              <p className="text-slate-400 font-medium text-lg">Enterprise Sales Strategy Synthesis & Refinement</p>
+            </div>
+            
+            <button 
+              onClick={() => handleGenerate()}
+              disabled={isGenerating}
+              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-900/20 active:scale-95 flex items-center gap-3"
+            >
+              {isGenerating ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <ICONS.Sparkles className="w-4 h-4" />
+              )}
+              Re-Synthesize Core
+            </button>
+          </div>
+
+          {error && (
+            <div className="p-6 bg-rose-900/20 border border-rose-900/50 rounded-3xl flex items-center gap-4 text-rose-400 animate-in fade-in slide-in-from-top-4">
+              <ICONS.Security className="w-5 h-5" />
+              <p className="font-bold">{error}</p>
+            </div>
+          )}
+
+          {!strategy && isGenerating ? (
+            <div className="flex flex-col items-center justify-center py-32 space-y-8">
+              <div className="relative">
+                <div className="w-24 h-24 border-4 border-slate-800 border-t-indigo-600 rounded-full animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ICONS.Brain className="w-8 h-8 text-indigo-500 animate-pulse" />
+                </div>
+              </div>
+              <p className="text-slate-500 font-black uppercase tracking-[0.3em] animate-pulse">Synthesizing Strategic Pillars...</p>
+            </div>
+          ) : strategy ? (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+              
+              {/* Navigation Rail */}
+              <div className="lg:col-span-3 space-y-4">
+                <NavButton active={activeSection === 'summary'} onClick={() => setActiveSection('summary')} icon={<ICONS.Document />} label="Executive Summary" />
+                <NavButton active={activeSection === 'pillars'} onClick={() => setActiveSection('pillars')} icon={<ICONS.Map />} label="Strategic Pillars" />
+                <NavButton active={activeSection === 'wedge'} onClick={() => setActiveSection('wedge')} icon={<ICONS.Efficiency />} label="Competitive Wedge" />
+                <NavButton active={activeSection === 'objections'} onClick={() => setActiveSection('objections')} icon={<ICONS.Security />} label="Objection Defense" />
+                <NavButton active={activeSection === 'roadmap'} onClick={() => setActiveSection('roadmap')} icon={<ICONS.Research />} label="Strategic Roadmap" />
+                
+                <div className="pt-8 mt-8 border-t border-slate-800 space-y-6">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 px-4">Refine Strategy</h4>
+                  <div className="px-4 space-y-4">
+                    <textarea 
+                      value={refinementPrompt}
+                      onChange={(e) => setRefinementPrompt(e.target.value)}
+                      placeholder="e.g., Focus more on ROI for the CFO..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all h-32 resize-none"
+                    />
+                    <button 
+                      onClick={() => handleGenerate(true)}
+                      disabled={isGenerating || !refinementPrompt.trim()}
+                      className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-indigo-400 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all border border-slate-700 active:scale-95"
+                    >
+                      Apply Refinement
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content Area */}
+              <div className="lg:col-span-9">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeSection}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-slate-900/50 border border-slate-800 rounded-[3rem] p-10 md:p-16 min-h-[600px]"
+                  >
+                    {activeSection === 'summary' && (
+                      <div className="space-y-8">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 bg-indigo-900/30 text-indigo-400 rounded-2xl flex items-center justify-center">
+                            <ICONS.Document className="w-6 h-6" />
+                          </div>
+                          <h3 className="text-3xl font-black text-white tracking-tight">Executive Summary</h3>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-200 leading-relaxed italic">
+                          “{strategy.executiveSummary}”
+                        </p>
+                      </div>
+                    )}
+
+                    {activeSection === 'pillars' && (
+                      <div className="space-y-12">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 bg-emerald-900/30 text-emerald-400 rounded-2xl flex items-center justify-center">
+                            <ICONS.Map className="w-6 h-6" />
+                          </div>
+                          <h3 className="text-3xl font-black text-white tracking-tight">Strategic Pillars</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          {strategy.strategicPillars.map((pillar, i) => (
+                            <div key={i} className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-6 group hover:border-emerald-900/50 transition-all">
+                              <div className="flex items-center gap-3">
+                                <span className="text-emerald-500 font-black text-xl">0{i+1}</span>
+                                <h4 className="text-xl font-black text-white">{pillar.title}</h4>
+                              </div>
+                              <p className="text-slate-400 text-sm font-medium leading-relaxed">{pillar.description}</p>
+                              <div className="space-y-3 pt-4 border-t border-slate-800">
+                                {pillar.tacticalActions.map((action, j) => (
+                                  <div key={j} className="flex items-start gap-3">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                    <p className="text-xs font-bold text-slate-300">{action}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeSection === 'wedge' && (
+                      <div className="space-y-8">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 bg-amber-900/30 text-amber-400 rounded-2xl flex items-center justify-center">
+                            <ICONS.Efficiency className="w-6 h-6" />
+                          </div>
+                          <h3 className="text-3xl font-black text-white tracking-tight">Competitive Wedge</h3>
+                        </div>
+                        <div className="p-12 bg-amber-900/10 border border-amber-900/30 rounded-[3rem] relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-8 opacity-10">
+                            <ICONS.Efficiency className="w-32 h-32 text-amber-500" />
+                          </div>
+                          <p className="text-3xl font-black text-amber-100 leading-tight relative z-10">
+                            {strategy.competitiveWedge}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeSection === 'objections' && (
+                      <div className="space-y-12">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 bg-rose-900/30 text-rose-400 rounded-2xl flex items-center justify-center">
+                            <ICONS.Security className="w-6 h-6" />
+                          </div>
+                          <h3 className="text-3xl font-black text-white tracking-tight">Objection Defense</h3>
+                        </div>
+                        <div className="space-y-6">
+                          {strategy.objectionDefense.map((item, i) => (
+                            <div key={i} className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] flex flex-col md:flex-row gap-8 items-start">
+                              <div className="flex-1 space-y-3">
+                                <h5 className="text-[10px] font-black uppercase tracking-widest text-rose-400">The Friction Node</h5>
+                                <p className="text-xl font-bold text-white">“{item.objection}”</p>
+                              </div>
+                              <div className="w-px h-full bg-slate-800 hidden md:block" />
+                              <div className="flex-1 space-y-3">
+                                <h5 className="text-[10px] font-black uppercase tracking-widest text-emerald-400">The Strategic Counter</h5>
+                                <p className="text-sm font-medium text-slate-300 leading-relaxed italic">{item.counterStrategy}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeSection === 'roadmap' && (
+                      <div className="space-y-12">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 bg-indigo-900/30 text-indigo-400 rounded-2xl flex items-center justify-center">
+                            <ICONS.Research className="w-6 h-6" />
+                          </div>
+                          <h3 className="text-3xl font-black text-white tracking-tight">Strategic Roadmap</h3>
+                        </div>
+                        <div className="relative space-y-12">
+                          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-800" />
+                          {strategy.roadmap.map((step, i) => (
+                            <div key={i} className="relative pl-20 group">
+                              <div className="absolute left-0 top-0 w-12 h-12 bg-slate-950 border-2 border-indigo-600 rounded-full flex items-center justify-center z-10 group-hover:scale-110 transition-transform">
+                                <span className="text-white font-black text-sm">{i+1}</span>
+                              </div>
+                              <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-4">
+                                <h4 className="text-xl font-black text-white uppercase tracking-tight">{step.phase}</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {step.milestones.map((m, j) => (
+                                    <div key={j} className="flex items-center gap-3 p-3 bg-slate-950/50 rounded-xl border border-slate-800/50">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                      <span className="text-xs font-bold text-slate-400">{m}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const NavButton = ({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) => (
+  <button 
+    onClick={onClick}
+    className={`w-full flex items-center gap-4 p-5 rounded-2xl transition-all border ${active ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl translate-x-2' : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+  >
+    <div className={`${active ? 'text-white' : 'text-slate-500'}`}>{icon}</div>
+    <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
+  </button>
+);

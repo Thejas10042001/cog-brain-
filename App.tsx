@@ -9,6 +9,7 @@ import { SalesGPT } from './components/SalesGPT';
 import { MeetingContextConfig } from './components/MeetingContextConfig';
 import { DocumentGallery } from './components/DocumentGallery';
 import { AssessmentLab } from './components/AssessmentLab';
+import { StrategyLab } from './components/StrategyLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
@@ -60,7 +61,7 @@ const App: React.FC = () => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'context' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
+  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged'>('context');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [darkMode] = useState(true);
 
@@ -74,8 +75,17 @@ const App: React.FC = () => {
       audioText: 'Welcome to the Intelligence Node Settings. All strategic parameters are now accessible on this single-page interface for holistic synthesis. Define the seller and client landscape, upload documents, and set simulation parameters to ground the AI in your deal reality.',
       guideText: 'Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base for neural synthesis. Anchor the cognitive simulation by selecting a primary KYC node to calibrate seller, client, and solution parameters.'
     },
-    'qa': {
+    'strategy': {
       stepNumber: '02',
+      label: 'Strategy Lab',
+      feature: 'Enterprise Strategy Synthesis',
+      purpose: 'Generate and refine high-fidelity sales strategies based on deal context.',
+      howItHelps: 'Provides an actionable roadmap and competitive wedge to win the deal.',
+      audioText: 'Welcome to the Strategy Lab. This module synthesizes high-fidelity sales strategies from your deal context. It provides an actionable roadmap and competitive wedge to win the deal.',
+      guideText: 'Synthesize and refine your enterprise sales strategy. Leverage the competitive wedge and objection defense nodes to build a winning roadmap.'
+    },
+    'qa': {
+      stepNumber: '03',
       label: 'Hands-on Assignment',
       feature: 'Cognitive Assessment Lab',
       purpose: 'Test your knowledge of the deal and product through structured assignments.',
@@ -84,7 +94,7 @@ const App: React.FC = () => {
       guideText: 'Calibrate the assessment parameters and challenge depth to align with your current strategic readiness. Initiate the neural assignment to pressure-test your document mastery and identify logic deficits.'
     },
     'avatar-staged': {
-      stepNumber: '03',
+      stepNumber: '04',
       label: 'Stage Simulation',
       feature: 'Progressive Deal Stages',
       purpose: 'Roleplay through specific meeting phases like Ice Breakers, Pricing, and Legal.',
@@ -93,7 +103,7 @@ const App: React.FC = () => {
       guideText: 'Navigate through the progressive deal stages to master the nuances of each phase of the sales cycle. Select a tactical node and commence the stage simulation to refine your situational reflexes.'
     },
     'avatar': {
-      stepNumber: '04',
+      stepNumber: '05',
       label: 'Avatar 1.0',
       feature: 'Dual-Mode Buyer Simulation',
       purpose: 'Real-time dialogue with a skeptical CIO persona.',
@@ -102,7 +112,7 @@ const App: React.FC = () => {
       guideText: 'Engage in high-fidelity, real-time dialogue with a skeptical CIO persona to sharpen your strategic reflexes. Activate the simulation and maintain vocal authority to neutralize predicted resistance.'
     },
     'avatar2': {
-      stepNumber: '05',
+      stepNumber: '06',
       label: 'Avatar 2.0',
       feature: 'Multi-Persona Enterprise Evaluation',
       purpose: 'Switch between CIO, CFO, and IT Director roles for comprehensive testing.',
@@ -111,7 +121,7 @@ const App: React.FC = () => {
       guideText: 'Evaluate your performance across a multi-persona enterprise committee. Switch between CIO, CFO, and IT Director roles to test the resilience of your strategy against diverse stakeholder scrutiny.'
     },
     'gpt': {
-      stepNumber: '06',
+      stepNumber: '07',
       label: 'Spiked GPT',
       feature: 'Strategic Knowledge Retrieval',
       purpose: 'Fast, grounded answering engine for any deal-related question.',
@@ -120,7 +130,7 @@ const App: React.FC = () => {
       guideText: 'Access the strategic knowledge retrieval engine for instantaneous, grounded responses to complex deal inquiries. Query the cognitive core to extract winning strategies and precise data points.'
     },
     'practice': {
-      stepNumber: '07',
+      stepNumber: '08',
       label: 'Grooming Lab',
       feature: 'Verbal Architecture & Pacing Audit',
       purpose: 'Practice your delivery and receive an elite audit on tone, grammar, and pacing.',
@@ -129,7 +139,7 @@ const App: React.FC = () => {
       guideText: 'Audit your verbal architecture and pacing to ensure your delivery matches the strength of your strategy. Initiate the grooming protocol to receive an elite analysis of your vocal energy and authority.'
     },
     'audio': {
-      stepNumber: '08',
+      stepNumber: '09',
       label: 'Studio',
       feature: 'High-Fidelity Audio Generation',
       purpose: 'Generate professional-grade audio samples of your winning pitches.',
@@ -585,13 +595,14 @@ const App: React.FC = () => {
                     )}
                     <div className="flex flex-col gap-3">
                       <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "01 Settings" : ""} scale={sidebarFontScale} step="01" />
-                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "02 Assignment" : ""} scale={sidebarFontScale} step="02" />
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "03 Simulation" : ""} scale={sidebarFontScale} step="03" />
-                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "04 Avatar 1.0" : ""} scale={sidebarFontScale} step="04" />
-                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "05 Avatar 2.0" : ""} scale={sidebarFontScale} step="05" />
-                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "06 Spiked GPT" : ""} scale={sidebarFontScale} step="06" />
-                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "07 Grooming" : ""} scale={sidebarFontScale} step="07" />
-                      <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "08 Studio" : ""} scale={sidebarFontScale} step="08" />
+                      <SidebarBtn active={activeTab === 'strategy'} onClick={() => handleNodeClick('strategy')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "02 Strategy" : ""} scale={sidebarFontScale} step="02" />
+                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "03 Assignment" : ""} scale={sidebarFontScale} step="03" />
+                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "04 Simulation" : ""} scale={sidebarFontScale} step="04" />
+                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "05 Avatar 1.0" : ""} scale={sidebarFontScale} step="05" />
+                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "06 Avatar 2.0" : ""} scale={sidebarFontScale} step="06" />
+                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "07 Spiked GPT" : ""} scale={sidebarFontScale} step="07" />
+                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "08 Grooming" : ""} scale={sidebarFontScale} step="08" />
+                      <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "09 Studio" : ""} scale={sidebarFontScale} step="09" />
                     </div>
                   </div>
 
@@ -785,6 +796,7 @@ const App: React.FC = () => {
                           </motion.div>
                         </div>
                       )}
+                      {activeTab === 'strategy' && <StrategyLab activeDocuments={activeDocuments} meetingContext={meetingContext} />}
                       {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
