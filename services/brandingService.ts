@@ -5,16 +5,8 @@ export interface BrandingEvent {
   name: string;
   description: string;
   theme: string;
-  date?: string; // MM-DD
+  date: string; // MM-DD
 }
-
-const BRAND_CONSTRAINTS = `
-1. CORE ICON: A bold white exclamation mark "!" inside a vibrant red square box (#dc2626).
-2. TEXT: The word "SPIKED" in bold black serif font, followed by "AI" in bold red.
-3. STYLE: Professional, clean, high-tech, yet creative (Google Doodle style).
-4. PRESERVATION: The red square and "!" must remain the focal point.
-5. THEME INTEGRATION: Elements of the event should wrap around, sit behind, or subtly modify the square without obscuring the "!".
-`;
 
 const HOLIDAYS: BrandingEvent[] = [
   { id: 'new-year', name: 'New Year', description: 'Celebrating the start of a new year', theme: 'fireworks, celebration, gold and red', date: '01-01' },
@@ -37,17 +29,15 @@ export class BrandingService {
 
   public async detectCurrentEvent(location?: string): Promise<BrandingEvent | null> {
     const now = new Date();
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
-    const monthStr = String(month).padStart(2, '0');
-    const dayStr = String(day).padStart(2, '0');
-    const todayStr = `${monthStr}-${dayStr}`;
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${month}-${day}`;
 
-    // 1. Check static holidays/milestones
+    // Check static holidays
     const event = HOLIDAYS.find(h => h.date === todayStr);
     if (event) return event;
 
-    // 2. Optional: Use Gemini to detect local events if location is provided
+    // Optional: Use Gemini to detect local events if location is provided
     if (location) {
       try {
         const response = await this.ai.models.generateContent({
@@ -63,38 +53,31 @@ export class BrandingService {
       }
     }
 
-    // 3. Seasonal Fallbacks
-    if (month >= 3 && month <= 5) {
-      return { id: 'spring', name: 'Spring Growth', description: 'Spring Growth & Renewal', theme: 'digital leaves, blooming circuits, soft green' };
-    } else if (month >= 6 && month <= 8) {
-      return { id: 'summer', name: 'Summer Energy', description: 'Summer Energy & Heat', theme: 'vibrant sunbeams, solar flares, warm orange' };
-    } else if (month >= 9 && month <= 11) {
-      return { id: 'autumn', name: 'Autumn Harvest', description: 'Autumn Harvest & Data Collection', theme: 'falling data bits, golden leaves, rustic orange' };
-    } else {
-      return { id: 'winter', name: 'Winter Focus', description: 'Winter Focus & Clarity', theme: 'frosty circuits, ice crystals, cool blue' };
-    }
+    return null;
   }
 
   public async generateThemedLogo(event: BrandingEvent): Promise<string> {
-    const dateStr = new Date().toISOString().split('T')[0];
-    const cacheKey = `spiked_logo_${event.id}_${dateStr}`;
+    const cacheKey = `spiked_logo_${event.id}_${event.date}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) return cached;
 
     const prompt = `
-      Design a "Spiked AI" Google Doodle style variation for today's theme: ${event.name}.
+      Create a high-quality, professional "Google Doodle" style variation of the "Spiked AI" brand logo.
       
-      BRAND RULES & CONSTRAINTS:
-      ${BRAND_CONSTRAINTS}
+      BRAND IDENTITY:
+      - Name: SPIKED AI
+      - Core Icon: A bold white exclamation mark "!" inside a rounded red square.
+      - Colors: Primary Red (#DC2626), Dark Slate/Black (#0F172A).
+      - Style: High-tech, Neural Sales Intelligence, Futuristic.
+
+      THEME: ${event.name} - ${event.theme}
       
-      TASK:
-      Create a high-quality, professional logo variation for "Spiked AI". 
-      The core icon (Red square with white "!") should be themed with ${event.name} elements (${event.theme}).
-      For example, if it's Winter, add subtle frost or snow to the square. 
-      If it's Spring, add small digital leaves or flowers.
-      The text "SPIKED AI" should be integrated into the composition.
-      
-      Output should be a clean, modern digital illustration on a transparent or dark slate background.
+      INSTRUCTIONS:
+      - Seamlessly integrate ${event.name} elements into the logo.
+      - You can modify the "!" icon or the text "SPIKED AI" to reflect the theme.
+      - Maintain the "SPIKED AI" legibility.
+      - The output should be a single, clean, centered logo on a transparent or dark slate background.
+      - Style should be artistic and creative, like a special edition commemorative logo.
     `;
 
     try {
