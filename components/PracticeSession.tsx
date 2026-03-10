@@ -454,6 +454,80 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     } catch (e) { setIsPlayingExplanation(false); }
   };
 
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  const handleSendEmail = async () => {
+    if (!evaluation) return;
+    setIsSendingEmail(true);
+    try {
+      const { googleService } = await import('../services/googleService');
+      const isAuthenticated = await googleService.getAuthStatus();
+      if (!isAuthenticated) {
+        alert("Please connect your Google account first via the sidebar.");
+        setIsSendingEmail(false);
+        return;
+      }
+
+      const reportHtml = `
+        <div style="font-family: sans-serif; color: #1e293b; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px;">
+          <h2 style="color: #4f46e5; margin-bottom: 8px;">Neural Simulation Lab: Performance Audit</h2>
+          <p style="font-size: 12px; color: #64748b; margin-bottom: 24px;">Generated on ${new Date().toLocaleString()}</p>
+          
+          <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h3 style="font-size: 14px; margin-top: 0;">Session Details</h3>
+            <p><strong>Mode:</strong> ${sessionMode}</p>
+            <p><strong>Target:</strong> ${sessionMode === 'speech' ? speechTarget : groomingTarget}</p>
+            <p><strong>Persona:</strong> ${selectedPersona}</p>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 16px; color: #4f46e5;">Scores</h3>
+            <p><strong>Grammar Score:</strong> ${evaluation.grammarScore}%</p>
+            <p><strong>Pacing Score:</strong> ${evaluation.pacingScore}%</p>
+            <p><strong>Strategic Alignment:</strong> ${evaluation.strategicAlignment}</p>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 16px; color: #4f46e5;">Transcription</h3>
+            <p style="font-style: italic; background-color: #f1f5f9; padding: 12px; border-radius: 4px;">"${evaluation.transcription}"</p>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 16px; color: #4f46e5;">Ideal Master Performance</h3>
+            <p style="font-weight: bold; background-color: #ecfdf5; padding: 12px; border-radius: 4px; border-left: 4px solid #10b981;">"${evaluation.idealWording}"</p>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 16px; color: #4f46e5;">Coaching Feedback</h3>
+            <p>${evaluation.correctionExplanation}</p>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h4 style="font-size: 14px;">Linguistic Analysis</h4>
+            <p>${evaluation.grammarFeedback}</p>
+            <p><strong>Sentence Formation:</strong> ${evaluation.sentenceFormation}</p>
+          </div>
+
+          <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center;">
+            Sent via Cognitive Sales Intelligence Node
+          </div>
+        </div>
+      `;
+
+      await googleService.sendReport(
+        'me',
+        `Performance Audit: ${sessionMode === 'speech' ? speechTarget : groomingTarget}`,
+        reportHtml
+      );
+      alert("Performance audit report sent to your Gmail successfully!");
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      alert("Failed to send email. Please ensure your Google account is connected.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   const addToGroomingJournal = () => {
     if (!evaluation) return;
     const newGrooming: SavedGrooming = {
@@ -715,6 +789,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                 <ICONS.X className="group-hover:rotate-90 transition-transform" /> Close Mastery Review
               </button>
               <div className="flex items-center gap-6">
+                <button 
+                  onClick={handleSendEmail}
+                  disabled={isSendingEmail}
+                  className="px-8 py-4 bg-indigo-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 dark:shadow-indigo-900/20 flex items-center gap-3 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  <ICONS.Efficiency className={`w-5 h-5 ${isSendingEmail ? 'animate-spin' : ''}`} />
+                  {isSendingEmail ? 'Sending...' : 'Send to Gmail'}
+                </button>
                 <button 
                   onClick={addToGroomingJournal}
                   className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 dark:shadow-emerald-900/20 flex items-center gap-3 transition-all active:scale-95"
