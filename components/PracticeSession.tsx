@@ -282,13 +282,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         {
           "transcription": "Cleaned up version of their answer.",
           "grammarScore": 0-100,
+          "pacingScore": 0-100,
           "toneAnalysis": "Detailed paragraph about vocal energy and authority.",
           "grammarFeedback": "Detailed bullet points about grammar improvements.",
           "sentenceFormation": "Detailed analysis of sentence structure, variety, and impact.",
           "breathPacingGuide": "The text with [Take Breath] and [Pause - Xs] markers inserted strategically.",
           "strategicAlignment": "Strategic score and rationale.",
           "idealWording": "A 'Master Performance' version of the answer, rewritten for elite delivery.",
-          "correctionExplanation": "3-4 paragraphs explaining EXACTLY WHY the user's structure was sub-optimal and why the new version wins."
+          "correctionExplanation": "3-4 paragraphs explaining EXACTLY WHY the user's structure was sub-optimal and why the new version wins.",
+          "objectionHandlingSuggestions": "Specific tactical suggestions for better objection handling based on the context."
         }`,
         config: {
           responseMimeType: "application/json",
@@ -297,15 +299,17 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             properties: {
               transcription: { type: Type.STRING },
               grammarScore: { type: Type.NUMBER },
+              pacingScore: { type: Type.NUMBER },
               toneAnalysis: { type: Type.STRING },
               grammarFeedback: { type: Type.STRING },
               sentenceFormation: { type: Type.STRING },
               breathPacingGuide: { type: Type.STRING },
               strategicAlignment: { type: Type.STRING },
               idealWording: { type: Type.STRING },
-              correctionExplanation: { type: Type.STRING }
+              correctionExplanation: { type: Type.STRING },
+              objectionHandlingSuggestions: { type: Type.STRING }
             },
-            required: ["transcription", "grammarScore", "toneAnalysis", "grammarFeedback", "sentenceFormation", "breathPacingGuide", "strategicAlignment", "idealWording", "correctionExplanation"]
+            required: ["transcription", "grammarScore", "pacingScore", "toneAnalysis", "grammarFeedback", "sentenceFormation", "breathPacingGuide", "strategicAlignment", "idealWording", "correctionExplanation", "objectionHandlingSuggestions"]
           }
         }
       });
@@ -596,9 +600,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                 >
                   <ICONS.Efficiency className="w-5 h-5" /> Add to Journal
                 </button>
-                <div className="px-8 py-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3">
-                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                  Grooming Score: {evaluation.grammarScore}%
+                <div className="flex gap-2">
+                  <div className="px-8 py-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                    Grammar: {evaluation.grammarScore}%
+                  </div>
+                  <div className="px-8 py-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Pacing: {evaluation.pacingScore}%
+                  </div>
                 </div>
               </div>
             </div>
@@ -694,6 +704,17 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   <div className="p-12 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-[3.5rem] shadow-sm">
                     <p className="text-lg font-medium text-emerald-950 dark:text-emerald-100 leading-relaxed whitespace-pre-wrap italic">
                       {evaluation.correctionExplanation}
+                    </p>
+                  </div>
+                </section>
+
+                <section className="space-y-6">
+                  <h4 className="text-[11px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-[0.3em] ml-2 flex items-center gap-3">
+                    <ICONS.Shield className="w-5 h-5" /> Objection Handling Suggestions
+                  </h4>
+                  <div className="p-12 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-[3.5rem] shadow-sm">
+                    <p className="text-lg font-medium text-amber-950 dark:text-amber-100 leading-relaxed whitespace-pre-wrap italic">
+                      {evaluation.objectionHandlingSuggestions}
                     </p>
                   </div>
                 </section>

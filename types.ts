@@ -300,6 +300,7 @@ export interface GPTMessage {
 export interface GroomingEvaluation {
   transcription: string;
   grammarScore: number;
+  pacingScore: number;
   toneAnalysis: string;
   grammarFeedback: string;
   sentenceFormation: string;
@@ -307,6 +308,7 @@ export interface GroomingEvaluation {
   strategicAlignment: string;
   idealWording: string;
   correctionExplanation: string;
+  objectionHandlingSuggestions: string;
 }
 
 export type SimPersonaV2 = 'CIO' | 'CFO' | 'IT_DIRECTOR';
