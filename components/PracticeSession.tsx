@@ -12,7 +12,7 @@ interface PracticeSessionProps {
   onStartSimulation?: () => void;
 }
 
-type SessionMode = 'roleplay' | 'seller-roleplay' | 'grooming';
+type SessionMode = 'roleplay' | 'seller-roleplay' | 'grooming' | 'speech';
 
 const PERSONA_OPTIONS: { type: CustomerPersonaType; label: string; icon: React.ReactNode; desc: string }[] = [
   { type: 'Balanced', label: 'Balanced', icon: <ICONS.Document />, desc: 'Standard business profile, focused on utility.' },
@@ -29,6 +29,22 @@ interface SavedGrooming {
   timestamp: number;
 }
 
+const LiveMetric: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
+  <div className="space-y-1">
+    <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-slate-500">
+      <span>{label}</span>
+      <span className={`text-${color}-400`}>{value}</span>
+    </div>
+    <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+      <motion.div 
+        initial={{ width: 0 }}
+        animate={{ width: value === 'Analyzing...' ? '30%' : '100%' }}
+        className={`h-full bg-${color}-500`}
+      />
+    </div>
+  </div>
+);
+
 export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meetingContext, onStartSimulation }) => {
   const [sessionMode, setSessionMode] = useState<SessionMode>('roleplay');
   const [isActive, setIsActive] = useState(false);
@@ -37,8 +53,22 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const [selectedPersona, setSelectedPersona] = useState<CustomerPersonaType>('Balanced');
   const [transcription, setTranscription] = useState<{ user: string; ai: string }[]>([]);
   const [currentTranscription, setCurrentTranscription] = useState({ user: '', ai: '' });
+  const [realTimeFeedback, setRealTimeFeedback] = useState<{
+    tone: string;
+    clarity: string;
+    pacing: string;
+    alignment: string;
+    score: number;
+  }>({
+    tone: 'Analyzing...',
+    clarity: 'Analyzing...',
+    pacing: 'Analyzing...',
+    alignment: 'Analyzing...',
+    score: 0
+  });
   
   const [groomingTarget, setGroomingTarget] = useState(analysis.objectionHandling[0]?.objection || "How do you define value?");
+  const [speechTarget, setSpeechTarget] = useState(analysis.finalCoaching.dos[0] || "Our core value proposition.");
   const [evaluation, setEvaluation] = useState<GroomingEvaluation | null>(null);
   const [isPlayingIdeal, setIsPlayingIdeal] = useState(false);
   const [isPlayingExplanation, setIsPlayingExplanation] = useState(false);
@@ -70,6 +100,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
       playGuidance(`In Seller Roleplay, I will act as ${sellerName}, and you will act as ${buyerName}. Observe how an elite salesperson handles your questions.`, 'commence');
     } else if (sessionMode === 'grooming') {
       playGuidance(`In Bot-Led Grooming, I will ask you a high-stakes question. Use the Activate Bot-Coach button to start and receive an elite audit on your performance.`, 'commence');
+    } else if (sessionMode === 'speech') {
+      playGuidance(`In Speech Practice, you can record your delivery of key sales points. Select a target and receive an elite audit on your tone, grammar, and pacing.`, 'commence');
     }
   }, [sessionMode]);
   const nextStartTimeRef = useRef<number>(0);
@@ -125,6 +157,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     await startPractice();
   };
 
+  const startSpeechSession = async () => {
+    setEvaluation(null);
+    userTranscriptionRef.current = '';
+    aiTranscriptionRef.current = '';
+    setTranscription([]);
+    setMicPermissionError(false);
+    await startPractice();
+  };
+
   const startPractice = async () => {
     if (onStartSimulation) onStartSimulation();
     setStatus('connecting');
@@ -156,6 +197,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         ? `Act as the buyer: ${buyerName}. Persona: ${selectedPersona}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}. 
            
            ===========================================================
+           REAL-TIME COACHING PROTOCOL (CRITICAL)
+           ===========================================================
+           In your TEXT output (which the user does NOT hear), you MUST provide a real-time analysis of the user's last response BEFORE your dialogue.
+           Format it exactly like this:
+           [LIVE_FEEDBACK: {"tone": "...", "clarity": "...", "pacing": "...", "alignment": "...", "score": 0-100}]
+           
+           Then proceed with your dialogue.
+           
+           ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
            1. For EVERY turn, follow this sequence:
@@ -169,6 +219,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. Persona: ${selectedPersona}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
            
            ===========================================================
+           REAL-TIME COACHING PROTOCOL (CRITICAL)
+           ===========================================================
+           In your TEXT output (which the user does NOT hear), you MUST provide a real-time analysis of the user's last response BEFORE your dialogue.
+           Format it exactly like this:
+           [LIVE_FEEDBACK: {"tone": "...", "clarity": "...", "pacing": "...", "alignment": "...", "score": 0-100}]
+           
+           Then proceed with your dialogue.
+
+           ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
            1. For EVERY turn, follow this sequence:
@@ -178,7 +237,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
            3. Never overlap or ask multiple questions at once.
 
            Start by saying: "I will act as ${sellerName} and you need to act as ${buyerName} in this roleplay."`
-        : `Act as a world-class speech and sales coach. 
+        : sessionMode === 'grooming'
+        ? `Act as a world-class speech and sales coach. 
            
            ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
@@ -186,7 +246,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
            1. First, state: "I'm going to ask you a critical question. Take a breath, and give me your best structured response."
            2. Then ask exactly this question: "${groomingTarget}". 
            3. Once the user provides a full answer, remain silent until the session is ended manually. 
-           4. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
+           4. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`
+        : `Act as a world-class speech and sales coach. 
+           
+           ===========================================================
+           CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
+           ===========================================================
+           1. First, state: "I'm ready to audit your delivery. Please deliver your pitch for: ${speechTarget}."
+           2. Once you have stated that, remain silent while the user delivers their speech. 
+           3. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
       const sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
@@ -230,8 +298,27 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   source.onended = () => sourcesRef.current.delete(source);
                 }
                 if (part.text) {
-                  aiTranscriptionRef.current += part.text;
-                  setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
+                  // Check for real-time feedback metadata
+                  const feedbackMatch = part.text.match(/\[LIVE_FEEDBACK: ({.*?})\]/);
+                  if (feedbackMatch) {
+                    try {
+                      const feedback = JSON.parse(feedbackMatch[1]);
+                      setRealTimeFeedback(feedback);
+                      // Remove the metadata from the displayed transcription
+                      const cleanText = part.text.replace(/\[LIVE_FEEDBACK: {.*?}\]/, '');
+                      if (cleanText.trim()) {
+                        aiTranscriptionRef.current += cleanText;
+                        setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
+                      }
+                    } catch (e) {
+                      console.error("Failed to parse live feedback:", e);
+                      aiTranscriptionRef.current += part.text;
+                      setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
+                    }
+                  } else {
+                    aiTranscriptionRef.current += part.text;
+                    setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
+                  }
                 }
               }
             }
@@ -274,7 +361,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         contents: `Act as a world-class communication, linguistics, and sales coach. 
         Perform a comprehensive "Grooming Audit" for a salesperson.
         
-        QUESTION POSED: "${groomingTarget}"
+        QUESTION/POINT POSED: "${sessionMode === 'speech' ? speechTarget : groomingTarget}"
         SALESPERSON PERFORMANCE: "${finalTranscript}"
         TARGET AUDIENCE PERSONA: ${selectedPersona}
         
@@ -361,7 +448,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     if (!evaluation) return;
     const newGrooming: SavedGrooming = {
       id: Date.now().toString(),
-      question: groomingTarget,
+      question: sessionMode === 'speech' ? speechTarget : groomingTarget,
       evaluation: evaluation,
       timestamp: Date.now()
     };
@@ -394,7 +481,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             {showGroomingJournal ? 'Close Journal' : 'Self-Grooming Journal'}
           </motion.button>
           <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-            {(['roleplay', 'seller-roleplay', 'grooming'] as SessionMode[]).map((m) => (
+            {(['roleplay', 'seller-roleplay', 'grooming', 'speech'] as SessionMode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => {
@@ -404,7 +491,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                 }}
                 className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === m ? 'bg-slate-700 text-indigo-400 shadow-lg scale-105' : 'text-slate-400 hover:text-slate-300'}`}
               >
-                {m === 'roleplay' ? 'Buyer Roleplay' : m === 'seller-roleplay' ? 'Seller Roleplay' : 'Bot-Led Grooming'}
+                {m === 'roleplay' ? 'Buyer Roleplay' : m === 'seller-roleplay' ? 'Seller Roleplay' : m === 'grooming' ? 'Bot-Led Grooming' : 'Speech Practice'}
               </button>
             ))}
           </div>
@@ -488,14 +575,16 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                  {sessionMode === 'roleplay' ? <ICONS.Brain className="w-10 h-10" /> : <ICONS.Trophy className="w-10 h-10" />}
               </motion.div>
               <h4 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight">
-                {sessionMode === 'roleplay' ? `Simulate a Live ${buyerName} Meeting` : sessionMode === 'seller-roleplay' ? `Simulate an Elite ${sellerName} Pitch` : 'Initiate Speech Mastery Protocol'}
+                {sessionMode === 'roleplay' ? `Simulate a Live ${buyerName} Meeting` : sessionMode === 'seller-roleplay' ? `Simulate an Elite ${sellerName} Pitch` : sessionMode === 'grooming' ? 'Initiate Speech Mastery Protocol' : 'Speech Practice Mode'}
               </h4>
               <p className="text-slate-500 dark:text-slate-400 text-xl leading-relaxed font-medium italic">
                 {sessionMode === 'roleplay' 
                   ? `Test your strategic reflexes in a real-time, low-latency dialogue with ${buyerName}.`
                   : sessionMode === 'seller-roleplay'
                   ? `Observe how an elite salesperson (${sellerName}) handles your questions. You act as ${buyerName}, the AI acts as ${sellerName}.`
-                  : 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit.'}
+                  : sessionMode === 'grooming'
+                  ? 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit.'
+                  : 'Record your delivery of key sales points and receive an AI audit on tone, grammar, and pacing.'}
               </p>
             </div>
 
@@ -521,7 +610,29 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                       </div>
                     </div>
                  </div>
-               ) : (
+               ) : sessionMode === 'speech' ? (
+                <div className="space-y-6 max-w-2xl mx-auto">
+                   <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 ml-4">Target Sales Point</label>
+                   <div className="relative group">
+                     <select 
+                       value={speechTarget}
+                       onChange={(e) => setSpeechTarget(e.target.value)}
+                       className="w-full bg-slate-900 border-4 border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-white outline-none focus:border-indigo-600 transition-all shadow-2xl appearance-none"
+                     >
+                       <optgroup label="Key Strategic Points">
+                         {analysis.finalCoaching.dos.map((d, i) => <option key={i} value={d}>{d}</option>)}
+                         <option value={analysis.finalCoaching.finalAdvice}>Final Coaching Advice</option>
+                       </optgroup>
+                       <optgroup label="Opening Lines">
+                         {analysis.openingLines.map((o, i) => <option key={i} value={o.text}>{o.text}</option>)}
+                       </optgroup>
+                     </select>
+                     <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                       <ICONS.ChevronDown className="w-6 h-6" />
+                     </div>
+                   </div>
+                </div>
+              ) : (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {PERSONA_OPTIONS.map((option) => (
                      <motion.button
@@ -546,15 +657,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             <motion.button 
               whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(79, 70, 229, 0.5)" }}
               whileTap={{ scale: 0.95 }}
-              onClick={sessionMode === 'grooming' ? startGroomingSession : startPractice} 
+              onClick={sessionMode === 'grooming' ? startGroomingSession : sessionMode === 'speech' ? startSpeechSession : startPractice} 
               disabled={status === 'connecting'} 
-              className={`group relative px-20 py-8 rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl transition-all overflow-hidden ${sessionMode === 'grooming' ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white'} ${highlightedButton === 'commence' ? 'ring-8 ring-indigo-400 animate-pulse' : ''}`}
+              className={`group relative px-20 py-8 rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl transition-all overflow-hidden ${sessionMode === 'grooming' || sessionMode === 'speech' ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white'} ${highlightedButton === 'commence' ? 'ring-8 ring-indigo-400 animate-pulse' : ''}`}
             >
               <div className="relative z-10 flex items-center gap-4">
                 {status === 'connecting' ? (
                   <><div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div> Connecting...</>
                 ) : (
-                  <><ICONS.Play className="w-10 h-10" /> {sessionMode === 'grooming' ? 'Activate Bot-Coach' : 'Commence Interaction'}</>
+                  <><ICONS.Play className="w-10 h-10" /> {sessionMode === 'grooming' ? 'Activate Bot-Coach' : sessionMode === 'speech' ? 'Start Speech Practice' : 'Commence Interaction'}</>
                 )}
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
@@ -755,11 +866,32 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                     <span className="text-[12px] font-black uppercase text-white tracking-[0.2em]">Active Audit Trace</span>
                   </motion.div>
                 )}
+
+                {isActive && (
+                  <motion.div 
+                    initial={{ x: 40, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className="absolute top-0 right-[-280px] w-64 space-y-4 z-20"
+                  >
+                    <div className="p-6 bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-[2rem] shadow-2xl space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h6 className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Live Performance</h6>
+                        <span className="text-[10px] font-black text-white">{realTimeFeedback.score}%</span>
+                      </div>
+                      <div className="space-y-3">
+                        <LiveMetric label="Tone" value={realTimeFeedback.tone} color="indigo" />
+                        <LiveMetric label="Clarity" value={realTimeFeedback.clarity} color="emerald" />
+                        <LiveMetric label="Pacing" value={realTimeFeedback.pacing} color="amber" />
+                        <LiveMetric label="Alignment" value={realTimeFeedback.alignment} color="rose" />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </div>
               
               <div className="text-center space-y-8 relative z-10 max-w-2xl">
                 <span className="px-6 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl border border-indigo-100 dark:border-indigo-900/30 mb-6 inline-block">
-                  {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : sessionMode === 'seller-roleplay' ? 'Elite Seller Simulation' : 'Bot-Led Grooming Active'}
+                  {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : sessionMode === 'seller-roleplay' ? 'Elite Seller Simulation' : sessionMode === 'grooming' ? 'Bot-Led Grooming Active' : 'Speech Practice Active'}
                 </span>
                 <h5 className="text-slate-900 dark:text-white text-5xl font-black tracking-tighter leading-tight uppercase">
                   {sessionMode === 'roleplay' ? buyerName : sessionMode === 'seller-roleplay' ? sellerName : 'Neural Bot-Coach'}
@@ -769,13 +901,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                     ? `"Speak directly to our business value drivers."` 
                     : sessionMode === 'seller-roleplay'
                     ? `"I am ready to address your concerns and demonstrate our value."`
-                    : `Bot Question: "${groomingTarget}"`}
+                    : sessionMode === 'grooming'
+                    ? `Bot Question: "${groomingTarget}"`
+                    : `Practicing: "${speechTarget}"`}
                 </p>
               </div>
 
               {isActive && (
                 <div className="absolute bottom-16 right-16 flex gap-6">
-                  {sessionMode === 'grooming' && (
+                  {(sessionMode === 'grooming' || sessionMode === 'speech') && (
                     <motion.button 
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
