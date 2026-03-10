@@ -22,13 +22,18 @@ export const Header: React.FC<HeaderProps> = ({
   darkMode
 }) => {
   const [showUtility, setShowUtility] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [activeMagnifierTab, setActiveMagnifierTab] = useState<'simulation' | 'typography'>('simulation');
   const utilityRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (utilityRef.current && !utilityRef.current.contains(event.target as Node)) {
         setShowUtility(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfileDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -57,19 +62,58 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="flex items-center gap-6">
           {user && (
-            <div className="hidden lg:flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm px-5 py-2 rounded-2xl border border-slate-700/50 transition-all shadow-sm hover:shadow-md">
-              <div className="flex flex-col items-end">
-                <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Neural Link Active</span>
-                <span className="text-[11px] font-black text-slate-200 truncate max-w-[150px]">{user.email}</span>
-              </div>
-              <div className="w-px h-6 bg-slate-700 mx-1"></div>
-              <button 
-                onClick={() => logoutUser()}
-                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-900/30 rounded-xl transition-all active:scale-90"
-                title="Disconnect Neural Link"
+            <div className="relative" ref={profileRef}>
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="hidden lg:flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm px-5 py-2 rounded-2xl border border-slate-700/50 transition-all shadow-sm hover:shadow-md hover:bg-slate-800"
               >
-                <ICONS.X className="w-4 h-4" />
-              </button>
+                <div className="flex flex-col items-end">
+                  <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Neural Link Active</span>
+                  <span className="text-[11px] font-black text-slate-200 truncate max-w-[150px]">{user.email}</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-lg">
+                  {user.email?.[0].toUpperCase()}
+                </div>
+                <ICONS.ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
+              </motion.button>
+
+              <AnimatePresence>
+                {showProfileDropdown && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-4 w-64 bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden z-50"
+                  >
+                    <div className="p-4 border-b border-slate-800 bg-slate-800/30">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Authenticated User</p>
+                      <p className="text-xs font-bold text-white truncate">{user.email}</p>
+                    </div>
+                    <div className="p-2">
+                      <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all group">
+                        <ICONS.Settings className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
+                        <span className="text-xs font-bold">Account Settings</span>
+                      </button>
+                      <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all group">
+                        <ICONS.Bell className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
+                        <span className="text-xs font-bold">Notifications</span>
+                        <span className="ml-auto w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
+                      </button>
+                    </div>
+                    <div className="p-2 border-t border-slate-800 bg-slate-800/10">
+                      <button 
+                        onClick={() => logoutUser()}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-rose-400 hover:text-rose-300 hover:bg-rose-900/20 rounded-xl transition-all group"
+                      >
+                        <ICONS.LogOut className="w-4 h-4 text-rose-500/50 group-hover:text-rose-500" />
+                        <span className="text-xs font-bold">Disconnect Link</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
