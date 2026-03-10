@@ -643,103 +643,186 @@ OPERATIONAL CONSTRAINTS:
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's baseline.</p>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                  <div className="lg:col-span-2 space-y-12">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Identity Base</label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'].map(voice => (
-                            <button
-                              key={voice}
-                              onClick={() => updateVocalAnalysis({ baseVoice: voice as any })}
-                              className={`py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${context.vocalPersonaAnalysis?.baseVoice === voice ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-300'}`}
-                            >
-                              {voice}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Parameters</label>
-                        <div className="space-y-6 p-8 bg-slate-800/50 rounded-[2rem] border border-slate-700 shadow-inner">
-                          <div className="space-y-3">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                              <span>Pace / Tempo</span>
-                              <span className="text-indigo-400">{context.vocalPersonaAnalysis?.pace}x</span>
-                            </div>
-                            <input 
-                              type="range" min="0.5" max="2.0" step="0.1"
-                              value={context.vocalPersonaAnalysis?.pace}
-                              onChange={e => updateVocalAnalysis({ pace: parseFloat(e.target.value) })}
-                              className="w-full h-1.5 bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
-                            />
-                          </div>
-                          <div className="space-y-3">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                              <span>Neural Stability</span>
-                              <span className="text-indigo-400">{context.vocalPersonaAnalysis?.stability}%</span>
-                            </div>
-                            <input 
-                              type="range" min="0" max="100"
-                              value={context.vocalPersonaAnalysis?.stability}
-                              onChange={e => updateVocalAnalysis({ stability: parseInt(e.target.value) })}
-                              className="w-full h-1.5 bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Behavioral Mimicry Directive</label>
-                      <textarea 
-                        value={context.vocalPersonaAnalysis?.mimicryDirective}
-                        onChange={e => updateVocalAnalysis({ mimicryDirective: e.target.value })}
-                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2rem] px-8 py-6 text-sm font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[120px] placeholder:text-slate-600"
-                        placeholder="Define the behavioral signature (e.g. 'Aggressive, fast-paced, skeptical, interrupts often')..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-900 dark:bg-black rounded-[3rem] p-10 text-white space-y-8 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[100px] rounded-full -mr-32 -mt-32"></div>
-                    <div className="relative z-10">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-8">Neural Vocal Signature</h4>
-                      <div className="flex items-center gap-6 mb-12">
-                        <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700 shadow-2xl">
-                          <ICONS.Speaker className="w-10 h-10 text-indigo-400" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-black tracking-tight text-white">{context.vocalPersonaAnalysis?.baseVoice}</p>
-                          <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Active Vocal Core</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <VocalTrait label="Pitch" val={context.vocalPersonaAnalysis?.pitch || 'Moderate'} color="indigo" />
-                          <VocalTrait label="Tempo" val={context.vocalPersonaAnalysis?.tempo || 'Controlled'} color="emerald" />
-                          <VocalTrait label="Cadence" val={context.vocalPersonaAnalysis?.cadence || 'Strategic'} color="amber" />
-                          <VocalTrait label="Accent" val={context.vocalPersonaAnalysis?.accent || 'Neutral'} color="rose" />
-                        </div>
-                      </div>
-
-                      <div className="pt-12">
-                        <button 
-                          onClick={() => {
-                            const text = `This is the ${context.vocalPersonaAnalysis?.baseVoice} vocal signature, calibrated for a ${context.persona} persona. Neural stability is at ${context.vocalPersonaAnalysis?.stability} percent.`;
-                            speak(text);
-                          }}
-                          className="w-full flex items-center justify-center gap-4 py-6 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 group"
-                        >
-                          <ICONS.Play className="w-5 h-5 group-hover:scale-125 transition-transform" /> Test Vocal Sync
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex flex-wrap gap-4 p-2 bg-slate-900/50 rounded-2xl border border-slate-800">
+                  {[
+                    { id: 'persona', label: 'AI Personas', icon: <ICONS.Brain className="w-4 h-4" /> },
+                    { id: 'personality', label: 'Public Personalities', icon: <ICONS.Trophy className="w-4 h-4" /> },
+                    { id: 'upload', label: 'Manual Calibration', icon: <ICONS.Efficiency className="w-4 h-4" /> }
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => handleChange('voiceMode', m.id as any)}
+                      className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                        context.voiceMode === m.id 
+                        ? 'bg-indigo-600 text-white shadow-lg' 
+                        : 'text-slate-400 hover:text-slate-300 hover:bg-slate-800'
+                      }`}
+                    >
+                      {m.icon}
+                      {m.label}
+                    </button>
+                  ))}
                 </div>
+                
+                <AnimatePresence mode="wait">
+                  {context.voiceMode === 'persona' && (
+                    <motion.div 
+                      key="persona-list"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
+                      {AI_VOICE_PERSONAS.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => selectAIPersona(p)}
+                          className={`p-6 rounded-3xl border-2 text-left transition-all relative group ${context.selectedPersonaId === p.id ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl' : 'bg-slate-900/50 border-slate-800 hover:border-indigo-500'}`}
+                        >
+                          <h4 className="font-black text-xs uppercase tracking-widest mb-2 text-white">{p.label}</h4>
+                          <p className={`text-[10px] leading-relaxed font-semibold ${context.selectedPersonaId === p.id ? 'text-indigo-100' : 'text-slate-400'}`}>{p.desc}</p>
+                          {context.selectedPersonaId === p.id && (
+                            <div className="absolute top-4 right-4 w-5 h-5 bg-white text-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+                              <ICONS.Check className="w-3 h-3" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+
+                  {context.voiceMode === 'personality' && (
+                    <motion.div 
+                      key="personality-list"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
+                      {PUBLIC_PERSONALITIES.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => selectPersonality(p)}
+                          className={`p-6 rounded-3xl border-2 text-left transition-all relative group ${context.selectedPersonalityId === p.id ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl' : 'bg-slate-900/50 border-slate-800 hover:border-indigo-500'}`}
+                        >
+                          <h4 className="font-black text-xs uppercase tracking-widest mb-2 text-white">{p.label}</h4>
+                          <p className={`text-[10px] leading-relaxed font-semibold ${context.selectedPersonalityId === p.id ? 'text-indigo-100' : 'text-slate-400'}`}>{p.desc}</p>
+                          {context.selectedPersonalityId === p.id && (
+                            <div className="absolute top-4 right-4 w-5 h-5 bg-white text-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+                              <ICONS.Check className="w-3 h-3" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+
+                  {context.voiceMode === 'upload' && (
+                    <motion.div 
+                      key="manual-calibration"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="grid grid-cols-1 lg:grid-cols-3 gap-12"
+                    >
+                      <div className="lg:col-span-2 space-y-12">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Identity Base</label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir'].map(voice => (
+                                <button
+                                  key={voice}
+                                  onClick={() => updateVocalAnalysis({ baseVoice: voice as any })}
+                                  className={`py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${context.vocalPersonaAnalysis?.baseVoice === voice ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-indigo-300'}`}
+                                >
+                                  {voice}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Vocal Parameters</label>
+                            <div className="space-y-6 p-8 bg-slate-800/50 rounded-[2rem] border border-slate-700 shadow-inner">
+                              <div className="space-y-3">
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                  <span>Pace / Tempo</span>
+                                  <span className="text-indigo-400">{context.vocalPersonaAnalysis?.pace}x</span>
+                                </div>
+                                <input 
+                                  type="range" min="0.5" max="2.0" step="0.1"
+                                  value={context.vocalPersonaAnalysis?.pace}
+                                  onChange={e => updateVocalAnalysis({ pace: parseFloat(e.target.value) })}
+                                  className="w-full h-1.5 bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                                />
+                              </div>
+                              <div className="space-y-3">
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                  <span>Neural Stability</span>
+                                  <span className="text-indigo-400">{context.vocalPersonaAnalysis?.stability}%</span>
+                                </div>
+                                <input 
+                                  type="range" min="0" max="100"
+                                  value={context.vocalPersonaAnalysis?.stability}
+                                  onChange={e => updateVocalAnalysis({ stability: parseInt(e.target.value) })}
+                                  className="w-full h-1.5 bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-600"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Behavioral Mimicry Directive</label>
+                          <textarea 
+                            value={context.vocalPersonaAnalysis?.mimicryDirective}
+                            onChange={e => updateVocalAnalysis({ mimicryDirective: e.target.value })}
+                            className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2rem] px-8 py-6 text-sm font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[120px] placeholder:text-slate-600"
+                            placeholder="Define the behavioral signature (e.g. 'Aggressive, fast-paced, skeptical, interrupts often')..."
+                          />
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900 dark:bg-black rounded-[3rem] p-10 text-white space-y-8 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[100px] rounded-full -mr-32 -mt-32"></div>
+                        <div className="relative z-10">
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-8">Neural Vocal Signature</h4>
+                          <div className="flex items-center gap-6 mb-12">
+                            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700 shadow-2xl">
+                              <ICONS.Speaker className="w-10 h-10 text-indigo-400" />
+                            </div>
+                            <div>
+                              <p className="text-2xl font-black tracking-tight text-white">{context.vocalPersonaAnalysis?.baseVoice}</p>
+                              <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Active Vocal Core</p>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <VocalTrait label="Pitch" val={context.vocalPersonaAnalysis?.pitch || 'Moderate'} color="indigo" />
+                              <VocalTrait label="Tempo" val={context.vocalPersonaAnalysis?.tempo || 'Controlled'} color="emerald" />
+                              <VocalTrait label="Cadence" val={context.vocalPersonaAnalysis?.cadence || 'Strategic'} color="amber" />
+                              <VocalTrait label="Accent" val={context.vocalPersonaAnalysis?.accent || 'Neutral'} color="rose" />
+                            </div>
+                          </div>
+
+                          <div className="pt-12">
+                            <button 
+                              onClick={() => {
+                                const text = `This is the ${context.vocalPersonaAnalysis?.baseVoice} vocal signature, calibrated for a ${context.persona} persona. Neural stability is at ${context.vocalPersonaAnalysis?.stability} percent.`;
+                                speak(text);
+                              }}
+                              className="w-full flex items-center justify-center gap-4 py-6 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 group"
+                            >
+                              <ICONS.Play className="w-5 h-5 group-hover:scale-125 transition-transform" /> Test Vocal Sync
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </motion.div>
