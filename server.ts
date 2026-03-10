@@ -118,20 +118,11 @@ async function startServer() {
     const tokens = (req.session as any).tokens;
     if (!tokens) return res.status(401).json({ error: 'Not authenticated' });
 
-    let { to, subject, body } = req.body;
+    const { to, subject, body } = req.body;
     oauth2Client.setCredentials(tokens);
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
     try {
-      // If 'to' is not a valid email, fetch the user's own email
-      if (!to || !to.includes('@')) {
-        const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
-        const userInfo = await oauth2.userinfo.get();
-        to = userInfo.data.email;
-      }
-
-      if (!to) throw new Error('Recipient email not found');
-
       const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
       const messageParts = [
         `To: ${to}`,

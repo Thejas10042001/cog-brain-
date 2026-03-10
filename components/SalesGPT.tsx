@@ -20,60 +20,6 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
   const [includeContext, setIncludeContext] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-
-  const handleSendEmail = async () => {
-    if (messages.length === 0) return;
-    setIsSendingEmail(true);
-    try {
-      const { googleService } = await import('../services/googleService');
-      const isAuthenticated = await googleService.getAuthStatus();
-      if (!isAuthenticated) {
-        alert("Please connect your Google account first via the sidebar.");
-        setIsSendingEmail(false);
-        return;
-      }
-
-      let chatHtml = "";
-      messages.forEach((msg) => {
-        chatHtml += `
-          <div style="margin-bottom: 24px; padding: 16px; border-radius: 8px; ${msg.role === 'user' ? 'background-color: #f1f5f9; border-left: 4px solid #4f46e5;' : 'background-color: #ffffff; border: 1px solid #e2e8f0;'}">
-            <p style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">${msg.role === 'user' ? 'Strategic Architect' : 'Cognitive Core'} [${msg.mode}]</p>
-            <div style="font-size: 14px; line-height: 1.6;">${msg.content.replace(/\n/g, '<br/>')}</div>
-            ${msg.imageUrl ? `<div style="margin-top: 16px;"><img src="${msg.imageUrl}" style="max-width: 100%; border-radius: 8px;" /></div>` : ''}
-          </div>
-        `;
-      });
-
-      const reportHtml = `
-        <div style="font-family: sans-serif; color: #1e293b; max-width: 800px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; background-color: #f8fafc;">
-          <h2 style="color: #4f46e5; margin-bottom: 8px;">Strategic Intelligence Transcript</h2>
-          <p style="font-size: 12px; color: #64748b; margin-bottom: 24px;">Generated on ${new Date().toLocaleString()}</p>
-          
-          <div style="margin-bottom: 32px;">
-            ${chatHtml}
-          </div>
-
-          <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center;">
-            Sent via Cognitive Sales Intelligence Node
-          </div>
-        </div>
-      `;
-
-      await googleService.sendReport(
-        'me',
-        `Strategic Intelligence Transcript: ${messages.length} Messages`,
-        reportHtml
-      );
-      alert("Chat transcript sent to your Gmail successfully!");
-    } catch (error) {
-      console.error("Failed to send email:", error);
-      alert("Failed to send email. Please ensure your Google account is connected.");
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -276,16 +222,6 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
              </div>
           </div>
           <div className="flex items-center gap-6">
-             <motion.button 
-               whileHover={{ scale: 1.05 }}
-               whileTap={{ scale: 0.95 }}
-               onClick={handleSendEmail}
-               disabled={isSendingEmail || messages.length === 0}
-               className="px-6 py-3 bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
-             >
-               {isSendingEmail ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <ICONS.Efficiency className="w-3 h-3" />}
-               {isSendingEmail ? 'Sending...' : 'Send Transcript to Gmail'}
-             </motion.button>
              <motion.button 
                whileHover={{ scale: 1.05 }}
                whileTap={{ scale: 0.95 }}

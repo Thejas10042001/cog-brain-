@@ -300,73 +300,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-
-  const handleSendEmail = async () => {
-    if (results.length === 0) return;
-    setIsSendingEmail(true);
-    try {
-      const { googleService } = await import('../services/googleService');
-      const isAuthenticated = await googleService.getAuthStatus();
-      if (!isAuthenticated) {
-        alert("Please connect your Google account first via the sidebar.");
-        setIsSendingEmail(false);
-        return;
-      }
-
-      const totalScore = Math.round(results.reduce((acc, r) => acc + r.evaluation.score, 0) / (results.length || 1));
-      
-      let questionsHtml = "";
-      questions.forEach((q, idx) => {
-        const res = results.find(r => r.questionId === q.id);
-        questionsHtml += `
-          <div style="margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
-            <p style="font-weight: bold; font-size: 16px;">${idx + 1}. ${q.text}</p>
-            <p style="color: #4f46e5; font-size: 12px; font-weight: bold;">[${q.type.toUpperCase()} MODE]</p>
-            <p><strong>Your Answer:</strong> ${res?.userAnswer || "N/A"}</p>
-            <p style="color: #059669;"><strong>Correct Logic:</strong> ${q.correctAnswer}</p>
-            <p style="background-color: #f8fafc; padding: 12px; border-radius: 4px; font-style: italic;"><strong>Coaching:</strong> ${res?.evaluation.feedback || ""}</p>
-            <p style="font-size: 12px; color: #64748b;">Score: ${res?.evaluation.score}% | Time Spent: ${res?.timeSpent}s</p>
-          </div>
-        `;
-      });
-
-      const reportHtml = `
-        <div style="font-family: sans-serif; color: #1e293b; max-width: 800px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px;">
-          <h2 style="color: #4f46e5; margin-bottom: 8px;">Assignment Readiness Audit</h2>
-          <p style="font-size: 12px; color: #64748b; margin-bottom: 24px;">Generated on ${new Date().toLocaleString()}</p>
-          
-          <div style="background-color: #4f46e5; color: white; padding: 24px; border-radius: 12px; margin-bottom: 32px; text-align: center;">
-            <p style="text-transform: uppercase; font-size: 12px; font-weight: bold; margin-bottom: 4px;">Audit Score</p>
-            <h1 style="font-size: 48px; margin: 0;">${totalScore}%</h1>
-            <p style="font-size: 14px; margin-top: 8px;">Difficulty: ${config.difficulty} | Perspective: ${perspective}</p>
-          </div>
-
-          <div style="margin-bottom: 32px;">
-            <h3 style="border-bottom: 2px solid #4f46e5; padding-bottom: 8px; color: #4f46e5;">Detailed Performance Nodes</h3>
-            ${questionsHtml}
-          </div>
-
-          <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center;">
-            Sent via Cognitive Sales Intelligence Node
-          </div>
-        </div>
-      `;
-
-      await googleService.sendReport(
-        'me',
-        `Assignment Readiness Audit: ${totalScore}% Score`,
-        reportHtml
-      );
-      alert("Assignment report sent to your Gmail successfully!");
-    } catch (error) {
-      console.error("Failed to send email:", error);
-      alert("Failed to send email. Please ensure your Google account is connected.");
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
   const exportPDF = async () => {
     setIsExporting(true);
     try {
@@ -684,14 +617,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                  Neural logic benchmark completed. Your answers have been cross-referenced with the grounded document core.
               </p>
               <div className="flex gap-4">
-                 <button 
-                  onClick={handleSendEmail}
-                  disabled={isSendingEmail}
-                  className="px-8 py-3.5 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl disabled:opacity-50 flex items-center gap-2"
-                 >
-                   {isSendingEmail ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <ICONS.Efficiency className="w-3 h-3" />}
-                   {isSendingEmail ? 'Sending...' : 'Send to Gmail'}
-                 </button>
                  <button onClick={exportPDF} className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">
                    Export Strategy Report
                  </button>
