@@ -14,11 +14,11 @@ interface PracticeSessionProps {
 
 type SessionMode = 'roleplay' | 'seller-roleplay' | 'grooming' | 'speech';
 
-const PERSONA_OPTIONS: { type: CustomerPersonaType; label: string; icon: React.ReactNode; desc: string }[] = [
-  { type: 'Balanced', label: 'Balanced', icon: <ICONS.Document />, desc: 'Standard business profile, focused on utility.' },
-  { type: 'Technical', label: 'Technical', icon: <ICONS.Brain />, desc: 'Focused on specs, architecture, and security.' },
-  { type: 'Financial', label: 'Financial', icon: <ICONS.ROI />, desc: 'Hyper-focused on ROI, TCO, and budgets.' },
-  { type: 'Business Executives', label: 'Executives', icon: <ICONS.Trophy />, desc: 'Focused on strategy, growth, and vision.' },
+const PERSONA_OPTIONS: { type: CustomerPersonaType; label: string; icon: React.ReactNode; desc: string; voice: string }[] = [
+  { type: 'Balanced', label: 'General Manager', icon: <ICONS.Document />, desc: 'Pragmatic and balanced. Focuses on operational efficiency and ease of implementation.', voice: 'Kore' },
+  { type: 'Technical', label: 'Technical Expert', icon: <ICONS.Brain />, desc: 'Skeptical and precise. Focuses on architecture, security, and technical debt.', voice: 'Fenrir' },
+  { type: 'Financial', label: 'CFO', icon: <ICONS.ROI />, desc: 'Hyper-rational and cost-conscious. Focuses on ROI, TCO, and budget constraints.', voice: 'Charon' },
+  { type: 'Business Executives', label: 'CIO / CEO', icon: <ICONS.Trophy />, desc: 'Visionary and strategic. Focuses on business growth, competitive advantage, and outcomes.', voice: 'Zephyr' },
 ];
 
 interface SavedGrooming {
@@ -186,15 +186,25 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
       const outputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       audioContextRef.current = outputCtx;
 
+      const selectedPersonaConfig = PERSONA_OPTIONS.find(p => p.type === selectedPersona) || PERSONA_OPTIONS[0];
+
       const personaDirectives = {
-        'Technical': "Focus heavily on architecture and security.",
-        'Financial': "Focus primarily on ROI and TCO.",
-        'Business Executives': "Focus on strategy and growth.",
-        'Balanced': "Maintain a mix of technical and business value."
+        'Technical': "Act as a skeptical Technical Expert or CTO. Focus heavily on architecture, security, scalability, and technical debt. Use technical jargon and demand deep-dive explanations.",
+        'Financial': "Act as a hyper-rational CFO or Procurement Lead. Focus primarily on ROI, TCO, payback periods, and budget constraints. Be skeptical of 'fluff' and demand hard numbers.",
+        'Business Executives': "Act as a visionary CIO or CEO. Focus on high-level strategy, business growth, competitive advantage, and long-term vision. Be impatient with technical details and focus on outcomes.",
+        'Balanced': "Act as a pragmatic General Manager. Maintain a mix of technical feasibility and business value. Focus on operational efficiency and ease of implementation."
       }[selectedPersona];
 
       const systemInstruction = sessionMode === 'roleplay' 
-        ? `Act as the buyer: ${buyerName}. Persona: ${selectedPersona}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}. 
+        ? `Act as the buyer: ${buyerName}. Your role is ${selectedPersonaConfig.label}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}. 
+           
+           ===========================================================
+           COMMUNICATION STYLE (CRITICAL)
+           ===========================================================
+           Adopt the specific tone and vocabulary of a ${selectedPersonaConfig.label}. 
+           If you are a Technical Expert, be precise and demanding. 
+           If you are a CFO, be cost-conscious and skeptical. 
+           If you are a CIO, be strategic and outcome-oriented.
            
            ===========================================================
            REAL-TIME COACHING PROTOCOL (CRITICAL)
@@ -214,9 +224,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
            2. Keep the explanation and question distinct. Do NOT mix them.
            3. Never overlap or ask multiple questions at once.
 
-           Start by saying: "I will act as ${buyerName} and you need to act as ${sellerName} in this roleplay."`
+           Start by saying: "I will act as ${buyerName}, your ${selectedPersonaConfig.label}, and you need to act as ${sellerName} in this roleplay."`
         : sessionMode === 'seller-roleplay'
-        ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. Persona: ${selectedPersona}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
+        ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. The buyer's persona is ${selectedPersonaConfig.label}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
            
            ===========================================================
            REAL-TIME COACHING PROTOCOL (CRITICAL)
@@ -341,7 +351,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } } },
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: selectedPersonaConfig.voice } } },
           systemInstruction
         },
       });
