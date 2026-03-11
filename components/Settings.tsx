@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ICONS } from '../constants';
-import { fetchUserSessions, endSession, changePassword } from '../services/firebaseService';
+import { fetchUserSessions, endSession, changePassword, logActivity } from '../services/firebaseService';
 
 interface SettingsProps {
   user: any;
@@ -31,6 +31,20 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
     loadSessions();
   };
 
+  const formatDateTime = (ms: number) => {
+    const date = new Date(ms);
+    const dateStr = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
+    });
+    const timeStr = date.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    return `${dateStr} @ ${timeStr}`;
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
@@ -39,6 +53,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
     }
     try {
       await changePassword(newPassword);
+      await logActivity('password_change', { timestamp: Date.now() }, 'settings');
       setPasswordStatus({ type: 'success', message: 'Password updated successfully.' });
       setNewPassword('');
     } catch (error: any) {
@@ -60,7 +75,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
             </div>
             <div className="flex flex-col gap-1">
               <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-xs">Security & Device Management // {user?.email}</p>
-              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Last Synced: {lastUpdated.toLocaleTimeString()}</p>
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Last Synced: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
           </div>
         </div>
@@ -114,12 +129,12 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
                           <div className="flex flex-wrap gap-4 pt-2">
                             <div className="flex items-center gap-2">
                               <span className="text-[9px] font-black text-slate-600 uppercase">Login:</span>
-                              <span className="text-[10px] font-bold text-slate-400">{new Date(session.startTime).toLocaleString()}</span>
+                              <span className="text-[10px] font-bold text-slate-400">{formatDateTime(session.startTime)}</span>
                             </div>
                             {session.endTime && (
                               <div className="flex items-center gap-2">
                                 <span className="text-[9px] font-black text-slate-600 uppercase">Logout:</span>
-                                <span className="text-[10px] font-bold text-slate-400">{new Date(session.endTime).toLocaleString()}</span>
+                                <span className="text-[10px] font-bold text-slate-400">{formatDateTime(session.endTime)}</span>
                               </div>
                             )}
                           </div>

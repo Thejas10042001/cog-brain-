@@ -171,12 +171,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     if (onStartSimulation) onStartSimulation();
     setStatus('connecting');
     
-    logActivity('practice_session_start', { 
-      persona: selectedPersona, 
-      mode: sessionMode,
-      target: sessionMode === 'grooming' ? groomingTarget : sessionMode === 'speech' ? speechTarget : 'Roleplay'
-    }, 'simulation');
-
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       let stream: MediaStream;
@@ -420,11 +414,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
       });
       const evaluationResult = JSON.parse(response.text || "{}");
       setEvaluation(evaluationResult);
-      
-      logActivity('practice_session_end', { 
-        score: (evaluationResult.grammarScore + evaluationResult.pacingScore) / 2,
-        mode: sessionMode
-      }, 'simulation');
       
       setStatus('idle');
     } catch (e) {

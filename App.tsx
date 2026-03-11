@@ -496,11 +496,6 @@ const App: React.FC = () => {
       const combinedContent = activeDocuments.map(d => `DOC NAME: ${d.name}\n${d.content}`).join('\n\n');
       const result = await analyzeSalesContext(combinedContent, effectiveContext);
       
-      logActivity('analysis_run', { 
-        docCount: activeDocuments.length,
-        context: effectiveContext.clientCompany 
-      }, 'context');
-
       clearInterval(progressInterval);
       setLoadingProgress(100);
       
@@ -735,9 +730,6 @@ const App: React.FC = () => {
                       files={files}
                       onFilesChange={(newFiles) => {
                         setFiles(newFiles);
-                        if (newFiles.length > files.length) {
-                          logActivity('document_upload', { count: newFiles.length - files.length }, 'context');
-                        }
                       }}
                       onUploadSuccess={loadHistory}
                       selectedLibraryDocIds={selectedLibraryDocIds}

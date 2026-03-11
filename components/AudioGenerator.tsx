@@ -147,8 +147,6 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
       const explanation = await generateExplanation(customQuestion, analysis);
       setCustomResponse(explanation);
       
-      logActivity('audio_generation', { track: 'custom', voice: selectedVoice, query: customQuestion }, 'audio');
-      
       const audioBytes = await generatePitchAudio(explanation, selectedVoice);
       if (audioBytes) {
         await playAudio(audioBytes);
@@ -177,7 +175,6 @@ export const AudioGenerator: React.FC<AudioGeneratorProps> = ({ analysis }) => {
     setIsGenerating(false);
 
     if (audioBytes) {
-      logActivity('audio_generation', { track: activeTrack, voice: selectedVoice }, 'audio');
       playAudio(audioBytes);
     }
   };

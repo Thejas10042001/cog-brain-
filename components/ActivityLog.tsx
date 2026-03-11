@@ -23,8 +23,9 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
         fetchUserActivities()
       ]);
       setSessions(s);
-      // Filter out high-frequency minor events like navigation
-      setActivities(a.filter(act => act.type !== 'node_navigation'));
+      // Filter for only major authentication and security events
+      const majorEvents = ['login', 'logout', 'password_change'];
+      setActivities(a.filter(act => majorEvents.includes(act.type)));
       setLastUpdated(new Date());
       setLoading(false);
     };
@@ -66,6 +67,8 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
           return `Secure access established for ${data.email}`;
         case 'logout':
           return `Neural link terminated`;
+        case 'password_change':
+          return `Security protocol updated: Password changed`;
         case 'node_navigation':
           return `Transitioned from ${data.from} to ${data.to}`;
         case 'analysis_run':
@@ -111,7 +114,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
             </div>
             <div className="flex flex-col gap-1">
               <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-xs">Neural Sales Intelligence Protocol // User Log</p>
-              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Last Synced: {lastUpdated.toLocaleTimeString()}</p>
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Last Synced: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
           </div>
           
