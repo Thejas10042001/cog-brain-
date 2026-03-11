@@ -11,6 +11,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState<'sessions' | 'activities'>('sessions');
 
   useEffect(() => {
@@ -22,7 +23,9 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
         fetchUserActivities()
       ]);
       setSessions(s);
-      setActivities(a);
+      // Filter out high-frequency minor events like navigation
+      setActivities(a.filter(act => act.type !== 'node_navigation'));
+      setLastUpdated(new Date());
       setLoading(false);
     };
     loadData();
@@ -102,11 +105,14 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-red-600 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl shadow-red-600/20">
-                !
+                <ICONS.Shield className="w-6 h-6" />
               </div>
               <h1 className="text-5xl font-black text-white tracking-tighter uppercase">Activity <span className="text-red-600">Audit</span></h1>
             </div>
-            <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-xs">Neural Sales Intelligence Protocol // User Log</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-xs">Neural Sales Intelligence Protocol // User Log</p>
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Last Synced: {lastUpdated.toLocaleTimeString()}</p>
+            </div>
           </div>
           
           <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-800 flex items-center gap-6">
@@ -121,20 +127,39 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-dark p-8 rounded-[2rem] border border-slate-800/50">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Sessions</p>
-            <p className="text-4xl font-black text-white">{sessions.length}</p>
-          </div>
-          <div className="glass-dark p-8 rounded-[2rem] border border-slate-800/50">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Activities Logged</p>
-            <p className="text-4xl font-black text-white">{activities.length}</p>
-          </div>
-          <div className="glass-dark p-8 rounded-[2rem] border border-slate-800/50">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Time Spent</p>
-            <p className="text-4xl font-black text-white">
-              {formatDuration(sessions.reduce((acc, s) => acc + (s.duration || 0), 0))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="glass-dark p-10 rounded-[3rem] border border-slate-800/50 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <ICONS.Clock className="w-16 h-16" />
+            </div>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Total Neural Engagement</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-6xl font-black text-white tracking-tighter">
+                {Math.floor(sessions.reduce((acc, s) => acc + (s.duration || 0), 0) / 3600000)}
+              </p>
+              <p className="text-xl font-black text-slate-500 uppercase tracking-widest">Hours</p>
+            </div>
+            <p className="text-[10px] font-bold text-slate-600 uppercase mt-4 tracking-widest">
+              {Math.floor((sessions.reduce((acc, s) => acc + (s.duration || 0), 0) % 3600000) / 60000)} Minutes Total
             </p>
+          </div>
+
+          <div className="glass-dark p-10 rounded-[3rem] border border-slate-800/50 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <ICONS.Brain className="w-16 h-16" />
+            </div>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Strategic Milestones</p>
+            <p className="text-6xl font-black text-white tracking-tighter">{activities.length}</p>
+            <p className="text-[10px] font-bold text-slate-600 uppercase mt-4 tracking-widest">Major Actions Logged</p>
+          </div>
+
+          <div className="glass-dark p-10 rounded-[3rem] border border-slate-800/50 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <ICONS.Monitor className="w-16 h-16" />
+            </div>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Active Sessions</p>
+            <p className="text-6xl font-black text-white tracking-tighter">{sessions.length}</p>
+            <p className="text-[10px] font-bold text-slate-600 uppercase mt-4 tracking-widest">Total Login Events</p>
           </div>
         </div>
 
@@ -151,7 +176,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
             onClick={() => setActiveTab('activities')}
             className={`pb-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'activities' ? 'text-red-600' : 'text-slate-500 hover:text-slate-300'}`}
           >
-            Intelligence Usage
+            Strategic Milestones
             {activeTab === 'activities' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-red-600" />}
           </button>
         </div>

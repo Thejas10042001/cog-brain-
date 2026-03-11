@@ -10,6 +10,7 @@ interface SettingsProps {
 export const Settings: React.FC<SettingsProps> = ({ user }) => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [newPassword, setNewPassword] = useState('');
   const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
 
@@ -21,6 +22,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
     setLoading(true);
     const data = await fetchUserSessions();
     setSessions(data);
+    setLastUpdated(new Date());
     setLoading(false);
   };
 
@@ -56,7 +58,10 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
               </div>
               <h1 className="text-5xl font-black text-white tracking-tighter uppercase">Account <span className="text-indigo-600">Settings</span></h1>
             </div>
-            <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-xs">Security & Device Management // {user?.email}</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-xs">Security & Device Management // {user?.email}</p>
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Last Synced: {lastUpdated.toLocaleTimeString()}</p>
+            </div>
           </div>
         </div>
 
@@ -98,7 +103,7 @@ export const Settings: React.FC<SettingsProps> = ({ user }) => {
                           <div className="flex items-center gap-3">
                             <h3 className="text-lg font-black text-white uppercase tracking-tight">{session.deviceName || 'Unknown Device'}</h3>
                             {session.status === 'active' ? (
-                              <span className="px-2 py-0.5 bg-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-[0_0_10px_rgba(34,197,94,0.3)]">Live</span>
+                              <span className="px-2 py-0.5 bg-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-full">Active</span>
                             ) : (
                               <span className="px-2 py-0.5 bg-slate-800 text-slate-500 text-[8px] font-black uppercase tracking-widest rounded-full">Offline</span>
                             )}

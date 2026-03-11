@@ -238,7 +238,6 @@ const App: React.FC = () => {
   const handleNodeClick = (tab: any) => {
     if (activeTab === tab) return;
     setActiveTab(tab as any);
-    logActivity('node_navigation', { from: activeTab, to: tab }, tab);
   };
 
   const [hasInteracted, setHasInteracted] = useState(false);
