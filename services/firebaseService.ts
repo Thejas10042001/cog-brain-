@@ -85,6 +85,8 @@ try {
 const COLLECTION_NAME = "cognitive_documents";
 const HISTORY_COLLECTION = "simulation_history";
 const CONTEXT_COLLECTION = "meeting_contexts";
+const SESSIONS_COLLECTION = "user_sessions";
+const ACTIVITIES_COLLECTION = "user_activities";
 
 // Helper to get user-isolated collection reference
 const getUserCollection = (subCollection: string) => {
@@ -331,5 +333,93 @@ export const deleteMeetingContext = async (): Promise<boolean> => {
   } catch (error) {
     console.error("Error deleting meeting context:", error);
     return false;
+  }
+};
+
+// Activity & Session Tracking
+export const logActivity = async (type: string, details: any, node?: string): Promise<void> => {
+  if (!db || !auth || !auth.currentUser) return;
+  try {
+    await addDoc(getUserCollection(ACTIVITIES_COLLECTION), {
+      userId: auth.currentUser.uid,
+      type,
+      details: JSON.stringify(details),
+      node: node || 'unknown',
+      timestamp: Timestamp.now()
+    });
+  } catch (error) {
+    console.error("Error logging activity:", error);
+  }
+};
+
+export const startSession = async (): Promise<string | null> => {
+  if (!db || !auth || !auth.currentUser) return null;
+  try {
+    const docRef = await addDoc(getUserCollection(SESSIONS_COLLECTION), {
+      userId: auth.currentUser.uid,
+      startTime: Timestamp.now(),
+      endTime: null,
+      duration: 0
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error starting session:", error);
+    return null;
+  }
+};
+
+export const endSession = async (sessionId: string): Promise<void> => {
+  if (!db || !auth || !auth.currentUser || !sessionId) return;
+  try {
+    const sessionRef = doc(getUserCollection(SESSIONS_COLLECTION), sessionId);
+    const endTime = Timestamp.now();
+    
+    // We need to get the start time to calculate duration
+    // But since we are ending, we can just update the endTime
+    // Duration calculation can be done on the client side when viewing
+    await updateDoc(sessionRef, {
+      endTime: endTime
+    });
+  } catch (error) {
+    console.error("Error ending session:", error);
+  }
+};
+
+export const fetchUserActivities = async (): Promise<any[]> => {
+  if (!db || !auth || !auth.currentUser) return [];
+  try {
+    const q = query(getUserCollection(ACTIVITIES_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: (doc.data().timestamp as Timestamp).toMillis()
+    })).sort((a, b) => b.timestamp - a.timestamp);
+  } catch (error) {
+    console.error("Error fetching activities:", error);
+    return [];
+  }
+};
+
+export const fetchUserSessions = async (): Promise<any[]> => {
+  if (!db || !auth || !auth.currentUser) return [];
+  try {
+    const q = query(getUserCollection(SESSIONS_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      const startTime = (data.startTime as Timestamp).toMillis();
+      const endTime = data.endTime ? (data.endTime as Timestamp).toMillis() : null;
+      return {
+        id: doc.id,
+        ...data,
+        startTime,
+        endTime,
+        duration: endTime ? endTime - startTime : 0
+      };
+    }).sort((a, b) => b.startTime - a.startTime);
+  } catch (error) {
+    console.error("Error fetching sessions:", error);
+    return [];
   }
 };

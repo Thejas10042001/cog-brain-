@@ -1,0 +1,39 @@
+{
+  "entities": {
+    "user_sessions": {
+      "title": "User Sessions",
+      "description": "Tracks user login and logout sessions.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The unique ID of the user." },
+        "startTime": { "type": "string", "format": "date-time", "description": "When the session started." },
+        "endTime": { "type": "string", "format": "date-time", "description": "When the session ended." },
+        "duration": { "type": "number", "description": "Duration of the session in milliseconds." }
+      },
+      "required": ["userId", "startTime"]
+    },
+    "user_activities": {
+      "title": "User Activities",
+      "description": "Tracks specific actions taken by the user within the application.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The unique ID of the user." },
+        "type": { "type": "string", "description": "The type of activity (e.g., 'analysis', 'simulation', 'gpt_query')." },
+        "details": { "type": "string", "description": "JSON stringified details about the activity." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the activity occurred." },
+        "node": { "type": "string", "description": "The neural node where the activity happened." }
+      },
+      "required": ["userId", "type", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/user_sessions": {
+      "schema": "user_sessions",
+      "description": "Collection of sessions for a specific user."
+    },
+    "/users/{userId}/user_activities": {
+      "schema": "user_activities",
+      "description": "Collection of activities for a specific user."
+    }
+  }
+}

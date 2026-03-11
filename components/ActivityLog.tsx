@@ -1,0 +1,195 @@
+import React, { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
+import { ICONS } from '../constants';
+import { fetchUserSessions, fetchUserActivities, User } from '../services/firebaseService';
+
+interface ActivityLogProps {
+  user: User | null;
+}
+
+export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'sessions' | 'activities'>('sessions');
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) return;
+      setLoading(true);
+      const [s, a] = await Promise.all([
+        fetchUserSessions(),
+        fetchUserActivities()
+      ]);
+      setSessions(s);
+      setActivities(a);
+      setLoading(false);
+    };
+    loadData();
+  }, [user]);
+
+  const formatDate = (ms: number) => {
+    const date = new Date(ms);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
+    });
+  };
+
+  const formatTime = (ms: number) => {
+    const date = new Date(ms);
+    return date.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDuration = (ms: number) => {
+    if (!ms) return 'Active';
+    const minutes = Math.floor(ms / 60000);
+    const hours = Math.floor(minutes / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-slate-800 border-t-red-600 rounded-full animate-spin"></div>
+        <p className="mt-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Retrieving Neural Logs...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-200 p-8 md:p-16 font-sans">
+      <div className="max-w-6xl mx-auto space-y-12">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-slate-800 pb-12">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-red-600 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl shadow-red-600/20">
+                !
+              </div>
+              <h1 className="text-5xl font-black text-white tracking-tighter uppercase">Activity <span className="text-red-600">Audit</span></h1>
+            </div>
+            <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-xs">Neural Sales Intelligence Protocol // User Log</p>
+          </div>
+          
+          <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-800 flex items-center gap-6">
+            <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black text-xl">
+              {user?.email?.[0].toUpperCase()}
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Authenticated Subject</p>
+              <p className="text-sm font-bold text-white">{user?.email}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="glass-dark p-8 rounded-[2rem] border border-slate-800/50">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Sessions</p>
+            <p className="text-4xl font-black text-white">{sessions.length}</p>
+          </div>
+          <div className="glass-dark p-8 rounded-[2rem] border border-slate-800/50">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Activities Logged</p>
+            <p className="text-4xl font-black text-white">{activities.length}</p>
+          </div>
+          <div className="glass-dark p-8 rounded-[2rem] border border-slate-800/50">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Time Spent</p>
+            <p className="text-4xl font-black text-white">
+              {formatDuration(sessions.reduce((acc, s) => acc + (s.duration || 0), 0))}
+            </p>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-4 border-b border-slate-800">
+          <button 
+            onClick={() => setActiveTab('sessions')}
+            className={`pb-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'sessions' ? 'text-red-600' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Session History
+            {activeTab === 'sessions' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-red-600" />}
+          </button>
+          <button 
+            onClick={() => setActiveTab('activities')}
+            className={`pb-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === 'activities' ? 'text-red-600' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Intelligence Usage
+            {activeTab === 'activities' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-red-600" />}
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-4">
+          {activeTab === 'sessions' ? (
+            <div className="space-y-4">
+              {sessions.map((session, idx) => (
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  key={session.id}
+                  className="glass-dark p-6 rounded-2xl border border-slate-800/50 flex items-center justify-between hover:border-slate-700 transition-all group"
+                >
+                  <div className="flex items-center gap-6">
+                    <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-500 group-hover:text-red-600 transition-colors">
+                      <ICONS.Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{formatDate(session.startTime)}</p>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        {formatTime(session.startTime)} — {session.endTime ? formatTime(session.endTime) : 'Active'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{formatDuration(session.duration)}</p>
+                    <p className="text-[9px] font-bold text-slate-600 uppercase">Duration</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {activities.map((activity, idx) => (
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  key={activity.id}
+                  className="glass-dark p-6 rounded-2xl border border-slate-800/50 flex items-center justify-between hover:border-slate-700 transition-all group"
+                >
+                  <div className="flex items-center gap-6">
+                    <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-500 group-hover:text-indigo-400 transition-colors">
+                      {activity.type === 'login' ? <ICONS.Shield className="w-5 h-5" /> : <ICONS.Brain className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-white capitalize">{activity.type.replace('_', ' ')}</p>
+                        <span className="px-2 py-0.5 bg-slate-800 text-[8px] font-black text-slate-400 rounded uppercase tracking-widest">Node: {activity.node}</span>
+                      </div>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        {formatDate(activity.timestamp)} @ {formatTime(activity.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right max-w-[300px]">
+                    <p className="text-[10px] font-bold text-slate-400 truncate">{activity.details}</p>
+                    <p className="text-[9px] font-black text-slate-600 uppercase">Payload Details</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

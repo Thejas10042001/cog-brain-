@@ -15,8 +15,19 @@ import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
+import { ActivityLog } from './components/ActivityLog';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
-import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
+import { 
+  fetchDocumentsFromFirebase, 
+  subscribeToAuth, 
+  User, 
+  saveMeetingContext, 
+  fetchMeetingContext, 
+  deleteMeetingContext,
+  startSession,
+  endSession,
+  logActivity
+} from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
 
@@ -66,12 +77,17 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
+  const [isActivityPage, setIsActivityPage] = useState(false);
   const [darkMode] = useState(true);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('page') === 'support') {
       setIsSupportPage(true);
+    }
+    if (params.get('page') === 'activity') {
+      setIsActivityPage(true);
     }
   }, []);
 
@@ -217,7 +233,7 @@ const App: React.FC = () => {
   const handleNodeClick = (tab: any) => {
     if (activeTab === tab) return;
     setActiveTab(tab as any);
-    // Redundant call removed - useEffect handles narration on activeTab change
+    logActivity('node_navigation', { from: activeTab, to: tab }, tab);
   };
 
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -384,18 +400,28 @@ const App: React.FC = () => {
   }, [shouldAutoAnalyze, history, user, selectedLibraryDocIds, files]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToAuth((u) => {
+    const unsubscribe = subscribeToAuth(async (u) => {
       setUser(u);
       setAuthLoading(false);
       if (!u) {
+        if (sessionId) {
+          logActivity('logout', {}, 'auth');
+          await endSession(sessionId);
+          setSessionId(null);
+        }
         setHistory([]);
         setFiles([]);
         setAnalysis(null);
         setSelectedLibraryDocIds([]);
+      } else {
+        // Start a new session if one doesn't exist
+        const id = await startSession();
+        setSessionId(id);
+        logActivity('login', { email: u.email }, 'auth');
       }
     });
     return unsubscribe;
-  }, []);
+  }, [sessionId]);
 
   useEffect(() => {
     if (user) {
@@ -466,6 +492,11 @@ const App: React.FC = () => {
       const combinedContent = activeDocuments.map(d => `DOC NAME: ${d.name}\n${d.content}`).join('\n\n');
       const result = await analyzeSalesContext(combinedContent, effectiveContext);
       
+      logActivity('analysis_run', { 
+        docCount: activeDocuments.length,
+        context: effectiveContext.clientCompany 
+      }, 'context');
+
       clearInterval(progressInterval);
       setLoadingProgress(100);
       
@@ -532,6 +563,10 @@ const App: React.FC = () => {
 
   if (isSupportPage) {
     return <SupportChatbot />;
+  }
+
+  if (isActivityPage) {
+    return <ActivityLog user={user} />;
   }
 
   if (!user) {
@@ -690,7 +725,12 @@ const App: React.FC = () => {
                       onContextChange={setMeetingContext} 
                       documents={history}
                       files={files}
-                      onFilesChange={setFiles}
+                      onFilesChange={(newFiles) => {
+                        setFiles(newFiles);
+                        if (newFiles.length > files.length) {
+                          logActivity('document_upload', { count: newFiles.length - files.length }, 'context');
+                        }
+                      }}
                       onUploadSuccess={loadHistory}
                       selectedLibraryDocIds={selectedLibraryDocIds}
                       onToggleLibraryDoc={toggleLibraryDoc}
