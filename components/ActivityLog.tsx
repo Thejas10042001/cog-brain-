@@ -55,6 +55,36 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
     return `${minutes}m`;
   };
 
+  const formatDetails = (details: string, type: string) => {
+    try {
+      const data = JSON.parse(details);
+      switch (type) {
+        case 'login':
+          return `Secure access established for ${data.email}`;
+        case 'logout':
+          return `Neural link terminated`;
+        case 'node_navigation':
+          return `Transitioned from ${data.from} to ${data.to}`;
+        case 'analysis_run':
+          return `Synthesized intelligence for ${data.context || 'Unknown Prospect'} using ${data.docCount || 0} documents`;
+        case 'document_upload':
+          return `Injected ${data.count || 1} new data assets into neural core`;
+        case 'audio_generation':
+          return `Synthesized ${data.track || 'strategic'} briefing using ${data.voice || 'Neural'} persona`;
+        case 'practice_session_start':
+          return `Initiated simulation with ${data.persona || 'Balanced'} at ${data.difficulty || 'Medium'} difficulty`;
+        case 'practice_session_end':
+          return `Simulation complete. Score: ${Math.round(data.score || 0)}% // Mode: ${data.mode || 'Roleplay'}`;
+        case 'gpt_query':
+          return `Queried SalesGPT: "${(data.query || '').substring(0, 40)}${(data.query || '').length > 40 ? '...' : ''}"`;
+        default:
+          return details;
+      }
+    } catch (e) {
+      return details;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center">
@@ -180,9 +210,11 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ user }) => {
                       </p>
                     </div>
                   </div>
-                  <div className="text-right max-w-[300px]">
-                    <p className="text-[10px] font-bold text-slate-400 truncate">{activity.details}</p>
-                    <p className="text-[9px] font-black text-slate-600 uppercase">Payload Details</p>
+                  <div className="text-right max-w-[400px]">
+                    <p className="text-[10px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors leading-relaxed">
+                      {formatDetails(activity.details, activity.type)}
+                    </p>
+                    <p className="text-[9px] font-black text-slate-600 uppercase mt-1">Audit Log Fact</p>
                   </div>
                 </motion.div>
               ))}

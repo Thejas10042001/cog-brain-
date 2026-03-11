@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ICONS } from '../constants';
 import { streamSalesGPT, generatePineappleImage, streamDeepStudy, performCognitiveSearchStream } from '../services/geminiService';
+import { logActivity } from '../services/firebaseService';
 import { GPTMessage, GPTToolMode, MeetingContext } from '../types';
 
 interface SalesGPTProps {
@@ -85,6 +86,8 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsProcessing(true);
+    
+    logActivity('gpt_query', { query: input, mode: mode }, 'gpt');
 
     const assistantId = (Date.now() + 1).toString();
     const assistantMessage: GPTMessage = {

@@ -5,6 +5,7 @@ import { AnalysisResult, CustomerPersonaType, GroomingEvaluation, MeetingContext
 import { ICONS } from '../constants';
 import { GoogleGenAI, Modality, LiveServerMessage, Type } from '@google/genai';
 import { generatePitchAudio, decodeAudioData } from '../services/geminiService';
+import { logActivity } from '../services/firebaseService';
 
 interface PracticeSessionProps {
   analysis: AnalysisResult;
@@ -169,6 +170,13 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const startPractice = async () => {
     if (onStartSimulation) onStartSimulation();
     setStatus('connecting');
+    
+    logActivity('practice_session_start', { 
+      persona: selectedPersona, 
+      mode: sessionMode,
+      target: sessionMode === 'grooming' ? groomingTarget : sessionMode === 'speech' ? speechTarget : 'Roleplay'
+    }, 'simulation');
+
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       let stream: MediaStream;
@@ -410,7 +418,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           }
         }
       });
-      setEvaluation(JSON.parse(response.text || "{}"));
+      const evaluationResult = JSON.parse(response.text || "{}");
+      setEvaluation(evaluationResult);
+      
+      logActivity('practice_session_end', { 
+        score: (evaluationResult.grammarScore + evaluationResult.pacingScore) / 2,
+        mode: sessionMode
+      }, 'simulation');
+      
       setStatus('idle');
     } catch (e) {
       console.error(e);
