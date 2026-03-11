@@ -91,23 +91,6 @@ export const Header: React.FC<HeaderProps> = ({
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Authenticated User</p>
                       <p className="text-xs font-bold text-white truncate">{user.email}</p>
                     </div>
-                    <div className="p-2">
-                      <button 
-                        onClick={() => window.open(window.location.origin + '?page=settings', '_blank')}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all group"
-                      >
-                        <ICONS.Settings className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
-                        <span className="text-xs font-bold">Account Settings</span>
-                      </button>
-                      <button 
-                        onClick={() => window.open(window.location.origin + '?page=activity', '_blank')}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all group"
-                      >
-                        <ICONS.Bell className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
-                        <span className="text-xs font-bold">Activity Audit</span>
-                        <span className="ml-auto w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
-                      </button>
-                    </div>
                     <div className="p-2 border-t border-slate-800 bg-slate-800/10">
                       <button 
                         onClick={() => logoutUser()}

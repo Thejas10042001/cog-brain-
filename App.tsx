@@ -15,8 +15,6 @@ import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
-import { ActivityLog } from './components/ActivityLog';
-import { Settings } from './components/Settings';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
 import { 
   fetchDocumentsFromFirebase, 
@@ -24,10 +22,7 @@ import {
   User, 
   saveMeetingContext, 
   fetchMeetingContext, 
-  deleteMeetingContext,
-  startSession,
-  endSession,
-  logActivity
+  deleteMeetingContext
 } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
@@ -78,22 +73,20 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
-  const [isActivityPage, setIsActivityPage] = useState(false);
-  const [isSettingsPage, setIsSettingsPage] = useState(false);
   const [darkMode] = useState(true);
-  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('page') === 'support') {
-      setIsSupportPage(true);
-    }
-    if (params.get('page') === 'activity') {
-      setIsActivityPage(true);
-    }
-    if (params.get('page') === 'settings') {
-      setIsSettingsPage(true);
-    }
+    const unsubscribe = subscribeToAuth(async (u) => {
+      setUser(u);
+      setAuthLoading(false);
+      if (!u) {
+        setHistory([]);
+        setFiles([]);
+        setAnalysis(null);
+        setSelectedLibraryDocIds([]);
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string; stepNumber: string }> = {
@@ -408,24 +401,14 @@ const App: React.FC = () => {
       setUser(u);
       setAuthLoading(false);
       if (!u) {
-        if (sessionId) {
-          logActivity('logout', {}, 'auth');
-          await endSession(sessionId);
-          setSessionId(null);
-        }
         setHistory([]);
         setFiles([]);
         setAnalysis(null);
         setSelectedLibraryDocIds([]);
-      } else {
-        // Start a new session if one doesn't exist
-        const id = await startSession();
-        setSessionId(id);
-        logActivity('login', { email: u.email }, 'auth');
       }
     });
     return unsubscribe;
-  }, [sessionId]);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -562,14 +545,6 @@ const App: React.FC = () => {
 
   if (isSupportPage) {
     return <SupportChatbot />;
-  }
-
-  if (isActivityPage) {
-    return <ActivityLog user={user} />;
-  }
-
-  if (isSettingsPage) {
-    return <Settings user={user} />;
   }
 
   if (!user) {

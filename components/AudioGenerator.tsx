@@ -3,7 +3,6 @@ import React, { useState, useRef, useMemo } from 'react';
 import { AnalysisResult } from '../types';
 import { ICONS } from '../constants';
 import { generatePitchAudio, decodeAudioData, generateExplanation } from '../services/geminiService';
-import { logActivity } from '../services/firebaseService';
 
 interface AudioGeneratorProps {
   analysis: AnalysisResult;

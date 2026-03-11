@@ -5,7 +5,6 @@ import { AnalysisResult, CustomerPersonaType, GroomingEvaluation, MeetingContext
 import { ICONS } from '../constants';
 import { GoogleGenAI, Modality, LiveServerMessage, Type } from '@google/genai';
 import { generatePitchAudio, decodeAudioData } from '../services/geminiService';
-import { logActivity } from '../services/firebaseService';
 
 interface PracticeSessionProps {
   analysis: AnalysisResult;

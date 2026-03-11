@@ -5,7 +5,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ICONS } from '../constants';
 import { streamSalesGPT, generatePineappleImage, streamDeepStudy, performCognitiveSearchStream } from '../services/geminiService';
-import { logActivity } from '../services/firebaseService';
 import { GPTMessage, GPTToolMode, MeetingContext } from '../types';
 
 interface SalesGPTProps {
