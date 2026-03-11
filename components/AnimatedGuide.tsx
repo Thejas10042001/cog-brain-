@@ -297,3 +297,4 @@ export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
       return null;
   }
 };
+
