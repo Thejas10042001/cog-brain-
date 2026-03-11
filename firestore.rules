@@ -3,63 +3,25 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper Functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    function isValidSession(data) {
-      return data.userId is string &&
-             data.startTime is timestamp &&
-             (data.endTime == null || data.endTime is timestamp) &&
-             data.deviceName is string &&
-             data.status in ['active', 'ended'];
-    }
-
-    function isValidActivity(data) {
-      return data.userId is string &&
-             data.type is string &&
-             data.timestamp is timestamp;
-    }
-
-    // User-isolated subcollections
-    match /users/{userId}/user_sessions/{sessionId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidSession(request.resource.data);
-      allow update: if isOwner(userId) && isValidSession(request.resource.data);
-      allow delete: if isOwner(userId);
-    }
-
-    match /users/{userId}/user_activities/{activityId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidActivity(request.resource.data);
-      allow update: if isOwner(userId) && isValidActivity(request.resource.data);
-      allow delete: if isOwner(userId);
-    }
-
+    // Enforce that each user can only access their own subcollections under /users/{userId}
     match /users/{userId}/{subcollection}/{document} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Legacy rules for top-level collections
+    // Legacy rules for top-level collections (if any data remains there)
     match /cognitive_documents/{document} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
     match /meeting_contexts/{document} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
     match /simulation_history/{document} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
   }
 }

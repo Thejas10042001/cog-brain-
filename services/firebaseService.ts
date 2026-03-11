@@ -30,8 +30,7 @@ const {
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut,
-  updatePassword
+  signOut 
 } = firebaseAuth as any;
 
 // Define User and Auth types locally as any to bypass module export issues in this environment.
@@ -103,10 +102,6 @@ export const clearFirebasePermissionError = () => { internalPermissionError = fa
 export const loginUser = (email: string, pass: string) => auth ? signInWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
 export const registerUser = (email: string, pass: string) => auth ? createUserWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
 export const logoutUser = () => auth && signOut(auth);
-export const changePassword = (newPass: string) => {
-  if (!auth || !auth.currentUser) return Promise.reject("Not authenticated");
-  return updatePassword(auth.currentUser, newPass);
-};
 export const subscribeToAuth = (callback: (user: User | null) => void) => {
   if (auth) {
     return onAuthStateChanged(auth, callback);
