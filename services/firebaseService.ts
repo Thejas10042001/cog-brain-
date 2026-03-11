@@ -30,7 +30,8 @@ const {
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut 
+  signOut,
+  updatePassword
 } = firebaseAuth as any;
 
 // Define User and Auth types locally as any to bypass module export issues in this environment.
@@ -104,6 +105,10 @@ export const clearFirebasePermissionError = () => { internalPermissionError = fa
 export const loginUser = (email: string, pass: string) => auth ? signInWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
 export const registerUser = (email: string, pass: string) => auth ? createUserWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
 export const logoutUser = () => auth && signOut(auth);
+export const changePassword = (newPass: string) => {
+  if (!auth || !auth.currentUser) return Promise.reject("Not authenticated");
+  return updatePassword(auth.currentUser, newPass);
+};
 export const subscribeToAuth = (callback: (user: User | null) => void) => {
   if (auth) {
     return onAuthStateChanged(auth, callback);
@@ -355,11 +360,23 @@ export const logActivity = async (type: string, details: any, node?: string): Pr
 export const startSession = async (): Promise<string | null> => {
   if (!db || !auth || !auth.currentUser) return null;
   try {
+    const userAgent = navigator.userAgent;
+    let deviceName = "Unknown Device";
+    
+    if (/android/i.test(userAgent)) deviceName = "Android Device";
+    else if (/iPad|iPhone|iPod/.test(userAgent)) deviceName = "iOS Device";
+    else if (/Windows/i.test(userAgent)) deviceName = "Windows PC";
+    else if (/Mac/i.test(userAgent)) deviceName = "Macintosh";
+    else if (/Linux/i.test(userAgent)) deviceName = "Linux PC";
+
     const docRef = await addDoc(getUserCollection(SESSIONS_COLLECTION), {
       userId: auth.currentUser.uid,
       startTime: Timestamp.now(),
       endTime: null,
-      duration: 0
+      duration: 0,
+      deviceName,
+      userAgent,
+      status: 'active'
     });
     return docRef.id;
   } catch (error) {
@@ -374,11 +391,9 @@ export const endSession = async (sessionId: string): Promise<void> => {
     const sessionRef = doc(getUserCollection(SESSIONS_COLLECTION), sessionId);
     const endTime = Timestamp.now();
     
-    // We need to get the start time to calculate duration
-    // But since we are ending, we can just update the endTime
-    // Duration calculation can be done on the client side when viewing
     await updateDoc(sessionRef, {
-      endTime: endTime
+      endTime: endTime,
+      status: 'ended'
     });
   } catch (error) {
     console.error("Error ending session:", error);

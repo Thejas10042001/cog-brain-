@@ -16,6 +16,7 @@ import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
 import { ActivityLog } from './components/ActivityLog';
+import { Settings } from './components/Settings';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
 import { 
   fetchDocumentsFromFirebase, 
@@ -78,6 +79,7 @@ const App: React.FC = () => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
   const [isActivityPage, setIsActivityPage] = useState(false);
+  const [isSettingsPage, setIsSettingsPage] = useState(false);
   const [darkMode] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -88,6 +90,9 @@ const App: React.FC = () => {
     }
     if (params.get('page') === 'activity') {
       setIsActivityPage(true);
+    }
+    if (params.get('page') === 'settings') {
+      setIsSettingsPage(true);
     }
   }, []);
 
@@ -567,6 +572,10 @@ const App: React.FC = () => {
 
   if (isActivityPage) {
     return <ActivityLog user={user} />;
+  }
+
+  if (isSettingsPage) {
+    return <Settings user={user} />;
   }
 
   if (!user) {

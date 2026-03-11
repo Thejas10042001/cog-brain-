@@ -2,15 +2,18 @@
   "entities": {
     "user_sessions": {
       "title": "User Sessions",
-      "description": "Tracks user login and logout sessions.",
+      "description": "Tracks user login and logout sessions with device info.",
       "type": "object",
       "properties": {
         "userId": { "type": "string", "description": "The unique ID of the user." },
         "startTime": { "type": "string", "format": "date-time", "description": "When the session started." },
         "endTime": { "type": "string", "format": "date-time", "description": "When the session ended." },
-        "duration": { "type": "number", "description": "Duration of the session in milliseconds." }
+        "duration": { "type": "number", "description": "Duration of the session in milliseconds." },
+        "deviceName": { "type": "string", "description": "Name/type of the device." },
+        "userAgent": { "type": "string", "description": "Browser user agent string." },
+        "status": { "type": "string", "enum": ["active", "ended"], "description": "Current status of the session." }
       },
-      "required": ["userId", "startTime"]
+      "required": ["userId", "startTime", "deviceName", "status"]
     },
     "user_activities": {
       "title": "User Activities",
