@@ -3,7 +3,6 @@
   "description": "An elite cognitive intelligence brain simulation for enterprise sales strategy, objection handling, and verbal architecture mastery.",
   "requestFramePermissions": [
     "camera",
-    "microphone",
-    "speech-recognition"
+    "microphone"
   ]
 }

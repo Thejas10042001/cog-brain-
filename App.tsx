@@ -19,54 +19,6 @@ import { analyzeSalesContext, generateVoiceSample } from './services/geminiServi
 import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
-import { db } from './services/firebaseService';
-import { doc, getDocFromServer } from 'firebase/firestore';
-
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, errorInfo: any }> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, errorInfo: null };
-  }
-
-  static getDerivedStateFromError(error: any) {
-    try {
-      const info = JSON.parse(error.message);
-      return { hasError: true, errorInfo: info };
-    } catch (e) {
-      return { hasError: true, errorInfo: { error: error.message } };
-    }
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-          <div className="max-w-md w-full glass-dark p-8 rounded-3xl border border-white/10 text-center">
-            <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <ICONS.AlertCircle className="w-8 h-8 text-red-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-4">Neural Link Interrupted</h2>
-            <p className="text-slate-400 mb-6">
-              {this.state.errorInfo?.error || "An unexpected error occurred in the cognitive core."}
-            </p>
-            {this.state.errorInfo?.path && (
-              <div className="text-xs font-mono text-slate-500 mb-6 bg-black/30 p-3 rounded-xl">
-                Path: {this.state.errorInfo.path}
-              </div>
-            )}
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all"
-            >
-              Re-initialize Core
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 const ALL_ANSWER_STYLES = [
   "Executive Summary", 
@@ -103,20 +55,6 @@ const ALL_ANSWER_STYLES = [
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-
-  useEffect(() => {
-    async function testConnection() {
-      if (!db) return;
-      try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
-      } catch (error: any) {
-        if (error.message?.includes('the client is offline')) {
-          console.error("Firebase connection failed. Check your configuration.");
-        }
-      }
-    }
-    testConnection();
-  }, []);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [history, setHistory] = useState<StoredDocument[]>([]);
   const [selectedLibraryDocIds, setSelectedLibraryDocIds] = useState<string[]>([]);
@@ -950,8 +888,4 @@ const SidebarBtn = ({ active, onClick, icon, label, scale = 1, step }: { active:
   </motion.button>
 );
 
-export default () => (
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
-);
+export default App;

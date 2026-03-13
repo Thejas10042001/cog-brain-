@@ -3,146 +3,25 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Enforce that each user can only access their own subcollections under /users/{userId}
+    match /users/{userId}/{subcollection}/{document} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
     
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: /users/{userId}/cognitive_documents
-    // Fields:
-    //   - userId: string (required, immutable)
-    //   - name: string (required, max 255)
-    //   - content: string (required, max 1MB)
-    //   - type: string (required)
-    //   - timestamp: timestamp (required)
-    //   - updatedAt: timestamp (optional)
-    //
-    // Collection: /users/{userId}/simulation_history
-    // Fields:
-    //   - userId: string (required, immutable)
-    //   - type: string (required, enum: avatar, avatar2, staged)
-    //   - timestamp: timestamp (required)
-    //   - meetingContext: map (required)
-    //   - messages: list (required)
-    //   - report: map (optional)
-    //   - biometrics: map (optional)
-    //   - score: number (optional)
-    //
-    // Collection: /users/{userId}/meeting_contexts
-    // Fields:
-    //   - userId: string (required, immutable)
-    //   - meetingContext: map (required)
-    //   - selectedLibraryDocIds: list (required)
-    //   - analysis: map (optional)
-    //   - updatedAt: timestamp (required)
-    //
-    // ===============================================================
-
-    // ===============================================================
-    // Helper Functions
-    // ===============================================================
-    
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    function hasOnlyAllowedFields(fields) {
-      return request.resource.data.keys().hasOnly(fields);
-    }
-
-    function hasRequiredFields(fields) {
-      return request.resource.data.keys().hasAll(fields);
-    }
-
-    function isValidString(field, maxLen) {
-      return request.resource.data[field] is string && request.resource.data[field].size() <= maxLen;
-    }
-
-    function isValidTimestamp(field) {
-      return request.resource.data[field] is timestamp;
-    }
-
-    function isRecent(field) {
-      return request.resource.data[field] > request.time - duration.value(5, 'm') &&
-             request.resource.data[field] < request.time + duration.value(5, 'm');
-    }
-
-    // ===============================================================
-    // Domain Validators
-    // ===============================================================
-
-    function isValidDocument(data) {
-      return hasRequiredFields(['userId', 'name', 'content', 'type', 'timestamp']) &&
-             data.userId == request.auth.uid &&
-             data.name is string && data.name.size() > 0 && data.name.size() <= 255 &&
-             data.content is string && data.content.size() <= 1048576 &&
-             data.type is string &&
-             data.timestamp is timestamp;
-    }
-
-    function isValidHistory(data) {
-      return hasRequiredFields(['userId', 'type', 'timestamp', 'meetingContext', 'messages']) &&
-             data.userId == request.auth.uid &&
-             data.type in ['avatar', 'avatar2', 'staged'] &&
-             data.timestamp is timestamp &&
-             data.meetingContext is map &&
-             data.messages is list;
-    }
-
-    function isValidContext(data) {
-      return hasRequiredFields(['userId', 'meetingContext', 'selectedLibraryDocIds', 'updatedAt']) &&
-             data.userId == request.auth.uid &&
-             data.meetingContext is map &&
-             data.selectedLibraryDocIds is list &&
-             data.updatedAt is timestamp;
-    }
-
-    // ===============================================================
-    // Match Rules
-    // ===============================================================
-
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-
-      match /cognitive_documents/{docId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && isValidDocument(request.resource.data);
-        allow update: if isOwner(userId) && isValidDocument(request.resource.data) && 
-                         request.resource.data.userId == resource.data.userId &&
-                         request.resource.data.timestamp == resource.data.timestamp;
-        allow delete: if isOwner(userId);
-      }
-
-      match /simulation_history/{historyId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && isValidHistory(request.resource.data);
-        allow update: if isOwner(userId) && isValidHistory(request.resource.data) &&
-                         request.resource.data.userId == resource.data.userId;
-        allow delete: if isOwner(userId);
-      }
-
-      match /meeting_contexts/{contextId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && isValidContext(request.resource.data);
-        allow update: if isOwner(userId) && isValidContext(request.resource.data) &&
-                         request.resource.data.userId == resource.data.userId;
-        allow delete: if isOwner(userId);
-      }
-    }
-
-    // Legacy top-level collections - Deny by default or restrict heavily
+    // Legacy rules for top-level collections (if any data remains there)
     match /cognitive_documents/{document} {
-      allow read, write: if false;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
+    
     match /meeting_contexts/{document} {
-      allow read, write: if false;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
+    
     match /simulation_history/{document} {
-      allow read, write: if false;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
   }
 }
