@@ -12,41 +12,13 @@ interface PracticeSessionProps {
   onStartSimulation?: () => void;
 }
 
-type SessionMode = 'roleplay' | 'seller-roleplay' | 'grooming' | 'speech' | 'video';
+type SessionMode = 'roleplay' | 'seller-roleplay' | 'grooming' | 'speech';
 
-const PERSONA_OPTIONS: { type: CustomerPersonaType; label: string; icon: React.ReactNode; desc: string; voice: string; avatar: string }[] = [
-  { 
-    type: 'Balanced', 
-    label: 'General Manager', 
-    icon: <ICONS.Document />, 
-    desc: 'Pragmatic and balanced. Focuses on operational efficiency and ease of implementation.', 
-    voice: 'Kore',
-    avatar: 'https://picsum.photos/seed/gm/400/400'
-  },
-  { 
-    type: 'Technical', 
-    label: 'Technical Expert', 
-    icon: <ICONS.Brain />, 
-    desc: 'Skeptical and precise. Focuses on architecture, security, and technical debt.', 
-    voice: 'Fenrir',
-    avatar: 'https://picsum.photos/seed/tech/400/400'
-  },
-  { 
-    type: 'Financial', 
-    label: 'CFO', 
-    icon: <ICONS.ROI />, 
-    desc: 'Hyper-rational and cost-conscious. Focuses on ROI, TCO, and budget constraints.', 
-    voice: 'Charon',
-    avatar: 'https://picsum.photos/seed/cfo/400/400'
-  },
-  { 
-    type: 'Business Executives', 
-    label: 'CIO / CEO', 
-    icon: <ICONS.Trophy />, 
-    desc: 'Visionary and strategic. Focuses on business growth, competitive advantage, and outcomes.', 
-    voice: 'Zephyr',
-    avatar: 'https://picsum.photos/seed/ceo/400/400'
-  },
+const PERSONA_OPTIONS: { type: CustomerPersonaType; label: string; icon: React.ReactNode; desc: string; voice: string }[] = [
+  { type: 'Balanced', label: 'General Manager', icon: <ICONS.Document />, desc: 'Pragmatic and balanced. Focuses on operational efficiency and ease of implementation.', voice: 'Kore' },
+  { type: 'Technical', label: 'Technical Expert', icon: <ICONS.Brain />, desc: 'Skeptical and precise. Focuses on architecture, security, and technical debt.', voice: 'Fenrir' },
+  { type: 'Financial', label: 'CFO', icon: <ICONS.ROI />, desc: 'Hyper-rational and cost-conscious. Focuses on ROI, TCO, and budget constraints.', voice: 'Charon' },
+  { type: 'Business Executives', label: 'CIO / CEO', icon: <ICONS.Trophy />, desc: 'Visionary and strategic. Focuses on business growth, competitive advantage, and outcomes.', voice: 'Zephyr' },
 ];
 
 interface SavedGrooming {
@@ -98,17 +70,12 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const [groomingTarget, setGroomingTarget] = useState(analysis.objectionHandling[0]?.objection || "How do you define value?");
   const [speechTarget, setSpeechTarget] = useState(analysis.finalCoaching.dos[0] || "Our core value proposition.");
   const [evaluation, setEvaluation] = useState<GroomingEvaluation | null>(null);
-  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
-  const activeSourcesCount = useRef(0);
   const [isPlayingIdeal, setIsPlayingIdeal] = useState(false);
   const [isPlayingExplanation, setIsPlayingExplanation] = useState(false);
   const [savedGroomings, setSavedGroomings] = useState<SavedGrooming[]>([]);
   const [highlightedButton, setHighlightedButton] = useState<string | null>(null);
   const [showGroomingJournal, setShowGroomingJournal] = useState(false);
-  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const playGuidance = async (text: string, buttonToHighlight?: string) => {
     if (!text) return;
@@ -135,8 +102,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
       playGuidance(`In Bot-Led Grooming, I will ask you a high-stakes question. Use the Activate Bot-Coach button to start and receive an elite audit on your performance.`, 'commence');
     } else if (sessionMode === 'speech') {
       playGuidance(`In Speech Practice, you can record your delivery of key sales points. Select a target and receive an elite audit on your tone, grammar, and pacing.`, 'commence');
-    } else if (sessionMode === 'video') {
-      playGuidance(`In Video Mastery, activate your camera for a high-fidelity audit of your body language, eye contact, and verbal delivery.`, 'commence');
     }
   }, [sessionMode]);
   const nextStartTimeRef = useRef<number>(0);
@@ -178,10 +143,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
-    if (videoStream) {
-      videoStream.getTracks().forEach(track => track.stop());
-      setVideoStream(null);
-    }
     sourcesRef.current.forEach(source => { try { source.stop(); } catch(e) {} });
     sourcesRef.current.clear();
     nextStartTimeRef.current = 0;
@@ -212,13 +173,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       let stream: MediaStream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: true,
-          video: sessionMode === 'video'
-        });
-        if (sessionMode === 'video') {
-          setVideoStream(stream);
-        }
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       } catch (err: any) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
           setMicPermissionError(true);
@@ -240,35 +195,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         'Balanced': "Act as a pragmatic General Manager. Maintain a mix of technical feasibility and business value. Focus on operational efficiency and ease of implementation."
       }[selectedPersona];
 
-      const systemInstruction = sessionMode === 'video'
-        ? `Act as a world-class speech, body language, and sales coach. 
-           
-           ===========================================================
-           VIDEO ANALYSIS PROTOCOL (CRITICAL)
-           ===========================================================
-           You are receiving both AUDIO and VIDEO (image frames) from the user. 
-           Analyze their:
-           1. EYE CONTACT: Are they looking at the camera?
-           2. POSTURE: Do they look confident or slumped?
-           3. GESTURES: Are they using their hands effectively?
-           4. FACIAL EXPRESSIONS: Do they look engaged and empathetic?
-           
-           ===========================================================
-           REAL-TIME COACHING PROTOCOL (CRITICAL)
-           ===========================================================
-           In your TEXT output (which the user does NOT hear), you MUST provide a real-time analysis of the user's last response AND their visual cues BEFORE your dialogue.
-           Format it exactly like this:
-           [LIVE_FEEDBACK: {"tone": "...", "clarity": "...", "pacing": "...", "alignment": "...", "score": 0-100}]
-           
-           Then proceed with your dialogue.
-           
-           ===========================================================
-           CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
-           ===========================================================
-           1. First, state: "I'm initiating the Video Mastery Protocol. I'll be analyzing your verbal and non-verbal cues. Please deliver your pitch for: ${speechTarget}."
-           2. Once you have stated that, remain silent while the user delivers their speech. 
-           3. You are observing their performance for a later audit focusing on voice tone, grammar, pacing, and visual presence.`
-        : sessionMode === 'roleplay' 
+      const systemInstruction = sessionMode === 'roleplay' 
         ? `Act as the buyer: ${buyerName}. Your role is ${selectedPersonaConfig.label}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}. 
            
            ===========================================================
@@ -362,32 +289,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             };
             input.connect(processor);
             processor.connect(inputCtx.destination);
-
-            if (sessionMode === 'video') {
-              if (videoRef.current && streamRef.current) {
-                videoRef.current.srcObject = streamRef.current;
-              }
-              const captureFrame = () => {
-                if (!sessionRef.current || !videoRef.current || !canvasRef.current) return;
-                const canvas = canvasRef.current;
-                const video = videoRef.current;
-                const context = canvas.getContext('2d');
-                if (context && video.readyState === video.HAVE_ENOUGH_DATA) {
-                  canvas.width = 320;
-                  canvas.height = 240;
-                  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                  const base64Data = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-                  sessionRef.current.sendRealtimeInput({
-                    media: { data: base64Data, mimeType: 'image/jpeg' }
-                  });
-                }
-                // Check if session is still active
-                if (sessionRef.current) {
-                  setTimeout(captureFrame, 500); // 2 FPS
-                }
-              };
-              captureFrame();
-            }
           },
           onmessage: async (message: LiveServerMessage) => {
             if (message.serverContent?.modelTurn) {
@@ -402,20 +303,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   
                   const startTime = Math.max(outputCtx.currentTime, nextStartTimeRef.current);
                   source.start(startTime);
-                  
-                  // Track AI speaking state
-                  activeSourcesCount.current++;
-                  setIsAiSpeaking(true);
-                  
                   nextStartTimeRef.current = startTime + buffer.duration;
                   sourcesRef.current.add(source);
-                  source.onended = () => {
-                    sourcesRef.current.delete(source);
-                    activeSourcesCount.current--;
-                    if (activeSourcesCount.current <= 0) {
-                      setIsAiSpeaking(false);
-                    }
-                  };
+                  source.onended = () => sourcesRef.current.delete(source);
                 }
                 if (part.text) {
                   // Check for real-time feedback metadata
@@ -601,7 +491,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             {showGroomingJournal ? 'Close Journal' : 'Self-Grooming Journal'}
           </motion.button>
           <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-            {(['roleplay', 'seller-roleplay', 'grooming', 'speech', 'video'] as SessionMode[]).map((m) => (
+            {(['roleplay', 'seller-roleplay', 'grooming', 'speech'] as SessionMode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => {
@@ -611,7 +501,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                 }}
                 className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sessionMode === m ? 'bg-slate-700 text-indigo-400 shadow-lg scale-105' : 'text-slate-400 hover:text-slate-300'}`}
               >
-                {m === 'roleplay' ? 'Buyer Roleplay' : m === 'seller-roleplay' ? 'Seller Roleplay' : m === 'grooming' ? 'Bot-Led Grooming' : m === 'speech' ? 'Speech Practice' : 'Video Mastery'}
+                {m === 'roleplay' ? 'Buyer Roleplay' : m === 'seller-roleplay' ? 'Seller Roleplay' : m === 'grooming' ? 'Bot-Led Grooming' : 'Speech Practice'}
               </button>
             ))}
           </div>
@@ -695,7 +585,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                  {sessionMode === 'roleplay' ? <ICONS.Brain className="w-10 h-10" /> : <ICONS.Trophy className="w-10 h-10" />}
               </motion.div>
               <h4 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-tight">
-                {sessionMode === 'roleplay' ? `Simulate a Live ${buyerName} Meeting` : sessionMode === 'seller-roleplay' ? `Simulate an Elite ${sellerName} Pitch` : sessionMode === 'grooming' ? 'Initiate Speech Mastery Protocol' : sessionMode === 'speech' ? 'Speech Practice Mode' : 'Video Mastery Protocol'}
+                {sessionMode === 'roleplay' ? `Simulate a Live ${buyerName} Meeting` : sessionMode === 'seller-roleplay' ? `Simulate an Elite ${sellerName} Pitch` : sessionMode === 'grooming' ? 'Initiate Speech Mastery Protocol' : 'Speech Practice Mode'}
               </h4>
               <p className="text-slate-500 dark:text-slate-400 text-xl leading-relaxed font-medium italic">
                 {sessionMode === 'roleplay' 
@@ -704,9 +594,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   ? `Observe how an elite salesperson (${sellerName}) handles your questions. You act as ${buyerName}, the AI acts as ${sellerName}.`
                   : sessionMode === 'grooming'
                   ? 'Our Bot-Coach will ask you a high-stakes question. Give your best answer, and receive an elite audit.'
-                  : sessionMode === 'speech'
-                  ? 'Record your delivery of key sales points and receive an AI audit on tone, grammar, and pacing.'
-                  : 'Activate your camera for a high-fidelity audit of your body language, eye contact, and verbal delivery.'}
+                  : 'Record your delivery of key sales points and receive an AI audit on tone, grammar, and pacing.'}
               </p>
             </div>
 
@@ -732,7 +620,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                       </div>
                     </div>
                  </div>
-               ) : (sessionMode === 'speech' || sessionMode === 'video') ? (
+               ) : sessionMode === 'speech' ? (
                 <div className="space-y-6 max-w-2xl mx-auto">
                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 ml-4">Target Sales Point</label>
                    <div className="relative group">
@@ -779,15 +667,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             <motion.button 
               whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(79, 70, 229, 0.5)" }}
               whileTap={{ scale: 0.95 }}
-              onClick={sessionMode === 'grooming' ? startGroomingSession : (sessionMode === 'speech' || sessionMode === 'video') ? startSpeechSession : startPractice} 
+              onClick={sessionMode === 'grooming' ? startGroomingSession : sessionMode === 'speech' ? startSpeechSession : startPractice} 
               disabled={status === 'connecting'} 
-              className={`group relative px-20 py-8 rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl transition-all overflow-hidden ${sessionMode === 'grooming' || sessionMode === 'speech' || sessionMode === 'video' ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white'} ${highlightedButton === 'commence' ? 'ring-8 ring-indigo-400 animate-pulse' : ''}`}
+              className={`group relative px-20 py-8 rounded-full font-black text-2xl uppercase tracking-widest shadow-2xl transition-all overflow-hidden ${sessionMode === 'grooming' || sessionMode === 'speech' ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white'} ${highlightedButton === 'commence' ? 'ring-8 ring-indigo-400 animate-pulse' : ''}`}
             >
               <div className="relative z-10 flex items-center gap-4">
                 {status === 'connecting' ? (
                   <><div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div> Connecting...</>
                 ) : (
-                  <><ICONS.Play className="w-10 h-10" /> {sessionMode === 'grooming' ? 'Activate Bot-Coach' : sessionMode === 'speech' ? 'Start Speech Practice' : sessionMode === 'video' ? 'Initiate Video Mastery' : 'Commence Interaction'}</>
+                  <><ICONS.Play className="w-10 h-10" /> {sessionMode === 'grooming' ? 'Activate Bot-Coach' : sessionMode === 'speech' ? 'Start Speech Practice' : 'Commence Interaction'}</>
                 )}
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
@@ -965,58 +853,24 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             <div className="lg:col-span-2 bg-slate-900 p-16 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
               <div className={`absolute inset-0 opacity-10 dark:opacity-20 blur-[150px] transition-colors duration-2000 ${selectedPersona === 'Technical' ? 'bg-blue-600' : selectedPersona === 'Financial' ? 'bg-emerald-600' : 'bg-indigo-600'}`}></div>
               
-              <div className="relative w-full h-full flex items-center justify-center">
-                {sessionMode === 'video' ? (
-                  <div className="relative w-full max-w-4xl aspect-video rounded-[3rem] overflow-hidden shadow-2xl border-8 border-slate-800 bg-black">
-                    <video 
-                      ref={videoRef}
-                      autoPlay 
-                      playsInline 
-                      muted 
-                      className="w-full h-full object-cover"
-                    />
-                    <canvas ref={canvasRef} className="hidden" />
-                    <div className="absolute top-8 left-8 flex items-center gap-4 px-6 py-3 bg-rose-600/90 backdrop-blur-md rounded-full border border-rose-500/50">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                      <span className="text-[10px] font-black uppercase text-white tracking-widest">Live Video Feed</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative w-96 h-96 flex items-center justify-center">
-                    <motion.div 
-                      animate={{ scale: isActive ? [1.4, 1.6, 1.4] : 1.4 }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-full"
-                    ></motion.div>
-                    <motion.div 
-                      animate={{ 
-                        scale: isActive ? (isAiSpeaking ? [1.1, 1.25, 1.1] : [1.1, 1.15, 1.1]) : 1.1,
-                        boxShadow: isAiSpeaking ? "0 0 150px rgba(79,70,229,0.8)" : "0 0 100px rgba(79,70,229,0.6)"
-                      }}
-                      transition={{ duration: isAiSpeaking ? 0.4 : 1.5, repeat: Infinity }}
-                      className="w-64 h-64 bg-indigo-600 rounded-full flex items-center justify-center text-white z-10 border-[10px] border-white dark:border-slate-800 transition-transform overflow-hidden"
-                    >
-                      {sessionMode === 'roleplay' || sessionMode === 'seller-roleplay' ? (
-                        <img 
-                          src={selectedPersonaConfig.avatar} 
-                          alt={selectedPersonaConfig.label}
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-indigo-600">
-                          <ICONS.Brain className="w-32 h-32 text-white/50" />
-                        </div>
-                      )}
-                    </motion.div>
-                  </div>
-                )}
-
+              <div className="relative w-96 h-96 mb-16 flex items-center justify-center">
+                <motion.div 
+                  animate={{ scale: isActive ? [1.4, 1.6, 1.4] : 1.4 }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-full"
+                ></motion.div>
+                <motion.div 
+                  animate={{ scale: isActive ? [1.7, 1.8, 1.7] : 1.7 }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="w-48 h-48 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-[0_0_100px_rgba(79,70,229,0.6)] z-10 border-[10px] border-white dark:border-slate-800 transition-transform"
+                >
+                  {sessionMode === 'roleplay' ? <ICONS.Brain className="w-20 h-20" /> : <ICONS.Speaker className="w-20 h-20" />}
+                </motion.div>
                 {isActive && (
                   <motion.div 
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6 px-8 py-3 bg-rose-600 rounded-full shadow-2xl z-30"
+                    className="absolute -bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-6 px-8 py-3 bg-rose-600 rounded-full shadow-2xl"
                   >
                     <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
                     <span className="text-[12px] font-black uppercase text-white tracking-[0.2em]">Active Audit Trace</span>
@@ -1027,7 +881,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   <motion.div 
                     initial={{ x: 40, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    className="absolute top-10 right-10 w-64 space-y-4 z-30"
+                    className="absolute top-0 right-[-280px] w-64 space-y-4 z-20"
                   >
                     <div className="p-6 bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-[2rem] shadow-2xl space-y-4">
                       <div className="flex items-center justify-between">
@@ -1045,9 +899,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                 )}
               </div>
               
-              <div className="text-center space-y-8 relative z-10 max-w-2xl mt-12">
+              <div className="text-center space-y-8 relative z-10 max-w-2xl">
                 <span className="px-6 py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl border border-indigo-100 dark:border-indigo-900/30 mb-6 inline-block">
-                  {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : sessionMode === 'seller-roleplay' ? 'Elite Seller Simulation' : sessionMode === 'grooming' ? 'Bot-Led Grooming Active' : sessionMode === 'speech' ? 'Speech Practice Active' : 'Video Mastery Active'}
+                  {sessionMode === 'roleplay' ? `Interacting with ${selectedPersona}` : sessionMode === 'seller-roleplay' ? 'Elite Seller Simulation' : sessionMode === 'grooming' ? 'Bot-Led Grooming Active' : 'Speech Practice Active'}
                 </span>
                 <h5 className="text-slate-900 dark:text-white text-5xl font-black tracking-tighter leading-tight uppercase">
                   {sessionMode === 'roleplay' ? buyerName : sessionMode === 'seller-roleplay' ? sellerName : 'Neural Bot-Coach'}
@@ -1064,8 +918,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
               </div>
 
               {isActive && (
-                <div className="absolute bottom-16 right-16 flex gap-6 z-40">
-                  {(sessionMode === 'grooming' || sessionMode === 'speech' || sessionMode === 'video') && (
+                <div className="absolute bottom-16 right-16 flex gap-6">
+                  {(sessionMode === 'grooming' || sessionMode === 'speech') && (
                     <motion.button 
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
