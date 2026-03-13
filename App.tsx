@@ -253,12 +253,6 @@ const App: React.FC = () => {
     };
   }, [activeTab, !!analysis, hasInteracted]);
 
-  // Whole Screen Magnifier State
-  const [zoom, setZoom] = useState(100);
-  // Text-Only Magnifier State
-  const [textZoom, setTextZoom] = useState(100);
-
-  // Partition Resizer State
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
 
@@ -304,13 +298,12 @@ const App: React.FC = () => {
 
   const resize = useCallback((e: MouseEvent) => {
     if (isResizing) {
-      const zoomFactor = zoom / 100;
-      const newWidth = e.clientX / zoomFactor;
+      const newWidth = e.clientX;
       if (newWidth > 64 && newWidth < 600) {
         setSidebarWidth(newWidth);
       }
     }
-  }, [isResizing, zoom]);
+  }, [isResizing]);
 
   useEffect(() => {
     if (isResizing) {
@@ -544,59 +537,13 @@ const App: React.FC = () => {
   return (
     <div 
       className="min-h-screen bg-slate-950 flex flex-col transition-all duration-300 ease-in-out origin-top-left bg-mesh"
-      style={{ 
-        zoom: zoom / 100,
-        // @ts-ignore
-        MozZoom: zoom / 100,
-      } as React.CSSProperties}
     >
-      {/* Dynamic Text-Only Magnifier Style Injection */}
-      <style>{`
-        :root {
-          --text-zoom-multiplier: ${textZoom / 100};
-        }
-        /* Target common text containers to scale only typography */
-        .text-magnifier p, 
-        .text-magnifier span:not(.no-zoom), 
-        .text-magnifier h1, 
-        .text-magnifier h2, 
-        .text-magnifier h3, 
-        .text-magnifier h4, 
-        .text-magnifier h5, 
-        .text-magnifier h6, 
-        .text-magnifier li, 
-        .text-magnifier button:not(.no-zoom), 
-        .text-magnifier input, 
-        .text-magnifier textarea,
-        .text-magnifier .text-xs,
-        .text-magnifier .text-sm,
-        .text-magnifier .text-base,
-        .text-magnifier .text-lg,
-        .text-magnifier .text-xl,
-        .text-magnifier .text-2xl,
-        .text-magnifier .text-3xl,
-        .text-magnifier .text-4xl,
-        .text-magnifier .text-5xl,
-        .text-magnifier .text-6xl {
-           font-size: calc(1em * var(--text-zoom-multiplier));
-        }
-        /* Specific override for explicit tailwind font size classes to handle rem behavior */
-        .text-magnifier .text-[9px] { font-size: calc(9px * var(--text-zoom-multiplier)); }
-        .text-magnifier .text-[10px] { font-size: calc(10px * var(--text-zoom-multiplier)); }
-        .text-magnifier .text-[11px] { font-size: calc(11px * var(--text-zoom-multiplier)); }
-        .text-magnifier .text-[12px] { font-size: calc(12px * var(--text-zoom-multiplier)); }
-      `}</style>
 
       <Header 
         user={user} 
-        zoom={zoom} 
-        onZoomChange={setZoom}
-        textZoom={textZoom}
-        onTextZoomChange={setTextZoom}
-        darkMode={darkMode}
       />
       
-      <div className="pt-20 flex flex-1 overflow-hidden text-magnifier relative z-10">
+      <div className="pt-20 flex flex-1 overflow-hidden relative z-10">
         
         <div className="flex flex-1 overflow-hidden relative">
           {analysis && !isAnalyzing && (
