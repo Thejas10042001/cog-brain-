@@ -42,22 +42,15 @@ import { StoredDocument } from "../types";
 // State to track if we've hit a permission error
 let internalPermissionError = false;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDf4CzUgSSGpRKlaLZiHTV25PHPUq4gltQ",
-  authDomain: "spiked-ai-76993.firebaseapp.com",
-  projectId: "spiked-ai-76993",
-  storageBucket: "spiked-ai-76993.firebasestorage.app",
-  messagingSenderId: "937017757020",
-  appId: "1:937017757020:web:1a899a8be406844e268599"
-};
+import firebaseConfig from "../firebase-applet-config.json";
 
 // Properly type db and auth instances instead of using any
-let db: Firestore | null = null;
-let auth: Auth | null = null;
+export let db: Firestore | null = null;
+export let auth: Auth | null = null;
 
 // Initialize Firebase App, Firestore, and Auth
 try {
-  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "REPLACE_WITH_YOUR_API_KEY") {
+  if (firebaseConfig.apiKey) {
     // Check if app is already initialized to avoid "already exists" errors
     const app: any = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     
@@ -68,11 +61,11 @@ try {
         experimentalForceLongPolling: true,
         experimentalAutoDetectLongPolling: true,
         localCache: memoryLocalCache(),
-      });
+      }, firebaseConfig.firestoreDatabaseId);
       console.log("Firestore initialized with long polling and memory cache.");
     } catch (e) {
       // If already initialized, just get the existing instance
-      db = getFirestore(app);
+      db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
       console.warn("Firestore already initialized, using existing instance.");
     }
     
@@ -80,6 +73,62 @@ try {
   }
 } catch (error) {
   console.error("Firebase Initialization Error:", error);
+}
+
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | null | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+      emailVerified: auth?.currentUser?.emailVerified,
+      isAnonymous: auth?.currentUser?.isAnonymous,
+      tenantId: auth?.currentUser?.tenantId,
+      providerInfo: auth?.currentUser?.providerData.map((provider: any) => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  
+  if (errInfo.error.includes('permission-denied') || errInfo.error.includes('Missing or insufficient permissions')) {
+    internalPermissionError = true;
+  }
+  
+  throw new Error(JSON.stringify(errInfo));
 }
 
 const COLLECTION_NAME = "cognitive_documents";
@@ -112,6 +161,7 @@ export const subscribeToAuth = (callback: (user: User | null) => void) => {
 
 export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' | 'timestamp'>): Promise<string | null> => {
   if (!db || !auth || !auth.currentUser) return null;
+  const path = `users/${auth.currentUser.uid}/${HISTORY_COLLECTION}`;
   try {
     const docRef = await addDoc(getUserCollection(HISTORY_COLLECTION), {
       ...history,
@@ -120,15 +170,15 @@ export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' |
     });
     return docRef.id;
   } catch (error) {
-    console.error("Error saving simulation history:", error);
+    handleFirestoreError(error, OperationType.CREATE, path);
     return null;
   }
 };
 
 export const fetchSimulationHistory = async (): Promise<any[]> => {
   if (!db || !auth || !auth.currentUser) return [];
+  const path = `users/${auth.currentUser.uid}/${HISTORY_COLLECTION}`;
   try {
-    // 1. Try fetching from the new user-isolated subcollection
     const q = query(getUserCollection(HISTORY_COLLECTION));
     const querySnapshot = await getDocs(q);
     
@@ -138,34 +188,21 @@ export const fetchSimulationHistory = async (): Promise<any[]> => {
       timestamp: (doc.data().timestamp as Timestamp).toMillis()
     }));
 
-    // 2. Fallback: If new collection is empty, try fetching from the legacy top-level collection
-    if (docs.length === 0) {
-      const qLegacy = query(
-        collection(db, HISTORY_COLLECTION),
-        where("userId", "==", auth.currentUser.uid)
-      );
-      const querySnapshotLegacy = await getDocs(qLegacy);
-      docs = querySnapshotLegacy.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: (doc.data().timestamp as Timestamp).toMillis()
-      }));
-    }
-
     return docs.sort((a, b) => b.timestamp - a.timestamp);
   } catch (error) {
-    console.error("Error fetching simulation history:", error);
+    handleFirestoreError(error, OperationType.LIST, path);
     return [];
   }
 };
 
 export const saveDocumentToFirebase = async (name: string, content: string, type: string): Promise<string | null> => {
   if (!db || !auth || !auth.currentUser) return null;
+  const path = `users/${auth.currentUser.uid}/${COLLECTION_NAME}`;
 
   try {
     const now = Timestamp.now();
     const docRef = await addDoc(getUserCollection(COLLECTION_NAME), {
-      userId: auth.currentUser.uid, // Tie document to unique user
+      userId: auth.currentUser.uid,
       name,
       content,
       type,
@@ -175,35 +212,32 @@ export const saveDocumentToFirebase = async (name: string, content: string, type
     internalPermissionError = false;
     return docRef.id;
   } catch (error: any) {
-    if (error.code === 'permission-denied') {
-      internalPermissionError = true;
-      console.error("CRITICAL: Firestore Permission Denied. Ensure rules are updated to check request.auth.uid.");
-    }
+    handleFirestoreError(error, OperationType.CREATE, path);
     return null;
   }
 };
 
 export const updateDocumentInFirebase = async (id: string, newContent: string): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
+  const path = `users/${auth.currentUser.uid}/${COLLECTION_NAME}/${id}`;
   try {
     const docRef = doc(getUserCollection(COLLECTION_NAME), id);
-    // Note: Firestore rules should prevent updating if userId doesn't match
     await updateDoc(docRef, {
       content: newContent,
       updatedAt: Timestamp.now()
     });
     return true;
   } catch (error: any) {
-    console.error("Error updating document:", error);
+    handleFirestoreError(error, OperationType.UPDATE, path);
     return false;
   }
 };
 
 export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> => {
   if (!db || !auth || !auth.currentUser) return [];
+  const path = `users/${auth.currentUser.uid}/${COLLECTION_NAME}`;
 
   try {
-    // 1. Try fetching from the new user-isolated subcollection
     const q = query(getUserCollection(COLLECTION_NAME));
     const querySnapshot = await getDocs(q);
     internalPermissionError = false;
@@ -220,53 +254,29 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
       };
     });
 
-    // 2. Fallback: If new collection is empty, try fetching from the legacy top-level collection
-    if (docs.length === 0) {
-      const qLegacy = query(
-        collection(db, COLLECTION_NAME),
-        where("userId", "==", auth.currentUser.uid)
-      );
-      const querySnapshotLegacy = await getDocs(qLegacy);
-      docs = querySnapshotLegacy.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          name: data.name,
-          content: data.content,
-          type: data.type,
-          timestamp: data.timestamp?.toMillis() || Date.now(),
-          updatedAt: data.updatedAt?.toMillis() || data.timestamp?.toMillis() || Date.now()
-        };
-      });
-    }
-
-    // Client-side sort by timestamp descending
     return docs.sort((a, b) => b.timestamp - a.timestamp);
   } catch (error: any) {
-    if (error.code === 'permission-denied') {
-      internalPermissionError = true;
-    }
-    console.error("Fetch documents failed:", error);
+    handleFirestoreError(error, OperationType.LIST, path);
     return [];
   }
 };
 
 export const deleteDocumentFromFirebase = async (id: string): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
+  const path = `users/${auth.currentUser.uid}/${COLLECTION_NAME}/${id}`;
   try {
     await deleteDoc(doc(getUserCollection(COLLECTION_NAME), id));
     internalPermissionError = false;
     return true;
   } catch (error: any) {
-    if (error.code === 'permission-denied') {
-      internalPermissionError = true;
-    }
+    handleFirestoreError(error, OperationType.DELETE, path);
     return false;
   }
 };
 
 export const saveMeetingContext = async (data: { meetingContext: any, selectedLibraryDocIds: string[], analysis?: any }): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
+  const path = `users/${auth.currentUser.uid}/${CONTEXT_COLLECTION}`;
   try {
     const userId = auth.currentUser.uid;
     const userContextCol = getUserCollection(CONTEXT_COLLECTION);
@@ -279,48 +289,36 @@ export const saveMeetingContext = async (data: { meetingContext: any, selectedLi
     };
 
     if (!querySnapshot.empty) {
-      // Update existing
       const docId = querySnapshot.docs[0].id;
       await updateDoc(doc(userContextCol, docId), contextData);
     } else {
-      // Create new
       await addDoc(userContextCol, contextData);
     }
     return true;
   } catch (error) {
-    console.error("Error saving meeting context:", error);
+    handleFirestoreError(error, OperationType.WRITE, path);
     return false;
   }
 };
 
 export const fetchMeetingContext = async (): Promise<any | null> => {
   if (!db || !auth || !auth.currentUser) return null;
+  const path = `users/${auth.currentUser.uid}/${CONTEXT_COLLECTION}`;
   try {
-    // 1. Try fetching from the new user-isolated subcollection
     const querySnapshot = await getDocs(getUserCollection(CONTEXT_COLLECTION));
     if (!querySnapshot.empty) {
       return querySnapshot.docs[0].data();
     }
-
-    // 2. Fallback: If new collection is empty, try fetching from the legacy top-level collection
-    const qLegacy = query(
-      collection(db, CONTEXT_COLLECTION),
-      where("userId", "==", auth.currentUser.uid)
-    );
-    const querySnapshotLegacy = await getDocs(qLegacy);
-    if (!querySnapshotLegacy.empty) {
-      return querySnapshotLegacy.docs[0].data();
-    }
-
     return null;
   } catch (error) {
-    console.error("Error fetching meeting context:", error);
+    handleFirestoreError(error, OperationType.LIST, path);
     return null;
   }
 };
 
 export const deleteMeetingContext = async (): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
+  const path = `users/${auth.currentUser.uid}/${CONTEXT_COLLECTION}`;
   try {
     const userContextCol = getUserCollection(CONTEXT_COLLECTION);
     const querySnapshot = await getDocs(userContextCol);
@@ -329,7 +327,8 @@ export const deleteMeetingContext = async (): Promise<boolean> => {
     }
     return true;
   } catch (error) {
-    console.error("Error deleting meeting context:", error);
+    handleFirestoreError(error, OperationType.DELETE, path);
     return false;
   }
 };
+
