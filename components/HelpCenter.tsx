@@ -2,6 +2,9 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ICONS } from '../constants';
 import { AnimatedGuide } from './AnimatedGuide';
+import { PrivacyPolicy } from './legal/PrivacyPolicy';
+import { TermsOfService } from './legal/TermsOfService';
+import { SecurityAudit } from './legal/SecurityAudit';
 
 interface HelpItem {
   subtitle: string;
@@ -10,7 +13,7 @@ interface HelpItem {
 }
 
 interface HelpSection {
-  id: 'getting-started' | 'strategy-lab' | 'simulations' | 'assessment' | 'gpt' | 'grooming' | 'studio';
+  id: 'getting-started' | 'strategy-lab' | 'simulations' | 'assessment' | 'gpt' | 'grooming' | 'studio' | 'compliance';
   title: string;
   icon: React.ReactNode;
   description: string;
@@ -173,6 +176,26 @@ const HELP_SECTIONS: HelpSection[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'compliance',
+    title: 'Compliance & Security',
+    icon: <ICONS.Shield className="w-5 h-5" />,
+    description: 'Review our legal frameworks, privacy protocols, and security infrastructure.',
+    content: [
+      {
+        subtitle: 'Data Privacy',
+        text: 'Our commitment to your data sovereignty and privacy protocols.'
+      },
+      {
+        subtitle: 'Terms of Service',
+        text: 'The legal framework governing your engagement with the Neural Protocol.'
+      },
+      {
+        subtitle: 'Security Infrastructure',
+        text: 'Detailed report on our hardened security measures and compliance certifications.'
+      }
+    ]
   }
 ];
 
@@ -250,7 +273,21 @@ export const HelpCenter: React.FC = () => {
                     <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
                   </div>
                 </div>
-                <AnimatedGuide type={section.id} />
+                {section.id === 'compliance' ? (
+                  <div className="space-y-8 max-h-[600px] overflow-y-auto custom-scrollbar pr-4">
+                    <div className="bg-slate-900/80 rounded-3xl border border-slate-800 p-2">
+                      <PrivacyPolicy />
+                    </div>
+                    <div className="bg-slate-900/80 rounded-3xl border border-slate-800 p-2">
+                      <TermsOfService />
+                    </div>
+                    <div className="bg-slate-900/80 rounded-3xl border border-slate-800 p-2">
+                      <SecurityAudit />
+                    </div>
+                  </div>
+                ) : (
+                  <AnimatedGuide type={section.id as any} />
+                )}
                 <div className="p-6 bg-slate-900/50 rounded-2xl border border-slate-800">
                   <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-3">Pro Tip: Elite Performance</h4>
                   <p className="text-[11px] text-slate-400 font-bold leading-relaxed italic">
