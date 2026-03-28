@@ -34,6 +34,8 @@ export const Auth: React.FC = () => {
         return 'The provided email identifier is invalid.';
       case 'auth/too-many-requests':
         return 'Access temporarily restricted due to multiple failed attempts.';
+      case 'auth/operation-not-allowed':
+        return 'This authentication method is currently disabled. Please enable Email/Password or Google Sign-In in the Firebase console.';
       default:
         return 'Neural link failed. Please verify your connection and credentials.';
     }
