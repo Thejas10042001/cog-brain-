@@ -1,5 +1,5 @@
 
-import { db, auth } from "../src/lib/firebase";
+import { db, auth, googleProvider } from "../src/lib/firebase";
 import { 
   collection, 
   addDoc, 
@@ -18,7 +18,8 @@ const {
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut 
+  signOut,
+  signInWithPopup
 } = firebaseAuth as any;
 
 // Define User and Auth types locally as any to bypass module export issues in this environment.
@@ -48,6 +49,7 @@ export const clearFirebasePermissionError = () => { internalPermissionError = fa
 
 // Auth Helper Functions
 export const loginUser = (email: string, pass: string) => auth ? signInWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
+export const loginWithGoogle = () => (auth && googleProvider) ? signInWithPopup(auth, googleProvider) : Promise.reject("Auth module not initialized");
 export const registerUser = (email: string, pass: string) => auth ? createUserWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
 export const logoutUser = () => auth && signOut(auth);
 export const subscribeToAuth = (callback: (user: User | null) => void) => {

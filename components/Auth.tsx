@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { loginUser } from '../services/firebaseService';
+import { loginUser, loginWithGoogle } from '../services/firebaseService';
 import { ICONS } from '../constants';
 
 export const Auth: React.FC = () => {
@@ -36,6 +36,19 @@ export const Auth: React.FC = () => {
         return 'Access temporarily restricted due to multiple failed attempts.';
       default:
         return 'Neural link failed. Please verify your connection and credentials.';
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      console.error("Google Auth Error:", err);
+      setError("Google authentication failed. Please ensure Google Sign-In is enabled in the Firebase console.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -191,6 +204,27 @@ export const Auth: React.FC = () => {
                   ) : (
                     <>Initiate Neural Link <ICONS.Play className="w-4 h-4" /></>
                   )}
+                </motion.button>
+
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-800"></div>
+                  </div>
+                  <div className="relative flex justify-center text-[9px] uppercase font-black tracking-widest">
+                    <span className="bg-slate-900 px-4 text-slate-500">Neural Alternative</span>
+                  </div>
+                </div>
+
+                <motion.button 
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  className="w-full py-5 bg-slate-800 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:bg-slate-700 disabled:opacity-50 flex items-center justify-center gap-4 transition-all border border-slate-700"
+                >
+                  <ICONS.Sparkles className="w-4 h-4 text-indigo-400" />
+                  Sign in with Google
                 </motion.button>
               </motion.form>
             ) : (
