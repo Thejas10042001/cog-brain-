@@ -16,7 +16,14 @@ import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
-import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
+import { 
+  fetchDocumentsFromFirebase, 
+  subscribeToAuth, 
+  User, 
+  saveMeetingContext, 
+  fetchMeetingContext, 
+  deleteMeetingContext
+} from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
 import { ICONS } from './constants';
 
@@ -69,10 +76,17 @@ const App: React.FC = () => {
   const [darkMode] = useState(true);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('page') === 'support') {
-      setIsSupportPage(true);
-    }
+    const unsubscribe = subscribeToAuth(async (u) => {
+      setUser(u);
+      setAuthLoading(false);
+      if (!u) {
+        setHistory([]);
+        setFiles([]);
+        setAnalysis(null);
+        setSelectedLibraryDocIds([]);
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const NODE_DETAILS: Record<string, { label: string; feature: string; purpose: string; howItHelps: string; audioText: string; guideText: string; stepNumber: string }> = {
@@ -217,7 +231,6 @@ const App: React.FC = () => {
   const handleNodeClick = (tab: any) => {
     if (activeTab === tab) return;
     setActiveTab(tab as any);
-    // Redundant call removed - useEffect handles narration on activeTab change
   };
 
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -384,7 +397,7 @@ const App: React.FC = () => {
   }, [shouldAutoAnalyze, history, user, selectedLibraryDocIds, files]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToAuth((u) => {
+    const unsubscribe = subscribeToAuth(async (u) => {
       setUser(u);
       setAuthLoading(false);
       if (!u) {
@@ -690,7 +703,9 @@ const App: React.FC = () => {
                       onContextChange={setMeetingContext} 
                       documents={history}
                       files={files}
-                      onFilesChange={setFiles}
+                      onFilesChange={(newFiles) => {
+                        setFiles(newFiles);
+                      }}
                       onUploadSuccess={loadHistory}
                       selectedLibraryDocIds={selectedLibraryDocIds}
                       onToggleLibraryDoc={toggleLibraryDoc}

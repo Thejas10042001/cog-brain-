@@ -85,7 +85,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsProcessing(true);
-
+    
     const assistantId = (Date.now() + 1).toString();
     const assistantMessage: GPTMessage = {
       id: assistantId,

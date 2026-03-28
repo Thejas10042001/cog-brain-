@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "Folder": {
+      "title": "Folder",
+      "description": "A folder for organizing documents",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the folder"
+        },
+        "parentId": {
+          "type": "string",
+          "description": "The ID of the parent folder, or null for top-level folders"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the folder was created"
+        },
+        "isDefault": {
+          "type": "boolean",
+          "description": "Whether this is a default system folder"
+        }
+      },
+      "required": ["name", "createdAt"]
+    },
+    "Document": {
+      "title": "Document",
+      "description": "A document stored in the library",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the document"
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "The URL of the stored file"
+        },
+        "folderId": {
+          "type": "string",
+          "description": "The ID of the folder this document belongs to"
+        },
+        "uploadedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the document was uploaded"
+        },
+        "content": {
+          "type": "string",
+          "description": "The text content of the document (extracted for LLM analysis)"
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Additional metadata about the document"
+        }
+      },
+      "required": ["name", "fileUrl", "uploadedAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/folders/{folderId}": {
+      "schema": "Folder",
+      "description": "User's folders"
+    },
+    "users/{userId}/documents/{documentId}": {
+      "schema": "Document",
+      "description": "User's documents"
+    }
+  }
+}

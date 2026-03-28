@@ -1320,6 +1320,17 @@ export const AvatarSimulationStaged: FC<{
 
                     {/* User Interaction Layer */}
                     <div className="w-full max-w-6xl mx-auto space-y-8 pb-24">
+                       {micPermissionError && (
+                         <div className="p-6 bg-rose-900/20 border border-rose-800 rounded-3xl flex items-center gap-4 animate-in slide-in-from-top-2 mb-4">
+                           <div className="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center shrink-0 shadow-lg">
+                             <ICONS.Security className="w-5 h-5 text-white" />
+                           </div>
+                           <div>
+                             <h6 className="text-[10px] font-black uppercase tracking-widest text-rose-400 mb-1">Microphone Access Denied</h6>
+                             <p className="text-xs font-bold text-slate-400 italic">Please enable microphone permissions in your browser settings to use voice input.</p>
+                           </div>
+                         </div>
+                       )}
                        <div className="relative group">
                           <textarea value={currentCaption} onChange={(e) => setCurrentCaption(e.target.value)} className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-bold italic text-white shadow-inner h-48 resize-none placeholder:text-slate-500 leading-relaxed" placeholder={`Respond to ${meetingContext.clientNames || "Client"}...`} />
                           <button 

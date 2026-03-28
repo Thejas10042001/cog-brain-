@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ICONS } from '../constants';
 
 interface AnimatedGuideProps {
-  type: 'getting-started' | 'strategy-lab' | 'simulations' | 'intelligence-tools';
+  type: 'getting-started' | 'strategy-lab' | 'simulations' | 'intelligence-tools' | 'gpt' | 'grooming' | 'studio' | 'assessment';
 }
 
 export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
@@ -134,6 +134,120 @@ export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
           >
             <span className="text-[8px] font-black text-green-400 uppercase tracking-widest">Sentiment: Positive</span>
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          </motion.div>
+        </div>
+      );
+
+    case 'gpt':
+      return (
+        <div className="relative w-full h-48 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 flex flex-col items-center justify-center p-6">
+          <motion.div 
+            initial={{ width: '40%', opacity: 0.5 }}
+            animate={{ width: ['40%', '80%', '80%', '40%'] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="h-8 bg-slate-800 rounded-full border border-slate-700 flex items-center px-3 gap-2 mb-4"
+          >
+            <ICONS.Search className="w-3 h-3 text-slate-500" />
+            <motion.div 
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="w-0.5 h-3 bg-indigo-500"
+            />
+          </motion.div>
+          
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: [20, 0, 0, 20], opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="w-full bg-indigo-600/10 border border-indigo-500/20 rounded-xl p-3 space-y-2"
+          >
+            <div className="h-2 w-full bg-indigo-500/30 rounded-full" />
+            <div className="h-2 w-3/4 bg-indigo-500/30 rounded-full" />
+            <div className="h-2 w-1/2 bg-indigo-500/30 rounded-full" />
+          </motion.div>
+        </div>
+      );
+
+    case 'grooming':
+      return (
+        <div className="relative w-full h-48 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center p-6">
+          <div className="flex items-center gap-1 h-12">
+            {[...Array(12)].map((_, i) => (
+              <motion.div
+                key={i}
+                animate={{ 
+                  height: [10, Math.random() * 40 + 10, 10],
+                  backgroundColor: ['#4f46e5', '#ef4444', '#4f46e5']
+                }}
+                transition={{ duration: 0.5, delay: i * 0.05, repeat: Infinity }}
+                className="w-1.5 rounded-full"
+              />
+            ))}
+          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 1, repeat: Infinity, repeatDelay: 3 }}
+            className="absolute bottom-4 bg-slate-800 px-4 py-2 rounded-full border border-slate-700 flex items-center gap-2"
+          >
+            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Pacing: Elite</span>
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+          </motion.div>
+        </div>
+      );
+
+    case 'studio':
+      return (
+        <div className="relative w-full h-48 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+          <motion.div
+            animate={{ 
+              scale: [1, 1.2, 1],
+              boxShadow: ['0 0 0px rgba(239, 68, 68, 0)', '0 0 20px rgba(239, 68, 68, 0.5)', '0 0 0px rgba(239, 68, 68, 0)']
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center"
+          >
+            <div className="w-6 h-6 bg-white rounded-sm" />
+          </motion.div>
+          
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 100, opacity: [0, 1, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="absolute h-0.5 w-full bg-indigo-500/50"
+          />
+        </div>
+      );
+
+    case 'assessment':
+      return (
+        <div className="relative w-full h-48 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 flex flex-col items-center justify-center p-6 gap-4">
+          <div className="w-full space-y-2">
+            <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+              <motion.div 
+                animate={{ width: ['0%', '100%'] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="h-full bg-indigo-500"
+              />
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[8px] font-black text-slate-500 uppercase">Question 5/10</span>
+              <span className="text-[8px] font-black text-indigo-400 uppercase">Score: 85%</span>
+            </div>
+          </div>
+          
+          <motion.div
+            animate={{ 
+              y: [10, 0, 0, 10],
+              opacity: [0, 1, 1, 0]
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="bg-green-500/10 border border-green-500/30 p-3 rounded-xl flex items-center gap-3"
+          >
+            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+              <ICONS.Check className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-[10px] font-black text-green-400 uppercase tracking-widest">Strategic Match Confirmed</span>
           </motion.div>
         </div>
       );

@@ -1315,24 +1315,44 @@ export async function generateClientAvatar(name: string, company: string): Promi
     The logo should be centered on a clean white background. 
     Resolution: 1K. Cinematic studio lighting on a flat surface.`;
 
-    const response = await withRetry(() => ai.models.generateContent({
-      model: modelName,
-      contents: {
-        parts: [{ text: prompt }],
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1",
-          imageSize: "1K"
+    let response;
+    try {
+      response = await withRetry(() => ai.models.generateContent({
+        model: modelName,
+        contents: {
+          parts: [{ text: prompt }],
         },
-        tools: [{googleSearch: {}}],
-      },
-    }));
+        config: {
+          imageConfig: {
+            aspectRatio: "1:1",
+            imageSize: "1K"
+          },
+          tools: [{googleSearch: {}}],
+        },
+      }));
+    } catch (searchError: any) {
+      console.warn("Logo generation with search failed, trying without search:", searchError);
+      // Fallback: Generate without search tool if it's a permission issue
+      response = await withRetry(() => ai.models.generateContent({
+        model: modelName,
+        contents: {
+          parts: [{ text: `Generate a minimalist, high-fidelity professional corporate logo for a company named "${company}". Style: Modern tech-forward branding, clean vector-like aesthetic, professional color palette. Centered on white background.` }],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "1:1",
+            imageSize: "1K"
+          }
+        },
+      }));
+    }
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        const base64EncodeString: string = part.inlineData.data;
-        return `data:image/png;base64,${base64EncodeString}`;
+    if (response && response.candidates && response.candidates[0].content.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          const base64EncodeString: string = part.inlineData.data;
+          return `data:image/png;base64,${base64EncodeString}`;
+        }
       }
     }
     return null;

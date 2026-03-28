@@ -1,27 +1,56 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Enforce that each user can only access their own subcollections under /users/{userId}
-    match /users/{userId}/{subcollection}/{document} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    
-    // Legacy rules for top-level collections (if any data remains there)
-    match /cognitive_documents/{document} {
-      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    match /meeting_contexts/{document} {
-      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidFolder(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 255 &&
+             (data.parentId == null || data.parentId is string) &&
+             data.createdAt is string &&
+             (!('isDefault' in data) || data.isDefault is bool);
     }
-    
-    match /simulation_history/{document} {
-      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+    function isValidDocument(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 255 &&
+             data.fileUrl is string &&
+             (data.folderId == null || data.folderId is string) &&
+             data.uploadedAt is string &&
+             (!('content' in data) || data.content is string) &&
+             (!('metadata' in data) || data.metadata is map);
+    }
+
+    // ===============================================================
+    // Match Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /folders/{folderId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidFolder(request.resource.data);
+        allow update: if isOwner(userId) && isValidFolder(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /documents/{documentId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidDocument(request.resource.data);
+        allow update: if isOwner(userId) && isValidDocument(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
     }
   }
 }

@@ -2,6 +2,9 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ICONS } from '../constants';
 import { AnimatedGuide } from './AnimatedGuide';
+import { PrivacyPolicy } from './legal/PrivacyPolicy';
+import { TermsOfService } from './legal/TermsOfService';
+import { SecurityAudit } from './legal/SecurityAudit';
 
 interface HelpItem {
   subtitle: string;
@@ -10,7 +13,7 @@ interface HelpItem {
 }
 
 interface HelpSection {
-  id: 'getting-started' | 'strategy-lab' | 'simulations' | 'intelligence-tools';
+  id: 'getting-started' | 'strategy-lab' | 'simulations' | 'assessment' | 'gpt' | 'grooming' | 'studio' | 'compliance';
   title: string;
   icon: React.ReactNode;
   description: string;
@@ -21,25 +24,27 @@ const HELP_SECTIONS: HelpSection[] = [
   {
     id: 'getting-started',
     title: 'Neural Nexus Setup',
-    icon: <ICONS.Efficiency className="w-5 h-5" />,
+    icon: <ICONS.Shield className="w-5 h-5" />,
     description: 'Establish the foundation of your deal intelligence through high-fidelity context ingestion.',
     content: [
       {
         subtitle: 'Step 1: Context Configuration',
-        text: 'Navigate to the "Settings" node to define the operational landscape of your deal.',
+        text: 'Navigate to the "Settings" node to define the operational landscape of your deal. This is the most critical phase as it defines the AI\'s perspective.',
         points: [
-          'Define the Seller Profile: Your company, value prop, and team.',
-          'Define the Client Profile: Target organization, industry, and pain points.',
-          'Set Strategic Goals: What does a "Win" look like for this specific engagement?'
+          'Seller Profile: Detail your company\'s unique value proposition, specific team members involved, and any internal constraints.',
+          'Client Profile: Identify the target organization\'s industry, current pain points, and decision-making hierarchy.',
+          'Strategic Goals: Define clear, measurable outcomes for the engagement (e.g., "Secure POC by Q3").',
+          'Deal Stage: Specify if you are in Discovery, Solutioning, or Final Negotiation.'
         ]
       },
       {
         subtitle: 'Step 2: Strategic Ingestion',
-        text: 'Upload the documentary intelligence that will ground the AI in your specific reality.',
+        text: 'Upload the documentary intelligence that will ground the AI in your specific reality. The system uses RAG (Retrieval-Augmented Generation) to ensure accuracy.',
         points: [
-          'Supported Formats: PDF, TXT, and DOCX files.',
-          'Recommended Content: Case studies, product briefs, and previous meeting notes.',
-          'Click "Synthesize Neural Core" to begin the cognitive parsing process.'
+          'Supported Formats: PDF, TXT, and DOCX files up to 50MB.',
+          'Recommended Content: Case studies, product briefs, previous meeting transcripts, and competitor analysis.',
+          'Synthesize Neural Core: This process parses your documents into a vector database for high-speed retrieval.',
+          'Verification: Ensure all uploaded documents are listed in the "Library" section for active use.'
         ]
       }
     ]
@@ -52,20 +57,22 @@ const HELP_SECTIONS: HelpSection[] = [
     content: [
       {
         subtitle: 'Step 1: Strategy Synthesis',
-        text: 'Review the AI-generated strategic framework designed to penetrate the target account.',
+        text: 'Review the AI-generated strategic framework designed to penetrate the target account using the "Neural Analysis" module.',
         points: [
-          'Executive Summary: A high-level overview of the winning approach.',
-          'Strategic Pillars: The three core themes that will drive your value.',
-          'Competitive Wedge: How to specifically displace the incumbent or alternative.'
+          'Executive Summary: A 30,000ft view of the winning approach and key messaging.',
+          'Strategic Pillars: Three core themes that differentiate your solution from competitors.',
+          'Competitive Wedge: Specific tactical points to displace incumbents or neutralize alternatives.',
+          'Stakeholder Map: Identification of Champions, Economic Buyers, and potential Detractors.'
         ]
       },
       {
         subtitle: 'Step 2: Neural Refinement',
-        text: 'Iterate on the strategy to ensure it perfectly matches the evolving deal dynamics.',
+        text: 'Iterate on the strategy to ensure it perfectly matches the evolving deal dynamics using real-time feedback loops.',
         points: [
-          'Use the "Neural Refinement" input to provide specific feedback.',
-          'Identify and neutralize buyer resistance using the Objection Defense module.',
-          'Export the strategy for team alignment and stakeholder reviews.'
+          'Neural Refinement Input: Provide specific feedback or new deal developments to update the strategy.',
+          'Objection Defense: Pre-emptively identify and neutralize buyer resistance with scripted responses.',
+          'Value Alignment: Ensure every strategic point maps directly to a client pain point identified in Step 1.',
+          'Export & Share: Distribute the strategy to your team for unified execution.'
         ]
       }
     ]
@@ -78,47 +85,115 @@ const HELP_SECTIONS: HelpSection[] = [
     content: [
       {
         subtitle: 'Step 1: Stage-Specific Training',
-        text: 'Master the critical phases of the enterprise sales cycle.',
+        text: 'Master the critical phases of the enterprise sales cycle through targeted simulation modules.',
         points: [
-          'Ice Breakers: Build rapport and establish credibility in seconds.',
-          'Pricing & Value: Defend your premium position against budget pressure.',
-          'Legal & Procurement: Navigate the final hurdles of the deal.'
+          'Ice Breakers: Practice building rapport and establishing credibility in the first 5 minutes.',
+          'Pricing & Value: Defend your premium position against budget-conscious procurement teams.',
+          'Legal & Procurement: Navigate the final hurdles of the deal with confidence.',
+          'Custom Scenarios: Create unique situations based on your specific deal challenges.'
         ]
       },
       {
         subtitle: 'Step 2: Persona Engagement',
-        text: 'Engage in dialogue with the industry\'s most sophisticated AI buyer avatars.',
+        text: 'Engage in natural dialogue with the industry\'s most sophisticated AI buyer avatars.',
         points: [
-          'Avatar 1.0 (The Skeptic): Test your logic against a high-pressure CIO.',
-          'Avatar 2.0 (The Committee): Manage a multi-stakeholder negotiation simulation.',
-          'Receive real-time sentiment analysis and tactical feedback on your delivery.'
+          'Avatar 1.0 (The Skeptic): A high-pressure CIO who demands technical proof and ROI.',
+          'Avatar 2.0 (The Committee): A multi-stakeholder negotiation simulation with conflicting interests.',
+          'Real-time Sentiment: Monitor the "Sentiment Tracker" to see how your words impact the buyer\'s mood.',
+          'Tactical Feedback: Receive a post-simulation audit on your performance and areas for growth.'
         ]
       }
     ]
   },
   {
-    id: 'intelligence-tools',
-    title: 'Intelligence Tools',
+    id: 'assessment',
+    title: 'Assessment Lab',
+    icon: <ICONS.Check className="w-5 h-5" />,
+    description: 'Evaluate your strategic readiness and knowledge of the deal dynamics.',
+    content: [
+      {
+        subtitle: 'Step 1: Strategic Evaluation',
+        text: 'Launch a comprehensive assessment to test your understanding of the client\'s pain points and your own strategy.',
+        points: [
+          'Situational Scenarios: Respond to complex, deal-specific questions that test your tactical agility.',
+          'Knowledge Check: Verify your alignment with the strategic playbook generated in the Strategy Lab.',
+          'Scorecard: Receive a detailed breakdown of your strategic strengths and weaknesses.',
+          'Remediation: Get specific recommendations on which modules to revisit based on your score.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'gpt',
+    title: 'Spiked GPT',
     icon: <ICONS.SpikedGPT className="w-5 h-5" />,
     description: 'Leverage the full power of the Neural Protocol to optimize every touchpoint.',
     content: [
       {
         subtitle: 'Spiked GPT: The Answering Engine',
-        text: 'Query the cognitive core for instant, grounded answers to any deal-related question.',
+        text: 'Query the cognitive core for instant, grounded answers to any deal-related question using our proprietary LLM wrapper.',
         points: [
-          'Extract specific data points from hundreds of pages of context.',
-          'Generate email drafts, follow-up notes, and executive summaries.',
-          'Ask for "Winning Plays" based on the current deal state.'
+          'Contextual Retrieval: Extract specific data points from hundreds of pages of uploaded context.',
+          'Content Generation: Create email drafts, follow-up notes, and executive summaries in seconds.',
+          'Winning Plays: Ask for tactical advice based on the current deal state and competitor profiles.',
+          'Audit Trail: All queries are logged for team learning and strategy consistency.'
         ]
+      }
+    ]
+  },
+  {
+    id: 'grooming',
+    title: 'Grooming Lab',
+    icon: <ICONS.Brain className="w-5 h-5" />,
+    description: 'Audit your vocal presence and delivery for maximum authority.',
+    content: [
+      {
+        subtitle: 'Grooming Lab: Vocal Audit',
+        text: 'Ensure your vocal presence matches the strength of your strategic intelligence through deep audio analysis.',
+        points: [
+          'Tone & Pacing: Receive an elite audit on your delivery speed, pitch variance, and confidence levels.',
+          'Grammar & Clarity: Identify and eliminate filler words, weak language, or industry jargon.',
+          'Confidence Score: Get a numerical rating of your perceived authority during the pitch.',
+          'Iterative Practice: Re-record and compare audits to track your vocal improvement over time.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'studio',
+    title: 'Studio',
+    icon: <ICONS.Mic className="w-5 h-5" />,
+    description: 'Generate professional-grade audio samples of your winning pitches.',
+    content: [
+      {
+        subtitle: 'Studio: Voice Synthesis',
+        text: 'Convert your written scripts into high-quality, natural-sounding audio using neural voice cloning.',
+        points: [
+          'Record Sample: Initialize your personal neural voice profile with a 30-second recording.',
+          'Script to Speech: Paste your winning pitch scripts to generate authoritative audio samples.',
+          'Fine-tune: Adjust emotion, emphasis, and pauses for maximum psychological impact.',
+          'Library: Store and manage your generated audio for practice or client-facing presentations.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'compliance',
+    title: 'Compliance & Security',
+    icon: <ICONS.Shield className="w-5 h-5" />,
+    description: 'Review our legal frameworks, privacy protocols, and security infrastructure.',
+    content: [
+      {
+        subtitle: 'Data Privacy',
+        text: 'Our commitment to your data sovereignty and privacy protocols.'
       },
       {
-        subtitle: 'Grooming Lab & Studio',
-        text: 'Ensure your vocal presence matches the strength of your strategic intelligence.',
-        points: [
-          'Grooming Lab: Receive an elite audit on tone, pacing, and grammar.',
-          'Studio: Generate professional-grade audio samples of your winning pitches.',
-          'Practice until your delivery is flawless and authoritative.'
-        ]
+        subtitle: 'Terms of Service',
+        text: 'The legal framework governing your engagement with the Neural Protocol.'
+      },
+      {
+        subtitle: 'Security Infrastructure',
+        text: 'Detailed report on our hardened security measures and compliance certifications.'
       }
     ]
   }
@@ -198,7 +273,21 @@ export const HelpCenter: React.FC = () => {
                     <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
                   </div>
                 </div>
-                <AnimatedGuide type={section.id} />
+                {section.id === 'compliance' ? (
+                  <div className="space-y-8 max-h-[600px] overflow-y-auto custom-scrollbar pr-4">
+                    <div className="bg-slate-900/80 rounded-3xl border border-slate-800 p-2">
+                      <PrivacyPolicy />
+                    </div>
+                    <div className="bg-slate-900/80 rounded-3xl border border-slate-800 p-2">
+                      <TermsOfService />
+                    </div>
+                    <div className="bg-slate-900/80 rounded-3xl border border-slate-800 p-2">
+                      <SecurityAudit />
+                    </div>
+                  </div>
+                ) : (
+                  <AnimatedGuide type={section.id as any} />
+                )}
                 <div className="p-6 bg-slate-900/50 rounded-2xl border border-slate-800">
                   <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-3">Pro Tip: Elite Performance</h4>
                   <p className="text-[11px] text-slate-400 font-bold leading-relaxed italic">
@@ -236,3 +325,4 @@ export const HelpCenter: React.FC = () => {
     </div>
   );
 };
+
