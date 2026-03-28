@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { loginUser, loginWithGoogle } from '../services/firebaseService';
+import { loginUser, loginWithGoogle, registerUser } from '../services/firebaseService';
 import { ICONS } from '../constants';
 
 export const Auth: React.FC = () => {
@@ -56,8 +56,7 @@ export const Auth: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLogin) return; // Prevent any submission attempt for registration
-
+    
     setError(null);
 
     if (password.length < 6) {
@@ -68,7 +67,11 @@ export const Auth: React.FC = () => {
     setLoading(true);
 
     try {
-      await loginUser(email, password);
+      if (isLogin) {
+        await loginUser(email, password);
+      } else {
+        await registerUser(email, password);
+      }
     } catch (err: any) {
       console.error("Auth Error:", err);
       const mappedError = mapAuthError(err.code);
@@ -230,47 +233,78 @@ export const Auth: React.FC = () => {
                 </motion.button>
               </motion.form>
             ) : (
-              <motion.div 
+              <motion.form 
                 key="register"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-8 py-4"
+                onSubmit={handleSubmit}
+                className="space-y-8"
               >
-                 <div className="p-10 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-[3rem] text-center space-y-8 shadow-inner">
-                    <div className="flex justify-center">
-                      <div className="p-6 bg-indigo-600 text-white rounded-[2rem] shadow-2xl shadow-indigo-200 dark:shadow-none">
-                        <ICONS.Shield className="w-10 h-10" />
-                      </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-4">New Neural Identifier</label>
+                  <div className="relative group">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                      <ICONS.User className="w-5 h-5" />
                     </div>
-                    <div className="space-y-3">
-                      <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Access Restricted</h3>
-                      <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-[0.4em]">Elite Managed Onboarding</p>
-                    </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-bold italic">
-                      Direct profile instantiation is currently restricted to verified enterprise partners. 
-                      To provision your cognitive intelligence core, please coordinate with our Sales Engineering team.
-                    </p>
-                    <div className="pt-4">
-                      <motion.a 
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        href={SUPPORT_LINK}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] shadow-2xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all flex items-center justify-center gap-4"
-                      >
-                        <ICONS.Sparkles className="w-5 h-5" />
-                        Coordinate Access
-                      </motion.a>
-                    </div>
-                 </div>
+                    <input 
+                      type="email" 
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-16 pr-8 py-5 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-sm focus:border-indigo-400 outline-none transition-all font-bold text-white placeholder:text-slate-600 shadow-inner"
+                      placeholder="architect@spikedai.io"
+                    />
+                  </div>
+                </div>
 
-                 <div className="flex items-center gap-4 justify-center text-slate-400">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em]">Neural Integrity Grounded</span>
-                 </div>
-              </motion.div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-4">New Secure Protocol Key</label>
+                  <div className="relative group">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                      <ICONS.Brain className="w-5 h-5" />
+                    </div>
+                    <input 
+                      type="password" 
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-16 pr-8 py-5 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-sm focus:border-indigo-400 outline-none transition-all font-bold text-white placeholder:text-slate-600 shadow-inner"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-bold italic px-4">Min 6 characters required for core security.</p>
+                </div>
+
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-6 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl text-rose-600 dark:text-rose-400 text-[11px] font-black text-center leading-relaxed shadow-sm"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+
+                <motion.button 
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-4 transition-all"
+                >
+                  {loading ? (
+                    <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>Provision Core Profile <ICONS.Shield className="w-4 h-4" /></>
+                  )}
+                </motion.button>
+
+                <div className="flex items-center gap-4 justify-center text-slate-400">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.4em]">Neural Integrity Grounded</span>
+                </div>
+              </motion.form>
             )}
           </AnimatePresence>
           

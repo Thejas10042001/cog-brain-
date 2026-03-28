@@ -13,14 +13,13 @@ import {
   Firestore
 } from "firebase/firestore";
 
-import * as firebaseAuth from "firebase/auth";
-const { 
+import { 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut,
   signInWithPopup
-} = firebaseAuth as any;
+} from "firebase/auth";
 
 // Define User and Auth types locally as any to bypass module export issues in this environment.
 export type User = any;
