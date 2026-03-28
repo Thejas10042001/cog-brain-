@@ -1,6 +1,16 @@
 
-import { db, auth, googleProvider } from "../src/lib/firebase";
+// Standard modular Firebase v9+ initialization
+// Use separate imports for value and type to resolve potential "no exported member" errors in some environments.
+// Fix: Use wildcard import and destructuring to resolve 'no exported member' errors for initializeApp.
+import * as firebaseApp from "firebase/app";
+const { initializeApp, getApp, getApps } = firebaseApp as any;
+
+// Fix: Removed unused 'FirebaseApp' type import which was causing compilation errors.
+
 import { 
+  getFirestore, 
+  initializeFirestore,
+  Firestore,
   collection, 
   addDoc, 
   getDocs, 
@@ -10,16 +20,18 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  Firestore
+  memoryLocalCache
 } from "firebase/firestore";
 
-import { 
+// Fix: Use wildcard import and destructuring for firebase/auth to resolve "no exported member" errors.
+import * as firebaseAuth from "firebase/auth";
+const { 
+  getAuth, 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut,
-  signInWithPopup
-} from "firebase/auth";
+  signOut 
+} = firebaseAuth as any;
 
 // Define User and Auth types locally as any to bypass module export issues in this environment.
 export type User = any;
@@ -29,6 +41,46 @@ import { StoredDocument } from "../types";
 
 // State to track if we've hit a permission error
 let internalPermissionError = false;
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDf4CzUgSSGpRKlaLZiHTV25PHPUq4gltQ",
+  authDomain: "spiked-ai-76993.firebaseapp.com",
+  projectId: "spiked-ai-76993",
+  storageBucket: "spiked-ai-76993.firebasestorage.app",
+  messagingSenderId: "937017757020",
+  appId: "1:937017757020:web:1a899a8be406844e268599"
+};
+
+// Properly type db and auth instances instead of using any
+let db: Firestore | null = null;
+let auth: Auth | null = null;
+
+// Initialize Firebase App, Firestore, and Auth
+try {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "REPLACE_WITH_YOUR_API_KEY") {
+    // Check if app is already initialized to avoid "already exists" errors
+    const app: any = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    
+    // Use initializeFirestore with experimentalForceLongPolling to bypass potential WebSocket blocks
+    // Use memoryLocalCache to avoid any local persistence issues that might cause hangs
+    try {
+      db = initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+        experimentalAutoDetectLongPolling: true,
+        localCache: memoryLocalCache(),
+      });
+      console.log("Firestore initialized with long polling and memory cache.");
+    } catch (e) {
+      // If already initialized, just get the existing instance
+      db = getFirestore(app);
+      console.warn("Firestore already initialized, using existing instance.");
+    }
+    
+    auth = getAuth(app);
+  }
+} catch (error) {
+  console.error("Firebase Initialization Error:", error);
+}
 
 const COLLECTION_NAME = "cognitive_documents";
 const HISTORY_COLLECTION = "simulation_history";
@@ -48,7 +100,6 @@ export const clearFirebasePermissionError = () => { internalPermissionError = fa
 
 // Auth Helper Functions
 export const loginUser = (email: string, pass: string) => auth ? signInWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
-export const loginWithGoogle = () => (auth && googleProvider) ? signInWithPopup(auth, googleProvider) : Promise.reject("Auth module not initialized");
 export const registerUser = (email: string, pass: string) => auth ? createUserWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
 export const logoutUser = () => auth && signOut(auth);
 export const subscribeToAuth = (callback: (user: User | null) => void) => {
