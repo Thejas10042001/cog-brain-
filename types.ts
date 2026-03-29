@@ -156,22 +156,6 @@ export interface StoredDocument {
   timestamp: number;
   updatedAt?: number;
   type: string;
-  folderId: string | null;
-  fileUrl: string;
-  metadata?: {
-    size: number;
-    type: string;
-    category: string;
-  };
-}
-
-export interface Folder {
-  id: string;
-  name: string;
-  parentId: string | null;
-  userId: string;
-  createdAt: number;
-  isDefault?: boolean;
 }
 
 export type CustomerPersonaType = 'Balanced' | 'Technical' | 'Financial' | 'Business Executives';

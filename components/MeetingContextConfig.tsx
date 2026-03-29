@@ -4,6 +4,7 @@ import { MeetingContext, CustomerPersonaType, VoiceMode, StoredDocument, VocalPe
 import { ICONS } from '../constants';
 import { extractMetadataFromDocument, analyzeVocalPersona, suggestVocalPersonaFromDoc, generateVoiceSample } from '../services/geminiService';
 import { deleteDocumentFromFirebase } from '../services/firebaseService';
+import { FileUpload } from './FileUpload';
 import { DocumentGallery } from './DocumentGallery';
 
 interface MeetingContextConfigProps {
@@ -402,9 +403,10 @@ OPERATIONAL CONSTRAINTS:
                 <div className="grid grid-cols-1 gap-12">
                   <div className="bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-800">
                     <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-8">
-                      <ICONS.Research /> Intelligence Library Hub
+                      <ICONS.Research /> Library Selection
                     </h3>
                     <DocumentGallery 
+                      documents={documents} 
                       onRefresh={onUploadSuccess} 
                       selectedIds={selectedLibraryDocIds}
                       onToggleSelect={onToggleLibraryDoc}
@@ -413,6 +415,12 @@ OPERATIONAL CONSTRAINTS:
                       isAnalyzing={isAnalyzing}
                       hideSynthesize={true}
                     />
+                  </div>
+                  <div className="bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-800">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-8">
+                      <ICONS.Document /> Documentary Memory Store
+                    </h3>
+                    <FileUpload files={files} onFilesChange={onFilesChange} onUploadSuccess={onUploadSuccess} />
                   </div>
                 </div>
               </div>

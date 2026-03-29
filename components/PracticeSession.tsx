@@ -169,7 +169,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const startPractice = async () => {
     if (onStartSimulation) onStartSimulation();
     setStatus('connecting');
-    
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       let stream: MediaStream;
@@ -411,9 +410,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           }
         }
       });
-      const evaluationResult = JSON.parse(response.text || "{}");
-      setEvaluation(evaluationResult);
-      
+      setEvaluation(JSON.parse(response.text || "{}"));
       setStatus('idle');
     } catch (e) {
       console.error(e);

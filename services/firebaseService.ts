@@ -159,7 +159,7 @@ export const fetchSimulationHistory = async (): Promise<any[]> => {
   }
 };
 
-export const saveDocumentToFirebase = async (name: string, content: string, type: string, folderId: string | null = null): Promise<string | null> => {
+export const saveDocumentToFirebase = async (name: string, content: string, type: string): Promise<string | null> => {
   if (!db || !auth || !auth.currentUser) return null;
 
   try {
@@ -169,7 +169,6 @@ export const saveDocumentToFirebase = async (name: string, content: string, type
       name,
       content,
       type,
-      folderId,
       timestamp: now,
       updatedAt: now
     });
@@ -216,11 +215,8 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
         name: data.name,
         content: data.content,
         type: data.type,
-        folderId: data.folderId || null,
-        fileUrl: data.fileUrl || `https://picsum.photos/seed/${doc.id}/200/300`,
         timestamp: data.timestamp?.toMillis() || Date.now(),
-        updatedAt: data.updatedAt?.toMillis() || data.timestamp?.toMillis() || Date.now(),
-        metadata: data.metadata
+        updatedAt: data.updatedAt?.toMillis() || data.timestamp?.toMillis() || Date.now()
       };
     });
 
@@ -238,11 +234,8 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
           name: data.name,
           content: data.content,
           type: data.type,
-          folderId: data.folderId || null,
-          fileUrl: data.fileUrl || `https://picsum.photos/seed/${doc.id}/200/300`,
           timestamp: data.timestamp?.toMillis() || Date.now(),
-          updatedAt: data.updatedAt?.toMillis() || data.timestamp?.toMillis() || Date.now(),
-          metadata: data.metadata
+          updatedAt: data.updatedAt?.toMillis() || data.timestamp?.toMillis() || Date.now()
         };
       });
     }

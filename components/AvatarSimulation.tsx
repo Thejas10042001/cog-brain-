@@ -426,14 +426,6 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
   const handleInitiate = async () => {
     if (onStartSimulation) onStartSimulation();
-
-    if (window.aistudio) {
-      const hasKey = await window.aistudio.hasSelectedApiKey();
-      if (!hasKey) {
-        await window.aistudio.openSelectKey();
-      }
-    }
-
     setSessionActive(true);
     setIsProcessing(true);
     setMessages([]);
@@ -459,12 +451,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
       await playAIQuestion(cleaned);
       
       setMessages([assistantMsg]);
-    } catch (e: any) { 
-      console.error(e); 
-      if (e.message?.includes("Requested entity was not found") && window.aistudio) {
-        window.aistudio.openSelectKey();
-      }
-    } finally { setIsProcessing(false); }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
   const handleNextNode = async () => {
@@ -519,12 +506,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         setMessages([...updatedMessages, assistantMsg]);
         setCurrentCaption("");
       }
-    } catch (e: any) { 
-      console.error(e); 
-      if (e.message?.includes("Requested entity was not found") && window.aistudio) {
-        window.aistudio.openSelectKey();
-      }
-    } finally { setIsProcessing(false); }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
   const handleTryAgain = () => {
@@ -970,17 +952,6 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
                {/* User Interaction Layer */}
                <div className="space-y-8">
-                  {micPermissionError && (
-                    <div className="p-6 bg-rose-50 border border-rose-200 rounded-3xl flex items-center gap-4 animate-in slide-in-from-top-2 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center shrink-0 shadow-lg">
-                        <ICONS.Security className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h6 className="text-[10px] font-black uppercase tracking-widest text-rose-600 mb-1">Microphone Access Denied</h6>
-                        <p className="text-xs font-bold text-slate-600 italic">Please enable microphone permissions in your browser settings to use voice input.</p>
-                      </div>
-                    </div>
-                  )}
                   <div className="relative group">
                      <textarea 
                        value={currentCaption} 

@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/genai": "^1.46.0",
+    "@google/genai": "^1.38.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.18.2",
@@ -18,8 +18,7 @@
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "firebase": "^12.11.0",
-    "framer-motion": "^12.38.0",
+    "firebase": "^12.9.0",
     "googleapis": "^171.4.0",
     "lucide-react": "^0.575.0",
     "motion": "^12.34.3",
