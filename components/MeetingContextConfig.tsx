@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MeetingContext, CustomerPersonaType, VoiceMode, StoredDocument, VocalPersonaStructure, UploadedFile } from '../types';
 import { ICONS } from '../constants';
-import { extractMetadataFromDocument, analyzeVocalPersona, suggestVocalPersonaFromDoc, generateVoiceSample } from '../services/geminiService';
+import { extractMetadataFromDocument, analyzeVocalPersona, suggestVocalPersonaFromDoc, generateVoiceSample, generateVocalSignatureFromDirective } from '../services/geminiService';
 import { deleteDocumentFromFirebase } from '../services/firebaseService';
 import { FileUpload } from './FileUpload';
 import { DocumentGallery } from './DocumentGallery';
@@ -21,6 +21,8 @@ interface MeetingContextConfigProps {
   onSave?: () => void;
   isAnalyzing: boolean;
   hasAnalysis: boolean;
+  activeFolderId: string;
+  onActiveFolderChange: (id: string) => void;
 }
 
 const PERSONAS: { type: CustomerPersonaType; label: string; desc: string; icon: React.ReactNode; strategicGuidance: string }[] = [
@@ -84,7 +86,9 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   onSynthesize,
   onSave,
   isAnalyzing,
-  hasAnalysis
+  hasAnalysis,
+  activeFolderId,
+  onActiveFolderChange
 }) => {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [keywordInput, setKeywordInput] = useState("");
@@ -221,6 +225,27 @@ OPERATIONAL CONSTRAINTS:
         toneAdjectives: []
       }
     });
+  };
+
+  const handleGenerateVocalSignature = async () => {
+    const directive = context.vocalPersonaAnalysis?.mimicryDirective;
+    if (!directive) return;
+
+    setIsAnalyzingVoice(true);
+    try {
+      const result = await generateVocalSignatureFromDirective(directive);
+      onContextChange({
+        ...context,
+        selectedPersonaId: undefined,
+        selectedPersonalityId: undefined,
+        vocalPersonaAnalysis: result
+      });
+      speak("Neural vocal signature generated and calibrated based on your directive.");
+    } catch (err) {
+      console.error("Vocal signature generation failed:", err);
+    } finally {
+      setIsAnalyzingVoice(false);
+    }
   };
 
   const handleTestVoice = async () => {
@@ -414,6 +439,8 @@ OPERATIONAL CONSTRAINTS:
                       onSynthesize={() => {}} 
                       isAnalyzing={isAnalyzing}
                       hideSynthesize={true}
+                      activeFolderId={activeFolderId}
+                      onActiveFolderChange={onActiveFolderChange}
                     />
                   </div>
                   <div className="bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-800">
@@ -781,6 +808,22 @@ OPERATIONAL CONSTRAINTS:
                             className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2rem] px-8 py-6 text-sm font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[120px] placeholder:text-slate-600"
                             placeholder="Define the behavioral signature (e.g. 'Aggressive, fast-paced, skeptical, interrupts often')..."
                           />
+                          {context.vocalPersonaAnalysis?.mimicryDirective && (
+                            <div className="flex justify-end mt-4">
+                              <button
+                                onClick={handleGenerateVocalSignature}
+                                disabled={isAnalyzingVoice}
+                                className="flex items-center gap-2 px-6 py-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-indigo-600/30 disabled:opacity-50"
+                              >
+                                {isAnalyzingVoice ? (
+                                  <div className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                  <ICONS.Brain className="w-3 h-3" />
+                                )}
+                                Generate Vocal Signature
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
 

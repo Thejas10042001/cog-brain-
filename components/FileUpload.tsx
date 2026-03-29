@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { UploadedFile } from '../types';
 import { ICONS } from '../constants';
 import { parseDocument } from '../services/fileService';
-import { saveDocumentToFirebase, deleteDocumentFromFirebase } from '../services/firebaseService';
+import { saveDocumentToFirebase, deleteDocumentFromFirebase, fetchFoldersFromFirebase } from '../services/firebaseService';
+import { categorizeDocument } from '../services/geminiService';
+import { PREDEFINED_CATEGORIES } from '../constants';
 
 interface FileUploadProps {
   onFilesChange: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
@@ -44,7 +46,25 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
           onStatusChange: (isOcr) => setIsCognitiveOcr(isOcr)
         });
 
-        const docId = await saveDocumentToFirebase(file.name, text, file.type);
+        // Categorize the document
+        const currentFolders = await fetchFoldersFromFirebase();
+        const folderNames = [...PREDEFINED_CATEGORIES, ...currentFolders.map(f => f.name)];
+        const categoryName = await categorizeDocument(file.name, text, folderNames);
+        
+        // Find the folder ID
+        let targetFolderId: string | null = null;
+        if (PREDEFINED_CATEGORIES.includes(categoryName)) {
+          targetFolderId = categoryName;
+        } else {
+          const customFolder = currentFolders.find(f => f.name === categoryName);
+          if (customFolder) {
+            targetFolderId = customFolder.id;
+          } else {
+            targetFolderId = "Miscellaneous";
+          }
+        }
+
+        const docId = await saveDocumentToFirebase(file.name, text, file.type, targetFolderId || undefined);
 
         onFilesChange(prev => prev.map(f => 
           f.name === file.name ? { ...f, id: docId || undefined, content: text, status: 'ready' } : f

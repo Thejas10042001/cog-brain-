@@ -207,4 +207,29 @@ export const ICONS = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
     </svg>
   ),
+  Plus: ({ className }: { className?: string } = {}) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className || "w-5 h-5"} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  ),
+  Folder: ({ className }: { className?: string } = {}) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className || "w-5 h-5"} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+  ),
 };
+
+export const PREDEFINED_CATEGORIES = [
+  "All Files",
+  "Sales",
+  "Product",
+  "Security, Compliance & Legal",
+  "Financial & Company Information",
+  "Procurement & Customer Onboarding",
+  "Partnerships & Ecosystem",
+  "Events & Community",
+  "Customer Materials",
+  "Research & Thought Leadership",
+  "Customers & Use Cases",
+  "Miscellaneous"
+];

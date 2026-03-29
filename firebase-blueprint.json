@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "StoredDocument": {
+      "title": "StoredDocument",
+      "description": "A document stored in the cognitive library.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "content": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "type": { "type": "string" },
+        "folderId": { "type": "string" }
+      },
+      "required": ["id", "name", "content", "timestamp", "type"]
+    },
+    "Folder": {
+      "title": "Folder",
+      "description": "A folder for organizing documents.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "userId": { "type": "string" },
+        "isCustom": { "type": "boolean" },
+        "timestamp": { "type": "number" },
+        "type": { "type": "string", "enum": ["main", "sub"] },
+        "parentId": { "type": "string" }
+      },
+      "required": ["id", "name", "userId", "isCustom", "timestamp"]
+    },
+    "MeetingContext": {
+      "title": "MeetingContext",
+      "description": "Configuration for a sales simulation meeting.",
+      "type": "object",
+      "properties": {
+        "sellerCompany": { "type": "string" },
+        "sellerNames": { "type": "string" },
+        "clientCompany": { "type": "string" },
+        "clientNames": { "type": "string" },
+        "targetProducts": { "type": "string" },
+        "productDomain": { "type": "string" },
+        "meetingFocus": { "type": "string" },
+        "persona": { "type": "string" },
+        "answerStyles": { "type": "array", "items": { "type": "string" } },
+        "executiveSnapshot": { "type": "string" },
+        "strategicKeywords": { "type": "array", "items": { "type": "string" } },
+        "potentialObjections": { "type": "array", "items": { "type": "string" } },
+        "baseSystemPrompt": { "type": "string" },
+        "thinkingLevel": { "type": "string" },
+        "temperature": { "type": "number" },
+        "kycDocId": { "type": "string" },
+        "voiceMode": { "type": "string" },
+        "selectedPersonaId": { "type": "string" },
+        "selectedPersonalityId": { "type": "string" },
+        "clonedVoiceBase64": { "type": "string" },
+        "clonedVoiceMimeType": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "simulationProtocol": { "type": "string" }
+      },
+      "required": ["sellerCompany", "clientCompany", "persona", "thinkingLevel", "temperature"]
+    },
+    "SimulationHistory": {
+      "title": "SimulationHistory",
+      "description": "History of a completed simulation session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["avatar", "avatar2", "staged"] },
+        "timestamp": { "type": "number" },
+        "meetingContext": { "$ref": "MeetingContext" },
+        "messages": { "type": "array", "items": { "type": "object" } },
+        "report": { "type": "object" },
+        "biometrics": { "type": "object" },
+        "score": { "type": "number" }
+      },
+      "required": ["id", "userId", "type", "timestamp", "meetingContext", "messages"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/cognitive_documents/{docId}": {
+      "schema": "StoredDocument",
+      "description": "User's uploaded documents."
+    },
+    "/users/{userId}/folders/{folderId}": {
+      "schema": "Folder",
+      "description": "User's document folders."
+    },
+    "/users/{userId}/meeting_contexts/{contextId}": {
+      "schema": "MeetingContext",
+      "description": "Saved meeting configurations."
+    },
+    "/users/{userId}/simulation_history/{historyId}": {
+      "schema": "SimulationHistory",
+      "description": "History of simulations."
+    }
+  }
+}

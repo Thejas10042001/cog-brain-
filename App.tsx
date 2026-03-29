@@ -56,6 +56,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [activeFolderId, setActiveFolderId] = useState<string>('Global Library');
   const [history, setHistory] = useState<StoredDocument[]>([]);
   const [selectedLibraryDocIds, setSelectedLibraryDocIds] = useState<string[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
@@ -67,6 +68,19 @@ const App: React.FC = () => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
   const [darkMode] = useState(true);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isLoading?: boolean;
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -417,9 +431,18 @@ const App: React.FC = () => {
   
   const activeDocuments = useMemo(() => {
     const sessionDocs = files.filter(f => f.status === 'ready').map(f => ({ name: f.name, content: f.content }));
-    const libDocs = history.filter(d => selectedLibraryDocIds.includes(d.id)).map(d => ({ name: d.name, content: d.content }));
+    
+    // Filter history by active folder if not 'Global Library'
+    const filteredHistory = activeFolderId === 'Global Library' 
+      ? history 
+      : history.filter(d => d.folderId === activeFolderId);
+
+    const libDocs = filteredHistory
+      .filter(d => selectedLibraryDocIds.includes(d.id))
+      .map(d => ({ name: d.name, content: d.content }));
+      
     return [...sessionDocs, ...libDocs];
-  }, [files, history, selectedLibraryDocIds]);
+  }, [files, history, selectedLibraryDocIds, activeFolderId]);
 
   const generateStateHash = useCallback(() => {
     const fileIds = files.map(f => `${f.name}-${f.content.length}`).join('|');
@@ -504,17 +527,27 @@ const App: React.FC = () => {
   }, [loadingProgress]);
 
   const reset = async () => {
-    if(confirm("Are you sure you want to wipe current strategy context?")) {
-      setFiles([]);
-      setSelectedLibraryDocIds([]);
-      setAnalysis(null);
-      lastAnalyzedHash.current = null;
-      setError(null);
-      setActiveTab('context');
-      
-      // Delete from Firebase
-      await deleteMeetingContext();
-    }
+    setConfirmModal({
+      show: true,
+      title: 'Wipe Strategy Context',
+      message: 'Are you sure you want to wipe current strategy context? This action cannot be undone.',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isLoading: true }));
+        try {
+          setFiles([]);
+          setSelectedLibraryDocIds([]);
+          setAnalysis(null);
+          lastAnalyzedHash.current = null;
+          setError(null);
+          setActiveTab('context');
+          
+          // Delete from Firebase
+          await deleteMeetingContext();
+        } finally {
+          setConfirmModal({ show: false, title: '', message: '', onConfirm: () => {} });
+        }
+      }
+    });
   };
 
   const handleSaveContext = async () => {
@@ -699,6 +732,8 @@ const App: React.FC = () => {
                       onSave={handleSaveContext}
                       isAnalyzing={isAnalyzing}
                       hasAnalysis={!!analysis}
+                      activeFolderId={activeFolderId}
+                      onActiveFolderChange={setActiveFolderId}
                     />
                   </div>
                 </motion.div>
@@ -816,6 +851,8 @@ const App: React.FC = () => {
                               onSave={handleSaveContext}
                               isAnalyzing={isAnalyzing}
                               hasAnalysis={!!analysis}
+                              activeFolderId={activeFolderId}
+                              onActiveFolderChange={setActiveFolderId}
                             />
                           </motion.div>
                         </div>

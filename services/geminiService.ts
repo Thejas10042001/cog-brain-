@@ -260,7 +260,42 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
   }
 }
 
-// Suggest Vocal Persona from Document
+// Categorize a document into a folder
+export async function categorizeDocument(fileName: string, content: string, availableFolders: string[]): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const prompt = `Act as an Elite Sales Operations Analyst. 
+  Your goal is to categorize the following document into the most appropriate folder based on its content and filename.
+
+  FILENAME: ${fileName}
+  CONTENT PREVIEW (First 2000 chars):
+  ${content.substring(0, 2000)}
+
+  AVAILABLE FOLDERS:
+  ${availableFolders.join(', ')}
+
+  DIRECTIVES:
+  1. Analyze the document's purpose, target audience, and subject matter.
+  2. Select the EXACT name of the most appropriate folder from the AVAILABLE FOLDERS list.
+  3. If no specific folder fits well, select "Miscellaneous".
+  4. Return ONLY the folder name.`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+    }));
+    const suggestedFolder = response.text?.trim() || "Miscellaneous";
+    // Ensure the suggested folder is actually in the list, otherwise fallback
+    return availableFolders.includes(suggestedFolder) ? suggestedFolder : "Miscellaneous";
+  } catch (error) {
+    console.error("Categorization failed:", error);
+    return "Miscellaneous";
+  }
+}
+
+// Suggest a vocal persona based on document content
 export async function suggestVocalPersonaFromDoc(content: string): Promise<VocalPersonaStructure> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
@@ -308,6 +343,66 @@ export async function suggestVocalPersonaFromDoc(content: string): Promise<Vocal
       tempo: 'Slow',
       cadence: 'Strategic',
       accent: 'Professional',
+      emotionalBaseline: 'Steady',
+      breathingPatterns: 'Regulated'
+    };
+  }
+}
+
+// Generate Vocal Signature from a mimicry directive
+export async function generateVocalSignatureFromDirective(directive: string): Promise<VocalPersonaStructure> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+
+  const prompt = `Act as a Neural Vocal Engineer. 
+  Analyze the following "Mimicry Directive" and generate a high-fidelity "Neural Vocal Signature" (vocal parameters) that would best represent this directive.
+  
+  MIMICRY DIRECTIVE:
+  "${directive}"
+
+  REQUIRED JSON FIELDS:
+  - gender: 'Male' | 'Female' | 'Neutral'
+  - baseVoice: 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Zephyr' (Select the best fit)
+  - toneAdjectives: string[] (3-5 adjectives describing the tone)
+  - pitch: string (e.g., "Deep Baritone", "High Soprano", "Mid-range Tenor")
+  - pace: number (0.5 to 2.0, where 1.0 is normal)
+  - stability: number (0 to 100, where 100 is perfectly steady)
+  - clarity: number (0 to 100, where 100 is perfectly clear)
+  - tempo: string (e.g., "Rapid", "Measured", "Slow & Deliberate")
+  - cadence: string (e.g., "Staccato", "Fluid", "Rhythmic")
+  - accent: string (e.g., "Neutral American", "British", "Global Business")
+  - emotionalBaseline: string (e.g., "Authoritative", "Empathetic", "Skeptical")
+  - breathingPatterns: string (e.g., "Shallow", "Deep", "Frequent Pauses")
+  
+  Return ONLY the JSON object.`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    }));
+    const result = safeJsonParse(response.text || "{}");
+    return {
+      ...result,
+      mimicryDirective: directive // Preserve the original directive
+    };
+  } catch (error) {
+    console.error("Vocal signature generation failed:", error);
+    return {
+      gender: 'Male',
+      baseVoice: 'Zephyr',
+      toneAdjectives: ['Professional', 'Steady'],
+      pitch: 'Moderate',
+      pace: 1.0,
+      stability: 80,
+      clarity: 90,
+      mimicryDirective: directive,
+      tempo: 'Controlled',
+      cadence: 'Strategic',
+      accent: 'Neutral',
       emotionalBaseline: 'Steady',
       breathingPatterns: 'Regulated'
     };
