@@ -278,14 +278,13 @@ export async function categorizeDocument(fileName: string, content: string, avai
   DIRECTIVES:
   1. DEEP CONTENT ANALYSIS: Analyze the document's core subject matter, technical depth, target audience, and business purpose.
   2. CONTENT OVER FILENAME: The filename can be misleading. Prioritize the actual text content.
-  3. SELECT EXACT MATCH: Select the EXACT name of the most appropriate folder from the AVAILABLE SUB-FOLDERS list.
-  4. NO HALLUCINATIONS: Do not suggest a folder name that is not in the list.
-  5. DEFAULT: If no specific folder fits well, select "Miscellaneous".
-  6. REASONING: Provide a brief (1-2 sentences) explanation of why this category was chosen.
+  3. SELECT BEST FIT: Select the most appropriate folder from the AVAILABLE SUB-FOLDERS list.
+  4. SUGGEST NEW IF NEEDED: If NO provided sub-folder is a good fit, suggest a new, concise (1-3 words) sub-folder name that accurately describes the content.
+  5. REASONING: Provide a brief (1-2 sentences) explanation of why this category was chosen.
 
   Return the result as a JSON object with the following structure:
   {
-    "category": "Exact Folder Name",
+    "category": "Folder Name",
     "reasoning": "Brief explanation"
   }`;
 
@@ -302,10 +301,7 @@ export async function categorizeDocument(fileName: string, content: string, avai
     const suggestedFolder = result.category || "Miscellaneous";
     const reasoning = result.reasoning || "Default categorization applied.";
     
-    // Ensure the suggested folder is actually in the list, otherwise fallback
-    const finalCategory = availableFolders.includes(suggestedFolder) ? suggestedFolder : "Miscellaneous";
-    
-    return { category: finalCategory, reasoning };
+    return { category: suggestedFolder, reasoning };
   } catch (error) {
     console.error("Categorization failed:", error);
     return { category: "Miscellaneous", reasoning: "Error during AI categorization process." };
@@ -1351,7 +1347,7 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
   
   GROUNDING RULES:
   1. If GROUNDING DATA is provided below, prioritize it. 
-  2. If the user's question relates to specific data in the documents, use that data and cite the source.
+  2. If the user's question relates to specific data in the documents, use that data and cite the source. Use inline markers like [1](citation:1), [2](citation:2) in the answer text to refer to the citations provided in the citations array.
   3. If the question is general or the data isn't in the docs, do NOT refuse to answer. Instead, use your world-class general knowledge to provide a strategic, authoritative response.
   
   FORMATTING: Use Markdown (bolding, lists, tables, headers) to make your response highly readable, structured, and professional.
@@ -1493,7 +1489,7 @@ export async function* streamDeepStudy(prompt: string, history: GPTMessage[], co
   MISSION: Conduct an exhaustive, multi-layered analysis that goes far beyond obvious observations.
   
   ANALYTICAL LAYERS:
-  1. DOCUMENT SYNTHESIS: Extract specific strategic pillars from the grounded context provided.
+  1. DOCUMENT SYNTHESIS: Extract specific strategic pillars from the grounded context provided. Use inline markers like [1](citation:1), [2](citation:2) in the answer text to refer to the citations provided in the citations array.
   2. OUT-OF-THE-BOX THINKING: Infuse creative, non-obvious sales maneuvers and global market trends.
   3. CUSTOMER PSYCHOLOGY: Analyze the situation from the CUSTOMER'S point of view (their fears, personal incentives, and organizational pressures).
   4. STRATEGIC ROADMAP: Provide a step-by-step execution plan for the salesperson.
@@ -1561,7 +1557,7 @@ export interface CognitiveSearchResult {
     buyerIncentive: string;
     strategicLever: string;
   };
-  citations: { snippet: string; source: string }[];
+  citations: { snippet: string; sourceFile: string }[];
   reasoningChain: {
     painPoint: string;
     capability: string;
@@ -1602,9 +1598,9 @@ export async function* performCognitiveSearchStream(
           type: Type.OBJECT,
           properties: {
             snippet: { type: Type.STRING },
-            source: { type: Type.STRING }
+            sourceFile: { type: Type.STRING }
           },
-          required: ["snippet", "source"]
+          required: ["snippet", "sourceFile"]
         }
       },
       reasoningChain: {
@@ -1634,7 +1630,8 @@ export async function* performCognitiveSearchStream(
       config: {
         systemInstruction: `You are a Senior Cognitive Brain Strategist. 
         Provide technical rigor and grounded depth in JSON. 
-        Inside the "answer" field, use rich Markdown formatting (bolding, lists, headers) to make the content highly structured and professional.`,
+        Inside the "answer" field, use rich Markdown formatting (bolding, lists, headers) to make the content highly structured and professional.
+        CRITICAL: Use inline markers like [1](citation:1), [2](citation:2) in the answer text to refer to the citations provided in the citations array.`,
         responseMimeType: "application/json",
         responseSchema,
         thinkingConfig: { thinkingBudget: 32768 }

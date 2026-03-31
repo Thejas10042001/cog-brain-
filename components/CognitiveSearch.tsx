@@ -353,7 +353,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
                    {result.citations.map((cit, i) => (
                      <div key={i} className="p-8 bg-slate-800/50 border border-slate-800 rounded-[2rem] group hover:bg-slate-800 hover:border-indigo-500/50 transition-all duration-500">
                         <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                          <ICONS.Document className="w-3.5 h-3.5" /> {cit.source || 'Intelligence Store'}
+                          <ICONS.Document className="w-3.5 h-3.5" /> {cit.sourceFile || 'Intelligence Store'}
                         </p>
                         <p className="text-md text-slate-400 leading-relaxed font-serif italic relative">
                            {cit.snippet}

@@ -19,6 +19,26 @@ interface SalesGPTProps {
   meetingContext: MeetingContext;
 }
 
+const TypingIndicator = () => (
+  <div className="flex gap-2 items-center py-2 px-4 bg-slate-800/30 rounded-full w-fit">
+    <motion.div
+      animate={{ opacity: [0.3, 1, 0.3] }}
+      transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+      className="w-2 h-2 bg-indigo-400 rounded-full"
+    />
+    <motion.div
+      animate={{ opacity: [0.3, 1, 0.3] }}
+      transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.2 }}
+      className="w-2 h-2 bg-indigo-400 rounded-full"
+    />
+    <motion.div
+      animate={{ opacity: [0.3, 1, 0.3] }}
+      transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.4 }}
+      className="w-2 h-2 bg-indigo-400 rounded-full"
+    />
+  </div>
+);
+
 export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext }) => {
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [input, setInput] = useState("");
@@ -388,13 +408,6 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                         </div>
                       )}
                     </div>
-                    {msg.isStreaming && (
-                      <div className="flex gap-1.5">
-                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></motion.div>
-                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></motion.div>
-                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></motion.div>
-                      </div>
-                    )}
                   </div>
                   <div className={`
                     max-w-[85%] p-14 rounded-[4.5rem] text-3xl font-medium leading-relaxed shadow-none
@@ -403,9 +416,35 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                       : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800'}
                   `}>
                     <div className="markdown-content">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {msg.content}
-                      </ReactMarkdown>
+                      {msg.content ? (
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            a: ({ node, ...props }) => {
+                              if (props.href?.startsWith('citation:')) {
+                                const index = parseInt(props.href.split(':')[1]) - 1;
+                                return (
+                                  <sup 
+                                    className="cursor-pointer text-indigo-400 hover:text-indigo-300 font-black px-1.5 py-0.5 bg-indigo-500/10 rounded-md border border-indigo-500/20 mx-1 transition-all hover:scale-110 inline-block"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      const citation = msg.citations?.[index];
+                                      if (citation) setSelectedCitation(citation);
+                                    }}
+                                  >
+                                    {index + 1}
+                                  </sup>
+                                );
+                              }
+                              return <a {...props} className="text-indigo-400 hover:underline" target="_blank" rel="noopener noreferrer" />;
+                            }
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      ) : msg.isStreaming ? (
+                        <TypingIndicator />
+                      ) : null}
                     </div>
                     {msg.imageUrl && (
                       <motion.div 
@@ -444,6 +483,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                               onClick={() => setSelectedCitation(citation)}
                               className="flex items-center gap-4 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xl text-slate-300 group"
                             >
+                              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-sm">
+                                {idx + 1}
+                              </div>
                               <span className="truncate max-w-[200px]">{citation.sourceFile}</span>
                               {citation.pageNumber && <span className="text-slate-600 font-black">p.{citation.pageNumber}</span>}
                               <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
@@ -457,19 +499,26 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mt-12 flex flex-wrap gap-4"
+                        className="mt-12 pt-12 border-t border-white/10"
                       >
-                        {msg.followUpQuestions.map((q, idx) => (
-                          <motion.button
-                            key={idx}
-                            whileHover={{ scale: 1.02, backgroundColor: 'rgba(79, 70, 229, 0.2)' }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleSend(q)}
-                            className="px-8 py-4 bg-slate-800/50 border border-slate-700 rounded-full text-xl text-indigo-300 hover:text-white transition-all text-left"
-                          >
-                            {q}
-                          </motion.button>
-                        ))}
+                        <div className="flex items-center gap-4 mb-6 text-[11px] uppercase tracking-[0.4em] text-indigo-500 font-black">
+                          <ICONS.Research className="w-5 h-5" />
+                          <span>Strategic Explorations</span>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          {msg.followUpQuestions.map((q, idx) => (
+                            <motion.button
+                              key={idx}
+                              whileHover={{ x: 10, backgroundColor: 'rgba(79, 70, 229, 0.1)' }}
+                              whileTap={{ scale: 0.99 }}
+                              onClick={() => handleSend(q)}
+                              className="px-8 py-6 bg-slate-800/30 border border-slate-700/50 rounded-3xl text-2xl text-slate-300 hover:text-indigo-300 transition-all text-left flex items-center justify-between group"
+                            >
+                              <span>{q}</span>
+                              <ICONS.Chat className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all text-indigo-500" />
+                            </motion.button>
+                          ))}
+                        </div>
                       </motion.div>
                     )}
                   </div>

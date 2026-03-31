@@ -74,14 +74,29 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
         let finalFolderId: string | null = null;
         
         // Check if it's a real subfolder in DB
-        const realSub = subFoldersForMain.find(f => f.name === categoryName);
+        const realSub = subFoldersForMain.find(f => f.name.toLowerCase() === categoryName.toLowerCase());
         if (realSub) {
           finalFolderId = realSub.id;
-        } else if (PREDEFINED_CATEGORIES.includes(categoryName)) {
-          // It's a virtual subfolder
-          finalFolderId = `virtual-${targetMainFolderId}-${categoryName.replace(/\s+/g, '-')}`;
+        } else if (PREDEFINED_CATEGORIES.some(cat => cat.toLowerCase() === categoryName.toLowerCase())) {
+          // It's a virtual subfolder (only for Global Library or if not created yet)
+          const matchedCat = PREDEFINED_CATEGORIES.find(cat => cat.toLowerCase() === categoryName.toLowerCase()) || categoryName;
+          finalFolderId = `virtual-${targetMainFolderId}-${matchedCat.replace(/\s+/g, '-')}`;
         } else {
-          // Fallback to the active folder or Miscellaneous
+          // It's a NEW category suggested by AI - Create a REAL subfolder
+          // Only create if we have a real main folder (not Global Library)
+          if (targetMainFolderId !== "Global Library") {
+            const { saveFolderToFirebase } = await import('../services/firebaseService');
+            const newFolderId = await saveFolderToFirebase(categoryName, true, 'sub', targetMainFolderId);
+            finalFolderId = newFolderId;
+          } else {
+            // If in Global Library, create a new MAIN folder for this category?
+            // Or just use a virtual ID for now to avoid cluttering main folders
+            finalFolderId = `virtual-Global Library-${categoryName.replace(/\s+/g, '-')}`;
+          }
+        }
+
+        // Fallback if finalFolderId is still null
+        if (!finalFolderId) {
           finalFolderId = activeFolderId !== "Global Library" ? activeFolderId : "Miscellaneous";
         }
 
