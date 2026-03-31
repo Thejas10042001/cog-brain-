@@ -20,22 +20,25 @@ interface SalesGPTProps {
 }
 
 const TypingIndicator = () => (
-  <div className="flex gap-2 items-center py-2 px-4 bg-slate-800/30 rounded-full w-fit">
-    <motion.div
-      animate={{ opacity: [0.3, 1, 0.3] }}
-      transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-      className="w-2 h-2 bg-indigo-400 rounded-full"
-    />
-    <motion.div
-      animate={{ opacity: [0.3, 1, 0.3] }}
-      transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.2 }}
-      className="w-2 h-2 bg-indigo-400 rounded-full"
-    />
-    <motion.div
-      animate={{ opacity: [0.3, 1, 0.3] }}
-      transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.4 }}
-      className="w-2 h-2 bg-indigo-400 rounded-full"
-    />
+  <div className="flex gap-4 items-center py-3 px-6 bg-slate-800/30 rounded-2xl border border-slate-700/50 w-fit">
+    <div className="flex gap-2">
+      <motion.div
+        animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+        transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+        className="w-2 h-2 bg-indigo-500 rounded-full"
+      />
+      <motion.div
+        animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+        transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.2 }}
+        className="w-2 h-2 bg-indigo-500 rounded-full"
+      />
+      <motion.div
+        animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+        transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.4 }}
+        className="w-2 h-2 bg-indigo-500 rounded-full"
+      />
+    </div>
+    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 animate-pulse">Cognitive Analysis Active</span>
   </div>
 );
 
@@ -279,12 +282,17 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         for await (const chunk of stream) {
           fullBuffer += chunk;
           const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
+          const partialReasoning = extractFieldFromPartialJson(fullBuffer, "reasoning");
           const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
+
+          let displayContent = "";
+          if (partialReasoning) displayContent += `> **STRATEGIC REASONING:** ${partialReasoning}\n\n`;
+          if (partialAnswer) displayContent += partialAnswer;
 
           setMessages(prev => prev.map(m => 
             m.id === assistantId ? { 
               ...m, 
-              content: partialAnswer || (fullBuffer.startsWith('{') ? "" : fullBuffer),
+              content: displayContent || (fullBuffer.startsWith('{') ? "" : fullBuffer),
               citations: partialCitations || undefined
             } : m
           ));
@@ -292,7 +300,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
 
         // Generate follow-up questions for standard mode
-        const finalContent = extractFieldFromPartialJson(fullBuffer, "answer") || fullBuffer;
+        const finalAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
+        const finalReasoning = extractFieldFromPartialJson(fullBuffer, "reasoning");
+        const finalContent = finalReasoning ? `> **STRATEGIC REASONING:** ${finalReasoning}\n\n${finalAnswer || ""}` : (finalAnswer || fullBuffer);
         const followUps = await generateFollowUpQuestions(finalContent, currentHistory, contextStr);
         setMessages(prev => prev.map(m => 
           m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
@@ -410,10 +420,10 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     </div>
                   </div>
                   <div className={`
-                    max-w-[85%] p-14 rounded-[4.5rem] text-3xl font-medium leading-relaxed shadow-none
+                    max-w-[90%] p-8 rounded-[2.5rem] text-lg font-medium leading-relaxed shadow-lg
                     ${msg.role === 'user' 
-                      ? 'bg-indigo-900/20 text-white rounded-tr-none border-2 border-indigo-900/30' 
-                      : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800'}
+                      ? 'bg-indigo-600 text-white rounded-tr-none border border-indigo-500 shadow-indigo-900/20' 
+                      : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800 shadow-black/40'}
                   `}>
                     <div className="markdown-content">
                       {msg.content ? (
@@ -425,7 +435,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                                 const index = parseInt(props.href.split(':')[1]) - 1;
                                 return (
                                   <sup 
-                                    className="cursor-pointer text-indigo-400 hover:text-indigo-300 font-black px-1.5 py-0.5 bg-indigo-500/10 rounded-md border border-indigo-500/20 mx-1 transition-all hover:scale-110 inline-block"
+                                    className="cursor-pointer text-indigo-400 hover:text-indigo-300 font-black px-1.5 py-0.5 bg-indigo-500/10 rounded-md border border-indigo-500/20 mx-0.5 transition-all hover:scale-110 inline-block align-top text-[10px]"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       const citation = msg.citations?.[index];
@@ -450,7 +460,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="mt-12 rounded-[3.5rem] overflow-hidden border-[12px] border-slate-800 shadow-2xl group/img relative"
+                        className="mt-8 rounded-3xl overflow-hidden border-4 border-slate-800 shadow-2xl group/img relative"
                       >
                         <img src={msg.imageUrl} alt="Strategic Asset" className="w-full h-auto object-cover" />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center backdrop-blur-md">
@@ -458,9 +468,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                              whileHover={{ scale: 1.1 }}
                              whileTap={{ scale: 0.9 }}
                              onClick={() => downloadImage(msg.imageUrl!, 'StrategicAsset')}
-                             className="px-10 py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-600 transition-all flex items-center gap-4"
+                             className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-600 transition-all flex items-center gap-3"
                            >
-                             <ICONS.Efficiency className="w-6 h-6" /> Download Master
+                             <ICONS.Efficiency className="w-5 h-5" /> Download Master
                            </motion.button>
                         </div>
                       </motion.div>
@@ -470,25 +480,25 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                       <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="mt-12 pt-12 border-t border-white/10"
+                        className="mt-8 pt-8 border-t border-white/10"
                       >
-                        <div className="flex items-center gap-4 mb-6 text-[11px] uppercase tracking-[0.4em] text-slate-500 font-black">
-                          <FileText className="w-5 h-5" />
+                        <div className="flex items-center gap-3 mb-4 text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black">
+                          <FileText className="w-4 h-4" />
                           <span>Referenced Intelligence</span>
                         </div>
-                        <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-wrap gap-3">
                           {msg.citations.map((citation, idx) => (
                             <button
                               key={idx}
                               onClick={() => setSelectedCitation(citation)}
-                              className="flex items-center gap-4 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xl text-slate-300 group"
+                              className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm text-slate-300 group"
                             >
-                              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-sm">
+                              <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-[10px]">
                                 {idx + 1}
                               </div>
-                              <span className="truncate max-w-[200px]">{citation.sourceFile}</span>
-                              {citation.pageNumber && <span className="text-slate-600 font-black">p.{citation.pageNumber}</span>}
-                              <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
+                              <span className="truncate max-w-[150px]">{citation.sourceFile}</span>
+                              {citation.pageNumber && <span className="text-slate-600 font-black text-[10px]">p.{citation.pageNumber}</span>}
+                              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all" />
                             </button>
                           ))}
                         </div>
@@ -499,23 +509,23 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mt-12 pt-12 border-t border-white/10"
+                        className="mt-8 pt-8 border-t border-white/10"
                       >
-                        <div className="flex items-center gap-4 mb-6 text-[11px] uppercase tracking-[0.4em] text-indigo-500 font-black">
-                          <ICONS.Research className="w-5 h-5" />
+                        <div className="flex items-center gap-3 mb-4 text-[10px] uppercase tracking-[0.3em] text-indigo-500 font-black">
+                          <ICONS.Research className="w-4 h-4" />
                           <span>Strategic Explorations</span>
                         </div>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-2">
                           {msg.followUpQuestions.map((q, idx) => (
                             <motion.button
                               key={idx}
-                              whileHover={{ x: 10, backgroundColor: 'rgba(79, 70, 229, 0.1)' }}
+                              whileHover={{ x: 5, backgroundColor: 'rgba(79, 70, 229, 0.1)' }}
                               whileTap={{ scale: 0.99 }}
                               onClick={() => handleSend(q)}
-                              className="px-8 py-6 bg-slate-800/30 border border-slate-700/50 rounded-3xl text-2xl text-slate-300 hover:text-indigo-300 transition-all text-left flex items-center justify-between group"
+                              className="px-6 py-4 bg-slate-800/30 border border-slate-700/50 rounded-2xl text-base text-slate-300 hover:text-indigo-300 transition-all text-left flex items-center justify-between group"
                             >
                               <span>{q}</span>
-                              <ICONS.Chat className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all text-indigo-500" />
+                              <ICONS.Chat className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all text-indigo-500" />
                             </motion.button>
                           ))}
                         </div>
@@ -532,12 +542,12 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
       {/* Input Area */}
       <div className="w-full bg-slate-950/80 backdrop-blur-2xl border-t border-slate-800 z-20">
-        <div className="max-w-5xl mx-auto px-12 py-12 space-y-8">
-          <div className="flex flex-wrap gap-4 justify-center">
-             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-5 h-5" />} label="Fast Pulse" />
-             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-5 h-5" />} label="Cognitive" />
-             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-5 h-5" />} label="Deep Study" color="amber" />
-             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-5 h-5" />} label="Visual Logic" color="emerald" />
+        <div className="max-w-5xl mx-auto px-12 py-8 space-y-6">
+          <div className="flex flex-wrap gap-3 justify-center">
+             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
+             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" />
+             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-4 h-4" />} label="Deep Study" color="amber" />
+             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-4 h-4" />} label="Visual Logic" color="emerald" />
           </div>
 
           <div className="relative group">
@@ -547,86 +557,32 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type your strategic inquiry..."
-              className="w-full bg-slate-900 border-4 border-slate-800 rounded-[3.5rem] px-16 py-12 text-3xl outline-none transition-all pr-64 font-bold italic shadow-2xl focus:border-indigo-400 placeholder:text-slate-700 text-white"
+              className="w-full bg-slate-900 border-2 border-slate-800 rounded-3xl px-10 py-6 text-xl outline-none transition-all pr-48 font-medium shadow-2xl focus:border-indigo-500 placeholder:text-slate-700 text-white"
             />
             <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => handleSend()}
               disabled={!input.trim() || isProcessing}
-              className={`absolute right-8 top-8 bottom-8 px-16 rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-sm shadow-2xl flex items-center gap-4 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
+              className={`absolute right-4 top-4 bottom-4 px-10 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl flex items-center gap-3 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
             >
               {isProcessing ? 'Synthesizing' : 'Synthesize'}
             </motion.button>
           </div>
           
-          <div className="flex items-center justify-between px-8">
+          <div className="flex items-center justify-between px-4">
              <motion.button 
                whileHover={{ x: 5 }}
                onClick={() => setIncludeContext(!includeContext)}
-               className={`flex items-center gap-4 text-[11px] font-black uppercase tracking-[0.4em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-600'}`}
+               className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-600'}`}
              >
-                <div className={`w-2.5 h-2.5 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.6)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                <div className={`w-2 h-2 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
                 Strategic Context Sync: {includeContext ? 'Active' : 'Offline'}
              </motion.button>
-             <p className="text-[11px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.5em]">Intelligence Node v3.1 Grounded</p>
+             <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
           </div>
         </div>
       </div>
-      {/* Citation Modal */}
-      <AnimatePresence>
-        {selectedCitation && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setSelectedCitation(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-[#141414] border border-white/10 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-white/70" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-white">{selectedCitation.sourceFile}</h3>
-                    {selectedCitation.pageNumber && (
-                      <p className="text-[10px] text-white/40 uppercase tracking-tighter">Page {selectedCitation.pageNumber}</p>
-                    )}
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setSelectedCitation(null)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-white/40" />
-                </button>
-              </div>
-              <div className="p-6 max-h-[60vh] overflow-y-auto">
-                <div className="text-[10px] uppercase tracking-widest text-white/30 mb-3 font-mono">Contextual Snippet</div>
-                <div className="text-sm text-white/80 leading-relaxed italic border-l-2 border-white/20 pl-4 py-1">
-                  "{selectedCitation.snippet}"
-                </div>
-              </div>
-              <div className="p-4 border-t border-white/10 bg-white/5 flex justify-end">
-                <button
-                  onClick={() => setSelectedCitation(null)}
-                  className="px-4 py-2 bg-white text-black text-xs font-bold rounded hover:bg-white/90 transition-colors uppercase tracking-widest"
-                >
-                  Close Intelligence
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
       {/* Citation Modal */}
       <AnimatePresence>
         {selectedCitation && (
