@@ -447,7 +447,7 @@ OPERATIONAL CONSTRAINTS:
                     <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-8">
                       <ICONS.Document /> Documentary Memory Store
                     </h3>
-                    <FileUpload files={files} onFilesChange={onFilesChange} onUploadSuccess={onUploadSuccess} />
+                    <FileUpload files={files} onFilesChange={onFilesChange} onUploadSuccess={onUploadSuccess} activeFolderId={activeFolderId} />
                   </div>
                 </div>
               </div>

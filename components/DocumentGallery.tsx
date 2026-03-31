@@ -58,10 +58,16 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
     isLoading?: boolean;
   } | null>(null);
   
+  const [showReasoningId, setShowReasoningId] = useState<string | null>(null);
+  
   const hasError = getFirebasePermissionError();
 
   useEffect(() => {
     loadFolders();
+    
+    const handleGlobalClick = () => setShowReasoningId(null);
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
   }, []);
 
   const loadFolders = async () => {
@@ -80,6 +86,9 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
     );
 
     if (folderId) {
+      // Automatically select the new folder
+      onActiveFolderChange(folderId);
+      
       // If it's a main folder, automatically create sub-folders from predefined categories
       if (folderType === 'main') {
         const subCategories = PREDEFINED_CATEGORIES;
@@ -756,17 +765,49 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-5 border-t border-slate-800 flex items-center justify-between">
+                    <div className="mt-6 pt-5 border-t border-slate-800 flex items-center justify-between relative">
                       <div className="flex flex-col gap-1">
-                         <span className="text-[8px] font-black uppercase text-slate-500 px-3 py-1 bg-slate-800 rounded-lg flex items-center gap-2">
-                           <ICONS.Folder className="w-2 h-2" />
-                           {doc.folderId || "Miscellaneous"}
-                         </span>
+                         <div className="flex items-center gap-2">
+                           <span className="text-[8px] font-black uppercase text-slate-500 px-3 py-1 bg-slate-800 rounded-lg flex items-center gap-2">
+                             <ICONS.Folder className="w-2 h-2" />
+                             {allFolders.find(f => f.id === doc.folderId)?.name || doc.category || "Miscellaneous"}
+                           </span>
+                           {doc.categorizationReasoning && (
+                             <button 
+                               onClick={(e) => { e.stopPropagation(); setShowReasoningId(showReasoningId === doc.id ? null : doc.id); }}
+                               className="p-1 text-indigo-400 hover:text-indigo-300 transition-colors"
+                               title="View AI Categorization Reasoning"
+                             >
+                               <ICONS.Help className="w-3 h-3" />
+                             </button>
+                           )}
+                         </div>
                          {doc.updatedAt && doc.updatedAt !== doc.timestamp && (
                            <span className="text-[7px] font-black text-indigo-500 px-1">Modified: {formatDate(doc.updatedAt)}</span>
                          )}
                       </div>
                       <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest">{(doc.type.split('/')[1] || 'DOC').toUpperCase()}</span>
+
+                      <AnimatePresence>
+                        {showReasoningId === doc.id && doc.categorizationReasoning && (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                            className="absolute bottom-full left-0 mb-2 w-64 bg-slate-800 border border-indigo-500/30 p-4 rounded-2xl shadow-2xl z-[60] backdrop-blur-xl"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <ICONS.Brain className="w-3 h-3 text-indigo-400" />
+                              <span className="text-[9px] font-black uppercase tracking-widest text-indigo-300">AI Reasoning</span>
+                            </div>
+                            <p className="text-[10px] text-slate-300 leading-relaxed font-medium italic">
+                              "{doc.categorizationReasoning}"
+                            </p>
+                            <div className="absolute -bottom-2 left-4 w-4 h-4 bg-slate-800 border-r border-b border-indigo-500/30 rotate-45"></div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     {/* Selection Indicator */}

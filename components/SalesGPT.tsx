@@ -4,8 +4,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ICONS } from '../constants';
-import { streamSalesGPT, generatePineappleImage, streamDeepStudy, performCognitiveSearchStream } from '../services/geminiService';
-import { GPTMessage, GPTToolMode, MeetingContext } from '../types';
+import { 
+  streamSalesGPT, 
+  generatePineappleImage, 
+  streamDeepStudy, 
+  performCognitiveSearchStream, 
+  generateFollowUpQuestions 
+} from '../services/geminiService';
+import { GPTMessage, GPTToolMode, MeetingContext, Citation } from '../types';
+import { FileText, ExternalLink, X } from 'lucide-react';
 
 interface SalesGPTProps {
   activeDocuments: { name: string; content: string }[];
@@ -18,6 +25,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
   const [mode, setMode] = useState<GPTToolMode>('standard');
   const [isProcessing, setIsProcessing] = useState(false);
   const [includeContext, setIncludeContext] = useState(true);
+  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -45,16 +53,28 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
         return content.replace(/\\n/g, '\n').replace(/\\"/g, '"');
       }
 
-      // Handle object fields (very basic extraction)
+      // Handle object or array fields (very basic extraction)
       const objMarker = `"${field}": {`;
+      const arrMarker = `"${field}": [`;
       const objStartIdx = json.indexOf(objMarker);
-      if (objStartIdx !== -1) {
-        const contentStart = objStartIdx + objMarker.length - 1; // include the {
+      const arrStartIdx = json.indexOf(arrMarker);
+      
+      const complexStartIdx = objStartIdx !== -1 ? objStartIdx : arrStartIdx;
+      const marker = objStartIdx !== -1 ? objMarker : arrMarker;
+      const openChar = objStartIdx !== -1 ? '{' : '[';
+      const closeChar = objStartIdx !== -1 ? '}' : ']';
+
+      if (complexStartIdx !== -1) {
+        const contentStart = complexStartIdx + marker.length - 1; // include the { or [
         let balance = 0;
         let content = "";
+        let inString = false;
         for (let i = contentStart; i < json.length; i++) {
-          if (json[i] === '{') balance++;
-          if (json[i] === '}') balance--;
+          if (json[i] === '"' && (i === 0 || json[i-1] !== '\\')) inString = !inString;
+          if (!inString) {
+            if (json[i] === openChar) balance++;
+            if (json[i] === closeChar) balance--;
+          }
           content += json[i];
           if (balance === 0) break;
         }
@@ -71,19 +91,20 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isProcessing) return;
+  const handleSend = async (overrideInput?: string) => {
+    const messageText = overrideInput || input;
+    if (!messageText.trim() || isProcessing) return;
 
     const currentHistory = [...messages];
     const userMessage: GPTMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: messageText,
       mode: mode,
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInput("");
+    if (!overrideInput) setInput("");
     setIsProcessing(true);
 
     const assistantId = (Date.now() + 1).toString();
@@ -121,16 +142,36 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         setMessages(prev => prev.map(m => 
           m.id === assistantId ? { ...m, content: imageUrl ? "Asset synthesized:" : "Failed to synthesize asset.", imageUrl: imageUrl || undefined, isStreaming: false } : m
         ));
+
+        // Generate follow-up questions for pineapple mode
+        const followUps = await generateFollowUpQuestions(imageUrl ? "Asset synthesized." : "Failed to synthesize asset.", currentHistory, contextStr);
+        setMessages(prev => prev.map(m => 
+          m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
+        ));
       } else if (mode === 'deep-study') {
         const stream = streamDeepStudy(input, currentHistory, contextStr);
-        let fullText = "";
+        let fullBuffer = "";
         for await (const chunk of stream) {
-          fullText += chunk;
+          fullBuffer += chunk;
+          const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
+          const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
+          
           setMessages(prev => prev.map(m => 
-            m.id === assistantId ? { ...m, content: fullText } : m
+            m.id === assistantId ? { 
+              ...m, 
+              content: partialAnswer || (fullBuffer.startsWith('{') ? "" : fullBuffer),
+              citations: partialCitations || undefined
+            } : m
           ));
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
+        
+        // Generate follow-up questions
+        const finalContent = extractFieldFromPartialJson(fullBuffer, "answer") || fullBuffer;
+        const followUps = await generateFollowUpQuestions(finalContent, currentHistory, contextStr);
+        setMessages(prev => prev.map(m => 
+          m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
+        ));
       } else if (mode === 'cognitive') {
         const stream = performCognitiveSearchStream(input, docContext, meetingContext);
         let fullBuffer = "";
@@ -140,8 +181,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           const partialShot = extractFieldFromPartialJson(fullBuffer, "cognitiveShot");
           const partialProjection = extractFieldFromPartialJson(fullBuffer, "psychologicalProjection");
           const partialChain = extractFieldFromPartialJson(fullBuffer, "reasoningChain");
+          const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
           
-          if (partialAnswer || partialShot || partialProjection || partialChain) {
+          if (partialAnswer || partialShot || partialProjection || partialChain || partialCitations) {
             let displayContent = "";
             
             if (partialShot) {
@@ -168,21 +210,73 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
             }
             
             setMessages(prev => prev.map(m => 
-              m.id === assistantId ? { ...m, content: displayContent } : m
+              m.id === assistantId ? { 
+                ...m, 
+                content: displayContent,
+                citations: partialCitations || undefined
+              } : m
             ));
           }
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
+
+        // Generate follow-up questions for cognitive mode
+        // We need to reconstruct the final display content or use fullBuffer
+        const finalAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
+        const finalShot = extractFieldFromPartialJson(fullBuffer, "cognitiveShot");
+        const finalProjection = extractFieldFromPartialJson(fullBuffer, "psychologicalProjection");
+        const finalChain = extractFieldFromPartialJson(fullBuffer, "reasoningChain");
+        const finalCitations = extractFieldFromPartialJson(fullBuffer, "citations");
+        
+        let finalDisplayContent = "";
+        if (finalShot) finalDisplayContent += `> **STRATEGIC SHOT:** ${finalShot}\n\n`;
+        if (finalProjection) {
+          finalDisplayContent += `### 🧠 Psychological Projection\n`;
+          if (finalProjection.buyerFear) finalDisplayContent += `- **Buyer Fear:** ${finalProjection.buyerFear}\n`;
+          if (finalProjection.buyerIncentive) finalDisplayContent += `- **Incentive:** ${finalProjection.buyerIncentive}\n`;
+          if (finalProjection.strategicLever) finalDisplayContent += `- **Strategic Lever:** ${finalProjection.strategicLever}\n`;
+          finalDisplayContent += `\n`;
+        }
+        if (finalAnswer) finalDisplayContent += `### 🎯 Intelligence Synthesis\n${finalAnswer}\n\n`;
+        if (finalChain) {
+          finalDisplayContent += `### ⛓️ Reasoning Chain\n`;
+          if (finalChain.painPoint) finalDisplayContent += `- **Pain Point:** ${finalChain.painPoint}\n`;
+          if (finalChain.capability) finalDisplayContent += `- **Capability:** ${finalChain.capability}\n`;
+          if (finalChain.strategicValue) finalDisplayContent += `- **Strategic Value:** ${finalChain.strategicValue}\n`;
+        }
+
+        const followUps = await generateFollowUpQuestions(finalDisplayContent, currentHistory, contextStr);
+        setMessages(prev => prev.map(m => 
+          m.id === assistantId ? { 
+            ...m, 
+            followUpQuestions: followUps,
+            citations: finalCitations || undefined
+          } : m
+        ));
       } else {
         const stream = streamSalesGPT(input, currentHistory, contextStr);
-        let fullText = "";
+        let fullBuffer = "";
         for await (const chunk of stream) {
-          fullText += chunk;
+          fullBuffer += chunk;
+          const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
+          const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
+
           setMessages(prev => prev.map(m => 
-            m.id === assistantId ? { ...m, content: fullText } : m
+            m.id === assistantId ? { 
+              ...m, 
+              content: partialAnswer || (fullBuffer.startsWith('{') ? "" : fullBuffer),
+              citations: partialCitations || undefined
+            } : m
           ));
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
+
+        // Generate follow-up questions for standard mode
+        const finalContent = extractFieldFromPartialJson(fullBuffer, "answer") || fullBuffer;
+        const followUps = await generateFollowUpQuestions(finalContent, currentHistory, contextStr);
+        setMessages(prev => prev.map(m => 
+          m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
+        ));
       }
     } catch (error) {
       console.error(error);
@@ -270,9 +364,30 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                   className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
                   <div className={`mb-4 px-8 flex items-center gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <span className={`text-[11px] font-black uppercase tracking-[0.4em] ${msg.role === 'user' ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'}`}>
-                       {msg.role === 'user' ? 'Strategic Architect' : 'Cognitive Core'}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-[11px] font-black uppercase tracking-[0.4em] ${msg.role === 'user' ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'}`}>
+                        {msg.role === 'user' ? 'Strategic Architect' : 'Cognitive Core'}
+                      </span>
+                      {msg.role === 'assistant' && (
+                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
+                          msg.mode === 'standard' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' :
+                          msg.mode === 'cognitive' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
+                          msg.mode === 'deep-study' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                          'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        }`}>
+                          {msg.mode === 'standard' && <ICONS.Chat className="w-3 h-3" />}
+                          {msg.mode === 'cognitive' && <ICONS.Search className="w-3 h-3" />}
+                          {msg.mode === 'deep-study' && <ICONS.Research className="w-3 h-3" />}
+                          {msg.mode === 'pineapple' && <ICONS.Pineapple className="w-3 h-3" />}
+                          <span>
+                            {msg.mode === 'standard' ? 'Fast Pulse' : 
+                             msg.mode === 'cognitive' ? 'Cognitive' : 
+                             msg.mode === 'deep-study' ? 'Deep Study' : 
+                             'Visual Logic'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                     {msg.isStreaming && (
                       <div className="flex gap-1.5">
                         <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></motion.div>
@@ -311,6 +426,52 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                         </div>
                       </motion.div>
                     )}
+                    
+                    {msg.citations && msg.citations.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="mt-12 pt-12 border-t border-white/10"
+                      >
+                        <div className="flex items-center gap-4 mb-6 text-[11px] uppercase tracking-[0.4em] text-slate-500 font-black">
+                          <FileText className="w-5 h-5" />
+                          <span>Referenced Intelligence</span>
+                        </div>
+                        <div className="flex flex-wrap gap-4">
+                          {msg.citations.map((citation, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setSelectedCitation(citation)}
+                              className="flex items-center gap-4 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xl text-slate-300 group"
+                            >
+                              <span className="truncate max-w-[200px]">{citation.sourceFile}</span>
+                              {citation.pageNumber && <span className="text-slate-600 font-black">p.{citation.pageNumber}</span>}
+                              <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                    
+                    {msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-12 flex flex-wrap gap-4"
+                      >
+                        {msg.followUpQuestions.map((q, idx) => (
+                          <motion.button
+                            key={idx}
+                            whileHover={{ scale: 1.02, backgroundColor: 'rgba(79, 70, 229, 0.2)' }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleSend(q)}
+                            className="px-8 py-4 bg-slate-800/50 border border-slate-700 rounded-full text-xl text-indigo-300 hover:text-white transition-all text-left"
+                          >
+                            {q}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
               ))
@@ -342,7 +503,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={!input.trim() || isProcessing}
               className={`absolute right-8 top-8 bottom-8 px-16 rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-sm shadow-2xl flex items-center gap-4 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
             >
@@ -363,6 +524,114 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           </div>
         </div>
       </div>
+      {/* Citation Modal */}
+      <AnimatePresence>
+        {selectedCitation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setSelectedCitation(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-[#141414] border border-white/10 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-white/70" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-white">{selectedCitation.sourceFile}</h3>
+                    {selectedCitation.pageNumber && (
+                      <p className="text-[10px] text-white/40 uppercase tracking-tighter">Page {selectedCitation.pageNumber}</p>
+                    )}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedCitation(null)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-white/40" />
+                </button>
+              </div>
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
+                <div className="text-[10px] uppercase tracking-widest text-white/30 mb-3 font-mono">Contextual Snippet</div>
+                <div className="text-sm text-white/80 leading-relaxed italic border-l-2 border-white/20 pl-4 py-1">
+                  "{selectedCitation.snippet}"
+                </div>
+              </div>
+              <div className="p-4 border-t border-white/10 bg-white/5 flex justify-end">
+                <button
+                  onClick={() => setSelectedCitation(null)}
+                  className="px-4 py-2 bg-white text-black text-xs font-bold rounded hover:bg-white/90 transition-colors uppercase tracking-widest"
+                >
+                  Close Intelligence
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Citation Modal */}
+      <AnimatePresence>
+        {selectedCitation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setSelectedCitation(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-[#141414] border border-white/10 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-white/70" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-white">{selectedCitation.sourceFile}</h3>
+                    {selectedCitation.pageNumber && (
+                      <p className="text-[10px] text-white/40 uppercase tracking-tighter">Page {selectedCitation.pageNumber}</p>
+                    )}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedCitation(null)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-white/40" />
+                </button>
+              </div>
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
+                <div className="text-[10px] uppercase tracking-widest text-white/30 mb-3 font-mono">Contextual Snippet</div>
+                <div className="text-sm text-white/80 leading-relaxed italic border-l-2 border-white/20 pl-4 py-1">
+                  "{selectedCitation.snippet}"
+                </div>
+              </div>
+              <div className="p-4 border-t border-white/10 bg-white/5 flex justify-end">
+                <button
+                  onClick={() => setSelectedCitation(null)}
+                  className="px-4 py-2 bg-white text-black text-xs font-bold rounded hover:bg-white/90 transition-colors uppercase tracking-widest"
+                >
+                  Close Intelligence
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -147,6 +147,8 @@ export interface UploadedFile {
   content: string;
   type: string;
   status: 'processing' | 'ready' | 'error' | 'ocr';
+  category?: string;
+  reasoning?: string;
 }
 
 export interface StoredDocument {
@@ -158,6 +160,7 @@ export interface StoredDocument {
   type: string;
   folderId?: string; // ID of the folder it belongs to
   category?: string; // Predefined category name
+  categorizationReasoning?: string; // AI's decision-making process
 }
 
 export interface Folder {
@@ -307,6 +310,8 @@ export interface GPTMessage {
   mode: GPTToolMode;
   imageUrl?: string;
   isStreaming?: boolean;
+  followUpQuestions?: string[];
+  citations?: Citation[];
 }
 
 export interface GroomingEvaluation {

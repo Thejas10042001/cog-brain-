@@ -261,37 +261,54 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
 }
 
 // Categorize a document into a folder
-export async function categorizeDocument(fileName: string, content: string, availableFolders: string[]): Promise<string> {
+export async function categorizeDocument(fileName: string, content: string, availableFolders: string[]): Promise<{ category: string; reasoning: string }> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
-  const prompt = `Act as an Elite Sales Operations Analyst. 
-  Your goal is to categorize the following document into the most appropriate folder based on its content and filename.
-
+  const prompt = `Act as an Elite Sales Operations Analyst and Knowledge Management Expert. 
+  Your goal is to categorize the following document into the most appropriate sub-folder based PRIMARILY on its content.
+  
   FILENAME: ${fileName}
-  CONTENT PREVIEW (First 2000 chars):
-  ${content.substring(0, 2000)}
-
-  AVAILABLE FOLDERS:
+  CONTENT PREVIEW (First 6000 chars):
+  ${content.substring(0, 6000)}
+  
+  AVAILABLE SUB-FOLDERS:
   ${availableFolders.join(', ')}
-
+  
   DIRECTIVES:
-  1. Analyze the document's purpose, target audience, and subject matter.
-  2. Select the EXACT name of the most appropriate folder from the AVAILABLE FOLDERS list.
-  3. If no specific folder fits well, select "Miscellaneous".
-  4. Return ONLY the folder name.`;
+  1. DEEP CONTENT ANALYSIS: Analyze the document's core subject matter, technical depth, target audience, and business purpose.
+  2. CONTENT OVER FILENAME: The filename can be misleading. Prioritize the actual text content.
+  3. SELECT EXACT MATCH: Select the EXACT name of the most appropriate folder from the AVAILABLE SUB-FOLDERS list.
+  4. NO HALLUCINATIONS: Do not suggest a folder name that is not in the list.
+  5. DEFAULT: If no specific folder fits well, select "Miscellaneous".
+  6. REASONING: Provide a brief (1-2 sentences) explanation of why this category was chosen.
+
+  Return the result as a JSON object with the following structure:
+  {
+    "category": "Exact Folder Name",
+    "reasoning": "Brief explanation"
+  }`;
 
   try {
     const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
       contents: prompt,
+      config: {
+        responseMimeType: 'application/json'
+      }
     }));
-    const suggestedFolder = response.text?.trim() || "Miscellaneous";
+    
+    const result = JSON.parse(response.text || '{}');
+    const suggestedFolder = result.category || "Miscellaneous";
+    const reasoning = result.reasoning || "Default categorization applied.";
+    
     // Ensure the suggested folder is actually in the list, otherwise fallback
-    return availableFolders.includes(suggestedFolder) ? suggestedFolder : "Miscellaneous";
+    const finalCategory = availableFolders.includes(suggestedFolder) ? suggestedFolder : "Miscellaneous";
+    
+    return { category: finalCategory, reasoning };
   } catch (error) {
     console.error("Categorization failed:", error);
-    return "Miscellaneous";
+    return { category: "Miscellaneous", reasoning: "Error during AI categorization process." };
   }
 }
 
@@ -1341,6 +1358,10 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
   
   STYLE: Direct, authoritative, and strategic. No fluff.
   
+  OUTPUT FORMAT: Return a JSON object with:
+  - answer: string (The strategic response)
+  - citations: Array of { snippet: string, sourceFile: string, pageNumber?: string } (The specific document references used)
+  
   ${context ? `--- DOCUMENT GROUNDING DATA ---
   ${context}
   -----------------------` : ""}`;
@@ -1351,7 +1372,26 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
       contents: contents,
       config: {
         systemInstruction: systemInstruction,
-        thinkingConfig: { thinkingBudget: 0 }
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            answer: { type: Type.STRING },
+            citations: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  snippet: { type: Type.STRING },
+                  sourceFile: { type: Type.STRING },
+                  pageNumber: { type: Type.STRING }
+                },
+                required: ["snippet", "sourceFile"]
+              }
+            }
+          },
+          required: ["answer", "citations"]
+        }
       }
     }));
 
@@ -1461,6 +1501,10 @@ export async function* streamDeepStudy(prompt: string, history: GPTMessage[], co
   FORMATTING: Use exhaustive Markdown formatting (headers, bullet points, bold text, and tables) to structure your deep analysis for maximum readability and impact.
   
   STYLE: Exhaustive, professional, academic but actionable.
+
+  OUTPUT FORMAT: Return a JSON object with:
+  - answer: string (The strategic response)
+  - citations: Array of { snippet: string, sourceFile: string, pageNumber?: string } (The specific document references used)
   
   ${context ? `--- GROUNDED DOCUMENT CONTEXT ---
   ${context}
@@ -1474,6 +1518,26 @@ export async function* streamDeepStudy(prompt: string, history: GPTMessage[], co
       contents: contents,
       config: {
         systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            answer: { type: Type.STRING },
+            citations: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  snippet: { type: Type.STRING },
+                  sourceFile: { type: Type.STRING },
+                  pageNumber: { type: Type.STRING }
+                },
+                required: ["snippet", "sourceFile"]
+              }
+            }
+          },
+          required: ["answer", "citations"]
+        },
         thinkingConfig: { thinkingBudget: 32768 }
       }
     }));
@@ -1829,4 +1893,50 @@ export async function analyzeSalesContext(filesContent: string, context: Meeting
     }));
     return safeJsonParse(response.text || "{}") as AnalysisResult;
   } catch (error: any) { throw new Error(`Analysis Failed: ${error.message}`); }
+}
+
+export async function generateFollowUpQuestions(
+  lastMessage: string,
+  history: GPTMessage[],
+  context?: string
+): Promise<string[]> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+
+  const historyStr = history.slice(-5).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+
+  const prompt = `Based on the following AI response and the conversation history, generate 3 relevant, strategic follow-up questions that a user might want to ask to explore the topic deeper.
+  
+  CONVERSATION HISTORY:
+  ${historyStr}
+  
+  LAST AI RESPONSE:
+  ${lastMessage}
+  
+  ${context ? `STRATEGIC CONTEXT: ${context}` : ""}
+  
+  DIRECTIVES:
+  1. The questions should be concise and high-impact.
+  2. They should focus on strategic sales insights, ROI, risk, or implementation details.
+  3. Return ONLY a JSON array of 3 strings.
+  
+  Example: ["How does this impact the TCO over 3 years?", "What are the primary integration risks?", "Can we see a case study for a similar scale?"]`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    }));
+    return safeJsonParse(response.text || "[]");
+  } catch (error) {
+    console.error("Follow-up generation failed:", error);
+    return [];
+  }
 }
