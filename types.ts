@@ -373,3 +373,11 @@ export interface SalesStrategy {
     milestones: string[];
   }>;
 }
+
+export interface SalesGPTSession {
+  id: string;
+  userId: string;
+  title: string;
+  timestamp: number;
+  messages: GPTMessage[];
+}

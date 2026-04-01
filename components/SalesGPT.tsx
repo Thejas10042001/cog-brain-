@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, FC } from 'react';
+import React, { useState, useRef, useEffect, FC, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -11,8 +11,9 @@ import {
   performCognitiveSearchStream, 
   generateFollowUpQuestions 
 } from '../services/geminiService';
-import { GPTMessage, GPTToolMode, MeetingContext, Citation } from '../types';
-import { FileText, ExternalLink, X } from 'lucide-react';
+import { saveSalesGPTSession, fetchSalesGPTSessions, deleteSalesGPTSession } from '../services/firebaseService';
+import { GPTMessage, GPTToolMode, MeetingContext, Citation, SalesGPTSession } from '../types';
+import { FileText, ExternalLink, X, MessageSquare, Plus, Trash2, Bell, History } from 'lucide-react';
 
 interface SalesGPTProps {
   activeDocuments: { name: string; content: string }[];
@@ -49,15 +50,93 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
   const [isProcessing, setIsProcessing] = useState(false);
   const [includeContext, setIncludeContext] = useState(true);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
+  const [sessions, setSessions] = useState<SalesGPTSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [showNotification, setShowNotification] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const playPing = useCallback(() => {
+    try {
+      const context = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, context.currentTime);
+      gain.gain.setValueAtTime(0.1, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.5);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.5);
+    } catch (e) {
+      console.warn("Audio feedback failed:", e);
+    }
+  }, []);
+
+  const loadSessions = useCallback(async () => {
+    const data = await fetchSalesGPTSessions();
+    setSessions(data);
+  }, []);
+
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
+
+  const scrollToBottom = useCallback(() => {
+    if (shouldAutoScroll) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [shouldAutoScroll]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
+
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+    setShouldAutoScroll(isAtBottom);
+  };
+
+  const createNewSession = () => {
+    setMessages([]);
+    setCurrentSessionId(null);
+    setShouldAutoScroll(true);
+  };
+
+  const selectSession = (session: SalesGPTSession) => {
+    setMessages(session.messages);
+    setCurrentSessionId(session.id);
+    setShouldAutoScroll(true);
+  };
+
+  const handleDeleteSession = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const success = await deleteSalesGPTSession(id);
+    if (success) {
+      if (currentSessionId === id) createNewSession();
+      loadSessions();
+    }
+  };
+
+  const autoSaveSession = async (updatedMessages: GPTMessage[]) => {
+    if (updatedMessages.length === 0) return;
+    
+    const title = updatedMessages[0].content.slice(0, 30) + (updatedMessages[0].content.length > 30 ? "..." : "");
+    const sessionId = await saveSalesGPTSession({
+      id: currentSessionId || undefined,
+      title,
+      messages: updatedMessages
+    });
+    
+    if (sessionId && !currentSessionId) {
+      setCurrentSessionId(sessionId);
+    }
+    loadSessions();
+  };
 
   const extractFieldFromPartialJson = (json: string, field: string): any => {
     try {
@@ -129,6 +208,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
     setMessages(prev => [...prev, userMessage]);
     if (!overrideInput) setInput("");
     setIsProcessing(true);
+    setShouldAutoScroll(true);
 
     const assistantId = (Date.now() + 1).toString();
     const assistantMessage: GPTMessage = {
@@ -166,11 +246,20 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           m.id === assistantId ? { ...m, content: imageUrl ? "Asset synthesized:" : "Failed to synthesize asset.", imageUrl: imageUrl || undefined, isStreaming: false } : m
         ));
 
+        // Notify user
+        playPing();
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+
         // Generate follow-up questions for pineapple mode
         const followUps = await generateFollowUpQuestions(imageUrl ? "Asset synthesized." : "Failed to synthesize asset.", currentHistory, contextStr);
-        setMessages(prev => prev.map(m => 
-          m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
-        ));
+        setMessages(prev => {
+          const updated = prev.map(m => 
+            m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
+          );
+          autoSaveSession(updated);
+          return updated;
+        });
       } else if (mode === 'deep-study') {
         const stream = streamDeepStudy(input, currentHistory, contextStr);
         let fullBuffer = "";
@@ -189,12 +278,21 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
         
+        // Notify user
+        playPing();
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+
         // Generate follow-up questions
         const finalContent = extractFieldFromPartialJson(fullBuffer, "answer") || fullBuffer;
         const followUps = await generateFollowUpQuestions(finalContent, currentHistory, contextStr);
-        setMessages(prev => prev.map(m => 
-          m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
-        ));
+        setMessages(prev => {
+          const updated = prev.map(m => 
+            m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
+          );
+          autoSaveSession(updated);
+          return updated;
+        });
       } else if (mode === 'cognitive') {
         const stream = performCognitiveSearchStream(input, docContext, meetingContext);
         let fullBuffer = "";
@@ -243,6 +341,11 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
 
+        // Notify user
+        playPing();
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+
         // Generate follow-up questions for cognitive mode
         // We need to reconstruct the final display content or use fullBuffer
         const finalAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
@@ -269,13 +372,17 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         }
 
         const followUps = await generateFollowUpQuestions(finalDisplayContent, currentHistory, contextStr);
-        setMessages(prev => prev.map(m => 
-          m.id === assistantId ? { 
-            ...m, 
-            followUpQuestions: followUps,
-            citations: finalCitations || undefined
-          } : m
-        ));
+        setMessages(prev => {
+          const updated = prev.map(m => 
+            m.id === assistantId ? { 
+              ...m, 
+              followUpQuestions: followUps,
+              citations: finalCitations || undefined
+            } : m
+          );
+          autoSaveSession(updated);
+          return updated;
+        });
       } else {
         const stream = streamSalesGPT(input, currentHistory, contextStr);
         let fullBuffer = "";
@@ -298,15 +405,24 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           ));
         }
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
+        
+        // Notify user
+        playPing();
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
 
         // Generate follow-up questions for standard mode
         const finalAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
         const finalReasoning = extractFieldFromPartialJson(fullBuffer, "reasoning");
         const finalContent = finalReasoning ? `> **STRATEGIC REASONING:** ${finalReasoning}\n\n${finalAnswer || ""}` : (finalAnswer || fullBuffer);
         const followUps = await generateFollowUpQuestions(finalContent, currentHistory, contextStr);
-        setMessages(prev => prev.map(m => 
-          m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
-        ));
+        setMessages(prev => {
+          const updated = prev.map(m => 
+            m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
+          );
+          autoSaveSession(updated);
+          return updated;
+        });
       }
     } catch (error) {
       console.error(error);
@@ -320,6 +436,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
   const clearChat = () => {
     setMessages([]);
+    setCurrentSessionId(null);
   };
 
   const downloadImage = (url: string, filename: string) => {
@@ -332,38 +449,108 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 relative overflow-hidden">
-      {/* Header */}
-      <div className="w-full bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 z-20">
-        <div className="max-w-5xl mx-auto px-12 py-8 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-             <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-2xl">
-                <ICONS.Brain className="w-8 h-8" />
-             </div>
-             <div>
-                <h3 className="text-2xl font-black text-white tracking-tighter uppercase">Strategic Intelligence</h3>
-                <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.4em]">Neural Sales Copilot v3.1</p>
-             </div>
-          </div>
-          <div className="flex items-center gap-6">
-             <motion.button 
-               whileHover={{ scale: 1.05 }}
-               whileTap={{ scale: 0.95 }}
-               onClick={clearChat} 
-               className="px-6 py-3 text-slate-500 hover:text-rose-400 text-[11px] font-black uppercase tracking-widest transition-colors"
-             >
-               Clear Memory
-             </motion.button>
-             <div className="flex items-center gap-3 px-6 py-3 bg-emerald-900/20 text-emerald-400 rounded-2xl border border-emerald-900/30 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                Neural Core Active
-             </div>
+    <div className="flex h-full bg-slate-950 relative overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-80 border-r border-slate-800/50 bg-slate-900/30 flex flex-col z-30">
+        <div className="p-6 border-b border-slate-800/50">
+          <button 
+            onClick={createNewSession}
+            className="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-lg shadow-indigo-900/20 active:scale-95"
+          >
+            <Plus className="w-4 h-4" /> New Strategic Session
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Recent Intelligence (15d)</p>
+          {sessions.map((session) => (
+            <div 
+              key={session.id}
+              onClick={() => selectSession(session)}
+              className={`group p-4 rounded-2xl cursor-pointer transition-all border flex items-start justify-between gap-3 ${
+                currentSessionId === session.id 
+                ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' 
+                : 'bg-transparent border-transparent hover:bg-slate-800/50 text-slate-400'
+              }`}
+            >
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <MessageSquare className={`w-4 h-4 mt-1 flex-shrink-0 ${currentSessionId === session.id ? 'text-indigo-400' : 'text-slate-600'}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate leading-tight">{session.title}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-50">
+                    {new Date(session.timestamp).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={(e) => handleDeleteSession(e, session.id)}
+                className="opacity-0 group-hover:opacity-100 p-2 hover:text-rose-400 transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+          {sessions.length === 0 && (
+            <div className="py-12 text-center space-y-4">
+              <div className="w-12 h-12 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto">
+                <History className="w-6 h-6 text-slate-600" />
+              </div>
+              <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No Recent Sessions</p>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col relative overflow-hidden">
+        {/* Notification Toast */}
+        <AnimatePresence>
+          {showNotification && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20, x: '-50%' }}
+              animate={{ opacity: 1, y: 0, x: '-50%' }}
+              exit={{ opacity: 0, y: -20, x: '-50%' }}
+              className="fixed top-24 left-1/2 z-50 px-6 py-3 bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center gap-3 border border-indigo-500"
+            >
+              <Bell className="w-4 h-4 animate-bounce" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Strategic Analysis Complete</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Header */}
+        <div className="w-full bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 z-20">
+          <div className="max-w-5xl mx-auto px-12 py-8 flex items-center justify-between">
+            <div className="flex items-center gap-6">
+               <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-2xl">
+                  <ICONS.Brain className="w-8 h-8" />
+               </div>
+               <div>
+                  <h3 className="text-2xl font-black text-white tracking-tighter uppercase">Strategic Intelligence</h3>
+                  <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.4em]">Neural Sales Copilot v3.1</p>
+               </div>
+            </div>
+            <div className="flex items-center gap-6">
+               <motion.button 
+                 whileHover={{ scale: 1.05 }}
+                 whileTap={{ scale: 0.95 }}
+                 onClick={clearChat} 
+                 className="px-6 py-3 text-slate-500 hover:text-rose-400 text-[11px] font-black uppercase tracking-widest transition-colors"
+               >
+                 Clear Memory
+               </motion.button>
+               <div className="flex items-center gap-3 px-6 py-3 bg-emerald-900/20 text-emerald-400 rounded-2xl border border-emerald-900/30 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  Neural Core Active
+               </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Conversation Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+        {/* Conversation Area */}
+        <div 
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto custom-scrollbar relative"
+        >
         <div className="max-w-5xl mx-auto px-12 py-16 space-y-16">
           <AnimatePresence mode="popLayout">
             {messages.length === 0 ? (
@@ -638,6 +825,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         )}
       </AnimatePresence>
     </div>
+  </div>
   );
 };
 

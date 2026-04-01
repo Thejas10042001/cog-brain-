@@ -112,6 +112,14 @@ service cloud.firestore {
              data.messages is list;
     }
 
+    function isValidSalesGPTSession(data, userId) {
+      return hasRequiredFields(['id', 'userId', 'title', 'timestamp', 'messages']) &&
+             data.userId == userId &&
+             data.title is string &&
+             data.timestamp is number &&
+             data.messages is list;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -144,6 +152,13 @@ service cloud.firestore {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && isValidSimulationHistory(request.resource.data, userId);
         allow update: if isOwner(userId) && isValidSimulationHistory(request.resource.data, userId);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
+      match /sales_gpt_history/{sessionId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidSalesGPTSession(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidSalesGPTSession(request.resource.data, userId);
         allow delete: if isOwner(userId) || isAdmin();
       }
     }

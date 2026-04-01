@@ -77,6 +77,19 @@
         "score": { "type": "number" }
       },
       "required": ["id", "userId", "type", "timestamp", "meetingContext", "messages"]
+    },
+    "SalesGPTSession": {
+      "title": "SalesGPTSession",
+      "description": "A chat session with SalesGPT.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "messages": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["id", "userId", "title", "timestamp", "messages"]
     }
   },
   "firestore": {
@@ -95,6 +108,10 @@
     "/users/{userId}/simulation_history/{historyId}": {
       "schema": "SimulationHistory",
       "description": "History of simulations."
+    },
+    "/users/{userId}/sales_gpt_history/{sessionId}": {
+      "schema": "SalesGPTSession",
+      "description": "History of SalesGPT chat sessions."
     }
   }
 }
