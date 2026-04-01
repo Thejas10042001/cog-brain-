@@ -91,8 +91,10 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext })
   }, [shouldAutoScroll]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    if (!isProcessing) {
+      scrollToBottom();
+    }
+  }, [messages, scrollToBottom, isProcessing]);
 
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;

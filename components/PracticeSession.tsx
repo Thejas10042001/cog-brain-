@@ -29,21 +29,6 @@ interface SavedGrooming {
   timestamp: number;
 }
 
-const LiveMetric: React.FC<{ label: string; value: string; color: string }> = ({ label, value, color }) => (
-  <div className="space-y-1">
-    <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-slate-500">
-      <span>{label}</span>
-      <span className={`text-${color}-400`}>{value}</span>
-    </div>
-    <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-      <motion.div 
-        initial={{ width: 0 }}
-        animate={{ width: value === 'Analyzing...' ? '30%' : '100%' }}
-        className={`h-full bg-${color}-500`}
-      />
-    </div>
-  </div>
-);
 
 export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meetingContext, onStartSimulation }) => {
   const [sessionMode, setSessionMode] = useState<SessionMode>('roleplay');
@@ -53,19 +38,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const [selectedPersona, setSelectedPersona] = useState<CustomerPersonaType>('Balanced');
   const [transcription, setTranscription] = useState<{ user: string; ai: string }[]>([]);
   const [currentTranscription, setCurrentTranscription] = useState({ user: '', ai: '' });
-  const [realTimeFeedback, setRealTimeFeedback] = useState<{
-    tone: string;
-    clarity: string;
-    pacing: string;
-    alignment: string;
-    score: number;
-  }>({
-    tone: 'Analyzing...',
-    clarity: 'Analyzing...',
-    pacing: 'Analyzing...',
-    alignment: 'Analyzing...',
-    score: 0
-  });
   
   const [groomingTarget, setGroomingTarget] = useState(analysis.objectionHandling[0]?.objection || "How do you define value?");
   const [speechTarget, setSpeechTarget] = useState(analysis.finalCoaching.dos[0] || "Our core value proposition.");
@@ -207,15 +179,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
            If you are a CIO, be strategic and outcome-oriented.
            
            ===========================================================
-           REAL-TIME COACHING PROTOCOL (CRITICAL)
-           ===========================================================
-           In your TEXT output (which the user does NOT hear), you MUST provide a real-time analysis of the user's last response BEFORE your dialogue.
-           Format it exactly like this:
-           [LIVE_FEEDBACK: {"tone": "...", "clarity": "...", "pacing": "...", "alignment": "...", "score": 0-100}]
-           
-           Then proceed with your dialogue.
-           
-           ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
            1. For EVERY turn, follow this sequence:
@@ -228,15 +191,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         : sessionMode === 'seller-roleplay'
         ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. The buyer's persona is ${selectedPersonaConfig.label}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
            
-           ===========================================================
-           REAL-TIME COACHING PROTOCOL (CRITICAL)
-           ===========================================================
-           In your TEXT output (which the user does NOT hear), you MUST provide a real-time analysis of the user's last response BEFORE your dialogue.
-           Format it exactly like this:
-           [LIVE_FEEDBACK: {"tone": "...", "clarity": "...", "pacing": "...", "alignment": "...", "score": 0-100}]
-           
-           Then proceed with your dialogue.
-
            ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
@@ -267,14 +221,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
            3. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
       const sessionPromise = ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        model: 'gemini-3.1-flash-live-preview',
         callbacks: {
           onopen: () => {
             setStatus('active');
             setIsActive(true);
             // Microphone input re-enabled
             const input = inputCtx.createMediaStreamSource(stream);
-            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+            const processor = inputCtx.createScriptProcessor(2048, 1, 1);
             processor.onaudioprocess = (e) => {
               const inputData = e.inputBuffer.getChannelData(0);
               const pcmData = new Int16Array(inputData.length);
@@ -283,7 +237,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
               }
               if (sessionRef.current) {
                 sessionRef.current.sendRealtimeInput({
-                  media: { data: encode(new Uint8Array(pcmData.buffer)), mimeType: 'audio/pcm;rate=16000' }
+                  audio: { data: encode(new Uint8Array(pcmData.buffer)), mimeType: 'audio/pcm;rate=16000' }
                 });
               }
             };
@@ -308,29 +262,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   source.onended = () => sourcesRef.current.delete(source);
                 }
                 if (part.text) {
-                  // Check for real-time feedback metadata
-                  const feedbackMatch = part.text.match(/\[LIVE_FEEDBACK: ({.*?})\]/);
-                  if (feedbackMatch) {
-                    try {
-                      const feedback = JSON.parse(feedbackMatch[1]);
-                      setRealTimeFeedback(feedback);
-                      // Remove the metadata from the displayed transcription
-                      const cleanText = part.text.replace(/\[LIVE_FEEDBACK: {.*?}\]/, '');
-                      if (cleanText.trim()) {
-                        aiTranscriptionRef.current += cleanText;
-                        setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
-                      }
-                    } catch (e) {
-                      console.error("Failed to parse live feedback:", e);
-                      aiTranscriptionRef.current += part.text;
-                      setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
-                    }
-                  } else {
-                    aiTranscriptionRef.current += part.text;
-                    setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
-                  }
+                  aiTranscriptionRef.current += part.text;
+                  setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
                 }
               }
+            }
+            if (message.serverContent?.inputTranscription) {
+              userTranscriptionRef.current = message.serverContent.inputTranscription.text || '';
+              setCurrentTranscription(prev => ({ ...prev, user: userTranscriptionRef.current }));
             }
             if (message.serverContent?.turnComplete) {
               setTranscription(prev => [...prev, { user: userTranscriptionRef.current, ai: aiTranscriptionRef.current }]);
@@ -874,27 +813,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   >
                     <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
                     <span className="text-[12px] font-black uppercase text-white tracking-[0.2em]">Active Audit Trace</span>
-                  </motion.div>
-                )}
-
-                {isActive && (
-                  <motion.div 
-                    initial={{ x: 40, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    className="absolute top-0 right-[-280px] w-64 space-y-4 z-20"
-                  >
-                    <div className="p-6 bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-[2rem] shadow-2xl space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h6 className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Live Performance</h6>
-                        <span className="text-[10px] font-black text-white">{realTimeFeedback.score}%</span>
-                      </div>
-                      <div className="space-y-3">
-                        <LiveMetric label="Tone" value={realTimeFeedback.tone} color="indigo" />
-                        <LiveMetric label="Clarity" value={realTimeFeedback.clarity} color="emerald" />
-                        <LiveMetric label="Pacing" value={realTimeFeedback.pacing} color="amber" />
-                        <LiveMetric label="Alignment" value={realTimeFeedback.alignment} color="rose" />
-                      </div>
-                    </div>
                   </motion.div>
                 )}
               </div>

@@ -169,15 +169,16 @@ export const saveSalesGPTSession = async (session: { id?: string, title: string,
   const path = SALES_GPT_COLLECTION;
   try {
     const userId = auth.currentUser.uid;
+    const { id, ...rest } = session;
     const sessionData = {
-      ...session,
+      ...rest,
       userId,
       timestamp: Timestamp.now()
     };
 
-    if (session.id) {
-      await updateDoc(doc(getUserCollection(path), session.id), sessionData);
-      return session.id;
+    if (id) {
+      await updateDoc(doc(getUserCollection(path), id), sessionData);
+      return id;
     } else {
       const docRef = await addDoc(getUserCollection(path), sessionData);
       return docRef.id;
@@ -506,11 +507,13 @@ export const saveMeetingContext = async (data: { meetingContext: any, selectedLi
     const userContextCol = getUserCollection(path);
     const querySnapshot = await getDocs(userContextCol);
     
-    const contextData = {
-      ...data,
+    const contextData: any = {
+      meetingContext: data.meetingContext,
+      selectedLibraryDocIds: data.selectedLibraryDocIds,
       userId,
       updatedAt: Timestamp.now()
     };
+    if (data.analysis) contextData.analysis = data.analysis;
 
     if (!querySnapshot.empty) {
       // Update existing
