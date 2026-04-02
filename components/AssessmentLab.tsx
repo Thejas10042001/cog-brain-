@@ -115,6 +115,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
   const timerRef = useRef<any>(null);
   const lastTimeRef = useRef<number>(0);
   const recognitionRef = useRef<any>(null);
+  const recordingBaseTextRef = useRef<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -168,28 +169,24 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) return;
 
+      const currentQId = questions[currentIdx]?.id;
+      recordingBaseTextRef.current = currentQId ? (answers[currentQId] || '') : '';
+
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
+        let sessionTranscript = '';
+        for (let i = 0; i < event.results.length; ++i) {
+          sessionTranscript += event.results[i][0].transcript;
         }
 
-        const currentQId = questions[currentIdx]?.id;
         if (currentQId) {
           setAnswers(prev => ({
             ...prev,
-            [currentQId]: (prev[currentQId] || '') + finalTranscript
+            [currentQId]: recordingBaseTextRef.current + (recordingBaseTextRef.current && sessionTranscript ? ' ' : '') + sessionTranscript
           }));
         }
       };
@@ -381,11 +378,14 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
             <div className="space-y-6">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 border-b-2 border-indigo-900/30 pb-3">Question Parameters</h4>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 border-b-2 border-indigo-900/30 pb-3 flex items-center justify-between">
+                <span>Question Parameters</span>
+                <span className="text-[9px] lowercase tracking-normal opacity-60 font-bold">(How many questions do you need?)</span>
+              </h4>
               <ConfigRow label="MCQ (Logic Gates)" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document className="w-5 h-5" />} />
               <ConfigRow label="Short Answer (Tactical)" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency className="w-5 h-5" />} />
               <ConfigRow label="Long Answer (Strategic)" val={config.long} set={(v) => setConfig({ ...config, long: v })} icon={<ICONS.Research className="w-5 h-5" />} />
-              <ConfigRow label="Microphone (Verbal Delivery)" val={config.mic} set={(v) => setConfig({ ...config, mic: v })} icon={<ICONS.Speaker className="w-5 h-5" />} />
+              <ConfigRow label="Microphone (Verbal Delivery)" val={config.mic} set={(v) => setConfig({ ...config, mic: v })} icon={<ICONS.Mic className="w-5 h-5" />} />
               <ConfigRow label="Video Performance (Visual/Verbal)" val={config.video} set={(v) => setConfig({ ...config, video: v })} icon={<ICONS.Play className="w-5 h-5" />} />
             </div>
 
@@ -560,18 +560,23 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                      ) : (
                        <div className="space-y-10 flex flex-col items-center w-full">
                           <button 
-                            onClick={() => {}} 
-                            className="w-32 h-32 rounded-full flex items-center justify-center bg-slate-800 text-slate-500 cursor-not-allowed opacity-50"
-                            title="Voice disabled"
+                            onClick={toggleRecording} 
+                            className={`w-32 h-32 rounded-full flex items-center justify-center transition-all border-4 ${isRecording ? 'bg-emerald-600 border-emerald-400 text-white animate-pulse shadow-[0_0_30px_rgba(16,185,129,0.4)]' : 'bg-slate-800 border-slate-700 text-indigo-400 hover:bg-slate-700 hover:border-indigo-500/50'}`}
                           >
-                             <ICONS.Speaker className="w-12 h-12" />
+                             <ICONS.Mic className={`w-12 h-12 ${isRecording ? 'animate-bounce' : ''}`} />
                           </button>
-                          <textarea 
-                             value={answers[currentQ.id] || ""}
-                             onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
-                             className="w-full p-10 bg-slate-800 rounded-[3rem] border-2 border-slate-700 text-lg h-48 text-white"
-                             placeholder="Voice trace..."
-                          />
+                          <div className="w-full space-y-4">
+                            <div className="flex items-center justify-between px-6">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Verbal Transcript</span>
+                              {isRecording && <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 animate-pulse">Live Capture Active</span>}
+                            </div>
+                            <textarea 
+                               value={answers[currentQ.id] || ""}
+                               onChange={(e) => setAnswers(prev => ({ ...prev, [currentQ.id]: e.target.value }))}
+                               className="w-full p-10 bg-slate-800 rounded-[3rem] border-2 border-slate-700 text-lg h-48 text-white focus:border-indigo-500 transition-all"
+                               placeholder="Start speaking to see transcript..."
+                            />
+                          </div>
                        </div>
                      )}
                   </div>
