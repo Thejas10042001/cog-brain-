@@ -1026,7 +1026,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                 )}
              </div>
 
-             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
+             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4" style={{ backgroundColor: '#111117' }}>
                 {messages.map((msg, idx) => (
                   <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-slate-900 border-slate-800' : 'bg-indigo-900/20 border-indigo-900/30'}`}>
                     <div className="flex items-center gap-2 mb-2">
