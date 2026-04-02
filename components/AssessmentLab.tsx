@@ -380,7 +380,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
             <div className="space-y-6">
               <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 border-b-2 border-indigo-900/30 pb-3 flex items-center justify-between">
                 <span>Question Parameters</span>
-                <span className="text-[9px] lowercase tracking-normal opacity-60 font-bold">(How many questions do you need?)</span>
+                <span className="text-[9px] lowercase tracking-normal opacity-60 font-bold">(+ and - indicated How many questions do you need so ai will generateAssessment Questions?)</span>
               </h4>
               <ConfigRow label="MCQ (Logic Gates)" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document className="w-5 h-5" />} />
               <ConfigRow label="Short Answer (Tactical)" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency className="w-5 h-5" />} />
