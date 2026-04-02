@@ -57,11 +57,11 @@ const PERSONAS: { type: CustomerPersonaType; label: string; desc: string; icon: 
 ];
 
 const AI_VOICE_PERSONAS = [
-  { id: 'pro-male', label: 'Pro Male', desc: 'Direct, authoritative, business-first.', baseVoice: 'Zephyr', gender: 'Male', directive: 'Adopt a professional male resonance. Pacing should be steady and deliberate. Articulation must be crisp. Project absolute authority and business-first logic.' },
+  { id: 'pro-male', label: 'Nailed', desc: 'Direct, authoritative, business-first.', baseVoice: 'Zephyr', gender: 'Male', directive: 'Adopt a professional male resonance. Pacing should be steady and deliberate. Articulation must be crisp. Project absolute authority and business-first logic.' },
   { id: 'high-energy', label: 'High Energy', desc: 'Enthusiastic, engaging, persuasive.', baseVoice: 'Puck', gender: 'Male', directive: 'Adopt a high-energy, upward-inflecting tone. Rapid tempo but controlled. Infuse every sentence with enthusiasm and persuasive conviction.' },
   { id: 'deep-authority', label: 'Deep Authority', desc: 'Serious, steady, risk-conscious.', baseVoice: 'Charon', gender: 'Male', directive: 'A deep, heavy baritone. Pacing is slow and weight-bearing. This voice should project risk-consciousness and the gravity of board-level decisions.' },
   { id: 'calm-strategist', label: 'Calm Strategist', desc: 'Consultative, soft, trusted advisor.', baseVoice: 'Zephyr', gender: 'Male', directive: 'Soft-spoken, melodic, and consultative. Use thoughtful pauses. This voice is designed to project the calm of a trusted strategic advisor.' },
-  { id: 'pro-female', label: 'Pro Female', desc: 'Professional, articulate, steady.', baseVoice: 'Kore', gender: 'Female', directive: 'Adopt a professional female resonance. Pacing is balanced and articulate. Project confidence and strategic clarity.' },
+  { id: 'pro-female', label: 'Pro Voice', desc: 'Professional, articulate, steady.', baseVoice: 'Kore', gender: 'Female', directive: 'Adopt a professional female resonance. Pacing is balanced and articulate. Project confidence and strategic clarity.' },
 ];
 
 const PUBLIC_PERSONALITIES = [
