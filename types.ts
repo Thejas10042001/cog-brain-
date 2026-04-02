@@ -290,6 +290,9 @@ export interface AssessmentEvaluation {
   attentionScore?: number; // 0-100
   eyeContactScore?: number; // 0-100
   clarityScore?: number; // 0-100
+  pitchScore?: number; // 0-100
+  grammarScore?: number; // 0-100
+  voiceToneScore?: number; // 0-100
   behavioralAnalysis?: string;
   modelDeliveryScript?: string;
 }

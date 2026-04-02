@@ -673,7 +673,9 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                          {(q.type === 'video' || q.type === 'mic') && res?.evaluation && (
                            <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-6 shadow-sm">
                               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                                 <h6 className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Biometric & Cognitive Trace</h6>
+                                 <h6 className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                                   {q.type === 'mic' ? 'Vocal & Cognitive Trace' : 'Biometric & Cognitive Trace'}
+                                 </h6>
                                  <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-1">
                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -686,9 +688,19 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                                  </div>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                 <MetricScale label="Stress Level" value={res.evaluation.stressLevel || 0} colorClass={res.evaluation.stressLevel && res.evaluation.stressLevel > 60 ? "bg-rose-500" : "bg-emerald-500"} />
-                                 <MetricScale label="Attention Focus" value={res.evaluation.attentionScore || 0} colorClass="bg-indigo-600" />
-                                 <MetricScale label="Eye Contact" value={res.evaluation.eyeContactScore || 0} colorClass="bg-blue-500" />
+                                 {q.type === 'mic' ? (
+                                   <>
+                                     <MetricScale label="Pitch Analysis" value={res.evaluation.pitchScore || 0} colorClass="bg-emerald-500" />
+                                     <MetricScale label="Grammar Formations" value={res.evaluation.grammarScore || 0} colorClass="bg-indigo-600" />
+                                     <MetricScale label="Voice Tone" value={res.evaluation.voiceToneScore || 0} colorClass="bg-blue-500" />
+                                   </>
+                                 ) : (
+                                   <>
+                                     <MetricScale label="Stress Level" value={res.evaluation.stressLevel || 0} colorClass={res.evaluation.stressLevel && res.evaluation.stressLevel > 60 ? "bg-rose-500" : "bg-emerald-500"} />
+                                     <MetricScale label="Attention Focus" value={res.evaluation.attentionScore || 0} colorClass="bg-indigo-600" />
+                                     <MetricScale label="Eye Contact" value={res.evaluation.eyeContactScore || 0} colorClass="bg-blue-500" />
+                                   </>
+                                 )}
                                  <MetricScale label="Clarity Score" value={res.evaluation.score} colorClass="bg-indigo-600" />
                               </div>
                               {res.evaluation.behavioralAnalysis && (

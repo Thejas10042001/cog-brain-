@@ -1241,6 +1241,9 @@ export async function evaluateAssessment(
     - Provide a "toneResult" analyzing clarity and executive authority.
     - Provide "correctionSuggestions" (specific things to change/fix in the phrasing).
     - Provide "improvementPoints" (how to make the answer more impactful).
+    - Infer "pitchScore" (0-100) from the perceived energy and modulation in the text.
+    - Infer "grammarScore" (0-100) based on sentence structure and "Grammar Formations".
+    - Infer "voiceToneScore" (0-100) based on the "Voice Tone" and professional delivery.
     - For Video specifically: 
       - Infer "stressLevel" (0-100) from phrasing speed and filler words.
       - Infer "attentionScore" (0-100) from focus on the core question.
@@ -1263,6 +1266,9 @@ export async function evaluateAssessment(
       "stressLevel": 0-100,
       "attentionScore": 0-100,
       "eyeContactScore": 0-100,
+      "pitchScore": 0-100,
+      "grammarScore": 0-100,
+      "voiceToneScore": 0-100,
       "behavioralAnalysis": "string",
       "modelDeliveryScript": "string"
     }
