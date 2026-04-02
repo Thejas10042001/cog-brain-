@@ -151,6 +151,24 @@ const CONTEXT_COLLECTION = "meeting_contexts";
 const FOLDERS_COLLECTION = "folders";
 const SALES_GPT_COLLECTION = "sales_gpt_history";
 
+// Helper to remove undefined values from objects recursively for Firestore
+const sanitizeData = (data: any): any => {
+  if (data === undefined) return null;
+  if (data === null) return null;
+  if (Array.isArray(data)) return data.map(sanitizeData);
+  if (typeof data === 'object' && data !== null && !(data instanceof Timestamp)) {
+    const sanitized: any = {};
+    for (const key in data) {
+      const value = sanitizeData(data[key]);
+      if (value !== undefined) {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  }
+  return data;
+};
+
 // Helper to get user-isolated collection reference
 const getUserCollection = (subCollection: string) => {
   if (!db || !auth || !auth.currentUser) throw new Error("Firebase not initialized or user not authenticated");
@@ -170,11 +188,11 @@ export const saveSalesGPTSession = async (session: { id?: string, title: string,
   try {
     const userId = auth.currentUser.uid;
     const { id, ...rest } = session;
-    const sessionData = {
+    const sessionData = sanitizeData({
       ...rest,
       userId,
       timestamp: Timestamp.now()
-    };
+    });
 
     if (id) {
       await updateDoc(doc(getUserCollection(path), id), sessionData);
@@ -321,11 +339,11 @@ export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' |
   if (!db || !auth || !auth.currentUser) return null;
   const path = HISTORY_COLLECTION;
   try {
-    const docRef = await addDoc(getUserCollection(path), {
+    const docRef = await addDoc(getUserCollection(path), sanitizeData({
       ...history,
       userId: auth.currentUser.uid,
       timestamp: Timestamp.now()
-    });
+    }));
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -507,13 +525,13 @@ export const saveMeetingContext = async (data: { meetingContext: any, selectedLi
     const userContextCol = getUserCollection(path);
     const querySnapshot = await getDocs(userContextCol);
     
-    const contextData: any = {
+    const contextData: any = sanitizeData({
       meetingContext: data.meetingContext,
       selectedLibraryDocIds: data.selectedLibraryDocIds,
       userId,
-      updatedAt: Timestamp.now()
-    };
-    if (data.analysis) contextData.analysis = data.analysis;
+      updatedAt: Timestamp.now(),
+      analysis: data.analysis || null
+    });
 
     if (!querySnapshot.empty) {
       // Update existing
