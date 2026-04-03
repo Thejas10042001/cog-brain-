@@ -57,7 +57,15 @@ const ModelDeliveryPlayer = ({ script }: { script: string }) => {
               <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Cognitive Coach Active</p>
             </div>
           </div>
-          
+          <button 
+            onClick={playScript}
+            disabled={isPlaying}
+            className={`flex items-center gap-2 px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isPlaying ? 'bg-indigo-600 text-white animate-pulse' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+          >
+            <ICONS.Speaker className="w-3 h-3" />
+            {isPlaying ? 'Delivering...' : 'Play Model Delivery'}
+          </button>
+        </div>
         <p className="text-xl font-medium leading-relaxed italic text-slate-300">
           “{script}”
         </p>
@@ -736,7 +744,15 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                             <h5 className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Expected Answer Node</h5>
                          </div>
                          
-                        
+                         {res?.evaluation.modelDeliveryScript ? (
+                           <ModelDeliveryPlayer script={res.evaluation.modelDeliveryScript} />
+                         ) : (
+                           <div className="p-8 bg-indigo-900/20 text-white rounded-[2.5rem] border border-indigo-900/30 shadow-sm leading-relaxed">
+                              <p className="text-[11px] font-black uppercase tracking-widest text-indigo-300 mb-3">Protocol Blocked: That was not the target answer. The master logic is as follows:</p>
+                              <p className="text-xl font-bold">“{q.correctAnswer}”</p>
+                           </div>
+                         )}
+                      </div>
                    </div>
 
                   {/* Strategic Insight Full Width */}
