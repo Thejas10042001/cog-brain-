@@ -20,6 +20,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  setDoc,
   memoryLocalCache,
   getDocFromServer,
   getDoc,
@@ -45,14 +46,14 @@ import firebaseConfig from '../firebase-applet-config.json';
 export type User = any;
 export type Auth = any;
 
-import { StoredDocument } from "../types";
+import { StoredDocument, SalesGPTSession } from "../types";
 
 // State to track if we've hit a permission error
 let internalPermissionError = false;
 
 // Properly type db and auth instances instead of using any
-let db: Firestore | null = null;
-let auth: Auth | null = null;
+export let db: Firestore | null = null;
+export let auth: Auth | null = null;
 
 // Initialize Firebase App, Firestore, and Auth
 try {
@@ -150,6 +151,10 @@ const HISTORY_COLLECTION = "simulation_history";
 const CONTEXT_COLLECTION = "meeting_contexts";
 const FOLDERS_COLLECTION = "folders";
 const SALES_GPT_COLLECTION = "sales_gpt_history";
+const GROUPS_COLLECTION = "groups";
+const INVITES_COLLECTION = "group_invites";
+const MESSAGES_COLLECTION = "group_messages";
+const USERS_COLLECTION = "users";
 
 // Helper to remove undefined values from objects recursively for Firestore
 const sanitizeData = (data: any): any => {
@@ -182,7 +187,7 @@ export const getFirebasePermissionError = () => internalPermissionError;
 export const clearFirebasePermissionError = () => { internalPermissionError = false; };
 
 // SalesGPT History Functions
-export const saveSalesGPTSession = async (session: { id?: string, title: string, messages: any[] }): Promise<string | null> => {
+export const saveSalesGPTSession = async (session: Partial<SalesGPTSession>): Promise<string | null> => {
   if (!db || !auth || !auth.currentUser) return null;
   const path = SALES_GPT_COLLECTION;
   try {
@@ -319,13 +324,56 @@ export const moveDocumentToFolder = async (docId: string, folderId: string | nul
 };
 
 // Auth Helper Functions
-export const loginUser = (email: string, pass: string) => auth ? signInWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
-export const loginWithGoogle = () => {
+export const saveUserProfile = async (user: any) => {
+  if (!db || !user) return;
+  const path = USERS_COLLECTION;
+  try {
+    const userRef = doc(db, path, user.uid);
+    await updateDoc(userRef, {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      lastLogin: Timestamp.now()
+    }).catch(async (err) => {
+      // If doc doesn't exist, create it
+      if (err.code === 'not-found') {
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          createdAt: Timestamp.now(),
+          lastLogin: Timestamp.now()
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Error saving user profile:", error);
+  }
+};
+
+export const loginUser = async (email: string, pass: string) => {
+  if (!auth) return Promise.reject("Auth module not initialized");
+  const result = await signInWithEmailAndPassword(auth, email, pass);
+  await saveUserProfile(result.user);
+  return result;
+};
+
+export const loginWithGoogle = async () => {
   if (!auth) return Promise.reject("Auth module not initialized");
   const provider = new GoogleAuthProvider();
-  return signInWithPopup(auth, provider);
+  const result = await signInWithPopup(auth, provider);
+  await saveUserProfile(result.user);
+  return result;
 };
-export const registerUser = (email: string, pass: string) => auth ? createUserWithEmailAndPassword(auth, email, pass) : Promise.reject("Auth module not initialized");
+
+export const registerUser = async (email: string, pass: string) => {
+  if (!auth) return Promise.reject("Auth module not initialized");
+  const result = await createUserWithEmailAndPassword(auth, email, pass);
+  await saveUserProfile(result.user);
+  return result;
+};
 export const logoutUser = () => auth && signOut(auth);
 export const subscribeToAuth = (callback: (user: User | null) => void) => {
   if (auth) {
@@ -589,4 +637,214 @@ export const deleteMeetingContext = async (): Promise<boolean> => {
     handleFirestoreError(error, OperationType.DELETE, path);
     return false;
   }
+};
+
+// Sharing Functions
+export const fetchSharedGPTSession = async (userId: string, sessionId: string): Promise<any | null> => {
+  if (!db) return null;
+  const path = `users/${userId}/${SALES_GPT_COLLECTION}/${sessionId}`;
+  try {
+    const docRef = doc(db, "users", userId, SALES_GPT_COLLECTION, sessionId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.isShared) {
+        return {
+          id: docSnap.id,
+          ...data,
+          timestamp: data.timestamp?.toMillis() || Date.now()
+        };
+      }
+    }
+    return null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return null;
+  }
+};
+
+// Group Functions
+export const checkUserExistsByEmail = async (email: string): Promise<string | null> => {
+  if (!db) return null;
+  const path = USERS_COLLECTION;
+  try {
+    const q = query(collection(db, path), where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].id; // Return UID
+    }
+    return null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return null;
+  }
+};
+
+export const createGroup = async (groupName: string, memberEmails: string[]): Promise<string | null> => {
+  if (!db || !auth || !auth.currentUser) return null;
+  const path = GROUPS_COLLECTION;
+  try {
+    const creatorId = auth.currentUser.uid;
+    const groupData = sanitizeData({
+      groupName,
+      creatorId,
+      members: [creatorId],
+      pendingInvites: memberEmails,
+      createdAt: Timestamp.now()
+    });
+    const groupRef = await addDoc(collection(db, path), groupData);
+    
+    // Send invites
+    for (const email of memberEmails) {
+      await sendGroupInvite(groupRef.id, groupName, email);
+    }
+    
+    return groupRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+    return null;
+  }
+};
+
+export const sendGroupInvite = async (groupId: string, groupName: string, receiverEmail: string): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  const path = INVITES_COLLECTION;
+  try {
+    const inviteData = sanitizeData({
+      groupId,
+      groupName,
+      senderId: auth.currentUser.uid,
+      senderEmail: auth.currentUser.email,
+      receiverEmail,
+      status: 'pending',
+      createdAt: Timestamp.now()
+    });
+    await addDoc(collection(db, path), inviteData);
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+    return false;
+  }
+};
+
+export const respondToInvite = async (inviteId: string, status: 'accepted' | 'denied'): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  const path = INVITES_COLLECTION;
+  try {
+    const inviteRef = doc(db, path, inviteId);
+    const inviteSnap = await getDoc(inviteRef);
+    if (!inviteSnap.exists()) return false;
+    
+    const inviteData = inviteSnap.data();
+    await updateDoc(inviteRef, { status });
+    
+    if (status === 'accepted') {
+      const groupRef = doc(db, GROUPS_COLLECTION, inviteData.groupId);
+      const groupSnap = await getDoc(groupRef);
+      if (groupSnap.exists()) {
+        const groupData = groupSnap.data();
+        const members = [...groupData.members, auth.currentUser.uid];
+        const pendingInvites = groupData.pendingInvites.filter((e: string) => e !== auth.currentUser.email);
+        await updateDoc(groupRef, { members, pendingInvites });
+      }
+    }
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+    return false;
+  }
+};
+
+export const fetchUserGroups = async (): Promise<any[]> => {
+  if (!db || !auth || !auth.currentUser) return [];
+  const path = GROUPS_COLLECTION;
+  try {
+    const q = query(collection(db, path), where("members", "array-contains", auth.currentUser.uid));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis() || Date.now()
+    }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return [];
+  }
+};
+
+export const subscribeToUserInvites = (callback: (invites: any[]) => void) => {
+  if (!db || !auth || !auth.currentUser) return () => {};
+  const path = INVITES_COLLECTION;
+  const q = query(
+    collection(db, path), 
+    where("receiverEmail", "==", auth.currentUser.email),
+    where("status", "==", "pending")
+  );
+  return onSnapshot(q, (snapshot) => {
+    const invites = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis() || Date.now()
+    }));
+    callback(invites);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, path);
+  });
+};
+
+export const subscribeToSentInvites = (groupId: string, callback: (invites: any[]) => void) => {
+  if (!db || !auth || !auth.currentUser) return () => {};
+  const path = INVITES_COLLECTION;
+  const q = query(
+    collection(db, path), 
+    where("groupId", "==", groupId)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const invites = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis() || Date.now()
+    }));
+    callback(invites);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, path);
+  });
+};
+
+export const sendGroupMessage = async (groupId: string, message: string): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  const path = MESSAGES_COLLECTION;
+  try {
+    const messageData = sanitizeData({
+      groupId,
+      senderId: auth.currentUser.uid,
+      senderName: auth.currentUser.displayName || auth.currentUser.email,
+      message,
+      timestamp: Timestamp.now()
+    });
+    await addDoc(collection(db, path), messageData);
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+    return false;
+  }
+};
+
+export const subscribeToGroupMessages = (groupId: string, callback: (messages: any[]) => void) => {
+  if (!db) return () => {};
+  const path = MESSAGES_COLLECTION;
+  const q = query(
+    collection(db, path), 
+    where("groupId", "==", groupId)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const messages = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: doc.data().timestamp?.toMillis() || Date.now()
+    })).sort((a, b) => a.timestamp - b.timestamp);
+    callback(messages);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, path);
+  });
 };

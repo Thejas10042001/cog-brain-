@@ -87,9 +87,55 @@
         "userId": { "type": "string" },
         "title": { "type": "string" },
         "timestamp": { "type": "number" },
-        "messages": { "type": "array", "items": { "type": "object" } }
+        "messages": { "type": "array", "items": { "type": "object" } },
+        "isShared": { "type": "boolean" },
+        "shareToken": { "type": "string" }
       },
       "required": ["id", "userId", "title", "timestamp", "messages"]
+    },
+    "Group": {
+      "title": "Group",
+      "description": "A team-based group chat.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupName": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "members": { "type": "array", "items": { "type": "string" } },
+        "pendingInvites": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "groupName", "creatorId", "members", "createdAt"]
+    },
+    "GroupInvite": {
+      "title": "GroupInvite",
+      "description": "An invitation to join a group.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "groupName": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderEmail": { "type": "string" },
+        "receiverEmail": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "denied"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "groupId", "senderId", "receiverEmail", "status", "createdAt"]
+    },
+    "GroupMessage": {
+      "title": "GroupMessage",
+      "description": "A message within a group chat.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "groupId", "senderId", "message", "timestamp"]
     }
   },
   "firestore": {
@@ -112,6 +158,18 @@
     "/users/{userId}/sales_gpt_history/{sessionId}": {
       "schema": "SalesGPTSession",
       "description": "History of SalesGPT chat sessions."
+    },
+    "/groups/{groupId}": {
+      "schema": "Group",
+      "description": "Team-based group chats."
+    },
+    "/group_invites/{inviteId}": {
+      "schema": "GroupInvite",
+      "description": "Invitations to join group chats."
+    },
+    "/group_messages/{messageId}": {
+      "schema": "GroupMessage",
+      "description": "Messages in group chats."
     }
   }
 }

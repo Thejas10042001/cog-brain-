@@ -383,4 +383,35 @@ export interface SalesGPTSession {
   title: string;
   timestamp: number;
   messages: GPTMessage[];
+  isShared?: boolean;
+  shareToken?: string;
+}
+
+export interface Group {
+  id: string;
+  groupName: string;
+  creatorId: string;
+  members: string[]; // Array of UIDs
+  pendingInvites: string[]; // Array of emails
+  createdAt: number;
+}
+
+export interface GroupInvite {
+  id: string;
+  groupId: string;
+  groupName: string;
+  senderId: string;
+  senderEmail: string;
+  receiverEmail: string;
+  status: 'pending' | 'accepted' | 'denied';
+  createdAt: number;
+}
+
+export interface GroupMessage {
+  id: string;
+  groupId: string;
+  senderId: string;
+  senderName: string;
+  message: string;
+  timestamp: number;
 }

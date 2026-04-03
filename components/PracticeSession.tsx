@@ -142,7 +142,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     if (onStartSimulation) onStartSimulation();
     setStatus('connecting');
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -304,7 +304,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     stopPractice();
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `Act as a world-class communication, linguistics, and sales coach. 

@@ -15,8 +15,16 @@ import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
-import { fetchDocumentsFromFirebase, subscribeToAuth, User, saveMeetingContext, fetchMeetingContext, deleteMeetingContext } from './services/firebaseService';
-import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument } from './types';
+import { 
+  fetchDocumentsFromFirebase, 
+  subscribeToAuth, 
+  User, 
+  saveMeetingContext, 
+  fetchMeetingContext, 
+  deleteMeetingContext,
+  fetchSharedGPTSession
+} from './services/firebaseService';
+import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument, SalesGPTSession } from './types';
 import { ICONS } from './constants';
 
 const ALL_ANSWER_STYLES = [
@@ -64,6 +72,9 @@ const App: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
+  const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
+  const [sharedSession, setSharedSession] = useState<SalesGPTSession | null>(null);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
   const [darkMode] = useState(true);
@@ -85,6 +96,32 @@ const App: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('page') === 'support') {
       setIsSupportPage(true);
+    }
+
+    const conversationId = params.get('conversationId');
+    if (conversationId) {
+      setInitialConversationId(conversationId);
+      setActiveTab('gpt');
+    }
+
+    const groupId = params.get('groupId');
+    if (groupId) {
+      setActiveGroupId(groupId);
+      setActiveTab('gpt');
+    }
+
+    // Handle shared chat route
+    const sharedUserId = params.get('sharedUserId');
+    const sharedSessionId = params.get('sharedSessionId');
+    if (sharedUserId && sharedSessionId) {
+      const loadShared = async () => {
+        const session = await fetchSharedGPTSession(sharedUserId, sharedSessionId);
+        if (session) {
+          setSharedSession(session);
+          setActiveTab('gpt');
+        }
+      };
+      loadShared();
     }
   }, []);
 
@@ -850,7 +887,15 @@ const App: React.FC = () => {
                       {activeTab === 'avatar-staged' && <AvatarSimulationStaged meetingContext={meetingContext} documents={history} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
-                      {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
+                      {activeTab === 'gpt' && (
+                        <SalesGPT 
+                          activeDocuments={activeDocuments} 
+                          meetingContext={meetingContext} 
+                          initialConversationId={initialConversationId}
+                          sharedSession={sharedSession}
+                          activeGroupId={activeGroupId}
+                        />
+                      )}
                       {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
                       {activeTab === 'help' && <HelpCenter />}
