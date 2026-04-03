@@ -258,7 +258,7 @@ export interface ComprehensiveAvatarReport {
   coaching_recommendations: string[];
 }
 
-export type QuestionType = 'mcq' | 'short' | 'long' | 'mic' | 'video';
+export type QuestionType = 'quiz' | 'short' | 'long' | 'mic' | 'video';
 
 export interface AssessmentQuestion {
   id: string;
@@ -267,6 +267,7 @@ export interface AssessmentQuestion {
   options?: string[];
   correctAnswer: string;
   explanation: string;
+  hint?: string;
   citation?: Citation;
 }
 

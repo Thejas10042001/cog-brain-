@@ -1163,7 +1163,7 @@ export async function generateAssessmentQuestions(
   PERSPECTIVE ORIENTATION: ${perspective.toUpperCase()}
   ${questionContext}
   
-  FOR MULTIPLE CHOICE QUESTIONS (MCQ):
+  FOR QUIZ QUESTIONS (QUIZ):
   - Generate exactly 4 options.
   - Distractors should be plausible within a sales context but demonstrably incorrect based ON THE PROVIDED TEXT OR LOGICAL INFERENCE.
   - Include a "citation" object that points to the exact evidence in the source text.
@@ -1172,7 +1172,7 @@ export async function generateAssessmentQuestions(
   - These should be "Pitch This" or "Respond to this High-Stakes Objection" style prompts.
   
   COUNTS REQUIRED:
-  - MCQ: ${config.mcq}
+  - Quiz: ${config.mcq}
   - Short Answer: ${config.short}
   - Long Answer: ${config.long}
   - Voice/Mic Answer: ${config.mic}
@@ -1181,11 +1181,12 @@ export async function generateAssessmentQuestions(
   STRICT JSON FORMAT REQUIRED: Array of objects with properties:
   {
     "id": "unique-string",
-    "type": "mcq" | "short" | "long" | "mic" | "video",
+    "type": "quiz" | "short" | "long" | "mic" | "video",
     "text": "The question text",
-    "options": ["A", "B", "C", "D"], // ONLY for mcq
+    "options": ["A", "B", "C", "D"], // ONLY for quiz
     "correctAnswer": "The exact correct option or ideal response",
     "explanation": "Brief coaching explanation explaining the strategic significance of this question. This must be an in-depth depth explain of the winning logic.",
+    "hint": "A concise, strategic hint that helps the user think about how to answer the question without giving away the answer.",
     "citation": { 
       "snippet": "exact quote from text or derived context", 
       "sourceFile": "filename or 'Document Context'",
@@ -1234,7 +1235,7 @@ export async function evaluateAssessment(
   const prompt = `Act as a world-class Sales Performance Auditor and Communications Coach. Grade the following question/answer sets. 
   
   EVALUATION CRITERIA:
-  - For MCQs: Exact match check.
+  - For Quiz: Exact match check.
   - For Short/Long: Evaluate semantic depth, factual accuracy, and alignment with the "Ideal Answer".
   - For Mic/Video (Transcribed): 
     - Evaluate vocal tone based on phrasing (e.g., confidence vs hesitation).

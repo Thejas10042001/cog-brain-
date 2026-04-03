@@ -108,6 +108,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [showHint, setShowHint] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [micPermissionError, setMicPermissionError] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -263,11 +264,13 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
     recordCurrentQuestionTime();
     if (isRecording) toggleRecording();
     setCurrentIdx(prev => prev + 1);
+    setShowHint(false);
   };
 
   const handlePrevious = () => {
     recordCurrentQuestionTime();
     setCurrentIdx(prev => Math.max(0, prev - 1));
+    setShowHint(false);
   };
 
   const handleSubmit = async () => {
@@ -503,10 +506,29 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                  <h3 className="text-4xl font-black text-white tracking-tight max-w-4xl mx-auto leading-tight">
                    {currentQ.text}
                  </h3>
+                 {currentQ.hint && (
+                   <div className="mt-6">
+                     {!showHint ? (
+                       <button 
+                         onClick={() => setShowHint(true)}
+                         className="px-6 py-2 bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600/40 transition-all"
+                       >
+                         Need a Hint?
+                       </button>
+                     ) : (
+                       <div className="p-4 bg-indigo-900/20 border border-indigo-800 rounded-2xl max-w-2xl mx-auto animate-in fade-in slide-in-from-top-2">
+                         <p className="text-sm font-bold text-indigo-200 italic">
+                           <span className="text-indigo-400 not-italic mr-2 font-black uppercase text-[10px]">Strategic Hint:</span>
+                           {currentQ.hint}
+                         </p>
+                       </div>
+                     )}
+                   </div>
+                 )}
               </div>
 
               <div className="min-h-[300px] flex items-center justify-center">
-                {currentQ.type === 'mcq' && (
+                {currentQ.type === 'quiz' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
                     {currentQ.options?.map((opt, i) => (
                       <button
