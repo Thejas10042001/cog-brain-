@@ -151,11 +151,28 @@ const CONTEXT_COLLECTION = "meeting_contexts";
 const FOLDERS_COLLECTION = "folders";
 const SALES_GPT_COLLECTION = "sales_gpt_history";
 
+// Helper to remove undefined values from objects recursively for Firestore
+const sanitizeData = (data: any): any => {
+  if (data === undefined) return null;
+  if (data === null) return null;
+  if (Array.isArray(data)) return data.map(sanitizeData);
+  if (typeof data === 'object' && data !== null && !(data instanceof Timestamp)) {
+    const sanitized: any = {};
+    for (const key in data) {
+      const value = sanitizeData(data[key]);
+      if (value !== undefined) {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  }
+  return data;
+};
+
 // Helper to get user-isolated collection reference
 const getUserCollection = (subCollection: string) => {
-  if (!db) throw new Error("Firebase not initialized");
-  const uid = auth?.currentUser?.uid || "default-user";
-  return collection(db, "users", uid, subCollection);
+  if (!db || !auth || !auth.currentUser) throw new Error("Firebase not initialized or user not authenticated");
+  return collection(db, "users", auth.currentUser.uid, subCollection);
 };
 
 export const getAuthInstance = () => auth;
@@ -164,73 +181,25 @@ export const getDbInstance = () => db;
 export const getFirebasePermissionError = () => internalPermissionError;
 export const clearFirebasePermissionError = () => { internalPermissionError = false; };
 
-// User Profile Functions
-export const saveUserProfile = async (user: any) => {
-  if (!db || !user) return;
-  const path = `users/${user.uid}`;
-  try {
-    const { setDoc } = await import("firebase/firestore");
-    await setDoc(doc(db, "users", user.uid), {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName || user.email.split('@')[0],
-      photoURL: user.photoURL || "",
-      updatedAt: Timestamp.now()
-    }, { merge: true });
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, path);
-  }
-};
-
-export const findUserByEmail = async (email: string): Promise<any | null> => {
-  if (!db) return null;
-  try {
-    const q = query(collection(db, "users"), where("email", "==", email));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs[0].data();
-    }
-    return null;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, "users");
-    return null;
-  }
-};
-
 // SalesGPT History Functions
-export const saveSalesGPTSession = async (session: { id?: string, title: string, messages: any[], isGroup?: boolean, members?: string[], ownerId?: string }): Promise<string | null> => {
-  if (!db) return null;
-  const isGroup = session.isGroup || false;
-  const path = isGroup ? "sales_gpt_sessions" : SALES_GPT_COLLECTION;
-  
+export const saveSalesGPTSession = async (session: { id?: string, title: string, messages: any[] }): Promise<string | null> => {
+  if (!db || !auth || !auth.currentUser) return null;
+  const path = SALES_GPT_COLLECTION;
   try {
-    const userId = auth?.currentUser?.uid || "default-user";
+    const userId = auth.currentUser.uid;
     const { id, ...rest } = session;
-    const sessionData = {
+    const sessionData = sanitizeData({
       ...rest,
       userId,
-      timestamp: Timestamp.now(),
-      isGroup,
-      members: session.members || [userId],
-      ownerId: session.ownerId || userId
-    };
+      timestamp: Timestamp.now()
+    });
 
-    if (isGroup) {
-      if (id) {
-        await updateDoc(doc(db, "sales_gpt_sessions", id), sessionData);
-        return id;
-      } else {
-        const docRef = await addDoc(collection(db, "sales_gpt_sessions"), sessionData);
-        return docRef.id;
-      }
+    if (id) {
+      await updateDoc(doc(getUserCollection(path), id), sessionData);
+      return id;
     } else {
-      if (id) {
-        await updateDoc(doc(getUserCollection(SALES_GPT_COLLECTION), id), sessionData);
-        return id;
-      } else {
-        const docRef = await addDoc(getUserCollection(SALES_GPT_COLLECTION), sessionData);
-        return docRef.id;
-      }
+      const docRef = await addDoc(getUserCollection(path), sessionData);
+      return docRef.id;
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -239,161 +208,41 @@ export const saveSalesGPTSession = async (session: { id?: string, title: string,
 };
 
 export const fetchSalesGPTSessions = async (): Promise<any[]> => {
-  if (!db) return [];
-  const userId = auth?.currentUser?.uid || "default-user";
-  
+  if (!db || !auth || !auth.currentUser) return [];
+  const path = SALES_GPT_COLLECTION;
   try {
     const fifteenDaysAgo = new Date();
     fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
     
-    // Fetch private sessions
-    const qPrivate = query(
-      getUserCollection(SALES_GPT_COLLECTION),
+    const q = query(
+      getUserCollection(path),
       where("timestamp", ">=", Timestamp.fromDate(fifteenDaysAgo))
     );
-    const privateSnapshot = await getDocs(qPrivate);
-    const privateSessions = privateSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      timestamp: doc.data().timestamp?.toMillis() || Date.now()
-    }));
-
-    // Fetch group sessions
-    let groupSessions: any[] = [];
-    if (userId !== "default-user") {
-      const qGroup = query(
-        collection(db, "sales_gpt_sessions"),
-        where("members", "array-contains", userId)
-      );
-      const groupSnapshot = await getDocs(qGroup);
-      const fifteenDaysAgoTime = fifteenDaysAgo.getTime();
-      
-      groupSessions = groupSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: (doc.data() as any).timestamp?.toMillis() || Date.now()
-        }))
-        .filter(session => session.timestamp >= fifteenDaysAgoTime);
-    }
+    const querySnapshot = await getDocs(q);
     
-    return [...privateSessions, ...groupSessions].sort((a, b) => b.timestamp - a.timestamp);
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        timestamp: data.timestamp?.toMillis() || Date.now()
+      };
+    }).sort((a, b) => b.timestamp - a.timestamp);
   } catch (error) {
-    handleFirestoreError(error, OperationType.GET, "sessions");
+    handleFirestoreError(error, OperationType.GET, path);
     return [];
   }
 };
 
-export const deleteSalesGPTSession = async (id: string, isGroup: boolean = false): Promise<boolean> => {
-  if (!db) return false;
-  const path = isGroup ? "sales_gpt_sessions" : SALES_GPT_COLLECTION;
+export const deleteSalesGPTSession = async (id: string): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  const path = SALES_GPT_COLLECTION;
   try {
-    if (isGroup) {
-      await deleteDoc(doc(db, "sales_gpt_sessions", id));
-    } else {
-      await deleteDoc(doc(getUserCollection(SALES_GPT_COLLECTION), id));
-    }
+    await deleteDoc(doc(getUserCollection(path), id));
     return true;
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
     return false;
-  }
-};
-
-// Invitation Functions
-export const createInvitation = async (chatId: string, chatTitle: string, toEmail: string) => {
-  if (!db || !auth?.currentUser) return null;
-  try {
-    const invitationData = {
-      chatId,
-      chatTitle,
-      fromUid: auth.currentUser.uid,
-      fromEmail: auth.currentUser.email,
-      toEmail,
-      status: 'waiting',
-      timestamp: Timestamp.now()
-    };
-    const docRef = await addDoc(collection(db, "invitations"), invitationData);
-    return docRef.id;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, "invitations");
-    return null;
-  }
-};
-
-export const fetchInvitations = async (type: 'incoming' | 'outgoing') => {
-  if (!db || !auth?.currentUser) return [];
-  try {
-    const q = type === 'incoming' 
-      ? query(collection(db, "invitations"), where("toEmail", "==", auth.currentUser.email))
-      : query(collection(db, "invitations"), where("fromUid", "==", auth.currentUser.uid));
-    
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, "invitations");
-    return [];
-  }
-};
-
-export const updateInvitationStatus = async (invitationId: string, status: 'accepted' | 'denied') => {
-  if (!db) return false;
-  try {
-    const invRef = doc(db, "invitations", invitationId);
-    const invDoc = await getDoc(invRef);
-    if (!invDoc.exists()) return false;
-    
-    const data = invDoc.data();
-    await updateDoc(invRef, { status, updatedAt: Timestamp.now() });
-
-    if (status === 'accepted') {
-      // Add user to chat members
-      const chatRef = doc(db, "sales_gpt_sessions", data.chatId);
-      const chatDoc = await getDoc(chatRef);
-      if (chatDoc.exists()) {
-        const chatData = chatDoc.data();
-        const members = [...(chatData.members || []), auth?.currentUser?.uid];
-        await updateDoc(chatRef, { members: Array.from(new Set(members)) });
-      }
-    }
-    return true;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, "invitations");
-    return false;
-  }
-};
-
-// Shared Chat Functions
-export const shareChat = async (chatId: string, title: string, messages: any[]) => {
-  if (!db || !auth?.currentUser) return null;
-  try {
-    const sharedData = {
-      originalChatId: chatId,
-      sharedBy: auth.currentUser.uid,
-      timestamp: Timestamp.now(),
-      title,
-      messages
-    };
-    const docRef = await addDoc(collection(db, "shared_chats"), sharedData);
-    return docRef.id;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, "shared_chats");
-    return null;
-  }
-};
-
-export const fetchSharedChat = async (id: string) => {
-  if (!db) return null;
-  try {
-    const docRef = doc(db, "shared_chats", id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() };
-    }
-    return null;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, "shared_chats");
-    return null;
   }
 };
 
@@ -404,11 +253,11 @@ export const saveFolderToFirebase = async (
   type: 'main' | 'sub' = 'main', 
   parentId: string | null = null
 ): Promise<string | null> => {
-  if (!db) return null;
+  if (!db || !auth || !auth.currentUser) return null;
   const path = FOLDERS_COLLECTION;
   try {
     const docRef = await addDoc(getUserCollection(path), {
-      userId: "default-user",
+      userId: auth.currentUser.uid,
       name,
       isCustom,
       type,
@@ -423,7 +272,7 @@ export const saveFolderToFirebase = async (
 };
 
 export const fetchFoldersFromFirebase = async (): Promise<any[]> => {
-  if (!db) return [];
+  if (!db || !auth || !auth.currentUser) return [];
   const path = FOLDERS_COLLECTION;
   try {
     const querySnapshot = await getDocs(getUserCollection(path));
@@ -442,7 +291,7 @@ export const fetchFoldersFromFirebase = async (): Promise<any[]> => {
 };
 
 export const deleteFolderFromFirebase = async (id: string): Promise<boolean> => {
-  if (!db) return false;
+  if (!db || !auth || !auth.currentUser) return false;
   const path = FOLDERS_COLLECTION;
   try {
     await deleteDoc(doc(getUserCollection(path), id));
@@ -454,7 +303,7 @@ export const deleteFolderFromFirebase = async (id: string): Promise<boolean> => 
 };
 
 export const moveDocumentToFolder = async (docId: string, folderId: string | null): Promise<boolean> => {
-  if (!db) return false;
+  if (!db || !auth || !auth.currentUser) return false;
   const path = COLLECTION_NAME;
   try {
     const docRef = doc(getUserCollection(path), docId);
@@ -487,14 +336,14 @@ export const subscribeToAuth = (callback: (user: User | null) => void) => {
 };
 
 export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' | 'timestamp'>): Promise<string | null> => {
-  if (!db) return null;
+  if (!db || !auth || !auth.currentUser) return null;
   const path = HISTORY_COLLECTION;
   try {
-    const docRef = await addDoc(getUserCollection(path), {
+    const docRef = await addDoc(getUserCollection(path), sanitizeData({
       ...history,
-      userId: "default-user",
+      userId: auth.currentUser.uid,
       timestamp: Timestamp.now()
-    });
+    }));
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -503,7 +352,7 @@ export const saveSimulationHistory = async (history: Omit<any, 'id' | 'userId' |
 };
 
 export const fetchSimulationHistory = async (): Promise<any[]> => {
-  if (!db) return [];
+  if (!db || !auth || !auth.currentUser) return [];
   const path = HISTORY_COLLECTION;
   try {
     // 1. Try fetching from the new user-isolated subcollection
@@ -523,7 +372,7 @@ export const fetchSimulationHistory = async (): Promise<any[]> => {
     if (docs.length === 0) {
       const qLegacy = query(
         collection(db, path),
-        where("userId", "==", "default-user")
+        where("userId", "==", auth.currentUser.uid)
       );
       const querySnapshotLegacy = await getDocs(qLegacy);
       docs = querySnapshotLegacy.docs.map(doc => {
@@ -551,12 +400,12 @@ export const saveDocumentToFirebase = async (
   category?: string,
   reasoning?: string
 ): Promise<string | null> => {
-  if (!db) return null;
+  if (!db || !auth || !auth.currentUser) return null;
   const path = COLLECTION_NAME;
   try {
     const now = Timestamp.now();
     const docRef = await addDoc(getUserCollection(path), {
-      userId: "default-user", // Tie document to unique user
+      userId: auth.currentUser.uid, // Tie document to unique user
       name,
       content,
       type,
@@ -578,7 +427,7 @@ export const saveDocumentToFirebase = async (
 };
 
 export const updateDocumentInFirebase = async (id: string, newContent: string): Promise<boolean> => {
-  if (!db) return false;
+  if (!db || !auth || !auth.currentUser) return false;
   const path = COLLECTION_NAME;
   try {
     const docRef = doc(getUserCollection(path), id);
@@ -595,7 +444,7 @@ export const updateDocumentInFirebase = async (id: string, newContent: string): 
 };
 
 export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> => {
-  if (!db) return [];
+  if (!db || !auth || !auth.currentUser) return [];
   const path = COLLECTION_NAME;
   try {
     // 1. Try fetching from the new user-isolated subcollection
@@ -622,7 +471,7 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
     if (docs.length === 0) {
       const qLegacy = query(
         collection(db, path),
-        where("userId", "==", "default-user")
+        where("userId", "==", auth.currentUser.uid)
       );
       const querySnapshotLegacy = await getDocs(qLegacy);
       docs = querySnapshotLegacy.docs.map(doc => {
@@ -653,7 +502,7 @@ export const fetchDocumentsFromFirebase = async (): Promise<StoredDocument[]> =>
 };
 
 export const deleteDocumentFromFirebase = async (id: string): Promise<boolean> => {
-  if (!db) return false;
+  if (!db || !auth || !auth.currentUser) return false;
   const path = COLLECTION_NAME;
   try {
     await deleteDoc(doc(getUserCollection(path), id));
@@ -669,20 +518,20 @@ export const deleteDocumentFromFirebase = async (id: string): Promise<boolean> =
 };
 
 export const saveMeetingContext = async (data: { meetingContext: any, selectedLibraryDocIds: string[], analysis?: any }): Promise<boolean> => {
-  if (!db) return false;
+  if (!db || !auth || !auth.currentUser) return false;
   const path = CONTEXT_COLLECTION;
   try {
-    const userId = "default-user";
+    const userId = auth.currentUser.uid;
     const userContextCol = getUserCollection(path);
     const querySnapshot = await getDocs(userContextCol);
     
-    const contextData: any = {
+    const contextData: any = sanitizeData({
       meetingContext: data.meetingContext,
       selectedLibraryDocIds: data.selectedLibraryDocIds,
       userId,
-      updatedAt: Timestamp.now()
-    };
-    if (data.analysis) contextData.analysis = data.analysis;
+      updatedAt: Timestamp.now(),
+      analysis: data.analysis || null
+    });
 
     if (!querySnapshot.empty) {
       // Update existing
@@ -700,7 +549,7 @@ export const saveMeetingContext = async (data: { meetingContext: any, selectedLi
 };
 
 export const fetchMeetingContext = async (): Promise<any | null> => {
-  if (!db) return null;
+  if (!db || !auth || !auth.currentUser) return null;
   const path = CONTEXT_COLLECTION;
   try {
     // 1. Try fetching from the new user-isolated subcollection
@@ -712,7 +561,7 @@ export const fetchMeetingContext = async (): Promise<any | null> => {
     // 2. Fallback: If new collection is empty, try fetching from the legacy top-level collection
     const qLegacy = query(
       collection(db, path),
-      where("userId", "==", "default-user")
+      where("userId", "==", auth.currentUser.uid)
     );
     const querySnapshotLegacy = await getDocs(qLegacy);
     if (!querySnapshotLegacy.empty) {
@@ -727,7 +576,7 @@ export const fetchMeetingContext = async (): Promise<any | null> => {
 };
 
 export const deleteMeetingContext = async (): Promise<boolean> => {
-  if (!db) return false;
+  if (!db || !auth || !auth.currentUser) return false;
   const path = CONTEXT_COLLECTION;
   try {
     const userContextCol = getUserCollection(path);
