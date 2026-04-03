@@ -53,8 +53,8 @@ const ModelDeliveryPlayer = ({ script }: { script: string }) => {
               <ICONS.Brain className="w-6 h-6" />
             </div>
             <div>
-              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Required Answer Delivery</h5>
-              <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Cognitive Coach Active</p>
+              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Master Model Delivery</h5>
+              <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Neural Coach Active</p>
             </div>
           </div>
           <button 
@@ -72,7 +72,7 @@ const ModelDeliveryPlayer = ({ script }: { script: string }) => {
         <div className="flex items-center gap-3 pt-4 border-t border-white/10">
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">
-            Coach Active
+            Coach Active (Neural Vocal Profile: Zephyr)
           </span>
         </div>
       </div>
@@ -148,7 +148,6 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(e => console.warn("Video play failed:", e));
       }
     } catch (e) {
       console.error("Camera access denied:", e);
@@ -383,11 +382,11 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                 <span>Question Parameters</span>
                 <span className="text-[9px] lowercase tracking-normal opacity-60 font-bold">(+ and - indicated How many questions do you need so ai will generateAssessment Questions?)</span>
               </h4>
-              <ConfigRow label="QUIZE" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document className="w-5 h-5" />} />
+              <ConfigRow label="Quiz" val={config.mcq} set={(v) => setConfig({ ...config, mcq: v })} icon={<ICONS.Document className="w-5 h-5" />} />
               <ConfigRow label="Short Answer" val={config.short} set={(v) => setConfig({ ...config, short: v })} icon={<ICONS.Efficiency className="w-5 h-5" />} />
               <ConfigRow label="Long Answer" val={config.long} set={(v) => setConfig({ ...config, long: v })} icon={<ICONS.Research className="w-5 h-5" />} />
               <ConfigRow label="Verbal Delivery" val={config.mic} set={(v) => setConfig({ ...config, mic: v })} icon={<ICONS.Mic className="w-5 h-5" />} />
-              <ConfigRow label="Visual Performance" val={config.video} set={(v) => setConfig({ ...config, video: v })} icon={<ICONS.Play className="w-5 h-5" />} />
+              <ConfigRow label="Video Performance (Visual/Verbal)" val={config.video} set={(v) => setConfig({ ...config, video: v })} icon={<ICONS.Play className="w-5 h-5" />} />
             </div>
 
           <div className="space-y-12">
@@ -507,7 +506,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
               </div>
 
               <div className="min-h-[300px] flex items-center justify-center">
-                {currentQ.type === 'MCQ' && (
+                {currentQ.type === 'mcq' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
                     {currentQ.options?.map((opt, i) => (
                       <button
@@ -540,7 +539,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                      {currentQ.type === 'video' ? (
                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
                          <div className="relative rounded-[3rem] overflow-hidden bg-slate-800 aspect-video flex items-center justify-center">
-                            <video ref={videoRef} muted playsInline className="w-full h-full object-cover" />
+                            <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                          </div>
                          <div className="flex flex-col justify-center gap-6">
                             <textarea 
@@ -664,7 +663,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                       <div className="space-y-6">
                          <div className="flex items-center gap-2 mb-2">
                             <ICONS.Chat className="w-4 h-4 text-slate-400" />
-                            <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Your Answer Delivery</h5>
+                            <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Your Protocol Delivery</h5>
                          </div>
                          <div className="p-8 bg-slate-800 rounded-[2.5rem] border border-slate-700 italic text-slate-100 leading-relaxed font-medium">
                             “{res?.userAnswer || "System encountered a null response node."}”
@@ -720,7 +719,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                       <div className="space-y-6">
                          <div className="flex items-center gap-2 mb-2">
                             <ICONS.Shield className="w-4 h-4 text-indigo-300" />
-                            <h5 className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Required Answer</h5>
+                            <h5 className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Master Logic Node</h5>
                          </div>
                          
                          {res?.evaluation.modelDeliveryScript ? (
