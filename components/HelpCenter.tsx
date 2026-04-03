@@ -112,11 +112,10 @@ const HELP_SECTIONS: HelpSection[] = [
         ]
       },
       {
-        subtitle: 'Grooming Lab & Studio',
+        subtitle: 'Grooming Lab',
         text: 'Ensure your vocal presence matches the strength of your strategic intelligence.',
         points: [
           'Grooming Lab: Receive an elite audit on tone, pacing, and grammar.',
-          'Studio: Generate professional-grade audio samples of your winning pitches.',
           'Practice until your delivery is flawless and authoritative.'
         ]
       }

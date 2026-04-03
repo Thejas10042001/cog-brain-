@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Header } from './components/Header';
 import { Auth } from './components/Auth';
 import { FileUpload } from './components/FileUpload';
-import { AudioGenerator } from './components/AudioGenerator';
 import { PracticeSession } from './components/PracticeSession';
 import { SalesGPT } from './components/SalesGPT';
 import { MeetingContextConfig } from './components/MeetingContextConfig';
@@ -64,7 +63,7 @@ const App: React.FC = () => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'audio' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
+  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
   const [darkMode] = useState(true);
@@ -162,17 +161,8 @@ const App: React.FC = () => {
       audioText: 'Welcome to the Grooming Lab. The purpose is to practice your delivery and receive an elite audit on tone, grammar, and pacing. It helps by refining your vocal presence and ensuring your delivery is as strong as your strategy.',
       guideText: 'Audit your verbal architecture and pacing to ensure your delivery matches the strength of your strategy. Initiate the grooming protocol to receive an elite analysis of your vocal energy and authority.'
     },
-    'audio': {
-      stepNumber: '09',
-      label: 'Studio',
-      feature: 'High-Fidelity Audio Generation',
-      purpose: 'Generate professional-grade audio samples of your winning pitches.',
-      howItHelps: 'Allows you to hear the ideal delivery and use it for rehearsal or internal alignment.',
-      audioText: 'This is the Studio. The purpose is to generate professional-grade audio samples of your winning pitches. It helps by allowing you to hear the ideal delivery and use it for rehearsal or internal alignment.',
-      guideText: 'Synthesize high-fidelity audio samples of your winning pitches to establish a baseline for elite delivery. Generate professional-grade vocal signatures for rehearsal and strategic alignment.'
-    },
     'help': {
-      stepNumber: '10',
+      stepNumber: '09',
       label: 'Help Center',
       feature: 'Operational Documentation & Support',
       purpose: 'Access comprehensive guides and strategic frameworks for the SPIKED AI protocol.',
@@ -658,8 +648,7 @@ const App: React.FC = () => {
                       <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "06 Avatar 2.0" : ""} scale={sidebarFontScale} step="06" />
                       <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "07 Spiked GPT" : ""} scale={sidebarFontScale} step="07" />
                       <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "08 Grooming" : ""} scale={sidebarFontScale} step="08" />
-                      <SidebarBtn active={activeTab === 'audio'} onClick={() => handleNodeClick('audio')} icon={<ICONS.Speaker />} label={sidebarWidth > 180 ? "09 Studio" : ""} scale={sidebarFontScale} step="09" />
-                      <SidebarBtn active={activeTab === 'help'} onClick={() => handleNodeClick('help')} icon={<ICONS.Help />} label={sidebarWidth > 180 ? "10 Help" : ""} scale={sidebarFontScale} step="10" />
+                      <SidebarBtn active={activeTab === 'help'} onClick={() => handleNodeClick('help')} icon={<ICONS.Help />} label={sidebarWidth > 180 ? "09 Help" : ""} scale={sidebarFontScale} step="09" />
                     </div>
                   </div>
 
@@ -862,7 +851,6 @@ const App: React.FC = () => {
                       {activeTab === 'avatar2' && <AvatarSimulationV2 meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'avatar' && <AvatarSimulation meetingContext={meetingContext} onContextChange={setMeetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'gpt' && <SalesGPT activeDocuments={activeDocuments} meetingContext={meetingContext} />}
-                      {activeTab === 'audio' && <div className="p-8 md:p-12 w-full flex-1"><AudioGenerator analysis={analysis!} /></div>}
                       {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
                       {activeTab === 'help' && <HelpCenter />}
