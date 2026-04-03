@@ -53,8 +53,8 @@ const ModelDeliveryPlayer = ({ script }: { script: string }) => {
               <ICONS.Brain className="w-6 h-6" />
             </div>
             <div>
-              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Master Model Delivery</h5>
-              <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Neural Coach Active</p>
+              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400"> Expected Answer To Be Delivered </h5>
+              <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Cognitive Coach Active</p>
             </div>
           </div>
           <button 
@@ -72,7 +72,7 @@ const ModelDeliveryPlayer = ({ script }: { script: string }) => {
         <div className="flex items-center gap-3 pt-4 border-t border-white/10">
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">
-            Coach Active (Neural Vocal Profile: Zephyr)
+            Coach Active
           </span>
         </div>
       </div>
@@ -685,7 +685,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                       <div className="space-y-6">
                          <div className="flex items-center gap-2 mb-2">
                             <ICONS.Chat className="w-4 h-4 text-slate-400" />
-                            <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Your Protocol Delivery</h5>
+                            <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Your Answer Delivered</h5>
                          </div>
                          <div className="p-8 bg-slate-800 rounded-[2.5rem] border border-slate-700 italic text-slate-100 leading-relaxed font-medium">
                             “{res?.userAnswer || "System encountered a null response node."}”
@@ -741,7 +741,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                       <div className="space-y-6">
                          <div className="flex items-center gap-2 mb-2">
                             <ICONS.Shield className="w-4 h-4 text-indigo-300" />
-                            <h5 className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Master Logic Node</h5>
+                            <h5 className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Expected Answer Node</h5>
                          </div>
                          
                          {res?.evaluation.modelDeliveryScript ? (
