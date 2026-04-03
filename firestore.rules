@@ -120,35 +120,6 @@ service cloud.firestore {
              data.messages is list;
     }
 
-    function isGroupMember(groupId) {
-      return isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members;
-    }
-
-    function isValidGroup(data) {
-      return hasRequiredFields(['id', 'groupName', 'creatorId', 'members', 'createdAt']) &&
-             data.groupName is string && data.groupName.size() <= 100 &&
-             data.creatorId is string &&
-             data.members is list &&
-             data.createdAt is number;
-    }
-
-    function isValidGroupInvite(data) {
-      return hasRequiredFields(['id', 'groupId', 'senderId', 'receiverEmail', 'status', 'createdAt']) &&
-             data.groupId is string &&
-             data.senderId is string &&
-             data.receiverEmail is string &&
-             data.status in ['pending', 'accepted', 'denied'] &&
-             data.createdAt is number;
-    }
-
-    function isValidGroupMessage(data) {
-      return hasRequiredFields(['id', 'groupId', 'senderId', 'message', 'timestamp']) &&
-             data.groupId is string &&
-             data.senderId is string &&
-             data.message is string &&
-             data.timestamp is number;
-    }
-
     // ===============================================================
     // Rules
     // ===============================================================
@@ -191,27 +162,6 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isValidSalesGPTSession(request.resource.data, userId);
         allow delete: if isOwner(userId) || isAdmin();
       }
-    }
-
-    match /groups/{groupId} {
-      allow read: if isAuthenticated() && (request.auth.uid in resource.data.members || isAdmin());
-      allow create: if isAuthenticated() && isValidGroup(request.resource.data);
-      allow update: if isAuthenticated() && (request.auth.uid in resource.data.members || isAdmin()) && isValidGroup(request.resource.data);
-      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.creatorId || isAdmin());
-    }
-
-    match /group_invites/{inviteId} {
-      allow read: if isAuthenticated() && (request.auth.token.email == resource.data.receiverEmail || request.auth.uid == resource.data.senderId || isAdmin());
-      allow create: if isAuthenticated() && isValidGroupInvite(request.resource.data);
-      allow update: if isAuthenticated() && (request.auth.token.email == resource.data.receiverEmail || isAdmin()) && isValidGroupInvite(request.resource.data);
-      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.senderId || isAdmin());
-    }
-
-    match /group_messages/{messageId} {
-      allow read: if isGroupMember(resource.data.groupId) || isAdmin();
-      allow create: if isGroupMember(request.resource.data.groupId) && isValidGroupMessage(request.resource.data);
-      allow update: if false; // Messages are immutable
-      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.senderId || isAdmin());
     }
 
     // Default deny

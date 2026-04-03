@@ -9,31 +9,24 @@ import {
   generatePineappleImage, 
   streamDeepStudy, 
   performCognitiveSearchStream, 
-  generateFollowUpQuestions 
+  generateFollowUpQuestions,
+  streamNormalChat
 } from '../services/geminiService';
 import { 
   saveSalesGPTSession, 
   fetchSalesGPTSessions, 
   deleteSalesGPTSession,
   fetchSharedGPTSession,
-  sendGroupMessage,
-  subscribeToGroupMessages,
-  fetchUserGroups,
-  createGroup,
-  checkUserExistsByEmail,
-  subscribeToUserInvites,
-  respondToInvite,
   auth
 } from '../services/firebaseService';
-import { GPTMessage, GPTToolMode, MeetingContext, Citation, SalesGPTSession, Group, GroupMessage, GroupInvite } from '../types';
-import { FileText, ExternalLink, X, MessageSquare, Plus, Trash2, Bell, History, Share2, Users, Send, LogOut, Check, XCircle } from 'lucide-react';
+import { GPTMessage, GPTToolMode, MeetingContext, Citation, SalesGPTSession } from '../types';
+import { FileText, ExternalLink, X, MessageSquare, Plus, Trash2, Bell, History, Share2, Send, LogOut, Check, XCircle } from 'lucide-react';
 
 interface SalesGPTProps {
   activeDocuments: { name: string; content: string }[];
   meetingContext: MeetingContext;
   initialConversationId?: string | null;
   sharedSession?: SalesGPTSession | null;
-  activeGroupId?: string | null;
 }
 
 const TypingIndicator = () => (
@@ -59,7 +52,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, initialConversationId, sharedSession, activeGroupId }) => {
+export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, initialConversationId, sharedSession }) => {
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<GPTToolMode>('standard');
@@ -67,26 +60,13 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   const [includeContext, setIncludeContext] = useState(true);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [sessions, setSessions] = useState<SalesGPTSession[]>([]);
-  const [userGroups, setUserGroups] = useState<Group[]>([]);
-  const [userInvites, setUserInvites] = useState<GroupInvite[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(initialConversationId || null);
-  const [currentGroupId, setCurrentGroupId] = useState<string | null>(activeGroupId || null);
-  const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
-  const [showInvites, setShowInvites] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showGroupModal, setShowGroupModal] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Group Creation State
-  const [newGroupName, setNewGroupName] = useState("");
-  const [inviteEmails, setInviteEmails] = useState<string[]>([]);
-  const [currentEmail, setCurrentEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
   useEffect(() => {
     if (sharedSession) {
@@ -104,38 +84,6 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
       }
     }
   }, [initialConversationId, sessions]);
-
-  useEffect(() => {
-    if (currentGroupId) {
-      const unsubscribe = subscribeToGroupMessages(currentGroupId, (msgs) => {
-        setGroupMessages(msgs);
-      });
-      return unsubscribe;
-    }
-  }, [currentGroupId]);
-
-  const loadGroups = useCallback(async () => {
-    const groups = await fetchUserGroups();
-    setUserGroups(groups);
-  }, []);
-
-  useEffect(() => {
-    loadGroups();
-    
-    const unsubscribeInvites = subscribeToUserInvites((invites) => {
-      setUserInvites(invites);
-      if (invites.length > 0) setShowNotification(true);
-    });
-
-    return () => unsubscribeInvites();
-  }, [loadGroups]);
-
-  const handleInviteResponse = async (inviteId: string, status: 'accepted' | 'denied') => {
-    const success = await respondToInvite(inviteId, status);
-    if (success) {
-      loadGroups();
-    }
-  };
 
   const playPing = useCallback(() => {
     try {
@@ -186,21 +134,12 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   const createNewSession = () => {
     setMessages([]);
     setCurrentSessionId(null);
-    setCurrentGroupId(null);
     setShouldAutoScroll(true);
   };
 
   const selectSession = (session: SalesGPTSession) => {
     setMessages(session.messages);
     setCurrentSessionId(session.id);
-    setCurrentGroupId(null);
-    setShouldAutoScroll(true);
-  };
-
-  const selectGroup = (group: Group) => {
-    setCurrentGroupId(group.id);
-    setCurrentSessionId(null);
-    setMessages([]);
     setShouldAutoScroll(true);
   };
 
@@ -225,48 +164,6 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   const openInNewTab = () => {
     if (!currentSessionId) return;
     window.open(`${window.location.origin}/salesgpt?conversationId=${currentSessionId}`, '_blank');
-  };
-
-  const handleAddEmail = async () => {
-    if (!currentEmail.trim()) return;
-    if (!currentEmail.includes('@')) {
-      setEmailError("Please enter a valid email address.");
-      return;
-    }
-    
-    const uid = await checkUserExistsByEmail(currentEmail.trim());
-    if (!uid) {
-      setEmailError("Please enter a valid email address. This email is not registered in the system.");
-      return;
-    }
-
-    if (inviteEmails.includes(currentEmail.trim())) {
-      setEmailError("Email already added.");
-      return;
-    }
-
-    setInviteEmails([...inviteEmails, currentEmail.trim()]);
-    setCurrentEmail("");
-    setEmailError("");
-  };
-
-  const handleCreateGroup = async () => {
-    if (!newGroupName.trim()) return;
-    setIsCreatingGroup(true);
-    const groupId = await createGroup(newGroupName.trim(), inviteEmails);
-    if (groupId) {
-      setShowGroupModal(false);
-      setNewGroupName("");
-      setInviteEmails([]);
-      loadGroups();
-    }
-    setIsCreatingGroup(false);
-  };
-
-  const handleSendGroupMessage = async () => {
-    if (!input.trim() || !currentGroupId) return;
-    const success = await sendGroupMessage(currentGroupId, input.trim());
-    if (success) setInput("");
   };
 
   const handleDeleteSession = async (e: React.MouseEvent, id: string) => {
@@ -615,12 +512,6 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           >
             <Plus className="w-4 h-4" /> New Strategic Session
           </button>
-          <button 
-            onClick={() => setShowGroupModal(true)}
-            className="w-full py-4 px-6 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-95 border border-slate-700"
-          >
-            <Users className="w-4 h-4" /> Create Group Chat
-          </button>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
           <div>
@@ -656,34 +547,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
             </div>
           </div>
 
-          <div>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 ml-2">Group Intelligence</p>
-            <div className="space-y-2">
-              {userGroups.map((group) => (
-                <div 
-                  key={group.id}
-                  onClick={() => selectGroup(group)}
-                  className={`group p-4 rounded-2xl cursor-pointer transition-all border flex items-start justify-between gap-3 ${
-                    currentGroupId === group.id 
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                    : 'bg-transparent border-transparent hover:bg-slate-800/50 text-slate-400'
-                  }`}
-                >
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <Users className={`w-4 h-4 mt-1 flex-shrink-0 ${currentGroupId === group.id ? 'text-emerald-400' : 'text-slate-600'}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate leading-tight">{group.groupName}</p>
-                      <p className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-50">
-                        {group.members.length} Members
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {sessions.length === 0 && userGroups.length === 0 && (
+          {sessions.length === 0 && (
             <div className="py-12 text-center space-y-4">
               <div className="w-12 h-12 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto">
                 <History className="w-6 h-6 text-slate-600" />
@@ -719,26 +583,14 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                </div>
                <div>
                   <h3 className="text-2xl font-black text-white tracking-tighter uppercase">
-                    {currentGroupId ? userGroups.find(g => g.id === currentGroupId)?.groupName : 'Strategic Intelligence'}
+                    Strategic Intelligence
                   </h3>
                   <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.4em]">
-                    {currentGroupId ? 'Team Collaboration Active' : 'Neural Sales Copilot v3.1'}
+                    Neural Sales Copilot v3.1
                   </p>
                </div>
             </div>
             <div className="flex items-center gap-4">
-               <button 
-                 onClick={() => setShowInvites(!showInvites)}
-                 className="relative p-3 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl transition-all border border-slate-700"
-                 title="Team Invites"
-               >
-                 <Bell className="w-4 h-4" />
-                 {userInvites.length > 0 && (
-                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[8px] font-black flex items-center justify-center rounded-full animate-bounce">
-                     {userInvites.length}
-                   </span>
-                 )}
-               </button>
                {currentSessionId && !sharedSession && (
                  <>
                    <button 
@@ -781,30 +633,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         >
         <div className="max-w-5xl mx-auto px-12 py-16 space-y-16">
           <AnimatePresence mode="popLayout">
-            {currentGroupId ? (
-              groupMessages.map((msg) => (
-                <motion.div 
-                  key={msg.id} 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex flex-col ${msg.senderId === auth.currentUser?.uid ? 'items-end' : 'items-start'}`}
-                >
-                  <div className={`mb-4 px-8 flex items-center gap-4 ${msg.senderId === auth.currentUser?.uid ? 'flex-row-reverse' : ''}`}>
-                    <span className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500">
-                      {msg.senderName}
-                    </span>
-                  </div>
-                  <div className={`
-                    max-w-[80%] p-6 rounded-[2rem] text-lg font-medium leading-relaxed shadow-lg
-                    ${msg.senderId === auth.currentUser?.uid 
-                      ? 'bg-emerald-600 text-white rounded-tr-none' 
-                      : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800'}
-                  `}>
-                    {msg.message}
-                  </div>
-                </motion.div>
-              ))
-            ) : messages.length === 0 ? (
+            {messages.length === 0 ? (
               <motion.div 
                 key="empty"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -981,97 +810,46 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
       {/* Input Area */}
       <div className="w-full bg-slate-950/80 backdrop-blur-2xl border-t border-slate-800 z-20">
         <div className="max-w-5xl mx-auto px-12 py-8 space-y-6">
-          {!currentGroupId && (
-            <div className="flex flex-wrap gap-3 justify-center">
-               <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
-               <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" />
-               <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-4 h-4" />} label="Deep Study" color="amber" />
-               <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-4 h-4" />} label="Visual Logic" color="emerald" />
-            </div>
-          )}
+          <div className="flex flex-wrap gap-3 justify-center">
+             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
+             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" />
+             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-4 h-4" />} label="Deep Study" color="amber" />
+             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-4 h-4" />} label="Visual Logic" color="emerald" />
+          </div>
 
           <div className="relative group">
             <input 
               type="text" 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (currentGroupId ? handleSendGroupMessage() : handleSend())}
-              placeholder={currentGroupId ? "Type a message to the team..." : "Type your strategic inquiry..."}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Type your strategic inquiry..."
               className="w-full bg-slate-900 border-2 border-slate-800 rounded-3xl px-10 py-6 text-xl outline-none transition-all pr-48 font-medium shadow-2xl focus:border-indigo-500 placeholder:text-slate-700 text-white"
             />
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => currentGroupId ? handleSendGroupMessage() : handleSend()}
+              onClick={() => handleSend()}
               disabled={!input.trim() || isProcessing}
               className={`absolute right-4 top-4 bottom-4 px-10 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl flex items-center gap-3 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
             >
-              {isProcessing ? 'Synthesizing' : currentGroupId ? 'Send' : 'Synthesize'}
+              {isProcessing ? 'Synthesizing' : 'Synthesize'}
             </motion.button>
           </div>
           
           <div className="flex items-center justify-between px-4">
-             {!currentGroupId ? (
-               <motion.button 
-                 whileHover={{ x: 5 }}
-                 onClick={() => setIncludeContext(!includeContext)}
-                 className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-600'}`}
-               >
-                  <div className={`w-2 h-2 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
-                  Strategic Context Sync: {includeContext ? 'Active' : 'Offline'}
-               </motion.button>
-             ) : (
-               <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">
-                 <Users className="w-3 h-3" />
-                 {userGroups.find(g => g.id === currentGroupId)?.members.length} Members Online
-               </div>
-             )}
+             <motion.button 
+               whileHover={{ x: 5 }}
+               onClick={() => setIncludeContext(!includeContext)}
+               className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-600'}`}
+             >
+                <div className={`w-2 h-2 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                Strategic Context Sync: {includeContext ? 'Active' : 'Offline'}
+             </motion.button>
              <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
           </div>
         </div>
       </div>
-
-      {/* Invites Dropdown */}
-      <AnimatePresence>
-        {showInvites && (
-          <div className="fixed top-24 right-12 z-[60] w-80 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Team Invites</h4>
-              <button onClick={() => setShowInvites(false)} className="text-slate-500 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
-              {userInvites.length === 0 ? (
-                <p className="text-xs text-slate-600 text-center py-4 italic">No pending invitations</p>
-              ) : (
-                userInvites.map(invite => (
-                  <div key={invite.id} className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
-                    <div className="space-y-1">
-                      <p className="text-sm font-bold text-white">{invite.groupName}</p>
-                      <p className="text-[10px] text-slate-500">From: {invite.senderEmail}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleInviteResponse(invite.id, 'accepted')}
-                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
-                      >
-                        <Check className="w-3 h-3" /> Accept
-                      </button>
-                      <button 
-                        onClick={() => handleInviteResponse(invite.id, 'denied')}
-                        className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
-                      >
-                        <XCircle className="w-3 h-3" /> Deny
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Share Modal */}
       <AnimatePresence>
@@ -1108,85 +886,6 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               >
                 Close
               </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Group Modal */}
-      <AnimatePresence>
-        {showGroupModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-slate-900 border border-slate-800 p-10 rounded-[3rem] max-w-lg w-full space-y-8 shadow-2xl"
-            >
-              <div className="space-y-2">
-                <h3 className="text-3xl font-black text-white tracking-tighter uppercase">Create Group Chat</h3>
-                <p className="text-slate-400 text-sm">Collaborate with your team in real-time.</p>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Group Name</label>
-                  <input 
-                    value={newGroupName}
-                    onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="e.g. Sales Strategy Team"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 text-white outline-none focus:border-indigo-500 transition-all"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Invite Members (Email)</label>
-                  <div className="flex gap-2">
-                    <input 
-                      value={currentEmail}
-                      onChange={(e) => {
-                        setCurrentEmail(e.target.value);
-                        setEmailError("");
-                      }}
-                      placeholder="teammate@company.com"
-                      className="flex-1 bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 text-white outline-none focus:border-indigo-500 transition-all"
-                    />
-                    <button 
-                      onClick={handleAddEmail}
-                      className="px-6 py-4 bg-slate-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 transition-all"
-                    >
-                      Add
-                    </button>
-                  </div>
-                  {emailError && <p className="text-rose-500 text-[10px] font-bold ml-2">{emailError}</p>}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {inviteEmails.map(email => (
-                    <div key={email} className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl text-xs flex items-center gap-2">
-                      {email}
-                      <button onClick={() => setInviteEmails(inviteEmails.filter(e => e !== email))}>
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <button 
-                  onClick={() => setShowGroupModal(false)}
-                  className="flex-1 py-4 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleCreateGroup}
-                  disabled={!newGroupName.trim() || isCreatingGroup}
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-900/20 disabled:opacity-50"
-                >
-                  {isCreatingGroup ? 'Creating...' : 'Create Group'}
-                </button>
-              </div>
             </motion.div>
           </div>
         )}

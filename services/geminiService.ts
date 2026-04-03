@@ -113,7 +113,6 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries: number = 3): Promi
       const isQuotaError = errorStr.includes("RESOURCE_EXHAUSTED") || 
                           error.status === "RESOURCE_EXHAUSTED" || 
                           error.code === 429 ||
-                          (error.error && (error.error.code === 429 || error.error.status === "RESOURCE_EXHAUSTED")) ||
                           (error.message && error.message.includes("429"));
 
       if (isQuotaError) {
@@ -151,7 +150,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries: number = 3): Promi
 
 // Extract meeting metadata from a document content
 export async function extractMetadataFromDocument(content: string): Promise<Partial<MeetingContext>> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
   const prompt = `Act as an Elite Sales Operations Analyst and Psychological Profiler. 
@@ -218,7 +217,7 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
 
 // Analyze Audio for Vocal Persona
 export async function analyzeVocalPersona(base64Audio: string, mimeType: string): Promise<VocalPersonaStructure> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Analyze this audio sample of a human voice. 
@@ -263,7 +262,7 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
 
 // Categorize a document into a folder
 export async function categorizeDocument(fileName: string, content: string, availableFolders: string[]): Promise<{ category: string; reasoning: string }> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
   const prompt = `Act as an Elite Sales Operations Analyst and Knowledge Management Expert. 
@@ -311,7 +310,7 @@ export async function categorizeDocument(fileName: string, content: string, avai
 
 // Suggest a vocal persona based on document content
 export async function suggestVocalPersonaFromDoc(content: string): Promise<VocalPersonaStructure> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Based on the following document content, suggest the most appropriate "Neural Vocal Persona" for an AI avatar that would be most effective in this context.
@@ -365,7 +364,7 @@ export async function suggestVocalPersonaFromDoc(content: string): Promise<Vocal
 
 // Generate Vocal Signature from a mimicry directive
 export async function generateVocalSignatureFromDirective(directive: string): Promise<VocalPersonaStructure> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Act as a Neural Vocal Engineer. 
@@ -474,8 +473,6 @@ function pcmToWav(base64Pcm: string, sampleRate: number = 24000): string {
   return btoa(binary);
 }
 
-const ttsCache = new Map<string, string>();
-
 // Generate Voice Sample using TTS
 export async function generateVoiceSample(
   text: string, 
@@ -488,9 +485,6 @@ export async function generateVoiceSample(
   // Clean text of markdown tags for better TTS
   const cleanText = text.replace(/\[.*?\]/g, '').trim();
   if (!cleanText) return "";
-
-  const cacheKey = `${voiceName}:${cleanText}`;
-  if (ttsCache.has(cacheKey)) return ttsCache.get(cacheKey)!;
 
   try {
     const response = await withRetry(() => ai.models.generateContent({
@@ -506,13 +500,11 @@ export async function generateVoiceSample(
           },
         },
       },
-    }), 5); // Increased retries for TTS
+    }));
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (base64Audio) {
-      const wav = pcmToWav(base64Audio);
-      ttsCache.set(cacheKey, wav);
-      return wav;
+      return pcmToWav(base64Audio);
     }
     return "";
   } catch (error) {
@@ -523,7 +515,7 @@ export async function generateVoiceSample(
 
 // Generate response for the Cogni Voice Assistant
 export async function generateAssistantResponse(query: string, context?: string): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
   const systemInstruction = `You are an Elite Cognitive Sales Intelligence Assistant for Spiked AI.
@@ -562,7 +554,7 @@ export async function generateSalesStrategy(
   context: MeetingContext,
   refinementPrompt?: string
 ): Promise<SalesStrategy> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-pro-preview';
   
   const prompt = `Act as an Elite Enterprise Sales Strategist and Competitive Intelligence Officer. 
@@ -628,7 +620,7 @@ async function performHighDepthEvaluation(
   context: MeetingContext,
   personaUsed: string
 ): Promise<ComprehensiveAvatarReport> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
   const historyStr = history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
@@ -716,7 +708,7 @@ export async function* streamAvatarSimulationV2(
   history: GPTMessage[], 
   context: MeetingContext
 ): AsyncGenerator<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
   const formattedHistory = history.map(msg => ({
@@ -876,7 +868,7 @@ export async function* streamAvatarSimulation(
   history: GPTMessage[], 
   context: MeetingContext
 ): AsyncGenerator<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const modelName = 'gemini-3-flash-preview';
   
   const formattedHistory = history.map(msg => ({
@@ -1343,6 +1335,39 @@ function formatHistory(history: GPTMessage[]) {
     role: msg.role === 'user' ? 'user' : 'model',
     parts: [{ text: msg.content }]
   }));
+}
+
+// Normal Chat: Simple, direct, and non-structured intelligence
+export async function* streamNormalChat(prompt: string, history: GPTMessage[]): AsyncGenerator<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const contents = [
+    ...formatHistory(history),
+    { role: 'user', parts: [{ text: prompt }] }
+  ];
+
+  const systemInstruction = `You are a helpful, professional AI assistant. 
+  Provide direct, clear, and concise answers to the user's questions. 
+  Maintain a professional yet conversational tone. 
+  Do not use complex strategic formatting unless requested.`;
+
+  try {
+    const result = await withRetry(() => ai.models.generateContentStream({
+      model: modelName,
+      contents: contents,
+      config: {
+        systemInstruction: systemInstruction,
+      }
+    }));
+
+    for await (const chunk of result) {
+      yield chunk.text || "";
+    }
+  } catch (error) {
+    console.error("Normal chat stream failed:", error);
+    yield "Error: Failed to connect to chat core.";
+  }
 }
 
 // Sales GPT: Balanced grounded and general intelligence

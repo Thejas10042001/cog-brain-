@@ -74,7 +74,6 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<SalesGPTSession | null>(null);
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
   const [darkMode] = useState(true);
@@ -101,12 +100,6 @@ const App: React.FC = () => {
     const conversationId = params.get('conversationId');
     if (conversationId) {
       setInitialConversationId(conversationId);
-      setActiveTab('gpt');
-    }
-
-    const groupId = params.get('groupId');
-    if (groupId) {
-      setActiveGroupId(groupId);
       setActiveTab('gpt');
     }
 
@@ -893,7 +886,6 @@ const App: React.FC = () => {
                           meetingContext={meetingContext} 
                           initialConversationId={initialConversationId}
                           sharedSession={sharedSession}
-                          activeGroupId={activeGroupId}
                         />
                       )}
                       {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
