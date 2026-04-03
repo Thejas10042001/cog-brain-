@@ -57,15 +57,7 @@ const ModelDeliveryPlayer = ({ script }: { script: string }) => {
               <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Cognitive Coach Active</p>
             </div>
           </div>
-          <button 
-            onClick={playScript}
-            disabled={isPlaying}
-            className={`flex items-center gap-2 px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isPlaying ? 'bg-indigo-600 text-white animate-pulse' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
-          >
-            <ICONS.Speaker className="w-3 h-3" />
-            {isPlaying ? 'Delivering...' : 'Play Model Delivery'}
-          </button>
-        </div>
+          
         <p className="text-xl font-medium leading-relaxed italic text-slate-300">
           “{script}”
         </p>
