@@ -533,23 +533,23 @@ OPERATIONAL CONSTRAINTS:
                     <div className="space-y-6">
                       <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                          <div className="text-indigo-500"><ICONS.Trophy /></div>
-                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Seller Core</h4>
+                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Seller Detail</h4>
                       </div>
                       <Input label="Seller Company" value={context.sellerCompany} onChange={v => handleChange('sellerCompany', v)} placeholder="Acme Corp" />
-                      <Input label="Seller Names" value={context.sellerNames} onChange={v => handleChange('sellerNames', v)} placeholder="John Doe, Jane Smith" />
+                      <Input label="Seller Name" value={context.sellerNames} onChange={v => handleChange('sellerNames', v)} placeholder="John Doe, Jane Smith" />
                     </div>
                     <div className="space-y-6">
                       <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                          <div className="text-indigo-500"><ICONS.ROI /></div>
-                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Client Core</h4>
+                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Client Detail</h4>
                       </div>
                       <Input label="Client Company" value={context.clientCompany} onChange={v => handleChange('clientCompany', v)} placeholder="Global Industries" />
-                      <Input label="Client Names" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="Robert Brown, Sarah Wilson" />
+                      <Input label="Client Name" value={context.clientNames} onChange={v => handleChange('clientNames', v)} placeholder="Robert Brown, Sarah Wilson" />
                     </div>
                     <div className="space-y-6">
                       <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                          <div className="text-indigo-500"><ICONS.Efficiency /></div>
-                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Solution Core</h4>
+                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Product Detail</h4>
                       </div>
                       <Input label="Target Products" value={context.targetProducts} onChange={v => handleChange('targetProducts', v)} placeholder="Enterprise Cloud Suite" />
                       <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="SaaS, Cybersecurity" />
