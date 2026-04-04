@@ -358,7 +358,7 @@ export const AvatarSimulationStaged: FC<{
         setExplanationContent(explanation);
         
         // Small delay to ensure UI renders the explanation text
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(explanation);
       }
     } catch (e) {
@@ -517,7 +517,7 @@ export const AvatarSimulationStaged: FC<{
       await explainNode(targetStage);
       
       // Small delay to ensure UI has rendered the question before narrating it
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 50));
       await playAIQuestion(cleaned);
     } catch (e: any) { 
       console.error(e);
@@ -573,7 +573,7 @@ export const AvatarSimulationStaged: FC<{
       await explainNode(stage);
       
       // Small delay to ensure UI has rendered the question before narrating it
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 50));
       await playAIQuestion(cleaned);
     } catch (e: any) { 
       console.error(e); 
@@ -650,7 +650,7 @@ export const AvatarSimulationStaged: FC<{
             setCurrentCaption("");
             
             // Small delay to ensure UI renders the message first
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 50));
             await playAIQuestion(cleaned);
             setTimeout(() => setShowCelebration(false), 2000);
         } else {
@@ -694,7 +694,7 @@ export const AvatarSimulationStaged: FC<{
         setCurrentCaption("");
 
         // Small delay to ensure UI renders the message first
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(retryText);
       } else {
         const cleaned = response.replace(/\[HINT: [\s\S]*?\]/, "").trim();
@@ -703,7 +703,7 @@ export const AvatarSimulationStaged: FC<{
         setCurrentCaption("");
 
         // Small delay to ensure UI renders the message first
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(cleaned);
       }
     } catch (e: any) { 
@@ -759,7 +759,7 @@ export const AvatarSimulationStaged: FC<{
       setMessages(prev => [...prev, aiMsg]);
       
       // Small delay to ensure UI renders the message first
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 50));
       await playAIQuestion(cleaned);
     } catch (e) {
       console.error(e);

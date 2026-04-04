@@ -346,7 +346,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         setExplanationContent(explanation);
         
         // Small delay to ensure UI renders the explanation text
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(explanation);
       }
     } catch (e) {
@@ -459,7 +459,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
       await explainNode("Initial Discovery");
       
       // Small delay to ensure UI has rendered the question before narrating it
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 50));
       await playAIQuestion(cleaned);
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
@@ -505,7 +505,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         setCurrentCaption("");
 
         // Small delay to ensure UI renders the message first
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(retryText);
       } else {
         const cleaned = nextContent.replace(/\[HINT: .*?\]/, "").trim();
@@ -515,7 +515,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         setCurrentCaption("");
 
         // Small delay to ensure UI renders the message first
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(cleaned);
       }
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
