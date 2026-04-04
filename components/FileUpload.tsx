@@ -155,7 +155,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`relative border-2 border-dashed rounded-[3rem] p-16 text-center cursor-pointer transition-all duration-500 group overflow-hidden ${isDragging ? 'border-indigo-500 bg-indigo-900/40 shadow-2xl shadow-indigo-500/20' : 'border-slate-800 bg-slate-900/50 hover:border-indigo-500 hover:shadow-none'}`} 
+        className={`relative border-2 border-dashed rounded-[3rem] p-8 text-center cursor-pointer transition-all duration-500 group overflow-hidden ${isDragging ? 'border-indigo-500 bg-indigo-900/40 shadow-2xl shadow-indigo-500/20' : 'border-slate-800 bg-slate-900/50 hover:border-indigo-500 hover:shadow-none'}`} 
         onClick={() => fileInputRef.current?.click()}
       >
         <input 
@@ -164,7 +164,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
           className="hidden" 
           ref={fileInputRef} 
           onChange={handleFileChange} 
-          accept=".pdf,.docx,.txt,.csv,.md,image/*" 
+          accept=".pdf,.docx,.txt,.csv" 
         />
         
         {/* Animated Background Element */}
@@ -184,7 +184,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
           <h4 className="text-2xl font-black text-white uppercase tracking-tighter">Cognitive Intake Hub</h4>
           <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.4em] mt-3">Drag & Drop or Click to Ingest Intelligence</p>
           <div className="mt-8 flex gap-3">
-            {['PDF', 'DOCX', 'TXT', 'IMG', 'MD'].map(ext => (
+            {['PDF', 'DOCX', 'TXT'].map(ext => (
               <span key={ext} className="px-4 py-1.5 bg-slate-800 text-[9px] font-black text-slate-400 rounded-xl border border-slate-700 shadow-sm">{ext}</span>
             ))}
           </div>

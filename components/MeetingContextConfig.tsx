@@ -101,8 +101,8 @@ export const MeetingContextConfig: React.FC<MeetingContextConfigProps> = ({
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [showVocalDirective, setShowVocalDirective] = useState(false);
   const [showKycGuide, setShowKycGuide] = useState(false);
-  const [activeSection, setActiveSection] = useState<'library' | 'core' | 'persona' | 'strategy' | 'vocal'>('library');
-  const SECTIONS: ('library' | 'core' | 'persona' | 'strategy' | 'vocal')[] = ['library', 'core', 'persona', 'strategy', 'vocal'];
+  const [activeSection, setActiveSection] = useState<'library' | 'core' | 'persona' | 'vocal'>('library');
+  const SECTIONS: ('library' | 'core' | 'persona' | 'vocal')[] = ['library', 'core', 'persona', 'vocal'];
   const isCustomizedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -373,9 +373,8 @@ OPERATIONAL CONSTRAINTS:
     <div className="flex flex-wrap gap-3 mb-16 p-3 bg-slate-800/50 rounded-[2.5rem] backdrop-blur-xl border border-slate-700/50 shadow-inner">
       {[
         { id: 'library', label: 'Library Hub', icon: <ICONS.Document className="w-4 h-4" /> },
-        { id: 'core', label: 'Mind Core', icon: <ICONS.Brain className="w-4 h-4" /> },
+        { id: 'core', label: 'Mind Core & Strategy', icon: <ICONS.Brain className="w-4 h-4" /> },
         { id: 'persona', label: 'Buyer Persona', icon: <ICONS.ROI className="w-4 h-4" /> },
-        { id: 'strategy', label: 'Strategy', icon: <ICONS.Trophy className="w-4 h-4" /> },
         { id: 'vocal', label: 'Vocal Sync', icon: <ICONS.Speaker className="w-4 h-4" /> }
       ].map((s) => (
         <motion.button
@@ -458,11 +457,13 @@ OPERATIONAL CONSTRAINTS:
                 <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
                   <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">02</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Cognitive Mind Core</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Anchor the cognitive simulation by selecting a primary KYC node to calibrate strategic parameters.</p>
+                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Mind Core & Strategy</h3>
+                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Anchor the cognitive simulation and define the specific focus of the meeting.</p>
                   </div>
                 </div>
+                
                 <div className="space-y-12">
+                  {/* Cognitive Mind Core Content */}
                   <div className="p-12 bg-indigo-900/10 border border-indigo-900/30 rounded-[3rem] flex flex-col items-center gap-8 shadow-inner text-center">
                     <div className="p-6 bg-indigo-600 text-white rounded-[2rem] shadow-2xl">
                       <ICONS.Shield className="w-12 h-12" />
@@ -555,6 +556,70 @@ OPERATIONAL CONSTRAINTS:
                       <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="SaaS, Cybersecurity" />
                     </div>
                   </div>
+
+                  {/* Strategy Finalization Content */}
+                  <div className="space-y-12 pt-12 border-t-4 border-slate-800">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-lg">
+                        <ICONS.Trophy className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-3xl font-black uppercase tracking-widest text-white">Strategy Finalization</h3>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Meeting Focus & Strategic Objective</label>
+                      <textarea 
+                        value={context.meetingFocus}
+                        onChange={e => handleChange('meetingFocus', e.target.value)}
+                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2rem] px-8 py-6 text-base font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[150px] placeholder:text-slate-600"
+                        placeholder="Describe the primary goal of this interaction..."
+                      />
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Predicted Resistance Nodes (Objections)</h4>
+                        <span className="text-[10px] font-black text-indigo-400 bg-indigo-900/30 px-3 py-1 rounded-lg">{context.potentialObjections.length} Active Nodes</span>
+                      </div>
+                      <div className="flex gap-4">
+                        <input 
+                          type="text"
+                          value={objectionInput}
+                          onChange={e => setObjectionInput(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && addObjection()}
+                          className="flex-1 bg-slate-800 border-2 border-slate-700 rounded-2xl px-6 py-4 text-sm font-semibold text-white outline-none focus:border-indigo-500 transition-all shadow-inner"
+                          placeholder="Add a predicted objection..."
+                        />
+                        <button 
+                          onClick={addObjection}
+                          className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95 shadow-lg"
+                        >
+                          Add Node
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <AnimatePresence>
+                          {context.potentialObjections.map((obj, i) => (
+                            <motion.div 
+                              key={i}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              className="flex items-center gap-3 px-5 py-3 bg-slate-800 border border-slate-700 rounded-xl shadow-sm group"
+                            >
+                              <span className="text-xs font-bold text-slate-300">{obj}</span>
+                              <button 
+                                onClick={() => handleChange('potentialObjections', context.potentialObjections.filter((_, idx) => idx !== i))}
+                                className="text-slate-300 hover:text-rose-500 transition-colors"
+                              >
+                                <ICONS.X className="w-3 h-3" />
+                              </button>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -594,77 +659,12 @@ OPERATIONAL CONSTRAINTS:
               </div>
             )}
 
-            {activeSection === 'strategy' && (
-              <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
-                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">04</div>
-                  <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Strategy Finalization</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Define the specific focus of the meeting and anticipate potential objections to sharpen neural response.</p>
-                  </div>
-                </div>
-                <div className="space-y-12">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Meeting Focus & Strategic Objective</label>
-                    <textarea 
-                      value={context.meetingFocus}
-                      onChange={e => handleChange('meetingFocus', e.target.value)}
-                      className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2rem] px-8 py-6 text-base font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[150px] placeholder:text-slate-600"
-                      placeholder="Describe the primary goal of this interaction..."
-                    />
-                  </div>
 
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Predicted Resistance Nodes (Objections)</h4>
-                      <span className="text-[10px] font-black text-indigo-400 bg-indigo-900/30 px-3 py-1 rounded-lg">{context.potentialObjections.length} Active Nodes</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <input 
-                        type="text"
-                        value={objectionInput}
-                        onChange={e => setObjectionInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && addObjection()}
-                        className="flex-1 bg-slate-800 border-2 border-slate-700 rounded-2xl px-6 py-4 text-sm font-semibold text-white outline-none focus:border-indigo-500 transition-all shadow-inner"
-                        placeholder="Add a predicted objection..."
-                      />
-                      <button 
-                        onClick={addObjection}
-                        className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95 shadow-lg"
-                      >
-                        Add Node
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      <AnimatePresence>
-                        {context.potentialObjections.map((obj, i) => (
-                          <motion.div 
-                            key={i}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            className="flex items-center gap-3 px-5 py-3 bg-slate-800 border border-slate-700 rounded-xl shadow-sm group"
-                          >
-                            <span className="text-xs font-bold text-slate-300">{obj}</span>
-                            <button 
-                              onClick={() => handleChange('potentialObjections', context.potentialObjections.filter((_, idx) => idx !== i))}
-                              className="text-slate-300 hover:text-rose-500 transition-colors"
-                            >
-                              <ICONS.X className="w-3 h-3" />
-                            </button>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {activeSection === 'vocal' && (
               <div className="space-y-12">
                 <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
-                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">05</div>
+                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">04</div>
                   <div className="flex flex-col">
                     <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Neural Vocal Sync</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's baseline.</p>
