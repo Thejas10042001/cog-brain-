@@ -699,7 +699,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     `}
                   >
                     <div className="flex items-start justify-between mb-5">
-                      <div className={`p-4 rounded-2xl transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-xl shadow-none' : 'bg-indigo-900/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-xl group-hover:shadow-none'}`}>
+                      <div className={`p-4 rounded-2xl transition-all ml-8 ${isSelected ? 'bg-indigo-600 text-white shadow-xl shadow-none' : 'bg-indigo-900/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-xl group-hover:shadow-none'}`}>
                         <ICONS.Document className="w-5 h-5" />
                       </div>
                       
@@ -812,7 +812,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
 
                     {/* Selection Indicator */}
                     <div className={`
-                      absolute top-6 right-6 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center
+                      absolute top-4 left-4 w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center z-[20]
                       ${isSelected ? 'bg-indigo-600 border-indigo-600 scale-110' : 'border-slate-800 bg-slate-900 group-hover:border-indigo-400'}
                     `}>
                       {isSelected && (
