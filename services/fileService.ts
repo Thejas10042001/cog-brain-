@@ -32,9 +32,64 @@ export async function parseDocument(file: File, callbacks: ParsingCallbacks = {}
     return result.value;
   } 
 
+  if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+    const arrayBuffer = await file.arrayBuffer();
+    return extractTextFromExcel(arrayBuffer);
+  }
+
+  if (file.name.endsWith('.pptx')) {
+    const arrayBuffer = await file.arrayBuffer();
+    return extractTextFromPptx(arrayBuffer);
+  }
+
   // Default: Plain text fallback
   const arrayBuffer = await file.arrayBuffer();
   return new TextDecoder().decode(arrayBuffer);
+}
+
+async function extractTextFromExcel(arrayBuffer: ArrayBuffer): Promise<string> {
+  const XLSX = (window as any).XLSX;
+  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+  let fullText = "";
+  
+  workbook.SheetNames.forEach((sheetName: string) => {
+    const worksheet = workbook.Sheets[sheetName];
+    // Convert to CSV for a readable text representation
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+    fullText += `--- SHEET: ${sheetName} ---\n${csv}\n\n`;
+  });
+  
+  return fullText;
+}
+
+async function extractTextFromPptx(arrayBuffer: ArrayBuffer): Promise<string> {
+  const JSZip = (window as any).JSZip;
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  let fullText = "";
+  
+  // PPTX slides are in ppt/slides/slide1.xml, slide2.xml, etc.
+  const slideFiles = Object.keys(zip.files).filter(name => name.startsWith('ppt/slides/slide') && name.endsWith('.xml'));
+  
+  // Sort slides numerically
+  slideFiles.sort((a, b) => {
+    const numA = parseInt(a.match(/\d+/)![0]);
+    const numB = parseInt(b.match(/\d+/)![0]);
+    return numA - numB;
+  });
+
+  for (let i = 0; i < slideFiles.length; i++) {
+    const slideXml = await zip.file(slideFiles[i])?.async('text');
+    if (slideXml) {
+      // Simple regex to extract text from <a:t> tags in the XML
+      const textMatches = slideXml.match(/<a:t>([^<]*)<\/a:t>/g);
+      if (textMatches) {
+        const slideText = textMatches.map(match => match.replace(/<a:t>|<\/a:t>/g, '')).join(' ');
+        fullText += `--- SLIDE ${i + 1} ---\n${slideText}\n\n`;
+      }
+    }
+  }
+  
+  return fullText;
 }
 
 async function extractTextFromPdf(

@@ -164,7 +164,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
           className="hidden" 
           ref={fileInputRef} 
           onChange={handleFileChange} 
-          accept=".pdf,.docx,.txt,.csv" 
+          accept=".pdf,.docx,.txt,.csv,.xlsx,.xls,.pptx" 
         />
         
         {/* Animated Background Element */}
@@ -183,8 +183,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
           </motion.div>
           <h4 className="text-2xl font-black text-white uppercase tracking-tighter">Cognitive Intake Hub</h4>
           <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.4em] mt-3">Drag & Drop or Click to Ingest Intelligence</p>
-          <div className="mt-8 flex gap-3">
-            {['PDF', 'DOCX', 'TXT'].map(ext => (
+          <div className="mt-8 flex gap-3 flex-wrap justify-center">
+            {['PDF', 'DOCX', 'TXT', 'PPTX', 'XLSX', 'CSV'].map(ext => (
               <span key={ext} className="px-4 py-1.5 bg-slate-800 text-[9px] font-black text-slate-400 rounded-xl border border-slate-700 shadow-sm">{ext}</span>
             ))}
           </div>
