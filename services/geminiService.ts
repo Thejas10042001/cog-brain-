@@ -766,10 +766,11 @@ If the user provides an answer to your previous question, you MUST evaluate it.
 
 If the response is weak, vague, or unprofessional:
 1. Start with exactly: [RESULT: FAIL]
-2. Provide: [COACHING: Detailed explanation of the deficit.]
-3. Provide: [STYLE_GUIDE: Strategic guidance on presentation.]
-4. Provide: [IDEAL_RESPONSE: A world-class response the user should have given.]
-5. Provide: [RETRY_PROMPT: A repeated or adjusted question to force a retry.]
+2. Provide: [DEFICIT: A percentage (0-100%) representing how much of the required cognitive logic or strategic depth was missing from the user's response.]
+3. Provide: [COACHING: Detailed explanation of the deficit.]
+4. Provide: [STYLE_GUIDE: Strategic guidance on presentation.]
+5. Provide: [IDEAL_RESPONSE: A world-class response the user should have given.]
+6. Provide: [RETRY_PROMPT: A repeated or adjusted question to force a retry.]
 
 If the response is strong:
 1. You MAY provide a brief strategic suggestion for improvement enclosed in exactly: [HINT: ...]
@@ -917,10 +918,11 @@ If the user provides an answer to your previous question, you MUST evaluate it.
 
 If the response is weak, vague, or unprofessional:
 1. Start with exactly: [RESULT: FAIL]
-2. Provide: [COACHING: Detailed explanation of the deficit.]
-3. Provide: [STYLE_GUIDE: Strategic guidance on presentation.]
-4. Provide: [IDEAL_RESPONSE: A world-class response the user should have given.]
-5. Provide: [RETRY_PROMPT: A repeated or adjusted question to force a retry.]
+2. Provide: [DEFICIT: A percentage (0-100%) representing how much of the required cognitive logic or strategic depth was missing from the user's response.]
+3. Provide: [COACHING: Detailed explanation of the deficit.]
+4. Provide: [STYLE_GUIDE: Strategic guidance on presentation.]
+5. Provide: [IDEAL_RESPONSE: A world-class response the user should have given.]
+6. Provide: [RETRY_PROMPT: A repeated or adjusted question to force a retry.]
 
 If the response is strong:
 1. You MAY provide a brief strategic suggestion for improvement enclosed in exactly: [HINT: ...]
@@ -1082,10 +1084,11 @@ GATEKEEPING RULES (CRITICAL - MANDATORY TAGS)
 Evaluate the user's latest response with extreme rigor.
 If the response is weak, vague, lacks document grounding, or misses the objective of ${currentStage}:
 1. Start with exactly: [RESULT: FAIL]
-2. Provide: [COACHING: Detailed multi-line explanation of the deficit.]
-3. Provide: [STYLE_GUIDE: Detailed multi-line strategic guidance on presentation and tone.]
-4. Provide: [IDEAL_RESPONSE: A complete, word-for-word world-class response the user should have given.]
-5. Provide: [RETRY_PROMPT: A repeated or adjusted question to force a retry.]
+2. Provide: [DEFICIT: A percentage (0-100%) representing how much of the required cognitive logic or strategic depth was missing from the user's response.]
+3. Provide: [COACHING: Detailed multi-line explanation of the deficit.]
+4. Provide: [STYLE_GUIDE: Detailed multi-line strategic guidance on presentation and tone.]
+5. Provide: [IDEAL_RESPONSE: A complete, word-for-word world-class response the user should have given.]
+6. Provide: [RETRY_PROMPT: A repeated or adjusted question to force a retry.]
 
 If the response is strong and professional:
 1. Start with exactly: [RESULT: SUCCESS]
