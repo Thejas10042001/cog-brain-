@@ -503,7 +503,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     {folder.isCustom && (
                       <button
                         onClick={(e) => handleDeleteFolder(e, folder.id)}
-                        className="absolute right-12 opacity-0 group-hover:opacity-100 p-2 text-slate-500 hover:text-rose-400 transition-all z-10 pointer-events-auto"
+                        className="absolute right-12 p-2 text-slate-500 hover:text-rose-400 transition-all z-10 pointer-events-auto"
                         title="Delete Folder"
                       >
                         <ICONS.Trash className="w-3 h-3" />
@@ -541,7 +541,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                             {sub.isCustom && (
                               <button
                                 onClick={(e) => handleDeleteFolder(e, sub.id)}
-                                className="absolute right-8 opacity-0 group-hover:opacity-100 p-1.5 text-slate-600 hover:text-rose-400 transition-all z-10 pointer-events-auto"
+                                className="absolute right-8 p-1.5 text-slate-600 hover:text-rose-400 transition-all z-10 pointer-events-auto"
                                 title="Delete Sub-folder"
                               >
                                 <ICONS.Trash className="w-2.5 h-2.5" />
@@ -703,7 +703,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                         <ICONS.Document className="w-5 h-5" />
                       </div>
                       
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 transition-opacity">
                         <div className="relative">
                           <button 
                             onClick={(e) => { e.stopPropagation(); setMovingDocId(isMoving ? null : doc.id); }}

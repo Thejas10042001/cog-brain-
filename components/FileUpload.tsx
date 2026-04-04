@@ -221,7 +221,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
                     onFilesChange(prev => prev.filter((_, i) => i !== idx));
                     onUploadSuccess?.();
                   }} 
-                  className="p-1.5 text-slate-700 hover:text-rose-500 hover:bg-rose-900/30 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                  className="p-1.5 text-slate-700 hover:text-rose-500 hover:bg-rose-900/30 rounded-lg transition-all"
                 >
                   <ICONS.X className="w-4 h-4" />
                 </button>
