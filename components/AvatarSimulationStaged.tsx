@@ -339,9 +339,13 @@ export const AvatarSimulationStaged: FC<{
 
     // Stop current audio immediately
     if (activeAudioSource.current) {
-      try { activeAudioSource.current.stop(); } catch (e) {}
+      try { 
+        activeAudioSource.current.stop(); 
+        activeAudioSource.current = null;
+      } catch (e) {}
     }
     setIsAISpeaking(false);
+    setIsUserListening(false); // Stop listening while explaining
 
     setExplanationContent("");
     setShowExplanation(true);
@@ -352,7 +356,10 @@ export const AvatarSimulationStaged: FC<{
       // Only proceed if the popup is still open
       if (showExplanationRef.current) {
         setExplanationContent(explanation);
-        playAIQuestion(explanation);
+        
+        // Small delay to ensure UI renders the explanation text
+        await new Promise(resolve => setTimeout(resolve, 150));
+        await playAIQuestion(explanation);
       }
     } catch (e) {
       console.error("Explanation failed:", e);
@@ -504,11 +511,14 @@ export const AvatarSimulationStaged: FC<{
       const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
-      // Zero latency: play immediately
-      await explainNode(targetStage);
-      await playAIQuestion(cleaned);
-      
       setMessages([assistantMsg]);
+
+      // Sequence explanation then question
+      await explainNode(targetStage);
+      
+      // Small delay to ensure UI has rendered the question before narrating it
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await playAIQuestion(cleaned);
     } catch (e: any) { 
       console.error(e);
       const errorStr = JSON.stringify(e);
@@ -557,11 +567,14 @@ export const AvatarSimulationStaged: FC<{
       const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
+      setMessages(prev => [...prev, aiMsg]);
+
       // Zero latency: play immediately
       await explainNode(stage);
-      await playAIQuestion(cleaned);
       
-      setMessages(prev => [...prev, aiMsg]);
+      // Small delay to ensure UI has rendered the question before narrating it
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await playAIQuestion(cleaned);
     } catch (e: any) { 
       console.error(e); 
       const errorStr = JSON.stringify(e);
@@ -635,7 +648,10 @@ export const AvatarSimulationStaged: FC<{
             const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
             setMessages([...updatedHistory, aiMsg]);
             setCurrentCaption("");
-            playAIQuestion(cleaned);
+            
+            // Small delay to ensure UI renders the message first
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await playAIQuestion(cleaned);
             setTimeout(() => setShowCelebration(false), 2000);
         } else {
             setRemainingQuestionsInLoop(0);
@@ -676,12 +692,19 @@ export const AvatarSimulationStaged: FC<{
         const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: retryText, mode: 'standard' };
         setMessages([...updatedHistory, aiMsg]);
         setCurrentCaption("");
-        playAIQuestion(retryText);
+
+        // Small delay to ensure UI renders the message first
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await playAIQuestion(retryText);
       } else {
         const cleaned = response.replace(/\[HINT: [\s\S]*?\]/, "").trim();
         const aiMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
         setMessages([...updatedHistory, aiMsg]);
-        playAIQuestion(cleaned);
+        setCurrentCaption("");
+
+        // Small delay to ensure UI renders the message first
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await playAIQuestion(cleaned);
       }
     } catch (e: any) { 
       console.error(e);
@@ -734,7 +757,10 @@ export const AvatarSimulationStaged: FC<{
       const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const aiMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       setMessages(prev => [...prev, aiMsg]);
-      playAIQuestion(cleaned);
+      
+      // Small delay to ensure UI renders the message first
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await playAIQuestion(cleaned);
     } catch (e) {
       console.error(e);
     } finally {

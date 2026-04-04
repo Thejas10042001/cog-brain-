@@ -328,9 +328,13 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
     // Stop current audio immediately
     if (activeAudioSource.current) {
-      try { activeAudioSource.current.stop(); } catch (e) {}
+      try { 
+        activeAudioSource.current.stop(); 
+        activeAudioSource.current = null;
+      } catch (e) {}
     }
     setIsAISpeaking(false);
+    setIsUserListening(false); // Stop listening while explaining
 
     setExplanationContent("");
     setShowExplanation(true);
@@ -341,7 +345,10 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       // Only proceed if the popup is still open
       if (showExplanationRef.current) {
         setExplanationContent(explanation);
-        playAIQuestion(explanation);
+        
+        // Small delay to ensure UI renders the explanation text
+        await new Promise(resolve => setTimeout(resolve, 150));
+        await playAIQuestion(explanation);
       }
     } catch (e) {
       console.error("Explanation failed:", e);
@@ -451,6 +458,9 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       
       // Sequence explanation then question
       await explainNode(meetingContext.simulationProtocol || "Initial Discovery");
+      
+      // Small delay to ensure UI has rendered the question before narrating it
+      await new Promise(resolve => setTimeout(resolve, 100));
       await playAIQuestion(cleaned);
     } catch (e: any) { 
       console.error(e); 
@@ -505,20 +515,22 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         const retryText = retryMatch?.[1]?.trim() || "Protocol performance deficit detected. Please refine your logic and try again.";
         const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: retryText, mode: 'standard' };
         
-        // Zero latency: play immediately
-        playAIQuestion(retryText);
-        
         setMessages([...updatedMessages, assistantMsg]);
         setCurrentCaption("");
+
+        // Small delay to ensure UI renders the message first
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await playAIQuestion(retryText);
       } else {
       const cleaned = nextContent.replace(/\[HINT: .*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
-      // Zero latency: play immediately
-      playAIQuestion(cleaned);
-      
       setMessages([...updatedMessages, assistantMsg]);
       setCurrentCaption("");
+
+      // Small delay to ensure UI renders the message first
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await playAIQuestion(cleaned);
     }
     } catch (e: any) { 
       console.error(e); 
