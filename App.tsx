@@ -288,7 +288,7 @@ const App: React.FC = () => {
   }, [activeTab, !!analysis, hasInteracted]);
 
   // Whole Screen Magnifier State
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(90);
   // Text-Only Magnifier State
   const [textZoom, setTextZoom] = useState(100);
 

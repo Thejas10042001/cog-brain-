@@ -167,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
                              <ICONS.ZoomOut className="w-4 h-4 text-slate-400" />
                            </button>
                            <button 
-                             onClick={() => onZoomChange(90)}
+                             onClick={() => onZoomChange(100)}
                              className="px-5 py-3 bg-indigo-600 text-[10px] font-black text-white rounded-2xl shadow-lg hover:bg-indigo-700 transition-colors"
                            >
                              RESET
