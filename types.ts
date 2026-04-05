@@ -305,7 +305,7 @@ export interface AssessmentResult {
   timeSpent: number;
 }
 
-export type GPTToolMode = 'standard' | 'pineapple' | 'deep-study' | 'cognitive' | 'cognitive-pro';
+export type GPTToolMode = 'standard' | 'pineapple' | 'deep-study' | 'cognitive';
 
 export interface GPTMessage {
   id: string;

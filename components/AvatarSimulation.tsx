@@ -78,7 +78,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     clarityScore: 92,
     behavioralAudit: "Professional, steady, and direct."
   });
-  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string; logicDeficit?: string } | null>(null);
+  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const showExplanationRef = useRef(false);
@@ -750,7 +750,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   const historyFontScale = Math.max(0.8, Math.min(1.4, historyWidth / 400));
 
   return (
-    <div className="bg-slate-950 shadow-2xl overflow-hidden relative h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
+    <div className="bg-slate-950 shadow-2xl overflow-hidden relative min-h-[calc(100vh-64px)] flex flex-col text-white animate-in zoom-in-95 duration-500">
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto px-12">
            <div className="w-80 h-80 bg-slate-900/50 rounded-[4rem] border border-slate-800 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
@@ -918,16 +918,14 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
                {/* Protocol Blocked Overlay */}
                {coachingFeedback && (
-                 <div className="p-12 bg-slate-900/80 backdrop-blur-3xl border-2 border-rose-500/30 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_0_80px_rgba(244,63,94,0.15)] relative overflow-hidden">
-                     <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 via-transparent to-transparent pointer-events-none"></div>
-                     <div className="absolute -top-24 -right-24 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl neural-glow"></div>
-                     <div className="flex items-center justify-between relative z-10">
+                 <div className="p-12 bg-rose-50 backdrop-blur-2xl border-2 border-rose-200 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
+                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                           <div className="w-14 h-14 rounded-2xl bg-rose-600 flex items-center justify-center text-white shadow-[0_0_30px_rgba(225,29,72,0.4)] animate-pulse"><ICONS.Security className="w-7 h-7" /></div>
+                           <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
                            <div className="flex flex-wrap gap-3">
-                             <span className="px-6 py-3 bg-rose-600 text-white text-[13px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl border border-rose-400/30">Protocol Blocked: Neural Performance Deficit</span>
+                             <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
                              {coachingFeedback.logicDeficit && (
-                               <span className="px-6 py-3 bg-rose-950/50 text-rose-400 text-[13px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl border border-rose-500/30 backdrop-blur-md">
+                               <span className="px-6 py-2.5 bg-rose-100 text-rose-600 text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl border border-rose-200">
                                  Logic Deficit: {coachingFeedback.logicDeficit}
                                </span>
                              )}
@@ -953,24 +951,23 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                        <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500 pt-4">
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                            <div className="space-y-4">
-                               <h5 className="text-[11px] font-black uppercase text-rose-500 tracking-[0.3em]">Deficit Rationale</h5>
-                               <div className="text-lg font-bold text-rose-200 leading-relaxed italic border-l-4 border-rose-500/50 pl-8 py-2 bg-rose-500/5 rounded-r-2xl">
+                               <h5 className="text-[11px] font-black uppercase text-rose-600 tracking-[0.3em]">Deficit Rationale</h5>
+                               <div className="text-lg font-bold text-rose-900 leading-relaxed italic border-l-4 border-rose-300 pl-8 py-2">
                                  {coachingFeedback.failReason || "Incongruent logic detected in current stage response."}
                                </div>
                            </div>
                            <div className="space-y-4">
-                               <h5 className="text-[11px] font-black uppercase text-indigo-400 tracking-[0.3em]">Strategic Guidance</h5>
-                               <div className="text-lg font-bold text-indigo-200 leading-relaxed italic border-l-4 border-indigo-500/50 pl-8 py-2 bg-indigo-500/5 rounded-r-2xl">
+                               <h5 className="text-[11px] font-black uppercase text-indigo-600 tracking-[0.3em]">Strategic Guidance</h5>
+                               <div className="text-lg font-bold text-indigo-900 leading-relaxed italic border-l-4 border-indigo-300 pl-8 py-2">
                                  {coachingFeedback.styleGuide || "Adopt a higher-authority executive stance with grounded metrics."}
                                </div>
                            </div>
                          </div>
 
                          {coachingFeedback.idealResponse && (
-                           <div className="p-12 bg-indigo-950/40 border-2 border-indigo-500/20 rounded-[3rem] space-y-6 shadow-[inset_0_0_40px_rgba(79,70,229,0.1)] relative overflow-hidden">
-                               <div className="absolute top-0 right-0 p-8 opacity-10"><ICONS.Sparkles className="w-20 h-20 text-indigo-400" /></div>
-                               <h5 className="text-[12px] font-black uppercase text-indigo-400 tracking-[0.4em] relative z-10">Master Logic Protocol</h5>
-                               <p className="text-3xl font-black text-white leading-[1.5] tracking-tight italic relative z-10">“{coachingFeedback.idealResponse}”</p>
+                           <div className="p-12 bg-indigo-50 border-2 border-indigo-100 rounded-[3rem] space-y-6 shadow-inner">
+                               <h5 className="text-[12px] font-black uppercase text-indigo-500 tracking-[0.4em]">Master Logic Protocol</h5>
+                               <p className="text-3xl font-black text-slate-900 leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
                            </div>
                          )}
 
@@ -1006,7 +1003,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                      <button 
                        onClick={handleNextNode} 
                        disabled={isProcessing || !currentCaption.trim()} 
-                       className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95 neural-pulse"
+                       className="flex-1 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95"
                      >
                        Commit Logic
                      </button>
@@ -1036,16 +1033,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
               fontSize: `${historyFontScale}rem`,
               transition: isResizing ? 'none' : 'all 0.3s ease'
             }}
-            className="border-l border-slate-800 bg-slate-900/40 backdrop-blur-2xl flex flex-col shrink-0 overflow-hidden h-full relative"
+            className="border-l border-slate-100 bg-slate-50/50 backdrop-blur-xl flex flex-col shrink-0 overflow-hidden"
           >
-             <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none"></div>
-             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/80 backdrop-blur-md z-10">
+             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-50">
                 <div className="flex items-center gap-3">
                    <div className="p-2 bg-indigo-600 rounded-lg text-white" style={{ transform: `scale(${historyFontScale})` }}><ICONS.Research className="w-4 h-4" /></div>
                    {historyWidth > 180 && (
                      <div className="overflow-hidden">
-                        <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-white truncate" style={{ fontSize: `${historyFontScale * 0.75}rem` }}>Simulation History</h4>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest truncate" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Mastery Trace Log</p>
+                        <h4 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-900 truncate" style={{ fontSize: `${historyFontScale * 0.75}rem` }}>Simulation History</h4>
+                        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest truncate" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Mastery Trace Log</p>
                      </div>
                    )}
                 </div>
@@ -1062,7 +1058,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                 )}
              </div>
 
-             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4 z-10 pb-20" style={{ backgroundColor: '#0a0a0f' }}>
+             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4" style={{ backgroundColor: '#111117' }}>
                 {messages.map((msg, idx) => (
                   <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-slate-900 border-slate-800' : 'bg-indigo-900/20 border-indigo-900/30'}`}>
                     <div className="flex items-center justify-between mb-2">
