@@ -1294,7 +1294,14 @@ export const AvatarSimulationStaged: FC<{
                           <div className="flex items-center justify-between">
                              <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
-                                <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
+                                <div className="flex flex-wrap gap-3">
+                                  <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
+                                  {coachingFeedback.logicDeficit && (
+                                    <span className="px-6 py-2.5 bg-rose-100 text-rose-600 text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl border border-rose-200">
+                                      Logic Deficit: {coachingFeedback.logicDeficit}
+                                    </span>
+                                  )}
+                                </div>
                              </div>
                           </div>
 
@@ -1448,9 +1455,16 @@ export const AvatarSimulationStaged: FC<{
                                  attempts.map((at, i) => (
                                     <div key={i} className={`p-4 rounded-2xl border ${at.result === 'SUCCESS' ? 'bg-emerald-50 border-emerald-100' : at.result === 'SKIPPED' ? 'bg-slate-50 border-slate-100' : 'bg-rose-50 border-rose-100'}`}>
                                        <div className="flex justify-between items-center mb-3">
-                                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${at.result === 'SUCCESS' ? 'bg-emerald-500 text-white' : at.result === 'SKIPPED' ? 'bg-slate-400 text-white' : 'bg-rose-600 text-white'}`} style={{ fontSize: `${historyFontScale * 0.5}rem` }}>
-                                             {at.result === 'FAIL' ? 'Deficit' : at.result}
-                                          </span>
+                                          <div className="flex items-center gap-2">
+                                             <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${at.result === 'SUCCESS' ? 'bg-emerald-500 text-white' : at.result === 'SKIPPED' ? 'bg-slate-400 text-white' : 'bg-rose-600 text-white'}`} style={{ fontSize: `${historyFontScale * 0.5}rem` }}>
+                                                {at.result === 'FAIL' ? 'Deficit' : at.result}
+                                             </span>
+                                             {at.logicDeficit && (
+                                               <span className="text-[8px] font-black text-rose-600 uppercase tracking-widest bg-rose-100 px-2 py-0.5 rounded-full" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>
+                                                 Logic Deficit: {at.logicDeficit}
+                                               </span>
+                                             )}
+                                          </div>
                                           {at.rating && <div style={{ transform: `scale(${historyFontScale * 0.8})`, transformOrigin: 'right center' }}><StarRating rating={at.rating} /></div>}
                                        </div>
                                        <div className="space-y-4">
@@ -1469,10 +1483,22 @@ export const AvatarSimulationStaged: FC<{
                                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Protocol Delivery:</p>
                                              <p className="text-[10px] font-bold text-slate-900 leading-relaxed line-clamp-3" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>"{at.userAnswer}"</p>
                                           </div>
-                                          {at.feedback && historyWidth > 250 && (
-                                             <div className="pt-3 mt-3 border-t border-slate-100 space-y-2">
-                                                <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Deficit Rationale:</p>
-                                                <p className="text-[9px] font-medium text-slate-500 italic leading-snug" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>{at.feedback.failReason}</p>
+                                          {at.feedback?.idealResponse && historyWidth > 250 && (
+                                             <div className="pt-3 mt-3 border-t border-slate-100 space-y-3">
+                                                <div className="space-y-1">
+                                                  <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Deficit Rationale:</p>
+                                                  <p className="text-[9px] font-medium text-slate-500 italic leading-snug" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>{at.feedback.failReason}</p>
+                                                </div>
+                                                <button 
+                                                  onClick={() => {
+                                                    setExplanationContent(`EXPECTED STRATEGIC ANSWER:\n\n${at.feedback?.idealResponse}\n\nCOGNITIVE GAP ANALYSIS:\n${at.feedback?.failReason}`);
+                                                    setShowExplanation(true);
+                                                  }}
+                                                  className="w-full py-2 bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-rose-200 transition-all"
+                                                  style={{ fontSize: `${historyFontScale * 0.5}rem` }}
+                                                >
+                                                  View Expected Answer & Gap Analysis
+                                                </button>
                                              </div>
                                           )}
                                        </div>

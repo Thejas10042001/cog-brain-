@@ -956,7 +956,14 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                            <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
-                           <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
+                           <div className="flex flex-wrap gap-3">
+                             <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
+                             {coachingFeedback.logicDeficit && (
+                               <span className="px-6 py-2.5 bg-rose-100 text-rose-600 text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl border border-rose-200">
+                                 Logic Deficit: {coachingFeedback.logicDeficit}
+                               </span>
+                             )}
+                           </div>
                         </div>
                      </div>
 
@@ -1079,7 +1086,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                         </span>
                         {msg.evaluation?.logicDeficit && (
                           <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-900/30 px-2 py-0.5 rounded-full">
-                            Gap: {msg.evaluation.logicDeficit}
+                            Logic Deficit: {msg.evaluation.logicDeficit}
                           </span>
                         )}
                       </div>
