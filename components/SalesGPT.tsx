@@ -10,7 +10,8 @@ import {
   streamDeepStudy, 
   performCognitiveSearchStream, 
   generateFollowUpQuestions,
-  streamNormalChat
+  streamNormalChat,
+  streamCognitivePro
 } from '../services/geminiService';
 import { 
   saveSalesGPTSession, 
@@ -52,6 +53,17 @@ const TypingIndicator = () => (
   </div>
 );
 
+const COGNITIVE_PRO_OPTIONS = [
+  "Psychological Projection", "Executive Summary", "Analogy Based", "Data-Driven Insights",
+  "Concise Answer", "In-Depth Response", "Answer in Points", "Define Technical Terms",
+  "Sales Points", "Key Statistics", "Case Study Summary", "Competitive Comparison",
+  "Anticipated Customer Questions", "Information Gap", "Pricing Overview", "ROI Forecast",
+  "SWOT Analysis", "Strategic Roadmap", "Risk Assessment", "Implementation Timeline",
+  "Technical Deep-Dive", "Value Proposition", "Financial Justification", "Stakeholder Alignment",
+  "Competitive Wedge", "Success Story Summary", "Buying Fear Mitigation", "Security & Compliance",
+  "Decision Matrix", "Reasoning Chain"
+];
+
 export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, initialConversationId, sharedSession }) => {
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [input, setInput] = useState("");
@@ -63,10 +75,22 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(initialConversationId || null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("Strategic Analysis Complete");
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLink, setShareLink] = useState("");
+  const [showCognitiveProModal, setShowCognitiveProModal] = useState(false);
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [isConsoleMode, setIsConsoleMode] = useState(false);
+  
   const chatEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('console') === 'true' || window.location.pathname === '/salesgpt-console') {
+      setIsConsoleMode(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (sharedSession) {
@@ -137,6 +161,28 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
     setShouldAutoScroll(true);
   };
 
+  const handleRegenerate = async (messageId: string) => {
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1 || messageIndex === 0) return;
+    
+    const userMessage = messages[messageIndex - 1];
+    if (userMessage.role !== 'user') return;
+
+    // Remove the assistant message and everything after it
+    const newMessages = messages.slice(0, messageIndex);
+    setMessages(newMessages);
+    
+    // Trigger handleSend with the user's message content and existing styles
+    handleSend(userMessage.content, userMessage.selectedStyles);
+  };
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setNotificationMessage("Copied to clipboard");
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 2000);
+  };
+
   const selectSession = (session: SalesGPTSession) => {
     setMessages(session.messages);
     setCurrentSessionId(session.id);
@@ -144,7 +190,10 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   };
 
   const handleShareChat = async () => {
-    if (!currentSessionId || !auth.currentUser) return;
+    if (!currentSessionId || !auth.currentUser) {
+      alert("Please sign in to share this chat.");
+      return;
+    }
     const session = sessions.find(s => s.id === currentSessionId);
     if (!session) return;
 
@@ -155,7 +204,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
       shareToken
     });
     
-    const url = `${window.location.origin}/salesgpt?sharedUserId=${auth.currentUser.uid}&sharedSessionId=${currentSessionId}`;
+    const url = `${window.location.origin}/share/chat/${currentSessionId}?sharedUserId=${auth.currentUser.uid}`;
     setShareLink(url);
     setShowShareModal(true);
     loadSessions();
@@ -163,7 +212,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
 
   const openInNewTab = () => {
     if (!currentSessionId) return;
-    window.open(`${window.location.origin}/salesgpt?conversationId=${currentSessionId}`, '_blank');
+    window.open(`${window.location.origin}/salesgpt-console?conversationId=${currentSessionId}`, '_blank');
   };
 
   const handleDeleteSession = async (e: React.MouseEvent, id: string) => {
@@ -246,16 +295,24 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
     }
   };
 
-  const handleSend = async (overrideInput?: string) => {
+  const handleSend = async (overrideInput?: string, overrideStyles?: string[]) => {
     const messageText = overrideInput || input;
     if (!messageText.trim() || isProcessing) return;
 
+    if (mode === 'cognitive-pro' && selectedStyles.length === 0 && !overrideStyles) {
+      setShowCognitiveProModal(true);
+      return;
+    }
+
+    const currentStyles = overrideStyles || selectedStyles;
     const currentHistory = [...messages];
     const userMessage: GPTMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: messageText,
       mode: mode,
+      selectedStyles: mode === 'cognitive-pro' ? currentStyles : undefined,
+      timestamp: new Date().toISOString(),
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -267,9 +324,11 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
     const assistantMessage: GPTMessage = {
       id: assistantId,
       role: 'assistant',
-      content: mode === 'pineapple' ? "Neural Creative Engine Primed. Synthesizing visual strategic asset..." : mode === 'deep-study' ? "Initiating Deep Study sequence..." : mode === 'cognitive' ? "Engaging Cognitive Search Core..." : "",
+      content: "",
       mode: mode,
-      isStreaming: mode !== 'pineapple'
+      isStreaming: mode !== 'pineapple',
+      selectedStyles: mode === 'cognitive-pro' ? currentStyles : undefined,
+      timestamp: new Date().toISOString(),
     };
 
     setMessages(prev => [...prev, assistantMessage]);
@@ -294,18 +353,19 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
     try {
       if (mode === 'pineapple') {
-        const imageUrl = await generatePineappleImage(input);
+        const imageUrl = await generatePineappleImage(messageText);
+        if (!imageUrl) throw new Error("Generation failed");
+        
         setMessages(prev => prev.map(m => 
-          m.id === assistantId ? { ...m, content: imageUrl ? "Asset synthesized:" : "Failed to synthesize asset.", imageUrl: imageUrl || undefined, isStreaming: false } : m
+          m.id === assistantId ? { ...m, content: "Asset synthesized:", imageUrl: imageUrl, isStreaming: false } : m
         ));
 
-        // Notify user
         playPing();
+        setNotificationMessage("Strategic Asset Synthesized");
         setShowNotification(true);
         setTimeout(() => setShowNotification(false), 3000);
 
-        // Generate follow-up questions for pineapple mode
-        const followUps = await generateFollowUpQuestions(imageUrl ? "Asset synthesized." : "Failed to synthesize asset.", currentHistory, contextStr);
+        const followUps = await generateFollowUpQuestions("Asset synthesized.", currentHistory, contextStr);
         setMessages(prev => {
           const updated = prev.map(m => 
             m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
@@ -314,13 +374,16 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           return updated;
         });
       } else if (mode === 'deep-study') {
-        const stream = streamDeepStudy(input, currentHistory, contextStr);
+        const stream = streamDeepStudy(messageText, currentHistory, contextStr);
         let fullBuffer = "";
+        let hasContent = false;
         for await (const chunk of stream) {
           fullBuffer += chunk;
           const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
           const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
           
+          if (partialAnswer) hasContent = true;
+
           setMessages(prev => prev.map(m => 
             m.id === assistantId ? { 
               ...m, 
@@ -329,14 +392,59 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
             } : m
           ));
         }
+
+        if (!hasContent && !fullBuffer) throw new Error("Empty response");
+
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
         
-        // Notify user
         playPing();
+        setNotificationMessage("Deep Study Analysis Complete");
         setShowNotification(true);
         setTimeout(() => setShowNotification(false), 3000);
 
-        // Generate follow-up questions
+        const finalContent = extractFieldFromPartialJson(fullBuffer, "answer") || fullBuffer;
+        const followUps = await generateFollowUpQuestions(finalContent, currentHistory, contextStr);
+        setMessages(prev => {
+          const updated = prev.map(m => 
+            m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
+          );
+          autoSaveSession(updated);
+          return updated;
+        });
+      } else if (mode === 'cognitive-pro') {
+        const stream = streamCognitivePro(messageText, currentHistory, currentStyles, contextStr);
+        let fullBuffer = "";
+        let hasContent = false;
+        for await (const chunk of stream) {
+          fullBuffer += chunk;
+          const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
+          const partialReasoning = extractFieldFromPartialJson(fullBuffer, "reasoning");
+          const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
+
+          if (partialAnswer) hasContent = true;
+
+          let displayContent = "";
+          if (partialReasoning) displayContent += `> **COGNITIVE PRO REASONING:** ${partialReasoning}\n\n`;
+          if (partialAnswer) displayContent += partialAnswer;
+
+          setMessages(prev => prev.map(m => 
+            m.id === assistantId ? { 
+              ...m, 
+              content: displayContent || (fullBuffer.startsWith('{') ? "" : fullBuffer),
+              citations: partialCitations || undefined
+            } : m
+          ));
+        }
+
+        if (!hasContent && !fullBuffer) throw new Error("Empty response");
+
+        setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
+        
+        playPing();
+        setNotificationMessage("Cognitive Pro Analysis Complete");
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+
         const finalContent = extractFieldFromPartialJson(fullBuffer, "answer") || fullBuffer;
         const followUps = await generateFollowUpQuestions(finalContent, currentHistory, contextStr);
         setMessages(prev => {
@@ -347,8 +455,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           return updated;
         });
       } else if (mode === 'cognitive') {
-        const stream = performCognitiveSearchStream(input, docContext, meetingContext);
+        const stream = performCognitiveSearchStream(messageText, docContext, meetingContext);
         let fullBuffer = "";
+        let hasContent = false;
         for await (const chunk of stream) {
           fullBuffer += chunk;
           const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
@@ -357,6 +466,8 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           const partialChain = extractFieldFromPartialJson(fullBuffer, "reasoningChain");
           const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
           
+          if (partialAnswer) hasContent = true;
+
           if (partialAnswer || partialShot || partialProjection || partialChain || partialCitations) {
             let displayContent = "";
             
@@ -392,15 +503,18 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
             ));
           }
         }
+
+        if (!hasContent && !fullBuffer) throw new Error("Empty response");
+
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
 
         // Notify user
         playPing();
+        setNotificationMessage("Cognitive Analysis Complete");
         setShowNotification(true);
         setTimeout(() => setShowNotification(false), 3000);
 
         // Generate follow-up questions for cognitive mode
-        // We need to reconstruct the final display content or use fullBuffer
         const finalAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
         const finalShot = extractFieldFromPartialJson(fullBuffer, "cognitiveShot");
         const finalProjection = extractFieldFromPartialJson(fullBuffer, "psychologicalProjection");
@@ -437,13 +551,16 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           return updated;
         });
       } else {
-        const stream = streamSalesGPT(input, currentHistory, contextStr);
+        const stream = streamSalesGPT(messageText, currentHistory, contextStr);
         let fullBuffer = "";
+        let hasContent = false;
         for await (const chunk of stream) {
           fullBuffer += chunk;
           const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
           const partialReasoning = extractFieldFromPartialJson(fullBuffer, "reasoning");
           const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
+
+          if (partialAnswer) hasContent = true;
 
           let displayContent = "";
           if (partialReasoning) displayContent += `> **STRATEGIC REASONING:** ${partialReasoning}\n\n`;
@@ -457,10 +574,14 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
             } : m
           ));
         }
+
+        if (!hasContent && !fullBuffer) throw new Error("Empty response");
+
         setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
         
         // Notify user
         playPing();
+        setNotificationMessage("Strategic Analysis Complete");
         setShowNotification(true);
         setTimeout(() => setShowNotification(false), 3000);
 
@@ -480,8 +601,16 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
     } catch (error) {
       console.error(error);
       setMessages(prev => prev.map(m => 
-        m.id === assistantId ? { ...m, content: "Neural link severed.", isStreaming: false } : m
+        m.id === assistantId ? { 
+          ...m, 
+          content: "Neural link severed. Generation failed. Please retry.", 
+          isStreaming: false,
+          isError: true 
+        } : m
       ));
+      setNotificationMessage("Generation Failed");
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
     } finally {
       setIsProcessing(false);
     }
@@ -558,7 +687,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col relative overflow-hidden">
+      <div className="flex-1 flex flex-col relative overflow-hidden h-full">
         {/* Notification Toast */}
         <AnimatePresence>
           {showNotification && (
@@ -566,11 +695,89 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               initial={{ opacity: 0, y: -20, x: '-50%' }}
               animate={{ opacity: 1, y: 0, x: '-50%' }}
               exit={{ opacity: 0, y: -20, x: '-50%' }}
-              className="fixed top-24 left-1/2 z-50 px-6 py-3 bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center gap-3 border border-indigo-500"
+              className={`fixed top-24 left-1/2 z-[100] px-8 py-4 ${notificationMessage.includes('Failed') ? 'bg-rose-600' : 'bg-indigo-600'} text-white rounded-2xl font-black text-xs uppercase tracking-[0.3em] shadow-2xl flex items-center gap-4 border border-white/10 backdrop-blur-xl`}
             >
-              <Bell className="w-4 h-4 animate-bounce" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Strategic Analysis Complete</span>
+              <div className={`w-2 h-2 rounded-full bg-white ${notificationMessage.includes('Complete') || notificationMessage.includes('Synthesized') ? 'animate-ping' : ''}`} />
+              {notificationMessage}
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Cognitive Pro Modal */}
+        <AnimatePresence>
+          {showCognitiveProModal && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-slate-900 border border-slate-800 rounded-[3rem] p-12 max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Cognitive Pro</h2>
+                    <p className="text-slate-400 font-medium">Select strategic reasoning frameworks for this inquiry</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowCognitiveProModal(false)}
+                    className="p-4 hover:bg-slate-800 rounded-2xl transition-colors text-slate-500"
+                  >
+                    <ICONS.X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 -mr-4 mb-8">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {COGNITIVE_PRO_OPTIONS.map(option => {
+                      const isSelected = selectedStyles.includes(option);
+                      return (
+                        <button
+                          key={option}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedStyles(prev => prev.filter(s => s !== option));
+                            } else {
+                              setSelectedStyles(prev => [...prev, option]);
+                            }
+                          }}
+                          className={`px-4 py-4 rounded-2xl border-2 text-left transition-all flex flex-col gap-2 ${
+                            isSelected 
+                              ? 'bg-indigo-600/20 border-indigo-500 text-indigo-100 shadow-lg shadow-indigo-900/20' 
+                              : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600'
+                          }`}
+                        >
+                          <span className="text-xs font-black uppercase tracking-widest">{option}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-8 border-t border-slate-800">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    {selectedStyles.length} Frameworks Selected
+                  </div>
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={() => setSelectedStyles([])}
+                      className="px-8 py-4 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:text-white transition-colors"
+                    >
+                      Clear All
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowCognitiveProModal(false);
+                        if (input.trim()) handleSend();
+                      }}
+                      disabled={selectedStyles.length === 0}
+                      className="px-12 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Initialize Reasoning
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
 
@@ -629,9 +836,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         <div 
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto custom-scrollbar relative"
+          className="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth"
         >
-        <div className="max-w-5xl mx-auto px-12 py-16 space-y-16">
+        <div className="max-w-5xl mx-auto px-6 md:px-12 py-16 space-y-12">
           <AnimatePresence mode="popLayout">
             {messages.length === 0 ? (
               <motion.div 
@@ -639,15 +846,15 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="h-[50vh] flex flex-col items-center justify-center text-center space-y-12"
+                className="h-[60vh] flex flex-col items-center justify-center text-center space-y-12"
               >
-                 <div className="p-20 bg-slate-900 rounded-[6rem] shadow-none border border-slate-800 text-indigo-900 transform -rotate-2 relative">
+                 <div className="p-12 md:p-20 bg-slate-900 rounded-[4rem] md:rounded-[6rem] shadow-none border border-slate-800 text-indigo-900 transform -rotate-2 relative">
                     <div className="absolute -top-10 -left-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-3xl"></div>
-                    <ICONS.Brain className="w-40 h-40 relative z-10" />
+                    <ICONS.Brain className="w-24 h-24 md:w-40 md:h-40 relative z-10" />
                  </div>
                  <div className="space-y-6">
-                    <h4 className="text-7xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">Neural Core<br/>Standby</h4>
-                    <p className="text-slate-500 dark:text-slate-400 text-3xl font-medium leading-relaxed max-w-2xl mx-auto italic">
+                    <h4 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">Neural Core<br/>Standby</h4>
+                    <p className="text-slate-500 dark:text-slate-400 text-xl md:text-3xl font-medium leading-relaxed max-w-2xl mx-auto italic">
                       Intelligence core is synced with active document nodes. Awaiting strategic inquiry.
                     </p>
                  </div>
@@ -660,25 +867,33 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
-                  <div className={`mb-4 px-8 flex items-center gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  <div className={`mb-2 px-4 flex items-center gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                     <div className="flex items-center gap-3">
-                      <span className={`text-[11px] font-black uppercase tracking-[0.4em] ${msg.role === 'user' ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'}`}>
+                      <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${msg.role === 'user' ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'}`}>
                         {msg.role === 'user' ? 'Strategic Architect' : 'Cognitive Core'}
                       </span>
+                      {msg.timestamp && (
+                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
                       {msg.role === 'assistant' && (
                         <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
                           msg.mode === 'standard' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' :
                           msg.mode === 'cognitive' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
+                          msg.mode === 'cognitive-pro' ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' :
                           msg.mode === 'deep-study' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
                           'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                         }`}>
                           {msg.mode === 'standard' && <ICONS.Chat className="w-3 h-3" />}
                           {msg.mode === 'cognitive' && <ICONS.Search className="w-3 h-3" />}
+                          {msg.mode === 'cognitive-pro' && <ICONS.Research className="w-3 h-3" />}
                           {msg.mode === 'deep-study' && <ICONS.Research className="w-3 h-3" />}
                           {msg.mode === 'pineapple' && <ICONS.Pineapple className="w-3 h-3" />}
                           <span>
                             {msg.mode === 'standard' ? 'Fast Pulse' : 
                              msg.mode === 'cognitive' ? 'Cognitive' : 
+                             msg.mode === 'cognitive-pro' ? 'Cognitive Pro' :
                              msg.mode === 'deep-study' ? 'Deep Study' : 
                              'Visual Logic'}
                           </span>
@@ -686,17 +901,49 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                       )}
                     </div>
                   </div>
+                  
+                  {msg.selectedStyles && msg.selectedStyles.length > 0 && (
+                    <div className={`flex flex-wrap gap-2 mb-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      {msg.selectedStyles.map(style => (
+                        <span key={style} className="px-3 py-1 bg-slate-800/50 border border-slate-700/50 rounded-full text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                          {style}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   <div className={`
-                    max-w-[90%] p-8 rounded-[2.5rem] text-lg font-medium leading-relaxed shadow-lg
+                    max-w-[90%] p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] text-base md:text-lg font-medium leading-relaxed shadow-lg relative group
                     ${msg.role === 'user' 
                       ? 'bg-indigo-600 text-white rounded-tr-none border border-indigo-500 shadow-indigo-900/20' 
-                      : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800 shadow-black/40'}
+                      : msg.isError 
+                        ? 'bg-rose-900/20 text-rose-200 rounded-tl-none border border-rose-500/50 shadow-black/40'
+                        : 'bg-slate-900 text-slate-200 rounded-tl-none border border-slate-800 shadow-black/40'}
                   `}>
                     <div className="markdown-content">
                       {msg.content ? (
                         <ReactMarkdown 
                           remarkPlugins={[remarkGfm]}
                           components={{
+                            p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
+                            h1: ({ children }) => <h1 className="text-2xl font-black uppercase tracking-tighter mb-4 mt-6 text-white">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-xl font-black uppercase tracking-tighter mb-3 mt-5 text-white/90">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-lg font-black uppercase tracking-tighter mb-2 mt-4 text-white/80">{children}</h3>,
+                            ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-2">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-2">{children}</ol>,
+                            li: ({ children }) => <li className="pl-1">{children}</li>,
+                            blockquote: ({ children }) => <blockquote className="border-l-4 border-indigo-500 pl-4 py-1 my-4 bg-indigo-500/5 rounded-r-xl italic text-slate-300">{children}</blockquote>,
+                            code: ({ node, inline, className, children, ...props }: any) => {
+                              return inline ? (
+                                <code className="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-sm" {...props}>
+                                  {children}
+                                </code>
+                              ) : (
+                                <pre className="bg-slate-950 p-4 rounded-xl border border-slate-800 overflow-x-auto my-4 font-mono text-sm text-indigo-300">
+                                  <code {...props}>{children}</code>
+                                </pre>
+                              );
+                            },
                             a: ({ node, ...props }) => {
                               if (props.href?.startsWith('citation:')) {
                                 const index = parseInt(props.href.split(':')[1]) - 1;
@@ -714,7 +961,24 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                                 );
                               }
                               return <a {...props} className="text-indigo-400 hover:underline" target="_blank" rel="noopener noreferrer" />;
-                            }
+                            },
+                            table: ({ children }) => (
+                              <div className="overflow-x-auto my-6 rounded-xl border border-slate-800">
+                                <table className="w-full text-sm text-left border-collapse">
+                                  {children}
+                                </table>
+                              </div>
+                            ),
+                            th: ({ children }) => (
+                              <th className="px-6 py-4 bg-slate-800/50 text-slate-300 font-black uppercase tracking-wider border-b border-slate-700">
+                                {children}
+                              </th>
+                            ),
+                            td: ({ children }) => (
+                              <td className="px-6 py-4 border-b border-slate-800/50 text-slate-400">
+                                {children}
+                              </td>
+                            )
                           }}
                         >
                           {msg.content}
@@ -723,6 +987,34 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                         <TypingIndicator />
                       ) : null}
                     </div>
+
+                    {/* Action Buttons */}
+                    {!msg.isStreaming && msg.role === 'assistant' && (
+                      <div className="absolute right-4 top-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+                        <button 
+                          onClick={() => handleCopy(msg.content)}
+                          className="p-2 bg-slate-800/90 hover:bg-indigo-600 rounded-lg border border-slate-700 transition-all text-slate-400 hover:text-white"
+                          title="Copy to clipboard"
+                        >
+                          <ICONS.Efficiency className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleRegenerate(msg.id)}
+                          className="p-2 bg-slate-800/90 hover:bg-indigo-600 rounded-lg border border-slate-700 transition-all text-slate-400 hover:text-white"
+                          title="Regenerate response"
+                        >
+                          <Plus className="w-3.5 h-3.5 rotate-45" />
+                        </button>
+                        {msg.isError && (
+                          <button 
+                            onClick={() => handleRegenerate(msg.id)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                          >
+                            <ICONS.Research className="w-3 h-3" /> Retry
+                          </button>
+                        )}
+                      </div>
+                    )}
                     {msg.imageUrl && (
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -808,30 +1100,40 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
       </div>
 
       {/* Input Area */}
-      <div className="w-full bg-slate-950/80 backdrop-blur-2xl border-t border-slate-800 z-20">
-        <div className="max-w-5xl mx-auto px-12 py-8 space-y-6">
-          <div className="flex flex-wrap gap-3 justify-center">
+      <div className="w-full bg-slate-950/90 backdrop-blur-3xl border-t border-slate-800/50 z-20 pb-8">
+        <div className="max-w-5xl mx-auto px-6 md:px-12 py-6 space-y-6">
+          <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
              <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
-             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" />
+             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" color="blue" />
+             <ToolToggle active={mode === 'cognitive-pro'} onClick={() => setMode('cognitive-pro')} icon={<ICONS.Research className="w-4 h-4" />} label="Cognitive Pro" color="purple" />
              <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-4 h-4" />} label="Deep Study" color="amber" />
              <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-4 h-4" />} label="Visual Logic" color="emerald" />
           </div>
 
           <div className="relative group">
-            <input 
-              type="text" 
+            <textarea 
+              rows={1}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              onChange={(e) => {
+                setInput(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
               placeholder="Type your strategic inquiry..."
-              className="w-full bg-slate-900 border-2 border-slate-800 rounded-3xl px-10 py-6 text-xl outline-none transition-all pr-48 font-medium shadow-2xl focus:border-indigo-500 placeholder:text-slate-700 text-white"
+              className="w-full bg-slate-900 border-2 border-slate-800 rounded-[2rem] px-8 py-5 text-lg outline-none transition-all pr-40 font-medium shadow-2xl focus:border-indigo-500 placeholder:text-slate-700 text-white resize-none max-h-48 custom-scrollbar"
             />
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleSend()}
               disabled={!input.trim() || isProcessing}
-              className={`absolute right-4 top-4 bottom-4 px-10 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl flex items-center gap-3 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
+              className={`absolute right-3 top-3 bottom-3 px-8 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl flex items-center gap-3 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
             >
               {isProcessing ? 'Synthesizing' : 'Synthesize'}
             </motion.button>
@@ -841,12 +1143,12 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
              <motion.button 
                whileHover={{ x: 5 }}
                onClick={() => setIncludeContext(!includeContext)}
-               className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-600'}`}
+               className={`flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-600'}`}
              >
-                <div className={`w-2 h-2 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                <div className={`w-1.5 h-1.5 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
                 Strategic Context Sync: {includeContext ? 'Active' : 'Offline'}
              </motion.button>
-             <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
+             <p className="text-[9px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
           </div>
         </div>
       </div>
@@ -955,7 +1257,9 @@ const ToolToggle = ({ active, onClick, icon, label, color = 'indigo' }: { active
     indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-110',
     emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 dark:shadow-emerald-900/40 scale-110',
     amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 dark:shadow-amber-900/40 scale-110',
-  }[color];
+    purple: 'bg-purple-600 border-purple-600 text-white shadow-2xl shadow-purple-200 dark:shadow-purple-900/40 scale-110',
+    blue: 'bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-200 dark:shadow-blue-900/40 scale-110',
+  }[color as keyof typeof activeClasses] || 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-110';
 
   return (
     <motion.button 

@@ -59,6 +59,79 @@ const ALL_ANSWER_STYLES = [
   "Decision Matrix"
 ];
 
+import { Routes, Route, useParams, useSearchParams } from 'react-router-dom';
+
+const SharedChatView: React.FC<{ user: User | null }> = ({ user }) => {
+  const { chatId } = useParams();
+  const [searchParams] = useSearchParams();
+  const sharedUserId = searchParams.get('sharedUserId');
+  const [sharedSession, setSharedSession] = useState<SalesGPTSession | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (chatId && sharedUserId) {
+      const load = async () => {
+        const session = await fetchSharedGPTSession(sharedUserId, chatId);
+        setSharedSession(session);
+        setLoading(false);
+      };
+      load();
+    }
+  }, [chatId, sharedUserId]);
+
+  if (!user) {
+    return <Auth />;
+  }
+
+  if (loading) return (
+    <div className="h-screen w-screen bg-slate-950 flex items-center justify-center">
+      <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+
+  if (!sharedSession) return (
+    <div className="h-screen w-screen bg-slate-950 flex items-center justify-center text-white font-black uppercase tracking-widest">
+      Shared Session Not Found
+    </div>
+  );
+
+  return (
+    <div className="h-screen w-screen bg-slate-950 overflow-hidden">
+      <SalesGPT 
+        activeDocuments={[]} 
+        meetingContext={{
+          sellerCompany: "", sellerNames: "", clientCompany: "", clientNames: "",
+          targetProducts: "", productDomain: "", meetingFocus: "", persona: "Balanced",
+          answerStyles: [], executiveSnapshot: "", strategicKeywords: [],
+          potentialObjections: [], baseSystemPrompt: "", thinkingLevel: "Medium",
+          temperature: 0.7,
+          kycDocId: "",
+          voiceMode: 'upload',
+          difficulty: 'Medium',
+          vocalPersonaAnalysis: {
+            pitch: 'Moderate',
+            tempo: 'Controlled',
+            cadence: 'Strategic',
+            accent: 'Neutral',
+            emotionalBaseline: 'Steady',
+            breathingPatterns: 'Regulated',
+            mimicryDirective: '',
+            baseVoice: 'Zephyr',
+            gender: 'Male',
+            pace: 1.0,
+            stability: 80,
+            clarity: 90,
+            pitchValue: 1.0,
+            toneAdjectives: []
+          }
+        }} 
+        initialConversationId={chatId}
+        sharedSession={sharedSession}
+      />
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -595,14 +668,27 @@ const App: React.FC = () => {
   const sidebarFontScale = Math.max(0.75, Math.min(1.5, sidebarWidth / 280));
 
   return (
-    <div 
-      className="min-h-screen bg-slate-950 flex flex-col transition-all duration-300 ease-in-out origin-top-left bg-mesh"
-      style={{ 
-        zoom: zoom / 100,
-        // @ts-ignore
-        MozZoom: zoom / 100,
-      } as React.CSSProperties}
-    >
+    <Routes>
+      <Route path="/salesgpt-console" element={
+        <div className="h-screen w-screen bg-slate-950 overflow-hidden">
+          <SalesGPT 
+            activeDocuments={activeDocuments} 
+            meetingContext={meetingContext} 
+            initialConversationId={initialConversationId}
+            sharedSession={sharedSession}
+          />
+        </div>
+      } />
+      <Route path="/share/chat/:chatId" element={<SharedChatView user={user} />} />
+      <Route path="*" element={
+        <div 
+          className="min-h-screen bg-slate-950 flex flex-col transition-all duration-300 ease-in-out origin-top-left bg-mesh"
+          style={{ 
+            zoom: zoom / 100,
+            // @ts-ignore
+            MozZoom: zoom / 100,
+          } as React.CSSProperties}
+        >
       {/* Dynamic Text-Only Magnifier Style Injection */}
       <style>{`
         :root {
@@ -900,6 +986,8 @@ const App: React.FC = () => {
         </div>
       </div>
     </div>
+      } />
+    </Routes>
   );
 };
 
