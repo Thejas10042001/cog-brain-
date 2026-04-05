@@ -143,10 +143,8 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   }, [shouldAutoScroll]);
 
   useEffect(() => {
-    if (!isProcessing) {
-      scrollToBottom();
-    }
-  }, [messages, scrollToBottom, isProcessing]);
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
@@ -687,7 +685,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col relative overflow-hidden h-full">
+      <div className="flex-1 flex flex-col relative overflow-hidden h-full bg-slate-950">
         {/* Notification Toast */}
         <AnimatePresence>
           {showNotification && (
@@ -836,37 +834,37 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
         <div 
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth"
+          className="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth bg-[radial-gradient(circle_at_50%_50%,rgba(15,23,42,1)_0%,rgba(2,6,23,1)_100%)]"
         >
-        <div className="max-w-5xl mx-auto px-6 md:px-12 py-16 space-y-12">
-          <AnimatePresence mode="popLayout">
-            {messages.length === 0 ? (
-              <motion.div 
-                key="empty"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="h-[60vh] flex flex-col items-center justify-center text-center space-y-12"
-              >
-                 <div className="p-12 md:p-20 bg-slate-900 rounded-[4rem] md:rounded-[6rem] shadow-none border border-slate-800 text-indigo-900 transform -rotate-2 relative">
+          <div className="max-w-4xl mx-auto px-6 md:px-12 py-20 space-y-12 min-h-full flex flex-col">
+            <AnimatePresence mode="popLayout">
+              {messages.length === 0 ? (
+                <motion.div 
+                  key="empty"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="flex-1 flex flex-col items-center justify-center text-center space-y-12 py-20"
+                >
+                  <div className="relative">
                     <div className="absolute -top-10 -left-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-3xl"></div>
-                    <ICONS.Brain className="w-24 h-24 md:w-40 md:h-40 relative z-10" />
-                 </div>
-                 <div className="space-y-6">
-                    <h4 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">Neural Core<br/>Standby</h4>
-                    <p className="text-slate-500 dark:text-slate-400 text-xl md:text-3xl font-medium leading-relaxed max-w-2xl mx-auto italic">
+                    <ICONS.Brain className="w-24 h-24 md:w-40 md:h-40 relative z-10 text-indigo-500/20" />
+                  </div>
+                  <div className="space-y-6">
+                    <h4 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">Neural Core<br/>Standby</h4>
+                    <p className="text-slate-500 text-lg md:text-xl font-medium leading-relaxed max-w-xl mx-auto italic">
                       Intelligence core is synced with active document nodes. Awaiting strategic inquiry.
                     </p>
-                 </div>
-              </motion.div>
-            ) : (
-              messages.map((msg) => (
-                <motion.div 
-                  key={msg.id} 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-                >
+                  </div>
+                </motion.div>
+              ) : (
+                messages.map((msg) => (
+                  <motion.div 
+                    key={msg.id} 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} w-full`}
+                  >
                   <div className={`mb-2 px-4 flex items-center gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                     <div className="flex items-center gap-3">
                       <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${msg.role === 'user' ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'}`}>
@@ -1095,60 +1093,93 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               ))
             )}
           </AnimatePresence>
-          <div ref={chatEndRef} className="h-32" />
+          <div ref={chatEndRef} className="h-4" />
         </div>
+
+        {/* Scroll to Bottom Button */}
+        <AnimatePresence>
+          {!shouldAutoScroll && messages.length > 0 && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              onClick={() => {
+                setShouldAutoScroll(true);
+                scrollToBottom();
+              }}
+              className="absolute bottom-40 left-1/2 -translate-x-1/2 p-3 bg-indigo-600 text-white rounded-full shadow-2xl z-30 hover:bg-indigo-700 transition-all border border-indigo-500/50"
+            >
+              <ICONS.ArrowDown className="w-5 h-5" />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Input Area */}
-      <div className="w-full bg-slate-950/90 backdrop-blur-3xl border-t border-slate-800/50 z-20 pb-8">
-        <div className="max-w-5xl mx-auto px-6 md:px-12 py-6 space-y-6">
-          <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
-             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
-             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" color="blue" />
-             <ToolToggle active={mode === 'cognitive-pro'} onClick={() => setMode('cognitive-pro')} icon={<ICONS.Research className="w-4 h-4" />} label="Cognitive Pro" color="purple" />
-             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-4 h-4" />} label="Deep Study" color="amber" />
-             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-4 h-4" />} label="Visual Logic" color="emerald" />
+      <div className="w-full bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent z-20 pt-10 pb-10">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-6">
+          <div className="flex flex-wrap gap-2 justify-center">
+             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-3.5 h-3.5" />} label="Fast Pulse" />
+             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-3.5 h-3.5" />} label="Cognitive" color="blue" />
+             <ToolToggle active={mode === 'cognitive-pro'} onClick={() => setMode('cognitive-pro')} icon={<ICONS.Research className="w-3.5 h-3.5" />} label="Cognitive Pro" color="purple" />
+             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-3.5 h-3.5" />} label="Deep Study" color="amber" />
+             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-3.5 h-3.5" />} label="Visual Logic" color="emerald" />
           </div>
 
           <div className="relative group">
-            <textarea 
-              rows={1}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder="Type your strategic inquiry..."
-              className="w-full bg-slate-900 border-2 border-slate-800 rounded-[2rem] px-8 py-5 text-lg outline-none transition-all pr-40 font-medium shadow-2xl focus:border-indigo-500 placeholder:text-slate-700 text-white resize-none max-h-48 custom-scrollbar"
-            />
-            <motion.button 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleSend()}
-              disabled={!input.trim() || isProcessing}
-              className={`absolute right-3 top-3 bottom-3 px-8 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl flex items-center gap-3 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
-            >
-              {isProcessing ? 'Synthesizing' : 'Synthesize'}
-            </motion.button>
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-[2.5rem] blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+            <div className="relative bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden focus-within:border-indigo-500/50 transition-all">
+              <textarea 
+                rows={1}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Type your strategic inquiry..."
+                className="w-full bg-transparent px-8 py-6 text-lg outline-none pr-40 font-medium placeholder:text-slate-700 text-white resize-none max-h-48 custom-scrollbar"
+              />
+              <div className="absolute right-4 bottom-4 flex items-center gap-3">
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isProcessing}
+                  className={`px-8 py-3 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl flex items-center gap-3 transition-all ${isProcessing ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                      Synthesizing
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      Synthesize
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </div>
           </div>
           
-          <div className="flex items-center justify-between px-4">
+          <div className="flex items-center justify-between px-6">
              <motion.button 
                whileHover={{ x: 5 }}
                onClick={() => setIncludeContext(!includeContext)}
-               className={`flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-600'}`}
+               className={`flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.3em] transition-colors ${includeContext ? 'text-emerald-500' : 'text-slate-600'}`}
              >
-                <div className={`w-1.5 h-1.5 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                <div className={`w-1.5 h-1.5 rounded-full ${includeContext ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]' : 'bg-slate-700'}`}></div>
                 Strategic Context Sync: {includeContext ? 'Active' : 'Offline'}
              </motion.button>
-             <p className="text-[9px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
+             <p className="text-[9px] font-black text-slate-700 uppercase tracking-[0.4em]">Intelligence Node v3.1 Grounded</p>
           </div>
         </div>
       </div>
