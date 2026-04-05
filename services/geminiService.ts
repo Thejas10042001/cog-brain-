@@ -1450,6 +1450,87 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
   }
 }
 
+export async function* streamCognitivePro(prompt: string, history: GPTMessage[], selectedStyles: string[], context?: string): AsyncGenerator<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const contents = [
+    ...formatHistory(history),
+    { role: 'user', parts: [{ text: prompt }] }
+  ];
+
+  const stylesPrompt = selectedStyles.length > 0 
+    ? `\n\nCRITICAL: The generated answer MUST strictly adhere to the following strategic styles and reasoning frameworks:
+    ${selectedStyles.map(s => `- ${s}`).join('\n')}
+    
+    Ensure each selected style is clearly reflected in the structure and content of your response.`
+    : "";
+
+  const systemInstruction = `You are Sales GPT Cognitive Pro, an advanced strategic reasoning engine. 
+  
+  CORE MISSION: Provide high-impact, multi-layered strategic sales intelligence using specific cognitive frameworks.
+  
+  COGNITIVE ANSWERING PROTOCOL:
+  1. GROUNDING: Prioritize the provided GROUNDING DATA. Every claim must be grounded in facts or logical deduction.
+  2. NO HALLUCINATIONS: Do NOT invent data points, customer names, or specific metrics.
+  3. MULTI-LAYERED REASONING: Synthesize your response through the lens of the selected Cognitive Pro styles.
+  4. REASONING: In the "reasoning" field, provide a deep internal monologue of your strategic thought process.
+  5. CITATIONS: Use inline markers like [1](citation:1) to refer to the citations provided.
+  
+  FORMATTING: 
+  - Use Markdown (bolding, lists, headers) for high readability.
+  - Use TABLES for structured data and comparisons.
+  
+  OUTPUT FORMAT: Return a JSON object with:
+  - answer: string (The strategic response)
+  - reasoning: string (Your strategic thought process)
+  - citations: Array of { snippet: string, sourceFile: string, pageNumber?: string }
+  
+  ${stylesPrompt}
+  
+  ${context ? `--- DOCUMENT GROUNDING DATA ---
+  ${context}
+  -----------------------` : ""}`;
+
+  try {
+    const result = await withRetry(() => ai.models.generateContentStream({
+      model: modelName,
+      contents: contents,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            answer: { type: Type.STRING },
+            reasoning: { type: Type.STRING },
+            citations: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  snippet: { type: Type.STRING },
+                  sourceFile: { type: Type.STRING },
+                  pageNumber: { type: Type.STRING }
+                },
+                required: ["snippet", "sourceFile"]
+              }
+            }
+          },
+          required: ["answer", "reasoning", "citations"]
+        }
+      }
+    }));
+
+    for await (const chunk of result) {
+      yield chunk.text || "";
+    }
+  } catch (error) {
+    console.error("Cognitive Pro stream failed:", error);
+    yield "Error: Failed to connect to Cognitive Pro core.";
+  }
+}
+
 // Pineapple: Image Generation using nano banana model
 export async function generatePineappleImage(prompt: string): Promise<string | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
