@@ -79,6 +79,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [showCognitiveProModal, setShowCognitiveProModal] = useState(false);
+  const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [isConsoleMode, setIsConsoleMode] = useState(false);
   
@@ -294,10 +295,11 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   };
 
   const handleSend = async (overrideInput?: string, overrideStyles?: string[]) => {
-    const messageText = overrideInput || input;
+    const messageText = overrideInput || pendingInput || input;
     if (!messageText.trim() || isProcessing) return;
 
-    if (mode === 'cognitive-pro' && selectedStyles.length === 0 && !overrideStyles) {
+    if (mode === 'cognitive-pro' && !overrideStyles) {
+      setPendingInput(messageText);
       setShowCognitiveProModal(true);
       return;
     }
@@ -315,6 +317,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
 
     setMessages(prev => [...prev, userMessage]);
     if (!overrideInput) setInput("");
+    setPendingInput(null);
     setIsProcessing(true);
     setShouldAutoScroll(true);
 
@@ -717,7 +720,10 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     <p className="text-slate-400 font-medium">Select strategic reasoning frameworks for this inquiry</p>
                   </div>
                   <button 
-                    onClick={() => setShowCognitiveProModal(false)}
+                    onClick={() => {
+                      setShowCognitiveProModal(false);
+                      setPendingInput(null);
+                    }}
                     className="p-4 hover:bg-slate-800 rounded-2xl transition-colors text-slate-500"
                   >
                     <ICONS.X className="w-6 h-6" />
@@ -765,7 +771,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     <button 
                       onClick={() => {
                         setShowCognitiveProModal(false);
-                        if (input.trim()) handleSend();
+                        handleSend(undefined, selectedStyles);
                       }}
                       disabled={selectedStyles.length === 0}
                       className="px-12 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
