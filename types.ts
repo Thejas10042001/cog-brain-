@@ -316,6 +316,11 @@ export interface GPTMessage {
   isStreaming?: boolean;
   followUpQuestions?: string[];
   citations?: Citation[];
+  evaluation?: {
+    logicDeficit?: string;
+    idealResponse?: string;
+    failReason?: string;
+  };
 }
 
 export interface GroomingEvaluation {

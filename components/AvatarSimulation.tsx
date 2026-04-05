@@ -78,15 +78,8 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     clarityScore: 92,
     behavioralAudit: "Professional, steady, and direct."
   });
-  const [coachingFeedback, setCoachingFeedback] = useState<{ 
-    failReason?: string; 
-    styleGuide?: string; 
-    nextTry?: string; 
-    idealResponse?: string;
-    deficitPercentage?: string;
-  } | null>(null);
+  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
-  const [showIdealResponse, setShowIdealResponse] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const showExplanationRef = useRef(false);
   useEffect(() => {
@@ -494,22 +487,32 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
       if (isFail) {
         const deficitMatch = nextContent.match(/\[DEFICIT: (.*?)\]/);
-        const coachMatch = nextContent.match(/\[COACHING: (.*?)\]/);
-        const styleMatch = nextContent.match(/\[STYLE_GUIDE: (.*?)\]/);
-        const retryMatch = nextContent.match(/\[RETRY_PROMPT: (.*?)\]/);
-        const idealMatch = nextContent.match(/\[IDEAL_RESPONSE: (.*?)\]/);
+        const coachMatch = nextContent.match(/\[COACHING: ([\s\S]*?)\]/);
+        const styleMatch = nextContent.match(/\[STYLE_GUIDE: ([\s\S]*?)\]/);
+        const retryMatch = nextContent.match(/\[RETRY_PROMPT: ([\s\S]*?)\]/);
+        const idealMatch = nextContent.match(/\[IDEAL_RESPONSE: ([\s\S]*?)\]/);
+
+        const evaluation = {
+          logicDeficit: deficitMatch?.[1]?.trim(),
+          failReason: coachMatch?.[1]?.trim(),
+          idealResponse: idealMatch?.[1]?.trim()
+        };
 
         setCoachingFeedback({
-          deficitPercentage: deficitMatch?.[1]?.trim(),
-          failReason: coachMatch?.[1]?.trim(),
+          failReason: evaluation.failReason,
           styleGuide: styleMatch?.[1]?.trim(),
           nextTry: retryMatch?.[1]?.trim(),
-          idealResponse: idealMatch?.[1]?.trim()
+          idealResponse: evaluation.idealResponse
         });
-        setShowIdealResponse(false);
 
         const retryText = retryMatch?.[1]?.trim() || "Protocol performance deficit detected. Please refine your logic and try again.";
-        const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: retryText, mode: 'standard' };
+        const assistantMsg: GPTMessage = { 
+          id: (Date.now() + 1).toString(), 
+          role: 'assistant', 
+          content: retryText, 
+          mode: 'standard',
+          evaluation
+        };
         
         setMessages([...updatedMessages, assistantMsg]);
         setCurrentCaption("");
@@ -915,18 +918,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
                {/* Protocol Blocked Overlay */}
                {coachingFeedback && (
-                  <div className="p-12 bg-rose-50 backdrop-blur-2xl border-2 border-rose-200 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
+                 <div className="p-12 bg-rose-50 backdrop-blur-2xl border-2 border-rose-200 rounded-[3.5rem] space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                            <div className="w-12 h-12 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg"><ICONS.Security className="w-6 h-6" /></div>
                            <span className="px-6 py-2.5 bg-rose-600 text-white text-[12px] font-black uppercase rounded-full tracking-[0.2em] shadow-xl">Protocol Blocked: Neural Performance Deficit</span>
                         </div>
-                        {coachingFeedback.deficitPercentage && (
-                          <div className="flex flex-col items-end">
-                            <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Logic Deficit</span>
-                            <div className="text-3xl font-black text-rose-600 tabular-nums">{coachingFeedback.deficitPercentage}</div>
-                          </div>
-                        )}
                      </div>
 
                      <button 
@@ -961,26 +958,9 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                          </div>
 
                          {coachingFeedback.idealResponse && (
-                           <div className="space-y-6">
-                             <div className="flex items-center justify-between">
+                           <div className="p-12 bg-indigo-50 border-2 border-indigo-100 rounded-[3rem] space-y-6 shadow-inner">
                                <h5 className="text-[12px] font-black uppercase text-indigo-500 tracking-[0.4em]">Master Logic Protocol</h5>
-                               <button 
-                                 onClick={() => setShowIdealResponse(!showIdealResponse)}
-                                 className="px-6 py-2 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg"
-                               >
-                                 {showIdealResponse ? 'Hide Expected Answer' : 'Show Expected Answer'}
-                               </button>
-                             </div>
-                             
-                             {showIdealResponse && (
-                               <motion.div 
-                                 initial={{ opacity: 0, y: 10 }}
-                                 animate={{ opacity: 1, y: 0 }}
-                                 className="p-12 bg-indigo-50 border-2 border-indigo-100 rounded-[3rem] shadow-inner"
-                               >
-                                   <p className="text-3xl font-black text-slate-900 leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
-                               </motion.div>
-                             )}
+                               <p className="text-3xl font-black text-slate-900 leading-[1.5] tracking-tight italic">“{coachingFeedback.idealResponse}”</p>
                            </div>
                          )}
 
@@ -992,7 +972,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                          </div>
                        </div>
                      )}
-                  </div>
+                 </div>
                )}
 
                {/* User Interaction Layer */}
@@ -1074,14 +1054,39 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4" style={{ backgroundColor: '#111117' }}>
                 {messages.map((msg, idx) => (
                   <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-slate-900 border-slate-800' : 'bg-indigo-900/20 border-indigo-900/30'}`}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${msg.role === 'assistant' ? 'bg-slate-900 text-white' : 'bg-indigo-600 text-white'}`}>
-                        {msg.role === 'assistant' ? 'Client' : 'Seller'}
-                      </span>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${msg.role === 'assistant' ? 'bg-slate-900 text-white' : 'bg-indigo-600 text-white'}`}>
+                          {msg.role === 'assistant' ? 'Client' : 'Seller'}
+                        </span>
+                        {msg.evaluation?.logicDeficit && (
+                          <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-900/30 px-2 py-0.5 rounded-full">
+                            Gap: {msg.evaluation.logicDeficit}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-[10px] font-bold text-slate-700 leading-relaxed" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>
+                    <p className="text-[10px] font-bold text-slate-400 leading-relaxed" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>
                       {msg.content}
                     </p>
+                    {msg.evaluation?.idealResponse && historyWidth > 250 && (
+                      <div className="mt-4 pt-4 border-t border-slate-800 space-y-3">
+                         <div className="space-y-1">
+                           <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Deficit Rationale:</p>
+                           <p className="text-[9px] font-medium text-slate-500 italic leading-snug" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>{msg.evaluation.failReason}</p>
+                         </div>
+                         <button 
+                           onClick={() => {
+                             setExplanationContent(`EXPECTED STRATEGIC ANSWER:\n\n${msg.evaluation?.idealResponse}\n\nCOGNITIVE GAP ANALYSIS:\n${msg.evaluation?.failReason}`);
+                             setShowExplanation(true);
+                           }}
+                           className="w-full py-2 bg-indigo-900/30 text-indigo-400 border border-indigo-900/50 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-indigo-900/50 transition-all"
+                           style={{ fontSize: `${historyFontScale * 0.5}rem` }}
+                         >
+                           View Expected Answer & Gap Analysis
+                         </button>
+                      </div>
+                    )}
                   </div>
                 ))}
              </div>

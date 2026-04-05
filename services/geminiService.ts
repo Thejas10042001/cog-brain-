@@ -766,7 +766,7 @@ If the user provides an answer to your previous question, you MUST evaluate it.
 
 If the response is weak, vague, or unprofessional:
 1. Start with exactly: [RESULT: FAIL]
-2. Provide: [DEFICIT: A percentage (0-100%) representing how much of the required cognitive logic or strategic depth was missing from the user's response.]
+2. Provide: [DEFICIT: XX%] (A percentage representing the logic gap or missing cognitive depth, where 100% is a total failure and 0% is a perfect answer.)
 3. Provide: [COACHING: Detailed explanation of the deficit.]
 4. Provide: [STYLE_GUIDE: Strategic guidance on presentation.]
 5. Provide: [IDEAL_RESPONSE: A world-class response the user should have given.]
@@ -777,7 +777,7 @@ If the response is strong:
 2. Proceed with your next question.
 
 Example Success: "[HINT: Good use of metrics.] Your next question is..."
-Example Fail: "[RESULT: FAIL] [COACHING: Too technical.] [STYLE_GUIDE: Focus on business value.] [IDEAL_RESPONSE: Our solution delivers 20% ROI...] [RETRY_PROMPT: How do you justify the cost?]"
+Example Fail: "[RESULT: FAIL] [DEFICIT: 50%] [COACHING: Too technical.] [STYLE_GUIDE: Focus on business value.] [IDEAL_RESPONSE: Our solution delivers 20% ROI...] [RETRY_PROMPT: How do you justify the cost?]"
 
 ===========================================================
 PERSONA DEFINITIONS
@@ -918,7 +918,7 @@ If the user provides an answer to your previous question, you MUST evaluate it.
 
 If the response is weak, vague, or unprofessional:
 1. Start with exactly: [RESULT: FAIL]
-2. Provide: [DEFICIT: A percentage (0-100%) representing how much of the required cognitive logic or strategic depth was missing from the user's response.]
+2. Provide: [DEFICIT: XX%] (A percentage representing the logic gap or missing cognitive depth, where 100% is a total failure and 0% is a perfect answer.)
 3. Provide: [COACHING: Detailed explanation of the deficit.]
 4. Provide: [STYLE_GUIDE: Strategic guidance on presentation.]
 5. Provide: [IDEAL_RESPONSE: A world-class response the user should have given.]
@@ -929,7 +929,7 @@ If the response is strong:
 2. Proceed with your next question.
 
 Example Success: "[HINT: Instead of technical jargon, focus on the business outcome.] Your next question is..."
-Example Fail: "[RESULT: FAIL] [COACHING: Lacks ROI focus.] [STYLE_GUIDE: Use financial metrics.] [IDEAL_RESPONSE: We project a 15% reduction in OpEx...] [RETRY_PROMPT: Can you walk me through the financial justification?]"
+Example Fail: "[RESULT: FAIL] [DEFICIT: 40%] [COACHING: Lacks ROI focus.] [STYLE_GUIDE: Use financial metrics.] [IDEAL_RESPONSE: We project a 15% reduction in OpEx...] [RETRY_PROMPT: Can you walk me through the financial justification?]"
 
 ===========================================================
 MODE 1: CIO BUYER SIMULATION
@@ -1084,7 +1084,7 @@ GATEKEEPING RULES (CRITICAL - MANDATORY TAGS)
 Evaluate the user's latest response with extreme rigor.
 If the response is weak, vague, lacks document grounding, or misses the objective of ${currentStage}:
 1. Start with exactly: [RESULT: FAIL]
-2. Provide: [DEFICIT: A percentage (0-100%) representing how much of the required cognitive logic or strategic depth was missing from the user's response.]
+2. Provide: [DEFICIT: XX%] (A percentage representing the logic gap or missing cognitive depth, where 100% is a total failure and 0% is a perfect answer.)
 3. Provide: [COACHING: Detailed multi-line explanation of the deficit.]
 4. Provide: [STYLE_GUIDE: Detailed multi-line strategic guidance on presentation and tone.]
 5. Provide: [IDEAL_RESPONSE: A complete, word-for-word world-class response the user should have given.]
