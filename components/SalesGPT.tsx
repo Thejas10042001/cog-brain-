@@ -10,7 +10,9 @@ import {
   streamDeepStudy, 
   performCognitiveSearchStream, 
   generateFollowUpQuestions,
-  streamNormalChat
+  streamNormalChat,
+  streamCognitivePro,
+  suggestCognitiveProOptions
 } from '../services/geminiService';
 import { 
   saveSalesGPTSession, 
@@ -52,6 +54,20 @@ const TypingIndicator = () => (
   </div>
 );
 
+const COGNITIVE_PRO_ALL_OPTIONS = [
+  "Psych", "Incentive", "Fear", "Lever", "Strategic", "Shot", "Synthesis", "Reasoning", "Chain",
+  "Pain Point", "Capability", "Value", "Solution", "Benefit", "Risk", "Opportunity", "Competitive Edge",
+  "Market Fit", "Customer Journey", "Touchpoint", "Conversion", "Retention", "Churn", "Lifetime Value",
+  "Acquisition Cost", "Revenue Growth", "Profitability", "Sustainability", "Scalability", "Efficiency",
+  "Productivity", "Innovation", "Agility", "Resilience", "Adaptability", "Leadership", "Culture",
+  "Talent", "Diversity", "Inclusion", "Equity", "Belonging", "Purpose", "Mission", "Vision", "Values",
+  "Strategy", "Execution", "Alignment", "Accountability", "Transparency", "Trust", "Integrity", "Ethics",
+  "Compliance", "Governance", "Risk Management", "Security", "Privacy", "Data Protection",
+  "Intellectual Property", "Brand Reputation", "Customer Experience", "Employee Experience",
+  "Partner Experience", "Stakeholder Experience", "Social Impact", "Environmental Impact",
+  "Economic Impact", "Global Impact", "Future Impact"
+];
+
 export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, initialConversationId, sharedSession }) => {
   const [messages, setMessages] = useState<GPTMessage[]>([]);
   const [input, setInput] = useState("");
@@ -65,6 +81,10 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   const [showNotification, setShowNotification] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLink, setShareLink] = useState("");
+  const [showCognitiveProModal, setShowCognitiveProModal] = useState(false);
+  const [cognitiveProOptions, setCognitiveProOptions] = useState<string[]>([]);
+  const [selectedCognitiveProOptions, setSelectedCognitiveProOptions] = useState<string[]>([]);
+  const [isSuggestingOptions, setIsSuggestingOptions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -155,7 +175,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
       shareToken
     });
     
-    const url = `${window.location.origin}/salesgpt?sharedUserId=${auth.currentUser.uid}&sharedSessionId=${currentSessionId}`;
+    const url = `${window.location.origin}/?sharedUserId=${auth.currentUser.uid}&sharedSessionId=${currentSessionId}`;
     setShareLink(url);
     setShowShareModal(true);
     loadSessions();
@@ -163,7 +183,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
 
   const openInNewTab = () => {
     if (!currentSessionId) return;
-    window.open(`${window.location.origin}/salesgpt?conversationId=${currentSessionId}`, '_blank');
+    window.open(`${window.location.origin}/?conversationId=${currentSessionId}`, '_blank');
   };
 
   const handleDeleteSession = async (e: React.MouseEvent, id: string) => {
@@ -246,9 +266,19 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
     }
   };
 
-  const handleSend = async (overrideInput?: string) => {
+  const handleSend = async (overrideInput?: string, selectedOptionsOverride?: string[]) => {
     const messageText = overrideInput || input;
     if (!messageText.trim() || isProcessing) return;
+
+    if (mode === 'cognitive-pro' && !overrideInput && !selectedOptionsOverride && selectedCognitiveProOptions.length === 0) {
+      setIsSuggestingOptions(true);
+      setShowCognitiveProModal(true);
+      const suggested = await suggestCognitiveProOptions(messageText, includeContext ? JSON.stringify(meetingContext) : undefined);
+      setCognitiveProOptions(suggested);
+      setSelectedCognitiveProOptions(suggested);
+      setIsSuggestingOptions(false);
+      return;
+    }
 
     const currentHistory = [...messages];
     const userMessage: GPTMessage = {
@@ -436,6 +466,47 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           autoSaveSession(updated);
           return updated;
         });
+      } else if (mode === 'cognitive-pro') {
+        const stream = streamCognitivePro(messageText, currentHistory, selectedOptionsOverride || selectedCognitiveProOptions, contextStr);
+        let fullBuffer = "";
+        for await (const chunk of stream) {
+          fullBuffer += chunk;
+          const partialAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
+          const partialCitations = extractFieldFromPartialJson(fullBuffer, "citations");
+          const partialReasoning = extractFieldFromPartialJson(fullBuffer, "reasoning");
+          
+          let displayContent = "";
+          if (partialReasoning) displayContent += `> **COGNITIVE REASONING:** ${partialReasoning}\n\n`;
+          if (partialAnswer) displayContent += partialAnswer;
+
+          setMessages(prev => prev.map(m => 
+            m.id === assistantId ? { 
+              ...m, 
+              content: displayContent || (fullBuffer.startsWith('{') ? "" : fullBuffer),
+              citations: partialCitations || undefined
+            } : m
+          ));
+        }
+        setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, isStreaming: false } : m));
+        
+        // Notify user
+        playPing();
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+
+        // Generate follow-up questions
+        const finalAnswer = extractFieldFromPartialJson(fullBuffer, "answer");
+        const finalReasoning = extractFieldFromPartialJson(fullBuffer, "reasoning");
+        const finalContent = finalReasoning ? `> **COGNITIVE REASONING:** ${finalReasoning}\n\n${finalAnswer || ""}` : (finalAnswer || fullBuffer);
+        const followUps = await generateFollowUpQuestions(finalContent, currentHistory, contextStr);
+        setMessages(prev => {
+          const updated = prev.map(m => 
+            m.id === assistantId ? { ...m, followUpQuestions: followUps } : m
+          );
+          autoSaveSession(updated);
+          return updated;
+        });
+        setSelectedCognitiveProOptions([]); // Reset for next time
       } else {
         const stream = streamSalesGPT(input, currentHistory, contextStr);
         let fullBuffer = "";
@@ -813,6 +884,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           <div className="flex flex-wrap gap-3 justify-center">
              <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-4 h-4" />} label="Fast Pulse" />
              <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-4 h-4" />} label="Cognitive" />
+             <ToolToggle active={mode === 'cognitive-pro'} onClick={() => setMode('cognitive-pro')} icon={<ICONS.Brain className="w-4 h-4" />} label="Cognitive Pro" color="indigo" />
              <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-4 h-4" />} label="Deep Study" color="amber" />
              <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-4 h-4" />} label="Visual Logic" color="emerald" />
           </div>
@@ -850,6 +922,112 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           </div>
         </div>
       </div>
+
+      {/* Cognitive Pro Modal */}
+      <AnimatePresence>
+        {showCognitiveProModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-slate-900 border border-slate-800 p-12 rounded-[4rem] max-w-4xl w-full space-y-10 shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-x"></div>
+              
+              <div className="flex justify-between items-start">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-indigo-600/20 rounded-2xl border border-indigo-500/30">
+                      <ICONS.Brain className="w-8 h-8 text-indigo-500" />
+                    </div>
+                    <h3 className="text-5xl font-black text-white tracking-tighter uppercase leading-none">Cognitive Pro<br/><span className="text-indigo-500">Synthesis Engine</span></h3>
+                  </div>
+                  <p className="text-slate-400 text-xl font-medium max-w-2xl">Select the strategic dimensions you want to synthesize into your intelligence report.</p>
+                </div>
+                <button 
+                  onClick={() => setShowCognitiveProModal(false)}
+                  className="p-4 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-2xl transition-all border border-slate-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {isSuggestingOptions ? (
+                <div className="py-20 flex flex-col items-center justify-center space-y-8">
+                  <div className="relative">
+                    <div className="w-24 h-24 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <ICONS.Brain className="w-10 h-10 text-indigo-500 animate-pulse" />
+                    </div>
+                  </div>
+                  <p className="text-indigo-400 font-black uppercase tracking-[0.4em] text-sm animate-pulse">Analyzing Inquiry Context...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
+                  {COGNITIVE_PRO_ALL_OPTIONS.map((option) => {
+                    const isSuggested = cognitiveProOptions.includes(option);
+                    const isSelected = selectedCognitiveProOptions.includes(option);
+                    
+                    return (
+                      <button
+                        key={option}
+                        onClick={() => {
+                          setSelectedCognitiveProOptions(prev => 
+                            prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option]
+                          );
+                        }}
+                        className={`p-6 rounded-[2rem] border-2 transition-all text-left group relative ${
+                          isSelected 
+                          ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl shadow-indigo-900/20' 
+                          : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
+                        }`}
+                      >
+                        {isSuggested && !isSelected && (
+                          <div className="absolute top-3 right-3 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[8px] font-black uppercase tracking-widest text-indigo-400">
+                            Suggested
+                          </div>
+                        )}
+                        <div className="flex items-center gap-4">
+                          <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            isSelected ? 'bg-white border-white text-indigo-600' : 'bg-transparent border-slate-800 group-hover:border-slate-700'
+                          }`}>
+                            {isSelected && <Check className="w-4 h-4" />}
+                          </div>
+                          <span className="font-bold text-sm tracking-tight">{option}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="flex gap-6 pt-6">
+                <button 
+                  onClick={() => setShowCognitiveProModal(false)}
+                  className="flex-1 py-6 bg-slate-950 border border-slate-800 text-slate-500 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  disabled={selectedCognitiveProOptions.length === 0}
+                  onClick={() => {
+                    setShowCognitiveProModal(false);
+                    handleSend(undefined, selectedCognitiveProOptions);
+                  }}
+                  className={`flex-[2] py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest transition-all shadow-2xl ${
+                    selectedCognitiveProOptions.length > 0 
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40' 
+                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                  }`}
+                >
+                  Synthesize Strategic Report ({selectedCognitiveProOptions.length})
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Share Modal */}
       <AnimatePresence>

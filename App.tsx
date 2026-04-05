@@ -74,6 +74,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<SalesGPTSession | null>(null);
+  const [isStandaloneGPT, setIsStandaloneGPT] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
   const [darkMode] = useState(true);
@@ -101,12 +102,14 @@ const App: React.FC = () => {
     if (conversationId) {
       setInitialConversationId(conversationId);
       setActiveTab('gpt');
+      setIsStandaloneGPT(true);
     }
 
     // Handle shared chat route
     const sharedUserId = params.get('sharedUserId');
     const sharedSessionId = params.get('sharedSessionId');
     if (sharedUserId && sharedSessionId) {
+      setIsStandaloneGPT(true);
       const loadShared = async () => {
         const session = await fetchSharedGPTSession(sharedUserId, sharedSessionId);
         if (session) {
@@ -640,19 +643,21 @@ const App: React.FC = () => {
         .text-magnifier .text-[12px] { font-size: calc(12px * var(--text-zoom-multiplier)); }
       `}</style>
 
-      <Header 
-        user={user} 
-        zoom={zoom} 
-        onZoomChange={setZoom}
-        textZoom={textZoom}
-        onTextZoomChange={setTextZoom}
-        darkMode={darkMode}
-      />
+      {!isStandaloneGPT && (
+        <Header 
+          user={user} 
+          zoom={zoom} 
+          onZoomChange={setZoom}
+          textZoom={textZoom}
+          onTextZoomChange={setTextZoom}
+          darkMode={darkMode}
+        />
+      )}
       
-      <div className="pt-20 flex flex-1 overflow-hidden text-magnifier relative z-10">
+      <div className={`${isStandaloneGPT ? 'pt-0' : 'pt-20'} flex flex-1 overflow-hidden text-magnifier relative z-10`}>
         
         <div className="flex flex-1 overflow-hidden relative">
-          {analysis && !isAnalyzing && (
+          {analysis && !isAnalyzing && !isStandaloneGPT && (
             <>
               <aside 
                 style={{ width: sidebarWidth, fontSize: `${sidebarFontScale}rem` }}
@@ -810,45 +815,47 @@ const App: React.FC = () => {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                     className="h-full flex flex-col"
                   >
-                    {/* Fixed Node Header */}
-                    <div className="px-8 py-10 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-20">
-                      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-4">
-                            <motion.div 
-                              whileHover={{ scale: 1.05, rotate: 5 }}
-                              className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-2xl"
-                            >
-                              {NODE_DETAILS[activeTab].stepNumber}
-                            </motion.div>
-                            <div>
-                              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">{NODE_DETAILS[activeTab].label}</h2>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[9px] font-black rounded-md uppercase tracking-wider">Neural Node Active</span>
-                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                    {/* Fixed Node Header - Hide in standalone mode or for GPT if preferred */}
+                    {!isStandaloneGPT && (
+                      <div className="px-8 py-10 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-20">
+                        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-4">
+                              <motion.div 
+                                whileHover={{ scale: 1.05, rotate: 5 }}
+                                className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-2xl"
+                              >
+                                {NODE_DETAILS[activeTab].stepNumber}
+                              </motion.div>
+                              <div>
+                                <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">{NODE_DETAILS[activeTab].label}</h2>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[9px] font-black rounded-md uppercase tracking-wider">Neural Node Active</span>
+                                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                </div>
                               </div>
                             </div>
+                            <p className="text-indigo-600 dark:text-indigo-400 font-black text-[10px] uppercase tracking-[0.2em]">{NODE_DETAILS[activeTab].feature}</p>
                           </div>
-                          <p className="text-indigo-600 dark:text-indigo-400 font-black text-[10px] uppercase tracking-[0.2em]">{NODE_DETAILS[activeTab].feature}</p>
-                        </div>
-                        <div className="flex-1 max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8">
-                          <div className="space-y-2">
-                            <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Strategic Purpose</h4>
-                            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">{NODE_DETAILS[activeTab].purpose}</p>
-                          </div>
-                          <div className="space-y-2">
-                            <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Competitive Edge</h4>
-                            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">{NODE_DETAILS[activeTab].howItHelps}</p>
-                          </div>
-                          <div className="space-y-2">
-                            <h4 className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Operational Protocol</h4>
-                            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 leading-relaxed italic">{NODE_DETAILS[activeTab].guideText}</p>
+                          <div className="flex-1 max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className="space-y-2">
+                              <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Strategic Purpose</h4>
+                              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">{NODE_DETAILS[activeTab].purpose}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Competitive Edge</h4>
+                              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">{NODE_DETAILS[activeTab].howItHelps}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Operational Protocol</h4>
+                              <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 leading-relaxed italic">{NODE_DETAILS[activeTab].guideText}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <div className={`flex-1 ${activeTab === 'gpt' ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar'}`}>
                       {activeTab === 'context' && (
                         <div className="px-4 md:px-8 py-12 space-y-12 w-full max-w-7xl mx-auto">
                           <motion.div 
