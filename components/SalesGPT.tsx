@@ -847,16 +847,16 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
         {/* Header */}
         <div className="w-full bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 z-20">
-          <div className="max-w-5xl mx-auto px-12 py-8 flex items-center justify-between">
+          <div className="max-w-5xl mx-auto px-12 py-4 flex items-center justify-between">
             <div className="flex items-center gap-6">
-               <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-2xl">
-                  <ICONS.Brain className="w-8 h-8" />
+               <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-2xl">
+                  <ICONS.Brain className="w-6 h-6" />
                </div>
                <div>
-                  <h3 className="text-2xl font-black text-white tracking-tighter uppercase">
+                  <h3 className="text-xl font-black text-white tracking-tighter uppercase">
                     Strategic Intelligence
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.4em]">
+                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.4em]">
                     Neural Sales Copilot v3.1
                   </p>
                </div>
@@ -902,7 +902,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth bg-[radial-gradient(circle_at_50%_50%,rgba(15,23,42,1)_0%,rgba(2,6,23,1)_100%)]"
         >
-          <div className="max-w-4xl mx-auto px-6 md:px-12 py-20 space-y-12 min-h-full flex flex-col">
+          <div className="max-w-4xl mx-auto px-6 md:px-12 py-10 space-y-12 min-h-full flex flex-col">
             <AnimatePresence mode="popLayout">
               {messages.length === 0 ? (
                 <motion.div 
@@ -1182,14 +1182,14 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
       </div>
 
       {/* Input Area */}
-      <div className="w-full bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent z-20 pt-10 pb-10">
-        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-6">
+      <div className="w-full bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent z-20 pt-4 pb-6">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-4">
           <div className="flex flex-wrap gap-2 justify-center">
-             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-3.5 h-3.5" />} label="Fast Pulse" />
-             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-3.5 h-3.5" />} label="Cognitive" color="blue" />
-             <ToolToggle active={mode === 'cognitive-pro'} onClick={() => setMode('cognitive-pro')} icon={<ICONS.Research className="w-3.5 h-3.5" />} label="Cognitive Pro" color="purple" />
-             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-3.5 h-3.5" />} label="Deep Study" color="amber" />
-             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-3.5 h-3.5" />} label="Visual Logic" color="emerald" />
+             <ToolToggle active={mode === 'standard'} onClick={() => setMode('standard')} icon={<ICONS.Chat className="w-3 h-3" />} label="Fast Pulse" />
+             <ToolToggle active={mode === 'cognitive'} onClick={() => setMode('cognitive')} icon={<ICONS.Search className="w-3 h-3" />} label="Cognitive" color="blue" />
+             <ToolToggle active={mode === 'cognitive-pro'} onClick={() => setMode('cognitive-pro')} icon={<ICONS.Research className="w-3 h-3" />} label="Cognitive Pro" color="purple" />
+             <ToolToggle active={mode === 'deep-study'} onClick={() => setMode('deep-study')} icon={<ICONS.Research className="w-3 h-3" />} label="Deep Study" color="amber" />
+             <ToolToggle active={mode === 'pineapple'} onClick={() => setMode('pineapple')} icon={<ICONS.Pineapple className="w-3 h-3" />} label="Visual Logic" color="emerald" />
           </div>
 
           <div className="relative group">
@@ -1210,9 +1210,9 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                   }
                 }}
                 placeholder="Type your strategic inquiry..."
-                className="w-full bg-transparent px-8 py-6 text-lg outline-none pr-40 font-medium placeholder:text-slate-700 text-white resize-none max-h-48 custom-scrollbar"
+                className="w-full bg-transparent px-6 py-4 text-base outline-none pr-40 font-medium placeholder:text-slate-700 text-white resize-none max-h-48 custom-scrollbar"
               />
-              <div className="absolute right-4 bottom-4 flex items-center gap-3">
+              <div className="absolute right-3 bottom-3 flex items-center gap-3">
                 <motion.button 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1351,19 +1351,19 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
 const ToolToggle = ({ active, onClick, icon, label, color = 'indigo' }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; color?: string }) => {
   const activeClasses = {
-    indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-110',
-    emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 dark:shadow-emerald-900/40 scale-110',
-    amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 dark:shadow-amber-900/40 scale-110',
-    purple: 'bg-purple-600 border-purple-600 text-white shadow-2xl shadow-purple-200 dark:shadow-purple-900/40 scale-110',
-    blue: 'bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-200 dark:shadow-blue-900/40 scale-110',
-  }[color as keyof typeof activeClasses] || 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-110';
+    indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-105',
+    emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 dark:shadow-emerald-900/40 scale-105',
+    amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 dark:shadow-amber-900/40 scale-105',
+    purple: 'bg-purple-600 border-purple-600 text-white shadow-2xl shadow-purple-200 dark:shadow-purple-900/40 scale-105',
+    blue: 'bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-200 dark:shadow-blue-900/40 scale-105',
+  }[color as keyof typeof activeClasses] || 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-105';
 
   return (
     <motion.button 
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`flex items-center gap-4 px-10 py-4 rounded-2xl border-2 transition-all font-black uppercase tracking-[0.2em] text-[11px] shadow-sm ${active ? activeClasses : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-indigo-900/50 hover:text-slate-300'}`}
+      className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-black uppercase tracking-[0.1em] text-[10px] shadow-sm ${active ? activeClasses : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-indigo-900/50 hover:text-slate-300'}`}
     >
       {icon}
       {label}
