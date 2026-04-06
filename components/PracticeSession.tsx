@@ -104,7 +104,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     return bytes;
   };
 
-  const stopPractice = useCallback((clearHistory = false) => {
+  const stopPractice = useCallback(() => {
     setIsActive(false);
     if (status !== 'analyzing') setStatus('idle');
     if (sessionRef.current) {
@@ -118,55 +118,28 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     sourcesRef.current.forEach(source => { try { source.stop(); } catch(e) {} });
     sourcesRef.current.clear();
     nextStartTimeRef.current = 0;
-
-    if (clearHistory) {
-      setTranscription([]);
-      setCurrentTranscription({ user: '', ai: '' });
-      userTranscriptionRef.current = '';
-      aiTranscriptionRef.current = '';
-    }
   }, [status]);
-
-  useEffect(() => {
-    return () => {
-      stopPractice(true);
-    };
-  }, [stopPractice]);
 
   const startGroomingSession = async () => {
     setEvaluation(null);
+    userTranscriptionRef.current = '';
+    aiTranscriptionRef.current = '';
+    setTranscription([]);
     setMicPermissionError(false);
     await startPractice();
   };
 
   const startSpeechSession = async () => {
     setEvaluation(null);
+    userTranscriptionRef.current = '';
+    aiTranscriptionRef.current = '';
+    setTranscription([]);
     setMicPermissionError(false);
     await startPractice();
   };
 
   const startPractice = async () => {
     if (onStartSimulation) onStartSimulation();
-    
-    // Clear previous session state without triggering full stopPractice logic
-    if (sessionRef.current) {
-      sessionRef.current.close();
-      sessionRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    sourcesRef.current.forEach(source => { try { source.stop(); } catch(e) {} });
-    sourcesRef.current.clear();
-    nextStartTimeRef.current = 0;
-    
-    // Clear history for fresh start
-    setTranscription([]);
-    setCurrentTranscription({ user: '', ai: '' });
-    userTranscriptionRef.current = '';
-    aiTranscriptionRef.current = '';
-
     setStatus('connecting');
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
@@ -247,7 +220,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
            2. Once you have stated that, remain silent while the user delivers their speech. 
            3. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
-      let activeSession: any = null;
       const sessionPromise = ai.live.connect({
         model: 'gemini-3.1-flash-live-preview',
         callbacks: {
@@ -263,7 +235,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
               for (let i = 0; i < inputData.length; i++) {
                 pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
               }
-              if (sessionRef.current === activeSession) {
+              if (sessionRef.current) {
                 sessionRef.current.sendRealtimeInput({
                   audio: { data: encode(new Uint8Array(pcmData.buffer)), mimeType: 'audio/pcm;rate=16000' }
                 });
@@ -273,8 +245,6 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             processor.connect(inputCtx.destination);
           },
           onmessage: async (message: LiveServerMessage) => {
-            if (sessionRef.current !== activeSession) return;
-
             if (message.serverContent?.modelTurn) {
               const parts = message.serverContent.modelTurn.parts;
               for (const part of parts) {
@@ -313,17 +283,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
               nextStartTimeRef.current = 0;
             }
           },
-          onerror: (e) => { 
-            if (sessionRef.current === activeSession) {
-              setStatus('error'); 
-              stopPractice(); 
-            }
-          },
-          onclose: () => {
-            if (sessionRef.current === activeSession) {
-              stopPractice();
-            }
-          },
+          onerror: (e) => { setStatus('error'); stopPractice(); },
+          onclose: () => stopPractice(),
         },
         config: {
           responseModalities: [Modality.AUDIO],
@@ -333,8 +294,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           systemInstruction
         },
       });
-      activeSession = await sessionPromise;
-      sessionRef.current = activeSession;
+      sessionRef.current = await sessionPromise;
     } catch (e) { setStatus('error'); }
   };
 
@@ -474,7 +434,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
               <button
                 key={m}
                 onClick={() => {
-                  stopPractice(true);
+                  stopPractice();
                   setSessionMode(m);
                   setEvaluation(null);
                 }}
@@ -890,7 +850,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => stopPractice()}
+                    onClick={stopPractice}
                     className="px-12 py-6 bg-rose-600 text-white rounded-[2.5rem] font-black text-base uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all active:scale-95 border border-rose-500/50"
                   >
                     End Interaction
@@ -907,7 +867,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
                 <div className="flex gap-3">
                   {isActive && (
                     <button 
-                      onClick={() => stopPractice()}
+                      onClick={stopPractice}
                       className="p-3 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl hover:bg-rose-200 dark:hover:bg-rose-900/50 transition-colors"
                       title="End Session"
                     >
