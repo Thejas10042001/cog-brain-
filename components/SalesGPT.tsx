@@ -854,10 +854,10 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                </div>
                <div>
                   <h3 className="text-xl font-black text-white tracking-tighter uppercase">
-                    Strategic Intelligence
+                    Spiked GPT
                   </h3>
                   <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.4em]">
-                    Neural Sales Copilot v3.1
+                    Cognitive Sales Copilot v3.1
                   </p>
                </div>
             </div>
