@@ -11,7 +11,8 @@ import {
   performCognitiveSearchStream, 
   generateFollowUpQuestions,
   streamNormalChat,
-  streamCognitivePro
+  streamCognitivePro,
+  recommendAndValidateStyles
 } from '../services/geminiService';
 import { 
   saveSalesGPTSession, 
@@ -81,6 +82,8 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   const [showCognitiveProModal, setShowCognitiveProModal] = useState(false);
   const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [isValidatingStyles, setIsValidatingStyles] = useState(false);
+  const [styleValidation, setStyleValidation] = useState<{ [style: string]: { isValid: boolean, reason?: string } }>({});
   const [isConsoleMode, setIsConsoleMode] = useState(false);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -146,6 +149,30 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  const toggleStyle = async (option: string) => {
+    const isSelected = selectedStyles.includes(option);
+    let newStyles: string[];
+    if (isSelected) {
+      newStyles = selectedStyles.filter(s => s !== option);
+    } else {
+      newStyles = [...selectedStyles, option];
+    }
+    setSelectedStyles(newStyles);
+    
+    // Re-validate
+    if (pendingInput) {
+      setIsValidatingStyles(true);
+      try {
+        const result = await recommendAndValidateStyles(pendingInput, messages, newStyles, COGNITIVE_PRO_OPTIONS);
+        setStyleValidation(result.validation);
+      } catch (err) {
+        console.error("Validation failed", err);
+      } finally {
+        setIsValidatingStyles(false);
+      }
+    }
+  };
 
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
@@ -301,6 +328,17 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
     if (mode === 'cognitive-pro' && !overrideStyles) {
       setPendingInput(messageText);
       setShowCognitiveProModal(true);
+      setIsValidatingStyles(true);
+      setStyleValidation({});
+      
+      // Fetch initial recommendations
+      recommendAndValidateStyles(messageText, messages, [], COGNITIVE_PRO_OPTIONS)
+        .then(result => {
+          setSelectedStyles(result.recommendedStyles);
+          setStyleValidation(result.validation);
+        })
+        .catch(err => console.error("Failed to get style recommendations", err))
+        .finally(() => setIsValidatingStyles(false));
       return;
     }
 
@@ -731,27 +769,49 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 -mr-4 mb-8">
+                  {isValidatingStyles && (
+                    <div className="flex items-center gap-3 mb-6 p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl animate-pulse">
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">AI Analyzing Strategic Fit...</span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {COGNITIVE_PRO_OPTIONS.map(option => {
                       const isSelected = selectedStyles.includes(option);
+                      const validation = styleValidation[option];
+                      const isWrong = validation && !validation.isValid;
+                      
                       return (
-                        <button
-                          key={option}
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedStyles(prev => prev.filter(s => s !== option));
-                            } else {
-                              setSelectedStyles(prev => [...prev, option]);
-                            }
-                          }}
-                          className={`px-4 py-4 rounded-2xl border-2 text-left transition-all flex flex-col gap-2 ${
-                            isSelected 
-                              ? 'bg-indigo-600/20 border-indigo-500 text-indigo-100 shadow-lg shadow-indigo-900/20' 
-                              : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600'
-                          }`}
-                        >
-                          <span className="text-xs font-black uppercase tracking-widest">{option}</span>
-                        </button>
+                        <div key={option} className="flex flex-col gap-2">
+                          <button
+                            onClick={() => toggleStyle(option)}
+                            className={`px-4 py-4 rounded-2xl border-2 text-left transition-all flex flex-col gap-2 relative ${
+                              isSelected 
+                                ? isWrong 
+                                  ? 'bg-rose-600/20 border-rose-500 text-rose-100 shadow-lg shadow-rose-900/20'
+                                  : 'bg-indigo-600/20 border-indigo-500 text-indigo-100 shadow-lg shadow-indigo-900/20' 
+                                : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black uppercase tracking-widest">{option}</span>
+                              {isSelected && !isWrong && <Check className="w-3 h-3 text-indigo-400" />}
+                              {isWrong && <XCircle className="w-3 h-3 text-rose-400" />}
+                            </div>
+                          </button>
+                          {isWrong && isSelected && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="px-3 py-2 bg-rose-950/30 border border-rose-900/50 rounded-xl"
+                            >
+                              <p className="text-[10px] font-bold text-rose-400 leading-relaxed">
+                                <span className="uppercase tracking-widest block mb-1 opacity-60">Warning:</span>
+                                {validation.reason}
+                              </p>
+                            </motion.div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>

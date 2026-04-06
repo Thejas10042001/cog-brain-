@@ -549,6 +549,64 @@ export async function generateAssistantResponse(query: string, context?: string)
   }
 }
 
+export async function recommendAndValidateStyles(
+  prompt: string, 
+  history: GPTMessage[], 
+  currentSelection: string[],
+  availableStyles: string[]
+): Promise<{ 
+  recommendedStyles: string[], 
+  validation: { [style: string]: { isValid: boolean, reason?: string } } 
+}> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const systemInstruction = `You are an Elite Sales Intelligence Strategist. 
+  Your goal is to recommend the most effective strategic reasoning frameworks (styles) for a given sales inquiry and validate the user's selection.
+  
+  AVAILABLE STYLES:
+  ${availableStyles.join(', ')}
+  
+  DIRECTIVES:
+  1. ANALYZE: Understand the user's intent and the sales context from the history.
+  2. RECOMMEND: Select 3-5 styles that would provide the most value for this specific question.
+  3. VALIDATE: For each style in the 'currentSelection', determine if it's appropriate. If not, provide a 1-2 line concise reason why it's a "wrong" or "sub-optimal" choice for this specific question.
+  
+  Return the result as a JSON object:
+  {
+    "recommendedStyles": ["Style 1", "Style 2"],
+    "validation": {
+      "Style Name": { "isValid": true },
+      "Wrong Style Name": { "isValid": false, "reason": "Concise 1-2 line explanation." }
+    }
+  }`;
+
+  const formattedHistory = history.slice(-5).map(m => ({ 
+    role: m.role === 'user' ? 'user' : 'model', 
+    parts: [{ text: m.content }] 
+  }));
+
+  const contents = [
+    ...formattedHistory,
+    { role: 'user', parts: [{ text: `Current Question: ${prompt}\nUser's Current Selection: ${JSON.stringify(currentSelection)}` }] }
+  ];
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json"
+      }
+    }));
+    return safeJsonParse(response.text || "{}");
+  } catch (error) {
+    console.error("Style recommendation/validation failed:", error);
+    return { recommendedStyles: [], validation: {} };
+  }
+}
+
 export async function generateSalesStrategy(
   combinedContent: string, 
   context: MeetingContext,
