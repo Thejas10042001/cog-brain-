@@ -54,7 +54,7 @@ export const AvatarSimulationStaged: FC<{
   const [isUserListening, setIsUserListening] = useState(false);
   const [micPermissionError, setMicPermissionError] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
-  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
+  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string; logicDeficit?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
   const [report, setReport] = useState<ComprehensiveAvatarReport | null>(null);

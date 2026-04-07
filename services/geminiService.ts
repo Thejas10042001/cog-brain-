@@ -164,7 +164,8 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
   2. POTENTIAL OBJECTIONS: Analyze the text for "Resistance Nodes". These are inferred tensions, legacy constraints, budget skepticism, or information gaps mentioned or implied.
   3. STRATEGIC CONTEXT: Identify the seller organization, client organization, and primary products of interest.
   4. DEAL SEMANTICS: Extract 5-8 highly relevant strategic keywords or project identifiers.
-  5. MISSION BRIEF: Provide a concise executive snapshot of the deal's current state.
+  5. CLIENT'S KEYWORDS: Identify specific terminology, jargon, or "internal language" used by the client.
+  6. MISSION BRIEF: Provide a concise executive snapshot of the deal's current state.
 
   REQUIRED JSON FIELDS:
   - sellerCompany: string
@@ -176,6 +177,7 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
   - meetingFocus: string
   - executiveSnapshot: string
   - strategicKeywords: string[]
+  - clientsKeywords: string[] (Client-specific terminology)
   - potentialObjections: string[] (Inferred Resistance Nodes and psychological barriers)
 
   Return ONLY the JSON object.`;
@@ -198,12 +200,13 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
             meetingFocus: { type: Type.STRING },
             executiveSnapshot: { type: Type.STRING },
             strategicKeywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+            clientsKeywords: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Specific keywords used by the client." },
             potentialObjections: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Specific risks, skepticism, or barriers identified in document sentiment." }
           },
           required: [
             "sellerCompany", "sellerNames", "clientCompany", "clientNames", 
             "targetProducts", "productDomain", "meetingFocus", "executiveSnapshot", 
-            "strategicKeywords", "potentialObjections"
+            "strategicKeywords", "clientsKeywords", "potentialObjections"
           ]
         }
       }
@@ -211,6 +214,80 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
     return safeJsonParse(response.text || "{}");
   } catch (error) {
     console.error("Neural extraction failed:", error);
+    return {};
+  }
+}
+
+// Extract meeting metadata from multiple documents
+export async function extractMetadataFromMultipleDocuments(documents: { name: string; content: string }[]): Promise<Partial<MeetingContext>> {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const modelName = 'gemini-3-pro-preview'; // Use Pro for deeper analysis across multiple docs
+  
+  const combinedContent = documents.map(d => `FILE [${d.name}]:\n${d.content}`).join('\n\n');
+  
+  const prompt = `Act as an Elite Sales Operations Architect and Cognitive Intelligence Specialist. 
+  Your goal is to perform a Unified Strategic Extraction across ALL provided documents to prime a sales intelligence core.
+  You must go deep into the documents, analyze relationships, and synthesize a holistic view. Do not miss any products or stakeholders.
+
+  DOCUMENT INTELLIGENCE POOL:
+  ${combinedContent}
+
+  EXTRACTION DIRECTIVES:
+  1. STAKEHOLDER MAPPING: Identify ALL names and roles of power brokers, decision-makers, and technical gatekeepers across all documents.
+  2. POTENTIAL OBJECTIONS: Analyze the text for "Resistance Nodes". These are inferred tensions, legacy constraints, budget skepticism, or information gaps.
+  3. STRATEGIC CONTEXT: Identify the seller organization, client organization, and ALL primary products of interest mentioned.
+  4. DEAL SEMANTICS: Extract 8-12 highly relevant strategic keywords or project identifiers.
+  5. CLIENT'S KEYWORDS: Identify specific terminology, jargon, or "internal language" used by the client in these documents.
+  6. MISSION BRIEF: Provide a high-density executive snapshot of the deal's current state, synthesizing insights from all sources.
+
+  REQUIRED JSON FIELDS:
+  - sellerCompany: string
+  - sellerNames: string
+  - clientCompany: string
+  - clientNames: string (All stakeholders and titles)
+  - targetProducts: string (List ALL products mentioned)
+  - productDomain: string
+  - meetingFocus: string
+  - executiveSnapshot: string
+  - strategicKeywords: string[]
+  - clientsKeywords: string[] (Client-specific terminology)
+  - potentialObjections: string[] (Comprehensive list of resistance nodes)
+
+  Return ONLY the JSON object.`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 16000 }, // Deep thinking for multi-doc synthesis
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            sellerCompany: { type: Type.STRING },
+            sellerNames: { type: Type.STRING },
+            clientCompany: { type: Type.STRING },
+            clientNames: { type: Type.STRING },
+            targetProducts: { type: Type.STRING },
+            productDomain: { type: Type.STRING },
+            meetingFocus: { type: Type.STRING },
+            executiveSnapshot: { type: Type.STRING },
+            strategicKeywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+            clientsKeywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+            potentialObjections: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: [
+            "sellerCompany", "sellerNames", "clientCompany", "clientNames", 
+            "targetProducts", "productDomain", "meetingFocus", "executiveSnapshot", 
+            "strategicKeywords", "clientsKeywords", "potentialObjections"
+          ]
+        }
+      }
+    }));
+    return safeJsonParse(response.text || "{}");
+  } catch (error) {
+    console.error("Multi-doc neural extraction failed:", error);
     return {};
   }
 }
@@ -2071,8 +2148,17 @@ export async function analyzeSalesContext(filesContent: string, context: Meeting
     required: ["snapshot", "documentInsights", "groundMatrix", "competitiveHub", "openingLines", "predictedQuestions", "strategicQuestionsToAsk", "objectionHandling", "toneGuidance", "finalCoaching", "reportSections"]
   };
 
-  const prompt = `Synthesize high-fidelity cognitive intelligence based on the following documents:
-  --- SOURCE --- 
+  const prompt = `Synthesize high-fidelity cognitive intelligence based on the following documents and strategic context.
+  
+  STRATEGIC CONTEXT:
+  Seller: ${context.sellerCompany} (${context.sellerNames})
+  Client: ${context.clientCompany} (${context.clientNames})
+  Target Products: ${context.targetProducts}
+  Meeting Focus: ${context.meetingFocus}
+  Executive Snapshot: ${context.executiveSnapshot}
+  Client Keywords: ${context.clientsKeywords.join(', ')}
+  
+  --- SOURCE DOCUMENTS --- 
   ${filesContent}`;
 
   try {

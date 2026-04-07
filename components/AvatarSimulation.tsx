@@ -78,7 +78,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     clarityScore: 92,
     behavioralAudit: "Professional, steady, and direct."
   });
-  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
+  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string; logicDeficit?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const showExplanationRef = useRef(false);

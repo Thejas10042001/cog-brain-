@@ -210,6 +210,7 @@ export interface MeetingContext {
   answerStyles: string[];
   executiveSnapshot: string;
   strategicKeywords: string[];
+  clientsKeywords: string[];
   potentialObjections: string[];
   baseSystemPrompt: string;
   thinkingLevel: ThinkingLevel;

@@ -78,7 +78,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     clarityScore: 95,
     behavioralAudit: "Highly focused, authoritative, and clear."
   });
-  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string } | null>(null);
+  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string; logicDeficit?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
   const [showExplanation, setShowExplanation] = useState(false);

@@ -2,7 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MeetingContext, CustomerPersonaType, VoiceMode, StoredDocument, VocalPersonaStructure, UploadedFile } from '../types';
 import { ICONS } from '../constants';
-import { extractMetadataFromDocument, analyzeVocalPersona, suggestVocalPersonaFromDoc, generateVoiceSample, generateVocalSignatureFromDirective } from '../services/geminiService';
+import { 
+  extractMetadataFromDocument, 
+  extractMetadataFromMultipleDocuments,
+  analyzeVocalPersona, 
+  suggestVocalPersonaFromDoc, 
+  generateVoiceSample, 
+  generateVocalSignatureFromDirective 
+} from '../services/geminiService';
 import { deleteDocumentFromFirebase } from '../services/firebaseService';
 import { FileUpload } from './FileUpload';
 import { DocumentGallery } from './DocumentGallery';
@@ -142,6 +149,14 @@ Your primary objective is to provide high-fidelity, persona-aligned sales strate
 PERSONA-SPECIFIC STRATEGIC DIRECTIVE:
 "${personaGuidance}"
 You must adapt your vocabulary, risk assessment parameters, and value prioritization to match this profile's psychological drivers and professional accountability.
+
+${context.executiveSnapshot ? `EXECUTIVE DEAL SNAPSHOT:
+"${context.executiveSnapshot}"
+Use this as the high-level strategic baseline for the deal's current state.` : ''}
+
+${context.clientsKeywords.length > 0 ? `CLIENT'S STRATEGIC TERMINOLOGY:
+${context.clientsKeywords.map(k => `- ${k}`).join('\n')}
+Adopt these specific keywords and jargon in your responses to build rapport and demonstrate deep alignment with their internal language.` : ''}
 
 ${context.meetingFocus ? `CRITICAL MEETING OBJECTIVE & FOCUS:
 "${context.meetingFocus}"
@@ -316,11 +331,46 @@ OPERATIONAL CONSTRAINTS:
         meetingFocus: metadata.meetingFocus || context.meetingFocus,
         executiveSnapshot: metadata.executiveSnapshot || context.executiveSnapshot,
         strategicKeywords: Array.from(existingKeywords),
+        clientsKeywords: metadata.clientsKeywords || context.clientsKeywords,
         potentialObjections: metadata.potentialObjections || context.potentialObjections,
         vocalPersonaAnalysis: vocalAnalysis
       });
     } catch (e) {
       console.error("KYC Metadata extraction failed", e);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleUnifiedSynthesis = async () => {
+    if (selectedLibraryDocIds.length === 0 && files.length === 0) return;
+
+    setIsExtracting(true);
+    try {
+      const activeDocs = [
+        ...documents.filter(d => selectedLibraryDocIds.includes(d.id)),
+        ...files.filter(f => f.status === 'ready').map(f => ({ name: f.name, content: f.content }))
+      ];
+
+      const metadata = await extractMetadataFromMultipleDocuments(activeDocs);
+      
+      onContextChange({
+        ...context,
+        sellerCompany: metadata.sellerCompany || context.sellerCompany,
+        sellerNames: metadata.sellerNames || context.sellerNames,
+        clientCompany: metadata.clientCompany || context.clientCompany,
+        clientNames: metadata.clientNames || context.clientNames,
+        targetProducts: metadata.targetProducts || context.targetProducts,
+        productDomain: metadata.productDomain || context.productDomain,
+        meetingFocus: metadata.meetingFocus || context.meetingFocus,
+        executiveSnapshot: metadata.executiveSnapshot || context.executiveSnapshot,
+        strategicKeywords: metadata.strategicKeywords || context.strategicKeywords,
+        clientsKeywords: metadata.clientsKeywords || context.clientsKeywords,
+        potentialObjections: metadata.potentialObjections || context.potentialObjections,
+      });
+      speak("Unified strategic synthesis complete. All selected documents have been analyzed and integrated into the core context.");
+    } catch (e) {
+      console.error("Unified synthesis failed", e);
     } finally {
       setIsExtracting(false);
     }
@@ -425,10 +475,20 @@ OPERATIONAL CONSTRAINTS:
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-12">
-                  <div className="bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-800">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-8">
-                      <ICONS.Research /> Library Selection
-                    </h3>
+                    <div className="bg-slate-900/50 rounded-[3rem] shadow-2xl p-10 border border-slate-800">
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <ICONS.Research /> Library Selection
+                      </h3>
+                      <button
+                        onClick={handleUnifiedSynthesis}
+                        disabled={isExtracting || (selectedLibraryDocIds.length === 0 && files.length === 0)}
+                        className="px-6 py-3 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                      >
+                        {isExtracting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <ICONS.Sparkles className="w-3 h-3" />}
+                        Unified Synthesis
+                      </button>
+                    </div>
                     <DocumentGallery 
                       documents={documents} 
                       onRefresh={onUploadSuccess} 
@@ -554,6 +614,15 @@ OPERATIONAL CONSTRAINTS:
                       </div>
                       <Input label="Target Products" value={context.targetProducts} onChange={v => handleChange('targetProducts', v)} placeholder="Enterprise Cloud Suite" />
                       <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="SaaS, Cybersecurity" />
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Client's Keywords</label>
+                        <div className="flex flex-wrap gap-2 p-3 bg-slate-800/50 rounded-xl border border-slate-700 min-h-[44px]">
+                          {context.clientsKeywords.map((kw, i) => (
+                            <span key={i} className="px-2 py-1 bg-indigo-900/30 text-indigo-400 text-[10px] font-bold rounded-md border border-indigo-900/50">{kw}</span>
+                          ))}
+                          {context.clientsKeywords.length === 0 && <span className="text-[10px] text-slate-600 italic">No keywords extracted</span>}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -566,6 +635,16 @@ OPERATIONAL CONSTRAINTS:
                       <h3 className="text-3xl font-black uppercase tracking-widest text-white">Strategy Finalization</h3>
                     </div>
                     
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Executive Snapshot</label>
+                      <textarea 
+                        value={context.executiveSnapshot}
+                        onChange={e => handleChange('executiveSnapshot', e.target.value)}
+                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-[2rem] px-8 py-6 text-sm font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[100px] placeholder:text-slate-600"
+                        placeholder="Executive summary of the deal..."
+                      />
+                    </div>
+
                     <div className="space-y-4">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Meeting Focus & Strategic Objective</label>
                       <textarea 
