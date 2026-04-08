@@ -6,6 +6,8 @@ import { ICONS } from '../constants';
 import { GoogleGenAI, Modality, LiveServerMessage, Type } from '@google/genai';
 import { generatePitchAudio, decodeAudioData } from '../services/geminiService';
 
+import { AIAnimatedBot } from './AIAnimatedBot';
+
 interface PracticeSessionProps {
   analysis: AnalysisResult;
   meetingContext: MeetingContext;
@@ -38,7 +40,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const [selectedPersona, setSelectedPersona] = useState<CustomerPersonaType>('Balanced');
   const [sentiment, setSentiment] = useState<string>('happy');
   const [isUserSpeaking, setIsUserSpeaking] = useState(false);
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
   const speakingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const aiSpeakingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [transcription, setTranscription] = useState<{ user: string; ai: string }[]>([]);
   const [currentTranscription, setCurrentTranscription] = useState({ user: '', ai: '' });
   
@@ -344,6 +348,10 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
               const parts = message.serverContent.modelTurn.parts;
               for (const part of parts) {
                 if (part.inlineData) {
+                  setIsAISpeaking(true);
+                  if (aiSpeakingTimeoutRef.current) clearTimeout(aiSpeakingTimeoutRef.current);
+                  aiSpeakingTimeoutRef.current = setTimeout(() => setIsAISpeaking(false), 2000);
+
                   const audioData = decode(part.inlineData.data);
                   const buffer = await decodeAudioData(audioData, outputCtx, 24000, 1);
                   const source = outputCtx.createBufferSource();
@@ -981,27 +989,23 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                   transition={{ duration: 2, repeat: Infinity }}
                   className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-full"
                 ></motion.div>
-                <motion.div 
-                  animate={{ 
-                    scale: isActive ? [1.7, 1.8, 1.7] : 1.7,
-                    rotate: isUserSpeaking ? [0, -5, 5, 0] : 0
-                  }}
-                  transition={{ duration: isUserSpeaking ? 0.3 : 1.5, repeat: Infinity }}
-                  className={`w-48 h-48 rounded-full flex items-center justify-center text-8xl shadow-[0_0_100px_rgba(79,70,229,0.6)] z-10 border-[10px] border-white dark:border-slate-800 transition-all duration-500 ${isUserSpeaking ? 'bg-emerald-600' : 'bg-indigo-600'}`}
-                >
-                  {isUserSpeaking ? '👂' : (
-                    {
-                      happy: '😊',
-                      angry: '😠',
-                      sad: '😔',
-                      hesitant: '🤨',
-                      annoyed: '😒',
-                      headache: '🤕',
-                      bored: '😑',
-                      impressed: '🤩'
-                    }[sentiment] || '🤖'
-                  )}
-                </motion.div>
+                <div className="w-64 h-64 rounded-[3rem] overflow-hidden border-8 border-white dark:border-slate-800 shadow-[0_0_100px_rgba(79,70,229,0.6)] z-10 relative">
+                  <AIAnimatedBot isAISpeaking={isAISpeaking} isUserListening={isUserSpeaking} />
+                  <div className="absolute top-4 right-4 text-4xl">
+                    {isUserSpeaking ? '👂' : (
+                      {
+                        happy: '😊',
+                        angry: '😠',
+                        sad: '😔',
+                        hesitant: '🤨',
+                        annoyed: '😒',
+                        headache: '🤕',
+                        bored: '😑',
+                        impressed: '🤩'
+                      }[sentiment] || '🤖'
+                    )}
+                  </div>
+                </div>
                 {isActive && (
                   <motion.div 
                     initial={{ y: 20, opacity: 0 }}

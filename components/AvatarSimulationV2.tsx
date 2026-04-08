@@ -685,8 +685,18 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
             <g className="animate-blink">
               <circle cx="78" cy="85" r="5" fill="#0f172a" />
               <circle cx="122" cy="85" r="5" fill="#0f172a" />
-              <circle cx="78" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
-              <circle cx="122" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
+              <motion.circle 
+                cx="78" cy="85" r="2" fill={config.accent} 
+                animate={isAISpeaking ? { x: [0, 1.5, -1.5, 0], y: [0, -1, 1, 0] } : {}}
+                transition={{ repeat: Infinity, duration: 2.5 }}
+                opacity={isAISpeaking ? "1" : "0.6"} 
+              />
+              <motion.circle 
+                cx="122" cy="85" r="2" fill={config.accent} 
+                animate={isAISpeaking ? { x: [0, 1.5, -1.5, 0], y: [0, -1, 1, 0] } : {}}
+                transition={{ repeat: Infinity, duration: 2.5 }}
+                opacity={isAISpeaking ? "1" : "0.6"} 
+              />
             </g>
             <g transform="translate(100, 135)">
               {isAISpeaking ? (
