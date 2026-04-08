@@ -167,13 +167,26 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         'Balanced': "Act as a pragmatic General Manager. Maintain a mix of technical feasibility and business value. Focus on operational efficiency and ease of implementation."
       }[selectedPersona];
 
+      const strategicContext = `
+STRATEGIC CONTEXT:
+Executive Deal Snapshot: ${meetingContext.executiveSnapshot || 'Not provided'}
+Client's Strategic Terminology: ${meetingContext.clientsKeywords.join(', ') || 'Standard industry terms'}
+Meeting Focus: ${meetingContext.meetingFocus || 'General discovery'}
+Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
+`;
+
       const systemInstruction = sessionMode === 'roleplay' 
-        ? `Act as the buyer: ${buyerName}. Your role is ${selectedPersonaConfig.label}. ${personaDirectives}. Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}. 
+        ? `Act as the buyer: ${buyerName}. Your role is ${selectedPersonaConfig.label}. ${personaDirectives}. 
+           
+           ${strategicContext}
+
+           Objection context: ${analysis.objectionHandling.map(o => o.objection).join(', ')}. 
            
            ===========================================================
            COMMUNICATION STYLE (CRITICAL)
            ===========================================================
            Adopt the specific tone and vocabulary of a ${selectedPersonaConfig.label}. 
+           Use the Client's Strategic Terminology naturally in your speech.
            If you are a Technical Expert, be precise and demanding. 
            If you are a CFO, be cost-conscious and skeptical. 
            If you are a CIO, be strategic and outcome-oriented.
@@ -189,7 +202,11 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
 
            Start by saying: "I will act as ${buyerName}, your ${selectedPersonaConfig.label}, and you need to act as ${sellerName} in this roleplay."`
         : sessionMode === 'seller-roleplay'
-        ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. The buyer's persona is ${selectedPersonaConfig.label}. ${personaDirectives}. Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
+        ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. The buyer's persona is ${selectedPersonaConfig.label}. ${personaDirectives}. 
+           
+           ${strategicContext}
+
+           Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
            
            ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
@@ -204,6 +221,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         : sessionMode === 'grooming'
         ? `Act as a world-class speech and sales coach. 
            
+           ${strategicContext}
+
            ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
@@ -213,6 +232,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
            4. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`
         : `Act as a world-class speech and sales coach. 
            
+           ${strategicContext}
+
            ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
@@ -310,6 +331,12 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
         contents: `Act as a world-class communication, linguistics, and sales coach. 
         Perform a comprehensive "Grooming Audit" for a salesperson.
         
+        STRATEGIC CONTEXT:
+        Executive Deal Snapshot: ${meetingContext.executiveSnapshot || 'Not provided'}
+        Client's Strategic Terminology: ${meetingContext.clientsKeywords.join(', ') || 'Standard industry terms'}
+        Meeting Focus: ${meetingContext.meetingFocus || 'General discovery'}
+        Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
+
         QUESTION/POINT POSED: "${sessionMode === 'speech' ? speechTarget : groomingTarget}"
         SALESPERSON PERFORMANCE: "${finalTranscript}"
         TARGET AUDIENCE PERSONA: ${selectedPersona}
@@ -346,7 +373,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
               objectionHandlingSuggestions: { type: Type.STRING }
             },
             required: ["transcription", "grammarScore", "pacingScore", "toneAnalysis", "grammarFeedback", "sentenceFormation", "breathPacingGuide", "strategicAlignment", "idealWording", "correctionExplanation", "objectionHandlingSuggestions"]
-          }
+          },
+          thinkingConfig: { thinkingBudget: 16000 }
         }
       });
       setEvaluation(JSON.parse(response.text || "{}"));
@@ -416,7 +444,14 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
           </div>
           <div>
             <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Neural Simulation Lab</h2>
-            <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.3em] mt-1">High-Fidelity Cognitive Roleplay & Performance Auditing</p>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.3em]">High-Fidelity Cognitive Roleplay & Performance Auditing</p>
+              <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-900/20 border border-indigo-900/30 rounded-md">
+                <ICONS.Shield className="w-2.5 h-2.5 text-indigo-400" />
+                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Context Grounded</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -538,69 +573,117 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             </div>
 
             <div className="w-full max-w-6xl relative z-10">
-               {sessionMode === 'grooming' ? (
-                 <div className="space-y-6 max-w-2xl mx-auto">
-                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 ml-4">Target Objection / Question</label>
-                    <div className="relative group">
-                      <select 
-                        value={groomingTarget}
-                        onChange={(e) => setGroomingTarget(e.target.value)}
-                        className="w-full bg-slate-900 border-4 border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-white outline-none focus:border-indigo-600 transition-all shadow-2xl appearance-none"
-                      >
-                        <optgroup label="Critical Objections">
-                          {analysis.objectionHandling.map((o, i) => <option key={i} value={o.objection}>{o.objection}</option>)}
-                        </optgroup>
-                        <optgroup label="Anticipated Questions">
-                          {analysis.predictedQuestions.map((q, i) => <option key={i} value={q.customerAsks}>{q.customerAsks}</option>)}
-                        </optgroup>
-                      </select>
-                      <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <ICONS.ChevronDown className="w-6 h-6" />
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                 <div className="lg:col-span-2 space-y-8">
+                   {sessionMode === 'grooming' ? (
+                     <div className="space-y-6">
+                        <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 ml-4">Target Objection / Question</label>
+                        <div className="relative group">
+                          <select 
+                            value={groomingTarget}
+                            onChange={(e) => setGroomingTarget(e.target.value)}
+                            className="w-full bg-slate-900 border-4 border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-white outline-none focus:border-indigo-600 transition-all shadow-2xl appearance-none"
+                          >
+                            <optgroup label="Critical Objections">
+                              {analysis.objectionHandling.map((o, i) => <option key={i} value={o.objection}>{o.objection}</option>)}
+                            </optgroup>
+                            <optgroup label="Anticipated Questions">
+                              {analysis.predictedQuestions.map((q, i) => <option key={i} value={q.customerAsks}>{q.customerAsks}</option>)}
+                            </optgroup>
+                          </select>
+                          <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <ICONS.ChevronDown className="w-6 h-6" />
+                          </div>
+                        </div>
+                     </div>
+                   ) : sessionMode === 'speech' ? (
+                    <div className="space-y-6">
+                       <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 ml-4">Target Sales Point</label>
+                       <div className="relative group">
+                         <select 
+                           value={speechTarget}
+                           onChange={(e) => setSpeechTarget(e.target.value)}
+                           className="w-full bg-slate-900 border-4 border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-white outline-none focus:border-indigo-600 transition-all shadow-2xl appearance-none"
+                         >
+                           <optgroup label="Key Strategic Points">
+                             {analysis.finalCoaching.dos.map((d, i) => <option key={i} value={d}>{d}</option>)}
+                             <option value={analysis.finalCoaching.finalAdvice}>Final Coaching Advice</option>
+                           </optgroup>
+                           <optgroup label="Opening Lines">
+                             {analysis.openingLines.map((o, i) => <option key={i} value={o.text}>{o.text}</option>)}
+                           </optgroup>
+                         </select>
+                         <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                           <ICONS.ChevronDown className="w-6 h-6" />
+                         </div>
+                       </div>
+                    </div>
+                  ) : (
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       {PERSONA_OPTIONS.map((option) => (
+                         <motion.button
+                           key={option.type}
+                           whileHover={{ y: -8 }}
+                           whileTap={{ scale: 0.98 }}
+                           onClick={() => setSelectedPersona(option.type)}
+                           className={`p-10 rounded-[3rem] border-4 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-400 text-white shadow-none' : 'bg-slate-900 border-slate-800 hover:border-indigo-900/50 shadow-none'}`}
+                         >
+                           <div className={`p-5 rounded-2xl mb-8 inline-block w-fit shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3 ${selectedPersona === option.type ? 'bg-white text-indigo-600' : 'bg-slate-800 text-slate-400'}`}>{option.icon}</div>
+                           <h5 className={`font-black text-sm uppercase tracking-[0.2em] mb-4 ${selectedPersona === option.type ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{option.label}</h5>
+                           <p className={`text-[12px] leading-relaxed font-bold italic ${selectedPersona === option.type ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>{option.desc}</p>
+                        {selectedPersona === option.type && (
+                          <motion.div layoutId="persona-active" className="absolute top-6 right-6 w-3 h-3 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]"></motion.div>
+                        )}
+                         </motion.button>
+                       ))}
+                     </div>
+                   )}
+                 </div>
+
+                 <div className="space-y-8">
+                    <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-6">
+                      <div className="flex items-center gap-3">
+                        <ICONS.Efficiency className="w-5 h-5 text-indigo-400" />
+                        <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Active Strategic Context</h5>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Executive Snapshot</label>
+                          <p className="text-[11px] font-bold text-slate-300 italic line-clamp-3 leading-relaxed">
+                            {meetingContext.executiveSnapshot || "No snapshot provided. AI will use general document synthesis."}
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Client Keywords</label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {meetingContext.clientsKeywords.length > 0 ? (
+                              meetingContext.clientsKeywords.slice(0, 6).map((kw, i) => (
+                                <span key={i} className="px-2 py-0.5 bg-indigo-900/30 text-indigo-400 text-[8px] font-black uppercase rounded border border-indigo-900/50">{kw}</span>
+                              ))
+                            ) : (
+                              <span className="text-[9px] text-slate-600 italic">No keywords extracted</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Meeting Focus</label>
+                          <p className="text-[11px] font-bold text-slate-300 line-clamp-2">
+                            {meetingContext.meetingFocus || "General Discovery"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-800">
+                        <p className="text-[9px] font-bold text-slate-500 leading-relaxed">
+                          Simulation is grounded in <span className="text-indigo-400">{analysis.documentInsights.summaries.length} documents</span> and <span className="text-indigo-400">{analysis.objectionHandling.length} objection nodes</span>.
+                        </p>
                       </div>
                     </div>
                  </div>
-               ) : sessionMode === 'speech' ? (
-                <div className="space-y-6 max-w-2xl mx-auto">
-                   <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 ml-4">Target Sales Point</label>
-                   <div className="relative group">
-                     <select 
-                       value={speechTarget}
-                       onChange={(e) => setSpeechTarget(e.target.value)}
-                       className="w-full bg-slate-900 border-4 border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-white outline-none focus:border-indigo-600 transition-all shadow-2xl appearance-none"
-                     >
-                       <optgroup label="Key Strategic Points">
-                         {analysis.finalCoaching.dos.map((d, i) => <option key={i} value={d}>{d}</option>)}
-                         <option value={analysis.finalCoaching.finalAdvice}>Final Coaching Advice</option>
-                       </optgroup>
-                       <optgroup label="Opening Lines">
-                         {analysis.openingLines.map((o, i) => <option key={i} value={o.text}>{o.text}</option>)}
-                       </optgroup>
-                     </select>
-                     <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                       <ICONS.ChevronDown className="w-6 h-6" />
-                     </div>
-                   </div>
-                </div>
-              ) : (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                   {PERSONA_OPTIONS.map((option) => (
-                     <motion.button
-                       key={option.type}
-                       whileHover={{ y: -8 }}
-                       whileTap={{ scale: 0.98 }}
-                       onClick={() => setSelectedPersona(option.type)}
-                       className={`p-10 rounded-[3rem] border-4 text-left transition-all relative overflow-hidden group flex flex-col h-full ${selectedPersona === option.type ? 'bg-indigo-600 border-indigo-400 text-white shadow-none' : 'bg-slate-900 border-slate-800 hover:border-indigo-900/50 shadow-none'}`}
-                     >
-                       <div className={`p-5 rounded-2xl mb-8 inline-block w-fit shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3 ${selectedPersona === option.type ? 'bg-white text-indigo-600' : 'bg-slate-800 text-slate-400'}`}>{option.icon}</div>
-                       <h5 className={`font-black text-sm uppercase tracking-[0.2em] mb-4 ${selectedPersona === option.type ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{option.label}</h5>
-                       <p className={`text-[12px] leading-relaxed font-bold italic ${selectedPersona === option.type ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>{option.desc}</p>
-                    {selectedPersona === option.type && (
-                      <motion.div layoutId="persona-active" className="absolute top-6 right-6 w-3 h-3 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]"></motion.div>
-                    )}
-                     </motion.button>
-                   ))}
-                 </div>
-               )}
+               </div>
             </div>
 
             <motion.button 
@@ -650,9 +733,15 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
             className="flex-1 overflow-y-auto custom-scrollbar p-12 space-y-16"
           >
             <div className="flex items-center justify-between sticky top-0 bg-slate-950/80 backdrop-blur-xl z-20 py-4 -mx-12 px-12 border-b border-slate-800">
-              <button onClick={() => setEvaluation(null)} className="text-[12px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest flex items-center gap-3 group">
-                <ICONS.X className="group-hover:rotate-90 transition-transform" /> Close Mastery Review
-              </button>
+              <div className="flex items-center gap-4">
+                <button onClick={() => setEvaluation(null)} className="text-[12px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest flex items-center gap-3 group">
+                  <ICONS.X className="group-hover:rotate-90 transition-transform" /> Close Mastery Review
+                </button>
+                <div className="flex items-center gap-2 px-3 py-1 bg-indigo-900/20 border border-indigo-900/30 rounded-lg">
+                  <ICONS.Brain className="w-3 h-3 text-indigo-400" />
+                  <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Cognitive Audit Active</span>
+                </div>
+              </div>
               <div className="flex items-center gap-6">
                 <button 
                   onClick={addToGroomingJournal}

@@ -612,7 +612,15 @@ OPERATIONAL CONSTRAINTS:
                          <div className="text-indigo-500"><ICONS.Efficiency /></div>
                          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Product Detail</h4>
                       </div>
-                      <Input label="Target Products" value={context.targetProducts} onChange={v => handleChange('targetProducts', v)} placeholder="Enterprise Cloud Suite" />
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Target Products</label>
+                        <textarea 
+                          value={context.targetProducts}
+                          onChange={e => handleChange('targetProducts', e.target.value)}
+                          className="w-full bg-slate-800 border-2 border-slate-700 rounded-[1.5rem] px-6 py-4 text-sm font-semibold text-white outline-none focus:border-indigo-500 focus:bg-slate-900 transition-all shadow-inner min-h-[80px] placeholder:text-slate-600"
+                          placeholder="Enterprise Cloud Suite, Security Module, etc."
+                        />
+                      </div>
                       <Input label="Product Domain" value={context.productDomain} onChange={v => handleChange('productDomain', v)} placeholder="SaaS, Cybersecurity" />
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Client's Keywords</label>
