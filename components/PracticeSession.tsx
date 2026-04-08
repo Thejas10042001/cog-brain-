@@ -85,12 +85,19 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const streamRef = useRef<MediaStream | null>(null);
   const idealSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const explanationSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const inputCtxRef = useRef<AudioContext | null>(null);
+  const outputCtxRef = useRef<AudioContext | null>(null);
 
   const userTranscriptionRef = useRef('');
   const aiTranscriptionRef = useRef('');
+  const logEndRef = useRef<HTMLDivElement>(null);
 
   const buyerName = meetingContext.clientNames || analysis.snapshot.role || "the Buyer";
   const sellerName = meetingContext.sellerNames || "the Seller";
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [transcription, currentTranscription]);
 
   const encode = (bytes: Uint8Array) => {
     let binary = '';
@@ -108,6 +115,21 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   };
 
   const stopPractice = useCallback(() => {
+    // Save pending transcription if any
+    if (userTranscriptionRef.current || aiTranscriptionRef.current) {
+      setTranscription(prev => {
+        // Avoid duplicates if turnComplete already fired
+        const lastTurn = prev[prev.length - 1];
+        if (lastTurn && lastTurn.user === userTranscriptionRef.current && lastTurn.ai === aiTranscriptionRef.current) {
+          return prev;
+        }
+        return [...prev, { user: userTranscriptionRef.current, ai: aiTranscriptionRef.current }];
+      });
+      userTranscriptionRef.current = '';
+      aiTranscriptionRef.current = '';
+      setCurrentTranscription({ user: '', ai: '' });
+    }
+
     setIsActive(false);
     if (status !== 'analyzing') setStatus('idle');
     if (sessionRef.current) {
@@ -118,27 +140,39 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    if (inputCtxRef.current) {
+      inputCtxRef.current.close();
+      inputCtxRef.current = null;
+    }
+    if (outputCtxRef.current) {
+      outputCtxRef.current.close();
+      outputCtxRef.current = null;
+    }
     sourcesRef.current.forEach(source => { try { source.stop(); } catch(e) {} });
     sourcesRef.current.clear();
     nextStartTimeRef.current = 0;
   }, [status]);
 
   const startGroomingSession = async () => {
+    stopPractice();
     setEvaluation(null);
     userTranscriptionRef.current = '';
     aiTranscriptionRef.current = '';
     setTranscription([]);
     setMicPermissionError(false);
-    await startPractice();
+    // Small delay to ensure cleanup
+    setTimeout(() => startPractice(), 100);
   };
 
   const startSpeechSession = async () => {
+    stopPractice();
     setEvaluation(null);
     userTranscriptionRef.current = '';
     aiTranscriptionRef.current = '';
     setTranscription([]);
     setMicPermissionError(false);
-    await startPractice();
+    // Small delay to ensure cleanup
+    setTimeout(() => startPractice(), 100);
   };
 
   const startPractice = async () => {
@@ -159,6 +193,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
 
       const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       const outputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      inputCtxRef.current = inputCtx;
+      outputCtxRef.current = outputCtx;
       audioContextRef.current = outputCtx;
 
       const selectedPersonaConfig = PERSONA_OPTIONS.find(p => p.type === selectedPersona) || PERSONA_OPTIONS[0];
@@ -259,7 +295,7 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
            ===========================================================
            1. First, state: "[SENTIMENT: impressed] I'm going to ask you a critical question. Take a breath, and give me your best structured response."
            2. Then ask exactly this question: "${groomingTarget}". 
-           3. Once the user provides a full answer, remain silent until the session is ended manually. 
+            3. Once the user provides a full answer, provide a brief, encouraging reaction (e.g., "[SENTIMENT: happy] Great effort. I've noted your response.") and then remain silent. 
            4. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`
         : `Act as a world-class speech and sales coach. 
            
@@ -275,8 +311,9 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
            1. First, state: "[SENTIMENT: impressed] I'm ready to audit your delivery. Please deliver your pitch for: ${speechTarget}."
-           2. Once you have stated that, remain silent while the user delivers their speech. 
-           3. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
+            2. Once you have stated that, remain silent while the user delivers their speech. 
+            3. After they finish, say: "[SENTIMENT: happy] Excellent. I'm processing your delivery for the audit now."
+            4. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
       const sessionPromise = ai.live.connect({
         model: 'gemini-3.1-flash-live-preview',
@@ -333,7 +370,15 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
               }
             }
             if (message.serverContent?.inputTranscription) {
-              userTranscriptionRef.current = message.serverContent.inputTranscription.text || '';
+              const text = message.serverContent.inputTranscription.text || '';
+              // Append if it's a new chunk, but Live API usually sends the full current utterance
+              // We'll use a simple heuristic: if the new text starts with the old text, it's an update
+              if (text.length > userTranscriptionRef.current.length) {
+                userTranscriptionRef.current = text;
+              } else if (text.length > 0 && !userTranscriptionRef.current.includes(text)) {
+                userTranscriptionRef.current += " " + text;
+              }
+              
               setCurrentTranscription(prev => ({ ...prev, user: userTranscriptionRef.current }));
               setIsUserSpeaking(true);
               if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
@@ -358,6 +403,8 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          // @ts-ignore
+          turnDetection: { serverVad: { threshold: 0.5 } },
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: selectedPersonaConfig.voice } } },
           systemInstruction
         },
@@ -1073,8 +1120,10 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                         <p className="text-base text-indigo-300 dark:text-indigo-600 bg-indigo-50/30 dark:bg-indigo-900/10 p-8 rounded-[2.5rem] rounded-tl-none border border-dashed border-indigo-100 dark:border-indigo-900/30 leading-relaxed italic w-full">“{currentTranscription.ai}”</p>
                       </div>
                     )}
+                    <div ref={logEndRef} />
                   </div>
                 )}
+                <div ref={logEndRef} />
               </div>
             </div>
           </motion.div>
