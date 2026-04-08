@@ -26,10 +26,10 @@ async function startServer() {
     }
   }));
 
-  const oauth2Client = new google.auth.OAuth2(
+const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/google/callback'
+    process.env.GOOGLE_REDIRECT_URI || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000/auth/google/callback')
   );
 
   const SCOPES = [
@@ -188,7 +188,6 @@ async function startServer() {
     }
   });
 
-  // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -196,15 +195,26 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static(path.join(__dirname, 'dist')));
+    // In production (like Cloud Run), serve static files
+    // But on Vercel, this part is usually handled by Vercel's static serving
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+      // Check if file exists in dist, otherwise send index.html
+      res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  return app;
+}
+
+// Start server if this file is run directly
+if (import.meta.url === `file://${fileURLToPath(import.meta.url)}`) {
+  startServer().then(app => {
+    app.listen(3000, '0.0.0.0', () => {
+      console.log('Server running on http://localhost:3000');
+    });
   });
 }
 
-startServer();
+export default startServer;

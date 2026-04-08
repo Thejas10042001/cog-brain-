@@ -164,7 +164,15 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
       }
     } catch (err) {
       console.error("Google Drive connection failed:", err);
-      alert("Failed to connect to Google Drive. Please check your configuration.");
+      let errorMessage = "Failed to connect to Google Drive. ";
+      if (err instanceof Error) {
+        if (err.message.includes('Unexpected token') || err.message.includes('JSON')) {
+          errorMessage += "The server returned an invalid response. This often happens if the backend API is not correctly configured on your hosting provider (e.g., Vercel).";
+        } else {
+          errorMessage += err.message;
+        }
+      }
+      alert(errorMessage + "\n\nPlease check your environment variables and server configuration.");
     } finally {
       setIsGoogleLoading(false);
     }
