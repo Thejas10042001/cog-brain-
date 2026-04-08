@@ -35,6 +35,7 @@ async function startServer() {
   const SCOPES = [
     'https://www.googleapis.com/auth/calendar.readonly',
     'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/drive.readonly',
     'https://www.googleapis.com/auth/userinfo.email',
     'openid',
     'profile',
@@ -82,6 +83,12 @@ async function startServer() {
 
   app.get('/api/auth/status', (req, res) => {
     res.json({ isAuthenticated: !!(req.session as any).tokens });
+  });
+
+  app.get('/api/auth/google/token', (req, res) => {
+    const tokens = (req.session as any).tokens;
+    if (!tokens) return res.status(401).json({ error: 'Not authenticated' });
+    res.json({ access_token: tokens.access_token });
   });
 
   app.post('/api/auth/logout', (req, res) => {
@@ -149,6 +156,35 @@ async function startServer() {
     } catch (error) {
       console.error('Error sending email:', error);
       res.status(500).json({ error: 'Failed to send email' });
+    }
+  });
+
+  // Drive Routes
+  app.get('/api/drive/download/:fileId', async (req, res) => {
+    const tokens = (req.session as any).tokens;
+    if (!tokens) return res.status(401).json({ error: 'Not authenticated' });
+
+    const { fileId } = req.params;
+    oauth2Client.setCredentials(tokens);
+    const drive = google.drive({ version: 'v3', auth: oauth2Client });
+
+    try {
+      const fileMetadata = await drive.files.get({
+        fileId,
+        fields: 'name, mimeType'
+      });
+
+      const response = await drive.files.get(
+        { fileId, alt: 'media' },
+        { responseType: 'arraybuffer' }
+      );
+
+      res.set('Content-Type', fileMetadata.data.mimeType || 'application/octet-stream');
+      res.set('Content-Disposition', `attachment; filename="${fileMetadata.data.name}"`);
+      res.send(Buffer.from(response.data as ArrayBuffer));
+    } catch (error) {
+      console.error('Error downloading from Drive:', error);
+      res.status(500).json({ error: 'Failed to download file from Google Drive' });
     }
   });
 

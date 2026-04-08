@@ -6,6 +6,7 @@ import { parseDocument } from '../services/fileService';
 import { saveDocumentToFirebase, deleteDocumentFromFirebase, fetchFoldersFromFirebase } from '../services/firebaseService';
 import { categorizeDocument } from '../services/geminiService';
 import { PREDEFINED_CATEGORIES } from '../constants';
+import { googleService } from '../services/googleService';
 
 interface FileUploadProps {
   onFilesChange: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
@@ -19,6 +20,94 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
   const [ocrProgress, setOcrProgress] = useState<number>(0);
   const [isCognitiveOcr, setIsCognitiveOcr] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const processFile = async (file: File | { name: string, type: string, blob: Blob }) => {
+    const fileName = file.name;
+    const fileType = file.type;
+    
+    onFilesChange(prev => [...prev, { 
+      name: fileName, 
+      content: '', 
+      type: fileType, 
+      status: 'processing' 
+    }]);
+
+    try {
+      const blob = 'blob' in file ? file.blob : file;
+      const text = await parseDocument(blob as File, {
+        onProgress: (p) => setOcrProgress(p),
+        onStatusChange: (isOcr) => setIsCognitiveOcr(isOcr)
+      });
+
+      // 1. Fetch all folders to understand the structure
+      const allFolders = await fetchFoldersFromFirebase();
+      
+      // 2. Identify the target main folder and its subfolders
+      let targetMainFolderId = activeFolderId;
+      const activeFolder = allFolders.find(f => f.id === activeFolderId);
+      
+      if (activeFolder && activeFolder.parentId) {
+        targetMainFolderId = activeFolder.parentId;
+      }
+
+      const subFoldersForMain = allFolders.filter(f => f.parentId === targetMainFolderId);
+      const subFolderNames = [
+        ...PREDEFINED_CATEGORIES, 
+        ...subFoldersForMain.map(f => f.name)
+      ];
+
+      const { category: categoryName, reasoning } = await categorizeDocument(fileName, text, subFolderNames);
+      
+      let finalFolderId: string | null = null;
+      const realSub = subFoldersForMain.find(f => f.name.toLowerCase() === categoryName.toLowerCase());
+      if (realSub) {
+        finalFolderId = realSub.id;
+      } else if (PREDEFINED_CATEGORIES.some(cat => cat.toLowerCase() === categoryName.toLowerCase())) {
+        const matchedCat = PREDEFINED_CATEGORIES.find(cat => cat.toLowerCase() === categoryName.toLowerCase()) || categoryName;
+        finalFolderId = `virtual-${targetMainFolderId}-${matchedCat.replace(/\s+/g, '-')}`;
+      } else {
+        if (targetMainFolderId !== "Global Library") {
+          const { saveFolderToFirebase } = await import('../services/firebaseService');
+          const newFolderId = await saveFolderToFirebase(categoryName, true, 'sub', targetMainFolderId);
+          finalFolderId = newFolderId;
+        } else {
+          finalFolderId = `virtual-Global Library-${categoryName.replace(/\s+/g, '-')}`;
+        }
+      }
+
+      if (!finalFolderId) {
+        finalFolderId = activeFolderId !== "Global Library" ? activeFolderId : "Miscellaneous";
+      }
+
+      const docId = await saveDocumentToFirebase(
+        fileName, 
+        text, 
+        fileType, 
+        finalFolderId || undefined,
+        categoryName,
+        reasoning
+      );
+
+      onFilesChange(prev => prev.map(f => 
+        f.name === fileName ? { 
+          ...f, 
+          id: docId || undefined, 
+          content: text, 
+          status: 'ready',
+          category: categoryName,
+          reasoning: reasoning
+        } : f
+      ));
+      
+      onUploadSuccess?.();
+    } catch (err) {
+      console.error(`Error parsing ${fileName}:`, err);
+      onFilesChange(prev => prev.map(f => 
+        f.name === fileName ? { ...f, status: 'error' } : f
+      ));
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
     let filesToProcess: FileList | null = null;
@@ -32,104 +121,100 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
     if (!filesToProcess) return;
     const fileList: File[] = Array.from(filesToProcess);
     
-    const placeholders: UploadedFile[] = fileList.map((f: File) => ({ 
-      name: f.name, 
-      content: '', 
-      type: f.type, 
-      status: 'processing' 
-    }));
-    onFilesChange(prev => [...prev, ...placeholders]);
-
     for (const file of fileList) {
-      try {
-        const text = await parseDocument(file, {
-          onProgress: (p) => setOcrProgress(p),
-          onStatusChange: (isOcr) => setIsCognitiveOcr(isOcr)
-        });
-
-        // 1. Fetch all folders to understand the structure
-        const allFolders = await fetchFoldersFromFirebase();
-        
-        // 2. Identify the target main folder and its subfolders
-        let targetMainFolderId = activeFolderId;
-        const activeFolder = allFolders.find(f => f.id === activeFolderId);
-        
-        // If the active folder is a subfolder, we should look at its parent's subfolders for categorization
-        if (activeFolder && activeFolder.parentId) {
-          targetMainFolderId = activeFolder.parentId;
-        }
-
-        // 3. Get available subfolders for this main folder
-        // Subfolders can be real (in DB) or virtual (predefined)
-        const subFoldersForMain = allFolders.filter(f => f.parentId === targetMainFolderId);
-        const subFolderNames = [
-          ...PREDEFINED_CATEGORIES, 
-          ...subFoldersForMain.map(f => f.name)
-        ];
-
-        // 4. Categorize the document based on CONTENT
-        const { category: categoryName, reasoning } = await categorizeDocument(file.name, text, subFolderNames);
-        
-        // 5. Find the final folder ID
-        let finalFolderId: string | null = null;
-        
-        // Check if it's a real subfolder in DB
-        const realSub = subFoldersForMain.find(f => f.name.toLowerCase() === categoryName.toLowerCase());
-        if (realSub) {
-          finalFolderId = realSub.id;
-        } else if (PREDEFINED_CATEGORIES.some(cat => cat.toLowerCase() === categoryName.toLowerCase())) {
-          // It's a virtual subfolder (only for Global Library or if not created yet)
-          const matchedCat = PREDEFINED_CATEGORIES.find(cat => cat.toLowerCase() === categoryName.toLowerCase()) || categoryName;
-          finalFolderId = `virtual-${targetMainFolderId}-${matchedCat.replace(/\s+/g, '-')}`;
-        } else {
-          // It's a NEW category suggested by AI - Create a REAL subfolder
-          // Only create if we have a real main folder (not Global Library)
-          if (targetMainFolderId !== "Global Library") {
-            const { saveFolderToFirebase } = await import('../services/firebaseService');
-            const newFolderId = await saveFolderToFirebase(categoryName, true, 'sub', targetMainFolderId);
-            finalFolderId = newFolderId;
-          } else {
-            // If in Global Library, create a new MAIN folder for this category?
-            // Or just use a virtual ID for now to avoid cluttering main folders
-            finalFolderId = `virtual-Global Library-${categoryName.replace(/\s+/g, '-')}`;
-          }
-        }
-
-        // Fallback if finalFolderId is still null
-        if (!finalFolderId) {
-          finalFolderId = activeFolderId !== "Global Library" ? activeFolderId : "Miscellaneous";
-        }
-
-        const docId = await saveDocumentToFirebase(
-          file.name, 
-          text, 
-          file.type, 
-          finalFolderId || undefined,
-          categoryName,
-          reasoning
-        );
-
-        onFilesChange(prev => prev.map(f => 
-          f.name === file.name ? { 
-            ...f, 
-            id: docId || undefined, 
-            content: text, 
-            status: 'ready',
-            category: categoryName,
-            reasoning: reasoning
-          } : f
-        ));
-        
-        onUploadSuccess?.();
-      } catch (err) {
-        console.error(`Error parsing ${file.name}:`, err);
-        onFilesChange(prev => prev.map(f => 
-          f.name === file.name ? { ...f, status: 'error' } : f
-        ));
-      }
+      await processFile(file);
     }
     
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleGoogleDriveClick = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const isConnected = await googleService.getAuthStatus();
+      if (!isConnected) {
+        const url = await googleService.getAuthUrl();
+        const width = 600;
+        const height = 700;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+        
+        const authWindow = window.open(
+          url,
+          'google_oauth',
+          `width=${width},height=${height},left=${left},top=${top}`
+        );
+
+        if (!authWindow) {
+          alert('Please allow popups to connect your Google account');
+          setIsGoogleLoading(false);
+          return;
+        }
+
+        const handleMessage = async (event: MessageEvent) => {
+          if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+            window.removeEventListener('message', handleMessage);
+            await openPicker();
+          }
+        };
+
+        window.addEventListener('message', handleMessage);
+      } else {
+        await openPicker();
+      }
+    } catch (err) {
+      console.error("Google Drive connection failed:", err);
+      alert("Failed to connect to Google Drive. Please check your configuration.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const openPicker = async () => {
+    const accessToken = await googleService.getAccessToken();
+    const apiKey = (import.meta as any).env.VITE_GOOGLE_DRIVE_API_KEY;
+
+    if (!apiKey) {
+      alert("Google Drive API Key is not configured. Please add VITE_GOOGLE_DRIVE_API_KEY to your environment variables.");
+      return;
+    }
+
+    // @ts-ignore
+    const gapi = window.gapi;
+    // @ts-ignore
+    const google = window.google;
+
+    if (!gapi || !google) {
+      alert("Google API libraries not loaded. Please refresh the page.");
+      return;
+    }
+
+    gapi.load('picker', {
+      callback: () => {
+        const picker = new google.picker.PickerBuilder()
+          .addView(google.picker.ViewId.DOCS)
+          .setOAuthToken(accessToken)
+          .setDeveloperKey(apiKey)
+          .setCallback(async (data: any) => {
+            if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
+              const doc = data[google.picker.Response.DOCUMENTS][0];
+              const fileId = doc[google.picker.Document.ID];
+              const fileName = doc[google.picker.Document.NAME];
+              const mimeType = doc[google.picker.Document.MIME_TYPE];
+
+              try {
+                const blob = await googleService.downloadDriveFile(fileId);
+                await processFile({ name: fileName, type: mimeType, blob });
+              } catch (err) {
+                console.error("Failed to download from Drive:", err);
+                alert("Failed to download file from Google Drive.");
+              }
+            }
+          })
+          .build();
+        picker.setVisible(true);
+      }
+    });
   };
 
   const onDragOver = (e: React.DragEvent) => {
@@ -183,6 +268,30 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
           </motion.div>
           <h4 className="text-2xl font-black text-white uppercase tracking-tighter">Cognitive Intake Hub</h4>
           <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.4em] mt-3">Drag & Drop or Click to Ingest Intelligence</p>
+          
+          <div className="mt-8 flex gap-4">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleGoogleDriveClick();
+              }}
+              disabled={isGoogleLoading}
+              className="flex items-center gap-3 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl border border-slate-700 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+            >
+              {isGoogleLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" 
+                  alt="Google Drive" 
+                  className="w-5 h-5"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              <span className="text-[10px] font-black uppercase tracking-widest">Google Drive</span>
+            </button>
+          </div>
+
           <div className="mt-8 flex gap-3 flex-wrap justify-center">
             {['PDF', 'DOCX', 'TXT', 'PPTX', 'XLSX', 'CSV'].map(ext => (
               <span key={ext} className="px-4 py-1.5 bg-slate-800 text-[9px] font-black text-slate-400 rounded-xl border border-slate-700 shadow-sm">{ext}</span>

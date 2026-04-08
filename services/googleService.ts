@@ -1,4 +1,3 @@
-
 export interface CalendarEvent {
   id: string;
   summary: string;
@@ -23,6 +22,13 @@ export const googleService = {
     return data.isAuthenticated;
   },
 
+  async getAccessToken(): Promise<string> {
+    const response = await fetch('/api/auth/google/token');
+    if (!response.ok) throw new Error('Failed to fetch token');
+    const data = await response.json();
+    return data.access_token;
+  },
+
   async logout(): Promise<void> {
     await fetch('/api/auth/logout', { method: 'POST' });
   },
@@ -40,5 +46,11 @@ export const googleService = {
       body: JSON.stringify({ to, subject, body }),
     });
     if (!response.ok) throw new Error('Failed to send report');
+  },
+
+  async downloadDriveFile(fileId: string): Promise<Blob> {
+    const response = await fetch(`/api/drive/download/${fileId}`);
+    if (!response.ok) throw new Error('Failed to download file');
+    return response.blob();
   }
 };
