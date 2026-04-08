@@ -36,6 +36,9 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const [status, setStatus] = useState<'idle' | 'connecting' | 'active' | 'error' | 'analyzing'>('idle');
   const [micPermissionError, setMicPermissionError] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<CustomerPersonaType>('Balanced');
+  const [sentiment, setSentiment] = useState<string>('happy');
+  const [isUserSpeaking, setIsUserSpeaking] = useState(false);
+  const speakingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [transcription, setTranscription] = useState<{ user: string; ai: string }[]>([]);
   const [currentTranscription, setCurrentTranscription] = useState({ user: '', ai: '' });
   
@@ -190,43 +193,71 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
            If you are a Technical Expert, be precise and demanding. 
            If you are a CFO, be cost-conscious and skeptical. 
            If you are a CIO, be strategic and outcome-oriented.
+
+           ===========================================================
+           SENTIMENT PROTOCOL (CRITICAL)
+           ===========================================================
+           At the VERY BEGINNING of your response, you MUST include a sentiment tag in brackets like [SENTIMENT: happy]. 
+           Choose the MOST appropriate sentiment from this list based on your persona's reaction:
+           - happy (pleased, agreeing)
+           - angry (frustrated, defensive)
+           - sad (disappointed, concerned)
+           - hesitant (skeptical, unsure)
+           - annoyed (impatient, bothered)
+           - headache (overwhelmed by complexity, stressed)
+           - bored (uninterested, disengaged)
+           - impressed (surprised, highly interested)
            
            ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
            1. For EVERY turn, follow this sequence:
-              a. EXPLAIN: Briefly explain your strategic reasoning or reaction to the seller's last point.
-              b. QUESTION: Ask your next sharp, executive-level question.
+              a. SENTIMENT: [SENTIMENT: sentiment_name]
+              b. EXPLAIN: Briefly explain your strategic reasoning or reaction to the seller's last point.
+              c. QUESTION: Ask your next sharp, executive-level question.
            2. Keep the explanation and question distinct. Do NOT mix them.
            3. Never overlap or ask multiple questions at once.
 
-           Start by saying: "I will act as ${buyerName}, your ${selectedPersonaConfig.label}, and you need to act as ${sellerName} in this roleplay."`
+           Start by saying: "[SENTIMENT: happy] I will act as ${buyerName}, your ${selectedPersonaConfig.label}, and you need to act as ${sellerName} in this roleplay."`
         : sessionMode === 'seller-roleplay'
         ? `Act as the elite salesperson representing your company, acting as ${sellerName}. The user is acting as the buyer: ${buyerName}. The buyer's persona is ${selectedPersonaConfig.label}. ${personaDirectives}. 
            
            ${strategicContext}
 
            Your goal is to handle their questions and objections using the following strategy: ${analysis.finalCoaching.finalAdvice}. Be persuasive, professional, and empathetic.
+
+           ===========================================================
+           SENTIMENT PROTOCOL (CRITICAL)
+           ===========================================================
+           At the VERY BEGINNING of your response, you MUST include a sentiment tag in brackets like [SENTIMENT: happy]. 
+           Choose from: happy, angry, sad, hesitant, annoyed, headache, bored, impressed.
            
            ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
            1. For EVERY turn, follow this sequence:
-              a. EXPLAIN: Briefly explain your strategic reasoning or reaction to the seller's last point.
-              b. QUESTION: Ask your next sharp, executive-level question.
+              a. SENTIMENT: [SENTIMENT: sentiment_name]
+              b. EXPLAIN: Briefly explain your strategic reasoning or reaction to the seller's last point.
+              c. QUESTION: Ask your next sharp, executive-level question.
            2. Keep the explanation and question distinct. Do NOT mix them.
            3. Never overlap or ask multiple questions at once.
 
-           Start by saying: "I will act as ${sellerName} and you need to act as ${buyerName} in this roleplay."`
+           Start by saying: "[SENTIMENT: happy] I will act as ${sellerName} and you need to act as ${buyerName} in this roleplay."`
         : sessionMode === 'grooming'
         ? `Act as a world-class speech and sales coach. 
            
            ${strategicContext}
 
            ===========================================================
+           SENTIMENT PROTOCOL (CRITICAL)
+           ===========================================================
+           At the VERY BEGINNING of your response, you MUST include a sentiment tag in brackets like [SENTIMENT: happy]. 
+           Choose from: happy, angry, sad, hesitant, annoyed, headache, bored, impressed.
+
+           ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
-           1. First, state: "I'm going to ask you a critical question. Take a breath, and give me your best structured response."
+           1. First, state: "[SENTIMENT: impressed] I'm going to ask you a critical question. Take a breath, and give me your best structured response."
            2. Then ask exactly this question: "${groomingTarget}". 
            3. Once the user provides a full answer, remain silent until the session is ended manually. 
            4. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`
@@ -235,9 +266,15 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
            ${strategicContext}
 
            ===========================================================
+           SENTIMENT PROTOCOL (CRITICAL)
+           ===========================================================
+           At the VERY BEGINNING of your response, you MUST include a sentiment tag in brackets like [SENTIMENT: happy]. 
+           Choose from: happy, angry, sad, hesitant, annoyed, headache, bored, impressed.
+
+           ===========================================================
            CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
            ===========================================================
-           1. First, state: "I'm ready to audit your delivery. Please deliver your pitch for: ${speechTarget}."
+           1. First, state: "[SENTIMENT: impressed] I'm ready to audit your delivery. Please deliver your pitch for: ${speechTarget}."
            2. Once you have stated that, remain silent while the user delivers their speech. 
            3. You are observing their performance for a later audit focusing on voice tone, grammar, and pacing.`;
 
@@ -284,13 +321,23 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                 }
                 if (part.text) {
                   aiTranscriptionRef.current += part.text;
-                  setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current }));
+                  
+                  // Extract sentiment tag
+                  const sentimentMatch = part.text.match(/\[SENTIMENT: (.*?)\]/);
+                  if (sentimentMatch) {
+                    setSentiment(sentimentMatch[1].toLowerCase());
+                  }
+
+                  setCurrentTranscription(prev => ({ ...prev, ai: aiTranscriptionRef.current.replace(/\[SENTIMENT: .*?\]/g, '').trim() }));
                 }
               }
             }
             if (message.serverContent?.inputTranscription) {
               userTranscriptionRef.current = message.serverContent.inputTranscription.text || '';
               setCurrentTranscription(prev => ({ ...prev, user: userTranscriptionRef.current }));
+              setIsUserSpeaking(true);
+              if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
+              speakingTimeoutRef.current = setTimeout(() => setIsUserSpeaking(false), 1500);
             }
             if (message.serverContent?.turnComplete) {
               setTranscription(prev => [...prev, { user: userTranscriptionRef.current, ai: aiTranscriptionRef.current }]);
@@ -888,11 +935,25 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                   className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-full"
                 ></motion.div>
                 <motion.div 
-                  animate={{ scale: isActive ? [1.7, 1.8, 1.7] : 1.7 }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="w-48 h-48 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-[0_0_100px_rgba(79,70,229,0.6)] z-10 border-[10px] border-white dark:border-slate-800 transition-transform"
+                  animate={{ 
+                    scale: isActive ? [1.7, 1.8, 1.7] : 1.7,
+                    rotate: isUserSpeaking ? [0, -5, 5, 0] : 0
+                  }}
+                  transition={{ duration: isUserSpeaking ? 0.3 : 1.5, repeat: Infinity }}
+                  className={`w-48 h-48 rounded-full flex items-center justify-center text-8xl shadow-[0_0_100px_rgba(79,70,229,0.6)] z-10 border-[10px] border-white dark:border-slate-800 transition-all duration-500 ${isUserSpeaking ? 'bg-emerald-600' : 'bg-indigo-600'}`}
                 >
-                  {sessionMode === 'roleplay' ? <ICONS.Brain className="w-20 h-20" /> : <ICONS.Speaker className="w-20 h-20" />}
+                  {isUserSpeaking ? '👂' : (
+                    {
+                      happy: '😊',
+                      angry: '😠',
+                      sad: '😔',
+                      hesitant: '🤨',
+                      annoyed: '😒',
+                      headache: '🤕',
+                      bored: '😑',
+                      impressed: '🤩'
+                    }[sentiment] || '🤖'
+                  )}
                 </motion.div>
                 {isActive && (
                   <motion.div 
@@ -975,7 +1036,7 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
               <div className="flex-1 overflow-y-auto space-y-10 custom-scrollbar pr-8">
                 {transcription.length === 0 && !currentTranscription.user && !currentTranscription.ai && (
                   <div className="py-32 text-center space-y-8 opacity-20">
-                    <ICONS.Speaker className="mx-auto w-20 h-20" />
+                    <div className="text-8xl">🤖</div>
                     <p className="text-[12px] font-black uppercase tracking-[0.5em]">Voice Interaction Disabled</p>
                   </div>
                 )}
