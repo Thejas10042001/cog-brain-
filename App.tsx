@@ -14,6 +14,7 @@ import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
+import { MfaEnrollment } from './components/MfaEnrollment';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
 import { 
   fetchDocumentsFromFirebase, 
@@ -148,6 +149,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<SalesGPTSession | null>(null);
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
   const [darkMode] = useState(true);
@@ -728,6 +730,35 @@ const App: React.FC = () => {
         .text-magnifier .text-[12px] { font-size: calc(12px * var(--text-zoom-multiplier)); }
       `}</style>
 
+      {/* Security Modal */}
+      <AnimatePresence>
+        {showSecurityModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSecurityModal(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+            ></motion.div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg"
+            >
+              <button 
+                onClick={() => setShowSecurityModal(false)}
+                className="absolute -top-4 -right-4 w-10 h-10 bg-slate-800 text-slate-400 rounded-full flex items-center justify-center hover:text-white transition-colors z-10 shadow-xl"
+              >
+                <ICONS.X className="w-5 h-5" />
+              </button>
+              <MfaEnrollment />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <Header 
         user={user} 
         zoom={zoom} 
@@ -735,6 +766,7 @@ const App: React.FC = () => {
         textZoom={textZoom}
         onTextZoomChange={setTextZoom}
         darkMode={darkMode}
+        onSecurityClick={() => setShowSecurityModal(true)}
       />
       
       <div className="pt-20 flex flex-1 overflow-hidden text-magnifier relative z-10">
