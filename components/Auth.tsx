@@ -4,15 +4,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   loginUser, 
   loginWithGoogle, 
-  getMfaResolver, 
-  sendPhoneMfaCode, 
-  verifyPhoneMfaCode,
-  verifyTotpCode,
   getAuthInstance
 } from '../services/firebaseService';
 import { ICONS } from '../constants';
-import * as firebaseAuth from "firebase/auth";
-const { RecaptchaVerifier } = firebaseAuth as any;
 
 export const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,27 +15,7 @@ export const Auth: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
-  // MFA State
-  const [mfaStep, setMfaStep] = useState<'none' | 'select' | 'verify'>('none');
-  const [mfaResolver, setMfaResolver] = useState<any>(null);
-  const [mfaVerificationId, setMfaVerificationId] = useState<string>("");
-  const [mfaCode, setMfaCode] = useState("");
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<any>(null);
-
   const SUPPORT_LINK = "https://www.spiked.ai/contact-sales";
-
-  useEffect(() => {
-    const auth = getAuthInstance();
-    if (auth && !recaptchaVerifier) {
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': () => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        }
-      });
-      setRecaptchaVerifier(verifier);
-    }
-  }, [recaptchaVerifier]);
 
   const mapAuthError = (code: string) => {
     switch (code) {
@@ -76,93 +50,9 @@ export const Auth: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
+      // Google handles its own MFA (Prompts, SMS, TOTP, Passkeys) during the popup flow.
       await loginWithGoogle();
     } catch (err: any) {
-      if (!handleMfaError(err)) {
-        setError(mapAuthError(err.code));
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMfaError = (err: any) => {
-    console.log("Auth Error Code:", err.code);
-    console.log("Auth Error Message:", err.message);
-    
-    const isMfaError = err.code === 'auth/multi-factor-auth-required' || 
-                       err.code === 'auth/mfa-required' ||
-                       err.message?.includes('multi-factor-auth-required') ||
-                       err.message?.includes('mfa-required');
-
-    if (isMfaError) {
-      console.log("MFA error detected, initiating resolution protocol...");
-      try {
-        const resolver = getMfaResolver(err);
-        setMfaResolver(resolver);
-        
-        if (resolver.hints && resolver.hints.length > 0) {
-          const firstHint = resolver.hints[0];
-          console.log("First MFA Hint:", firstHint);
-          
-          if (firstHint.factorId === 'phone') {
-            initiatePhoneMfa(resolver, 0);
-          } else if (firstHint.factorId === 'totp') {
-            setMfaStep('verify');
-          } else {
-            setMfaStep('select');
-          }
-        } else {
-          console.warn("MFA resolver has no hints, defaulting to selection step.");
-          setMfaStep('select');
-        }
-        return true;
-      } catch (resolverErr) {
-        console.error("Critical error during MFA resolution:", resolverErr);
-        return false;
-      }
-    }
-    return false;
-  };
-
-  const initiatePhoneMfa = async (resolver: any, index: number) => {
-    try {
-      if (!recaptchaVerifier) {
-        setError("Security verification system not ready. Please refresh.");
-        return;
-      }
-      const verificationId = await sendPhoneMfaCode(resolver, index, recaptchaVerifier);
-      setMfaVerificationId(verificationId);
-      setMfaStep('verify');
-    } catch (mfaErr: any) {
-      console.error("MFA Send Error:", mfaErr);
-      setError("Failed to send MFA verification code. Please try again.");
-    }
-  };
-
-  const handleMfaVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!mfaResolver) {
-      setError("MFA session expired. Please try logging in again.");
-      setMfaStep('none');
-      return;
-    }
-    setError(null);
-    setLoading(true);
-    try {
-      const selectedIndex = 0; // Default to first factor
-      const hint = mfaResolver.hints[selectedIndex];
-      
-      if (hint.factorId === 'phone') {
-        await verifyPhoneMfaCode(mfaResolver, mfaVerificationId, mfaCode);
-      } else if (hint.factorId === 'totp') {
-        await verifyTotpCode(mfaResolver, mfaCode, selectedIndex);
-      }
-      
-      // Success! The user is now signed in.
-      setMfaStep('none');
-    } catch (err: any) {
-      console.error("MFA Verify Error:", err);
       setError(mapAuthError(err.code));
     } finally {
       setLoading(false);
@@ -171,24 +61,19 @@ export const Auth: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLogin) return; // Prevent any submission attempt for registration
+    if (!isLogin) return;
 
     setError(null);
-
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
       return;
     }
 
     setLoading(true);
-
     try {
       await loginUser(email, password);
     } catch (err: any) {
-      if (!handleMfaError(err)) {
-        const mappedError = mapAuthError(err.code);
-        setError(mappedError);
-      }
+      setError(mapAuthError(err.code));
     } finally {
       setLoading(false);
     }
@@ -230,12 +115,7 @@ export const Auth: React.FC = () => {
         >
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 opacity-50"></div>
           
-          {/* Hidden reCAPTCHA container */}
-          <div id="recaptcha-container"></div>
-
-          {mfaStep === 'none' ? (
-            <>
-              <div className="flex p-1.5 bg-slate-800/50 rounded-[2rem] mb-12 border border-slate-700/50">
+          <div className="flex p-1.5 bg-slate-800/50 rounded-[2rem] mb-12 border border-slate-700/50">
                 <button 
                   onClick={() => { setIsLogin(true); setError(null); }}
                   className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-[1.5rem] transition-all duration-300 ${isLogin ? 'bg-slate-700 text-indigo-400 shadow-xl scale-[1.02]' : 'text-slate-400 hover:text-slate-300'}`}
@@ -417,79 +297,6 @@ export const Auth: React.FC = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </>
-          ) : (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-8"
-            >
-              <div className="text-center space-y-4">
-                <div className="flex justify-center">
-                  <div className="p-5 bg-indigo-600 text-white rounded-2xl shadow-xl">
-                    <ICONS.Shield className="w-8 h-8" />
-                  </div>
-                </div>
-                <h3 className="text-2xl font-black text-white uppercase tracking-tight">Neural Verification</h3>
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">Multi-Factor Authentication Required</p>
-              </div>
-
-              <form onSubmit={handleMfaVerify} className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-4">Verification Code</label>
-                  <div className="relative group">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
-                      <ICONS.Key className="w-5 h-5" />
-                    </div>
-                    <input 
-                      type="text" 
-                      required
-                      value={mfaCode}
-                      onChange={(e) => setMfaCode(e.target.value)}
-                      className="w-full pl-16 pr-8 py-5 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-center text-2xl tracking-[0.5em] focus:border-indigo-400 outline-none transition-all font-black text-white placeholder:text-slate-700 shadow-inner"
-                      placeholder="000000"
-                      maxLength={6}
-                    />
-                  </div>
-                  <p className="text-center text-[9px] text-slate-500 font-bold italic">Enter the 6-digit code sent to your device.</p>
-                </div>
-
-                {error && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-6 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl text-rose-600 dark:text-rose-400 text-[11px] font-black text-center"
-                  >
-                    {error}
-                  </motion.div>
-                )}
-
-                <div className="space-y-4">
-                  <motion.button 
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    disabled={loading || mfaCode.length !== 6}
-                    className="w-full py-6 bg-white text-slate-900 rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] shadow-2xl hover:bg-slate-100 disabled:opacity-50 flex items-center justify-center gap-4 transition-all"
-                  >
-                    {loading ? (
-                      <div className="w-6 h-6 border-3 border-slate-900/30 border-t-slate-900 rounded-full animate-spin"></div>
-                    ) : (
-                      <>Verify Identity <ICONS.Check className="w-4 h-4" /></>
-                    )}
-                  </motion.button>
-                  
-                  <button 
-                    type="button"
-                    onClick={() => { setMfaStep('none'); setError(null); }}
-                    className="w-full py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-slate-300 transition-colors"
-                  >
-                    Cancel Verification
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          )}
           
           {isLogin && !error && (
             <div className="mt-12 pt-8 border-t border-slate-50 dark:border-slate-800 text-center">

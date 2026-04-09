@@ -370,96 +370,10 @@ export const loginUser = async (email: string, pass: string) => {
 export const loginWithGoogle = async () => {
   if (!auth) return Promise.reject("Auth module not initialized");
   const provider = new GoogleAuthProvider();
-  try {
-    const result = await signInWithPopup(auth, provider);
-    await saveUserProfile(result.user);
-    return result;
-  } catch (error: any) {
-    if (error.code === 'auth/multi-factor-auth-required') {
-      // Return the error so the UI can handle the MFA challenge
-      throw error;
-    }
-    throw error;
-  }
-};
-
-export const getMfaResolver = (error: any) => {
-  return getMultiFactorResolver(auth, error);
-};
-
-export const sendPhoneMfaCode = async (resolver: any, multiFactorIndex: number, recaptchaVerifier: any) => {
-  const phoneInfoOptions = {
-    multiFactorHint: resolver.hints[multiFactorIndex],
-    session: resolver.session
-  };
-  const phoneAuthProvider = new PhoneAuthProvider(auth);
-  return phoneAuthProvider.verifyPhoneNumber(phoneInfoOptions, recaptchaVerifier);
-};
-
-export const verifyPhoneMfaCode = async (resolver: any, verificationId: string, verificationCode: string) => {
-  const cred = PhoneAuthProvider.credential(verificationId, verificationCode);
-  const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
-  return resolver.resolveSignIn(multiFactorAssertion);
-};
-
-export const enrollPhoneMfa = async (user: any, phoneNumber: string, recaptchaVerifier: any) => {
-  const session = await multiFactor(user).getSession();
-  const phoneInfoOptions = {
-    phoneNumber: phoneNumber,
-    session: session
-  };
-  const phoneAuthProvider = new PhoneAuthProvider(auth);
-  const verificationId = await phoneAuthProvider.verifyPhoneNumber(phoneInfoOptions, recaptchaVerifier);
-  return verificationId;
-};
-
-export const finalizePhoneMfaEnrollment = async (user: any, verificationId: string, verificationCode: string, label: string) => {
-  const cred = PhoneAuthProvider.credential(verificationId, verificationCode);
-  const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
-  return multiFactor(user).enroll(multiFactorAssertion, label);
-};
-
-/**
- * Generates a TOTP secret for enrollment
- */
-export const generateTotpSecret = async (user: any) => {
-  const mfaUser = multiFactor(user);
-  const session = await mfaUser.getSession();
-  return TotpMultiFactorGenerator.generateSecret(session);
-};
-
-/**
- * Finalizes TOTP enrollment
- */
-export const finalizeTotpEnrollment = async (user: any, secret: any, code: string, displayName: string = 'SpikedAI Authenticator') => {
-  const assertion = TotpAuthProvider.assertionForEnrollment(secret, code);
-  const mfaUser = multiFactor(user);
-  return mfaUser.enroll(assertion, displayName);
-};
-
-/**
- * Verifies a TOTP code during MFA challenge
- */
-export const verifyTotpCode = async (resolver: any, code: string, selectedIndex: number = 0) => {
-  const hint = resolver.hints[selectedIndex];
-  const assertion = TotpAuthProvider.assertionForSignIn(hint.uid, code);
-  return resolver.resolveSignIn(assertion);
-};
-
-/**
- * Checks if a user has MFA enabled
- */
-export const getUserMfaFactors = async (user: any) => {
-  const mfaUser = multiFactor(user);
-  return mfaUser.enrolledFactors;
-};
-
-/**
- * Unenrolls an MFA factor
- */
-export const unenrollMfaFactor = async (user: any, factorUid: string) => {
-  const mfaUser = multiFactor(user);
-  return mfaUser.unenroll(factorUid);
+  // Google handles its own MFA (Prompts, SMS, TOTP, Passkeys) during the popup flow.
+  const result = await signInWithPopup(auth, provider);
+  await saveUserProfile(result.user);
+  return result;
 };
 
 export const registerUser = async (email: string, pass: string) => {
