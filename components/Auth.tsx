@@ -37,10 +37,6 @@ export const Auth: React.FC = () => {
         return 'Authentication popup was closed before completion.';
       case 'auth/cancelled-by-user':
         return 'Authentication was cancelled.';
-      case 'auth/invalid-verification-code':
-        return 'The MFA verification code is incorrect.';
-      case 'auth/multi-factor-auth-required':
-        return 'Multi-factor authentication is required for this account.';
       default:
         return 'Neural link failed. Please verify your connection and credentials.';
     }

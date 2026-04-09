@@ -36,14 +36,7 @@ const {
   createUserWithEmailAndPassword, 
   signOut,
   signInWithPopup,
-  GoogleAuthProvider,
-  getMultiFactorResolver,
-  PhoneAuthProvider,
-  PhoneMultiFactorGenerator,
-  TotpMultiFactorGenerator,
-  TotpAuthProvider,
-  RecaptchaVerifier,
-  multiFactor
+  GoogleAuthProvider
 } = firebaseAuth as any;
 
 // Import the Firebase configuration
