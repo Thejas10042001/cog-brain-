@@ -92,9 +92,28 @@
         "shareToken": { "type": "string" }
       },
       "required": ["id", "userId", "title", "timestamp", "messages"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string" },
+        "createdAt": { "type": "object" },
+        "lastLogin": { "type": "object" }
+      },
+      "required": ["uid", "email"]
     }
   },
   "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document."
+    },
     "/users/{userId}/cognitive_documents/{docId}": {
       "schema": "StoredDocument",
       "description": "User's uploaded documents."

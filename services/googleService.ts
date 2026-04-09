@@ -18,8 +18,17 @@ export const googleService = {
 
   async getAuthStatus(): Promise<boolean> {
     const response = await fetch('/api/auth/status');
-    const data = await response.json();
-    return data.isAuthenticated;
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Server returned ${response.status}: ${text.slice(0, 100)}`);
+    }
+    try {
+      const data = await response.json();
+      return data.isAuthenticated;
+    } catch (e) {
+      const text = await response.text();
+      throw new Error(`Invalid JSON response: ${text.slice(0, 100)}`);
+    }
   },
 
   async getAccessToken(): Promise<string> {

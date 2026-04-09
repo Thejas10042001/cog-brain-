@@ -26,10 +26,17 @@ async function startServer() {
     }
   }));
 
-const oauth2Client = new google.auth.OAuth2(
+  const getRedirectUri = (req: any) => {
+    if (process.env.GOOGLE_REDIRECT_URI) return process.env.GOOGLE_REDIRECT_URI;
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers.host;
+    return `${protocol}://${host}/auth/google/callback`;
+  };
+
+  const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000/auth/google/callback')
+    '' // Will be set per request
   );
 
   const SCOPES = [
@@ -44,6 +51,9 @@ const oauth2Client = new google.auth.OAuth2(
 
   // Auth Routes
   app.get('/api/auth/google/url', (req, res) => {
+    const redirectUri = getRedirectUri(req);
+    // @ts-ignore
+    oauth2Client.redirectUri = redirectUri;
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
@@ -55,6 +65,9 @@ const oauth2Client = new google.auth.OAuth2(
   app.get('/auth/google/callback', async (req, res) => {
     const { code } = req.query;
     try {
+      const redirectUri = getRedirectUri(req);
+      // @ts-ignore
+      oauth2Client.redirectUri = redirectUri;
       const { tokens } = await oauth2Client.getToken(code as string);
       // In a real app, you'd store this in a database linked to the user
       // For this demo, we'll store it in the session

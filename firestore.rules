@@ -62,7 +62,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() &&
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          (request.auth.token.email == "thejasssreenivasu@gmail.com" && request.auth.token.email_verified == true));
+          (request.auth.token.email == "thejassreenivasu@gmail.com" && request.auth.token.email_verified == true));
     }
 
     function hasOnlyAllowedFields(fields) {
@@ -76,6 +76,15 @@ service cloud.firestore {
     // ===============================================================
     // Domain Validators
     // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'email']) &&
+             data.uid is string &&
+             data.email is string &&
+             (!('displayName' in data) || data.displayName is string) &&
+             (!('photoURL' in data) || data.photoURL is string) &&
+             (!('role' in data) || data.role is string);
+    }
 
     function isValidDocument(data) {
       return hasRequiredFields(['id', 'name', 'content', 'timestamp', 'type']) &&
@@ -125,7 +134,10 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (!('role' in request.resource.data) || isAdmin());
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isAdmin();
 
       match /cognitive_documents/{docId} {
         allow read: if isOwner(userId) || isAdmin();
