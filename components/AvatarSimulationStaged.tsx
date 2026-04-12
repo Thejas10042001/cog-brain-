@@ -1086,6 +1086,7 @@ export const AvatarSimulationStaged: FC<{
                 return (
                   <button 
                     key={s} 
+                    id={i === 0 ? "tour-start-sim-btn" : undefined}
                     onClick={() => handleInitiate(s)}
                     className={`p-10 border-2 rounded-[2.5rem] text-left transition-all group flex flex-col gap-4 h-full ${isSelected ? 'bg-indigo-600 border-indigo-500 shadow-2xl scale-[1.03]' : 'bg-slate-900 border-slate-800 hover:border-indigo-400'}`}
                   >

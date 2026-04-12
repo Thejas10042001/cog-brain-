@@ -1204,6 +1204,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-[2.5rem] blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden focus-within:border-indigo-500/50 transition-all">
               <textarea 
+                id="tour-gpt-input"
                 rows={1}
                 value={input}
                 onChange={(e) => {

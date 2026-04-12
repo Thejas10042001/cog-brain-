@@ -782,15 +782,15 @@ const App: React.FC = () => {
                       </motion.p>
                     )}
                     <div className="flex flex-col gap-3">
-                      <SidebarBtn active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "01 Settings" : ""} scale={sidebarFontScale} step="01" />
-                      <SidebarBtn active={activeTab === 'strategy'} onClick={() => handleNodeClick('strategy')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "02 Strategy" : ""} scale={sidebarFontScale} step="02" />
-                      <SidebarBtn active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "03 Assignment" : ""} scale={sidebarFontScale} step="03" />
-                      <SidebarBtn active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "04 Simulation" : ""} scale={sidebarFontScale} step="04" />
-                      <SidebarBtn active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "05 Avatar 1.0" : ""} scale={sidebarFontScale} step="05" />
-                      <SidebarBtn active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "06 Avatar 2.0" : ""} scale={sidebarFontScale} step="06" />
-                      <SidebarBtn active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "07 Spiked GPT" : ""} scale={sidebarFontScale} step="07" />
-                      <SidebarBtn active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "08 Grooming" : ""} scale={sidebarFontScale} step="08" />
-                      <SidebarBtn active={activeTab === 'help'} onClick={() => handleNodeClick('help')} icon={<ICONS.Help />} label={sidebarWidth > 180 ? "09 Help" : ""} scale={sidebarFontScale} step="09" />
+                      <SidebarBtn id="tour-tab-context" active={activeTab === 'context'} onClick={() => handleNodeClick('context')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "01 Settings" : ""} scale={sidebarFontScale} step="01" />
+                      <SidebarBtn id="tour-tab-strategy" active={activeTab === 'strategy'} onClick={() => handleNodeClick('strategy')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "02 Strategy" : ""} scale={sidebarFontScale} step="02" />
+                      <SidebarBtn id="tour-tab-qa" active={activeTab === 'qa'} onClick={() => handleNodeClick('qa')} icon={<ICONS.QuestionAnswer />} label={sidebarWidth > 180 ? "03 Assignment" : ""} scale={sidebarFontScale} step="03" />
+                      <SidebarBtn id="tour-tab-avatar-staged" active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "04 Simulation" : ""} scale={sidebarFontScale} step="04" />
+                      <SidebarBtn id="tour-tab-avatar" active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "05 Avatar 1.0" : ""} scale={sidebarFontScale} step="05" />
+                      <SidebarBtn id="tour-tab-avatar2" active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "06 Avatar 2.0" : ""} scale={sidebarFontScale} step="06" />
+                      <SidebarBtn id="tour-tab-gpt" active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "07 Spiked GPT" : ""} scale={sidebarFontScale} step="07" />
+                      <SidebarBtn id="tour-tab-practice" active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "08 Grooming" : ""} scale={sidebarFontScale} step="08" />
+                      <SidebarBtn id="tour-tab-help" active={activeTab === 'help'} onClick={() => handleNodeClick('help')} icon={<ICONS.Help />} label={sidebarWidth > 180 ? "09 Help" : ""} scale={sidebarFontScale} step="09" />
                     </div>
                   </div>
 
@@ -1017,8 +1017,9 @@ const App: React.FC = () => {
   );
 };
 
-const SidebarBtn = ({ active, onClick, icon, label, scale = 1, step }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string, scale?: number, step?: string }) => (
+const SidebarBtn = ({ active, onClick, icon, label, scale = 1, step, id }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string, scale?: number, step?: string, id?: string }) => (
   <motion.button 
+    id={id}
     whileHover={{ x: 8, backgroundColor: active ? '' : 'rgba(79, 70, 229, 0.1)' }}
     whileTap={{ scale: 0.96 }}
     onClick={onClick}

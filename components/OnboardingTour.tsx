@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ICONS } from '../constants';
 
@@ -19,6 +19,8 @@ interface OnboardingTourProps {
 export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTabChange }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const steps: TourStep[] = [
     {
@@ -28,33 +30,38 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
     },
     {
       tab: 'context',
+      targetId: 'tour-context-config',
       title: "Strategic Priming",
       content: "Start by configuring your deal context. Define the seller/client landscape and set simulation parameters to ground the AI in your reality.",
-      position: 'right'
+      position: 'bottom'
     },
     {
       tab: 'context',
+      targetId: 'tour-upload-zone',
       title: "Intelligence Ingestion",
       content: "Upload your sales playbooks, product specs, and customer data. Our neural engine categorizes them automatically for high-fidelity synthesis.",
-      position: 'right'
+      position: 'top'
     },
     {
       tab: 'strategy',
+      targetId: 'tour-synthesize-btn',
       title: "Strategy Lab",
       content: "Once grounded, synthesize high-fidelity sales strategies. Generate actionable roadmaps and competitive wedges tailored to your specific deal.",
-      position: 'right'
+      position: 'bottom'
     },
     {
-      tab: 'avatar',
+      tab: 'avatar-staged',
+      targetId: 'tour-start-sim-btn',
       title: "Avatar Simulation",
       content: "Pressure-test your strategy in real-time dialogue with skeptical buyer personas. Sharpen your reflexes before you face the actual committee.",
-      position: 'right'
+      position: 'top'
     },
     {
       tab: 'gpt',
+      targetId: 'tour-gpt-input',
       title: "Spiked GPT",
       content: "Your grounded answering engine. Ask any deal-related question and get instant, evidence-based responses from your uploaded intelligence.",
-      position: 'right'
+      position: 'top'
     },
     {
       title: "Ready for Launch",
@@ -67,6 +74,32 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
     const timer = setTimeout(() => setIsVisible(true), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  useLayoutEffect(() => {
+    const updateRect = () => {
+      const step = steps[currentStep];
+      if (step.targetId) {
+        const el = document.getElementById(step.targetId);
+        if (el) {
+          setTargetRect(el.getBoundingClientRect());
+        } else {
+          setTargetRect(null);
+        }
+      } else {
+        setTargetRect(null);
+      }
+    };
+
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    // Add a small delay to allow tab transitions to complete
+    const timer = setTimeout(updateRect, 500);
+    
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      clearTimeout(timer);
+    };
+  }, [currentStep, steps]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -81,6 +114,16 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
     }
   };
 
+  const handleBack = () => {
+    if (currentStep > 0) {
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      if (steps[prevStep].tab) {
+        onTabChange(steps[prevStep].tab!);
+      }
+    }
+  };
+
   const handleSkip = () => {
     setIsVisible(false);
     setTimeout(onComplete, 500);
@@ -88,25 +131,127 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
 
   const step = steps[currentStep];
 
+  const getTooltipStyle = () => {
+    if (!targetRect || step.position === 'center') return {};
+
+    const padding = 20;
+    const tooltipWidth = 400;
+    const tooltipHeight = 250; // Approximate
+
+    let top = 0;
+    let left = 0;
+
+    switch (step.position) {
+      case 'top':
+        top = targetRect.top - tooltipHeight - padding;
+        left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
+        break;
+      case 'bottom':
+        top = targetRect.bottom + padding;
+        left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
+        break;
+      case 'left':
+        top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
+        left = targetRect.left - tooltipWidth - padding;
+        break;
+      case 'right':
+        top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
+        left = targetRect.right + padding;
+        break;
+    }
+
+    // Keep within viewport
+    left = Math.max(20, Math.min(window.innerWidth - tooltipWidth - 20, left));
+    top = Math.max(20, Math.min(window.innerHeight - tooltipHeight - 20, top));
+
+    return {
+      position: 'fixed' as const,
+      top,
+      left,
+      width: tooltipWidth,
+    };
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm pointer-events-auto"
-            onClick={handleSkip}
-          />
+        <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
+          {/* Spotlight Overlay */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-auto">
+            <defs>
+              <mask id="spotlight-mask">
+                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                {targetRect && (
+                  <motion.rect
+                    initial={false}
+                    animate={{
+                      x: targetRect.left - 10,
+                      y: targetRect.top - 10,
+                      width: targetRect.width + 20,
+                      height: targetRect.height + 20,
+                    }}
+                    rx="20"
+                    fill="black"
+                  />
+                )}
+              </mask>
+            </defs>
+            <rect
+              x="0"
+              y="0"
+              width="100%"
+              height="100%"
+              fill="rgba(2, 6, 23, 0.8)"
+              mask="url(#spotlight-mask)"
+              className="backdrop-blur-[2px]"
+              onClick={handleSkip}
+            />
+          </svg>
+
+          {/* Pulsing Highlight */}
+          {targetRect && (
+            <motion.div
+              initial={false}
+              animate={{
+                top: targetRect.top - 10,
+                left: targetRect.left - 10,
+                width: targetRect.width + 20,
+                height: targetRect.height + 20,
+              }}
+              className="fixed pointer-events-none z-[101]"
+            >
+              <motion.div
+                animate={{
+                  boxShadow: [
+                    "0 0 0 0px rgba(79, 70, 229, 0)",
+                    "0 0 0 20px rgba(79, 70, 229, 0.4)",
+                    "0 0 0 40px rgba(79, 70, 229, 0)",
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="w-full h-full rounded-[1.5rem] border-2 border-indigo-500/50"
+              />
+            </motion.div>
+          )}
           
           <motion.div
+            ref={tooltipRef}
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              y: 0,
+              ...getTooltipStyle()
+            }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`
-              relative z-10 w-full max-w-md p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl pointer-events-auto
-              ${step.position === 'center' ? '' : 'lg:ml-80'}
+              relative z-10 p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl pointer-events-auto
+              ${step.position === 'center' ? 'mx-auto mt-[20vh] w-full max-w-md' : ''}
             `}
           >
             <div className="absolute -top-6 -left-6 w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-900/40">
@@ -134,6 +279,15 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
                 </button>
                 
                 <div className="flex items-center gap-4">
+                  {currentStep > 0 && (
+                    <button 
+                      onClick={handleBack}
+                      className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                      Back
+                    </button>
+                  )}
+                  
                   <div className="flex gap-1">
                     {steps.map((_, i) => (
                       <div 

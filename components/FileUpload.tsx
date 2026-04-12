@@ -241,7 +241,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="tour-upload-zone">
       <motion.div 
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}

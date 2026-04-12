@@ -466,7 +466,7 @@ OPERATIONAL CONSTRAINTS:
             transition={{ duration: 0.3 }}
           >
             {activeSection === 'library' && (
-              <div className="space-y-12" id="library-hub">
+              <div className="space-y-12" id="tour-context-config">
                 <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
                   <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">01</div>
                   <div className="flex flex-col">

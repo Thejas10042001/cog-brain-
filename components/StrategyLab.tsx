@@ -128,6 +128,7 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
             </div>
             
             <button 
+              id="tour-synthesize-btn"
               onClick={() => handleGenerate()}
               disabled={isGenerating}
               className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-900/20 active:scale-95 flex items-center gap-3"
