@@ -14,6 +14,7 @@ import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
+import { OnboardingTour } from './components/OnboardingTour';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
 import { 
   fetchDocumentsFromFirebase, 
@@ -151,6 +152,19 @@ const App: React.FC = () => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
   const [darkMode] = useState(true);
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('spiked_tour_seen');
+    if (!hasSeenTour && user) {
+      setShowTour(true);
+    }
+  }, [user]);
+
+  const completeTour = () => {
+    setShowTour(false);
+    localStorage.setItem('spiked_tour_seen', 'true');
+  };
 
   const [confirmModal, setConfirmModal] = useState<{
     show: boolean;
@@ -737,7 +751,15 @@ const App: React.FC = () => {
         textZoom={textZoom}
         onTextZoomChange={setTextZoom}
         darkMode={darkMode}
+        onStartTour={() => setShowTour(true)}
       />
+
+      {showTour && (
+        <OnboardingTour 
+          onComplete={completeTour} 
+          onTabChange={(tab) => setActiveTab(tab as any)} 
+        />
+      )}
       
       <div className="pt-20 flex flex-1 overflow-hidden text-magnifier relative z-10">
         

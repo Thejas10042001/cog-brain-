@@ -10,7 +10,8 @@ import {
   fetchFoldersFromFirebase,
   saveFolderToFirebase,
   deleteFolderFromFirebase,
-  moveDocumentToFolder
+  moveDocumentToFolder,
+  renameFolderInFirebase
 } from '../services/firebaseService';
 
 interface DocumentGalleryProps {
@@ -50,7 +51,10 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [newFolderName, setNewFolderName] = useState("");
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const [movingDocId, setMovingDocId] = useState<string | null>(null);
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     title: string;
     message: string;
@@ -166,8 +170,46 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
     const success = await moveDocumentToFolder(docId, folderId === "Global Library" ? null : folderId);
     if (success) {
       setMovingDocId(null);
+      setDragOverFolderId(null);
       onRefresh();
     }
+  };
+
+  const handleRenameFolder = async (id: string) => {
+    if (!renameValue.trim()) {
+      setRenamingFolderId(null);
+      setRenameValue("");
+      return;
+    }
+    const success = await renameFolderInFirebase(id, renameValue.trim());
+    if (success) {
+      setRenamingFolderId(null);
+      setRenameValue("");
+      loadFolders();
+    }
+  };
+
+  const onDragStart = (e: React.DragEvent, docId: string) => {
+    e.dataTransfer.setData("docId", docId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const onDragOver = (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    setDragOverFolderId(folderId);
+  };
+
+  const onDragLeave = () => {
+    setDragOverFolderId(null);
+  };
+
+  const onDrop = async (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    const docId = e.dataTransfer.getData("docId");
+    if (docId) {
+      await handleMoveDoc(docId, folderId);
+    }
+    setDragOverFolderId(null);
   };
 
   const allFolders = useMemo(() => {
@@ -462,12 +504,19 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
             {mainFolders.map((folder) => {
               const isActive = activeFolderId === folder.id;
               const isExpanded = expandedFolders[folder.id];
+              const isDragOver = dragOverFolderId === folder.id;
+              const isRenaming = renamingFolderId === folder.id;
               const count = folderCounts[folder.id] || 0;
               const children = subFolders.filter(sf => sf.parentId === folder.id);
               
               return (
                 <div key={folder.id} className="space-y-1">
-                  <div className="group relative flex items-center gap-1">
+                  <div 
+                    className="group relative flex items-center gap-1"
+                    onDragOver={(e) => onDragOver(e, folder.id)}
+                    onDragLeave={onDragLeave}
+                    onDrop={(e) => onDrop(e, folder.id)}
+                  >
                     <button 
                       onClick={(e) => toggleFolderExpansion(e, folder.id)}
                       className={`p-2 hover:bg-slate-800 rounded-xl text-slate-500 transition-all ${children.length === 0 ? 'opacity-0 cursor-default' : ''} ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
@@ -475,7 +524,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                       <ICONS.ChevronDown className="w-3 h-3" />
                     </button>
                     
-                    <button
+                    <div
                       onClick={() => {
                         onActiveFolderChange(folder.id);
                         if (children.length > 0 && !isExpanded) {
@@ -483,31 +532,61 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                         }
                       }}
                       className={`
-                        flex-1 flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all
+                        flex-1 flex items-center justify-between px-4 py-3 rounded-2xl text-left transition-all cursor-pointer
                         ${isActive 
                           ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' 
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}
+                          : isDragOver
+                            ? 'bg-indigo-900/40 border border-indigo-500/50 text-indigo-200'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}
                       `}
                     >
-                      <div className="flex items-center gap-3">
-                        <ICONS.Folder className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`} />
-                        <span className="text-[11px] font-black uppercase tracking-wider truncate max-w-[140px]">
-                          {folder.name}
-                        </span>
+                      <div className="flex items-center gap-3 w-full">
+                        <ICONS.Folder className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`} />
+                        {isRenaming ? (
+                          <input
+                            autoFocus
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onBlur={() => handleRenameFolder(folder.id)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleRenameFolder(folder.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-slate-800 border border-indigo-500 rounded px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white outline-none w-full"
+                          />
+                        ) : (
+                          <span className="text-[11px] font-black uppercase tracking-wider truncate max-w-[140px]">
+                            {folder.name}
+                          </span>
+                        )}
                       </div>
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg ${isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'}`}>
-                        {count}
-                      </span>
-                    </button>
+                      {!isRenaming && (
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg shrink-0 ${isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                          {count}
+                        </span>
+                      )}
+                    </div>
                     
-                    {folder.isCustom && (
-                      <button
-                        onClick={(e) => handleDeleteFolder(e, folder.id)}
-                        className="absolute right-12 p-2 text-slate-500 hover:text-rose-400 transition-all z-10 pointer-events-auto"
-                        title="Delete Folder"
-                      >
-                        <ICONS.Trash className="w-3 h-3" />
-                      </button>
+                    {folder.isCustom && !isRenaming && (
+                      <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenamingFolderId(folder.id);
+                            setRenameValue(folder.name);
+                          }}
+                          className="p-2 text-slate-500 hover:text-indigo-400 transition-all"
+                          title="Rename Folder"
+                        >
+                          <ICONS.Edit className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteFolder(e, folder.id)}
+                          className="p-2 text-slate-500 hover:text-rose-400 transition-all"
+                          title="Delete Folder"
+                        >
+                          <ICONS.Trash className="w-3 h-3" />
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -516,36 +595,74 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     <div className="ml-8 pl-2 border-l border-slate-800 space-y-1">
                       {children.map(sub => {
                         const isSubActive = activeFolderId === sub.id;
+                        const isSubDragOver = dragOverFolderId === sub.id;
+                        const isSubRenaming = renamingFolderId === sub.id;
                         const subCount = folderCounts[sub.id] || 0;
                         return (
-                          <div key={sub.id} className="group relative flex items-center">
-                            <button
+                          <div 
+                            key={sub.id} 
+                            className="group relative flex items-center"
+                            onDragOver={(e) => onDragOver(e, sub.id)}
+                            onDragLeave={onDragLeave}
+                            onDrop={(e) => onDrop(e, sub.id)}
+                          >
+                            <div
                               onClick={() => onActiveFolderChange(sub.id)}
                               className={`
-                                flex-1 flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all
+                                flex-1 flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all cursor-pointer
                                 ${isSubActive 
                                   ? 'bg-slate-700 text-white' 
-                                  : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'}
+                                  : isSubDragOver
+                                    ? 'bg-indigo-900/40 border border-indigo-500/50 text-indigo-200'
+                                    : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'}
                               `}
                             >
-                              <div className="flex items-center gap-2">
-                                <ICONS.Folder className="w-3 h-3 opacity-50" />
-                                <span className="text-[10px] font-bold uppercase tracking-wider truncate max-w-[120px]">
-                                  {sub.name}
-                                </span>
+                              <div className="flex items-center gap-2 w-full">
+                                <ICONS.Folder className="w-3 h-3 opacity-50 shrink-0" />
+                                {isSubRenaming ? (
+                                  <input
+                                    autoFocus
+                                    type="text"
+                                    value={renameValue}
+                                    onChange={(e) => setRenameValue(e.target.value)}
+                                    onBlur={() => handleRenameFolder(sub.id)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleRenameFolder(sub.id)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="bg-slate-800 border border-indigo-500 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white outline-none w-full"
+                                  />
+                                ) : (
+                                  <span className="text-[10px] font-bold uppercase tracking-wider truncate max-w-[120px]">
+                                    {sub.name}
+                                  </span>
+                                )}
                               </div>
-                              <span className="text-[8px] font-black opacity-50">
-                                {subCount}
-                              </span>
-                            </button>
-                            {sub.isCustom && (
-                              <button
-                                onClick={(e) => handleDeleteFolder(e, sub.id)}
-                                className="absolute right-8 p-1.5 text-slate-600 hover:text-rose-400 transition-all z-10 pointer-events-auto"
-                                title="Delete Sub-folder"
-                              >
-                                <ICONS.Trash className="w-2.5 h-2.5" />
-                              </button>
+                              {!isSubRenaming && (
+                                <span className="text-[8px] font-black opacity-50 shrink-0">
+                                  {subCount}
+                                </span>
+                              )}
+                            </div>
+                            {sub.isCustom && !isSubRenaming && (
+                              <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setRenamingFolderId(sub.id);
+                                    setRenameValue(sub.name);
+                                  }}
+                                  className="p-1.5 text-slate-600 hover:text-indigo-400 transition-all"
+                                  title="Rename Sub-folder"
+                                >
+                                  <ICONS.Edit className="w-2.5 h-2.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => handleDeleteFolder(e, sub.id)}
+                                  className="p-1.5 text-slate-600 hover:text-rose-400 transition-all"
+                                  title="Delete Sub-folder"
+                                >
+                                  <ICONS.Trash className="w-2.5 h-2.5" />
+                                </button>
+                              </div>
                             )}
                           </div>
                         );
@@ -692,6 +809,8 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     whileHover={{ y: -5 }}
+                    draggable
+                    onDragStart={(e: any) => onDragStart(e, doc.id)}
                     onClick={() => onToggleSelect(doc.id)}
                     className={`
                       bg-slate-900 border p-6 rounded-[2.5rem] transition-all cursor-pointer group relative h-full flex flex-col

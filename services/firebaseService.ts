@@ -307,6 +307,22 @@ export const deleteFolderFromFirebase = async (id: string): Promise<boolean> => 
   }
 };
 
+export const renameFolderInFirebase = async (id: string, newName: string): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  const path = FOLDERS_COLLECTION;
+  try {
+    const docRef = doc(getUserCollection(path), id);
+    await updateDoc(docRef, {
+      name: newName,
+      updatedAt: Timestamp.now()
+    });
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+    return false;
+  }
+};
+
 export const moveDocumentToFolder = async (docId: string, folderId: string | null): Promise<boolean> => {
   if (!db || !auth || !auth.currentUser) return false;
   const path = COLLECTION_NAME;

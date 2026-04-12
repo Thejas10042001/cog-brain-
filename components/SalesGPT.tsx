@@ -669,6 +669,13 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
     document.body.removeChild(link);
   };
 
+  const preprocessContent = (content: string) => {
+    if (!content) return "";
+    // Convert [1] to [1](citation:1) if it's not already a link
+    // This regex looks for [number] that is NOT followed by an opening parenthesis
+    return content.replace(/\[(\d+)\](?!\()/g, '[$1](citation:$1)');
+  };
+
   return (
     <div className="flex h-full bg-slate-950 relative overflow-hidden">
       {/* Sidebar */}
@@ -1014,6 +1021,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                                 return (
                                   <sup 
                                     className="cursor-pointer text-indigo-400 hover:text-indigo-300 font-black px-1.5 py-0.5 bg-indigo-500/10 rounded-md border border-indigo-500/20 mx-0.5 transition-all hover:scale-110 inline-block align-top text-[10px]"
+                                    title={msg.citations?.[index]?.sourceFile || 'Citation'}
                                     onClick={(e) => {
                                       e.preventDefault();
                                       const citation = msg.citations?.[index];
@@ -1045,7 +1053,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                             )
                           }}
                         >
-                          {msg.content}
+                          {preprocessContent(msg.content)}
                         </ReactMarkdown>
                       ) : msg.isStreaming ? (
                         <TypingIndicator />
