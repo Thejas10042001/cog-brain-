@@ -155,6 +155,7 @@ const GROUPS_COLLECTION = "groups";
 const INVITES_COLLECTION = "group_invites";
 const MESSAGES_COLLECTION = "group_messages";
 const USERS_COLLECTION = "users";
+const UPDATES_COLLECTION = "app_updates";
 
 // Helper to remove undefined values from objects recursively for Firestore
 const sanitizeData = (data: any): any => {
@@ -677,5 +678,106 @@ export const fetchSharedGPTSession = async (userId: string, sessionId: string): 
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, path);
     return null;
+  }
+};
+
+// App Updates & Notifications
+export const fetchAppUpdates = async (): Promise<any[]> => {
+  if (!db || !auth || !auth.currentUser) return [];
+  const path = UPDATES_COLLECTION;
+  try {
+    const q = query(getUserCollection(path));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        timestamp: data.timestamp?.toMillis() || Date.now()
+      };
+    }).sort((a, b) => b.timestamp - a.timestamp);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return [];
+  }
+};
+
+export const markUpdateAsRead = async (updateId: string): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  const path = UPDATES_COLLECTION;
+  try {
+    const docRef = doc(getUserCollection(path), updateId);
+    await updateDoc(docRef, {
+      isRead: true,
+      readAt: Timestamp.now()
+    });
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+    return false;
+  }
+};
+
+export const seedInitialUpdates = async (): Promise<void> => {
+  if (!db || !auth || !auth.currentUser) return;
+  const path = UPDATES_COLLECTION;
+  try {
+    const existing = await fetchAppUpdates();
+    if (existing.length > 0) return;
+
+    const initialUpdates = [
+      {
+        title: "Google Drive Integration",
+        description: "Directly import documents from your Google Drive.",
+        detailedInfo: "You can now connect your Google Drive account to SPIKED AI. This allows you to seamlessly import sales playbooks, product specs, and customer data directly into your cognitive library without manual uploads.",
+        isRead: false,
+        version: "v3.2.0"
+      },
+      {
+        title: "Enhanced Folder UI",
+        description: "New contextual icons and document counts for folders.",
+        detailedInfo: "We've overhauled the Document Gallery sidebar. Folders now feature intelligent icons that adapt to your category names (Sales, Product, Legal, etc.), and you can see exactly how many intelligence nodes are stored in each folder at a glance.",
+        isRead: false,
+        version: "v3.1.5"
+      },
+      {
+        title: "Cognitive Magnifier v3",
+        description: "New viewport and text-only scaling modes.",
+        detailedInfo: "The Cognitive Magnifier has been upgraded. You can now choose between 'Simulation Scale' (full viewport zoom) and 'Text Intelligence' (typography-only zoom) to optimize your focus during intense deal analysis.",
+        isRead: false,
+        version: "v3.1.0"
+      },
+      {
+        title: "Neural Onboarding Tour",
+        description: "Interactive guide through the SPIKED AI protocol.",
+        detailedInfo: "New users (and veterans!) can now take a guided tour of the neural architecture. Learn how to navigate from Strategic Priming to Avatar Simulation with our interactive spotlight system.",
+        isRead: false,
+        version: "v3.0.0"
+      },
+      {
+        title: "Avatar Simulation Staged",
+        description: "Practice specific deal stages like Pricing and Legal.",
+        detailedInfo: "Beyond general roleplay, you can now target specific inflection points in the sales cycle. The Staged Simulation module allows you to focus on Ice Breakers, Technical deep-dives, or high-stakes Closing dialogues.",
+        isRead: false,
+        version: "v2.9.0"
+      },
+      {
+        title: "Spiked GPT Cognitive Pro",
+        description: "Advanced reasoning mode for complex deal inquiries.",
+        detailedInfo: "Spiked GPT now features 'Cognitive Pro' mode. This uses enhanced neural synthesis to provide deeper evidence-based responses, perfect for complex technical objections or ROI justifications.",
+        isRead: false,
+        version: "v2.8.5"
+      }
+    ];
+
+    for (const update of initialUpdates) {
+      await addDoc(getUserCollection(path), {
+        ...update,
+        timestamp: Timestamp.now()
+      });
+    }
+  } catch (error) {
+    console.error("Error seeding updates:", error);
   }
 };

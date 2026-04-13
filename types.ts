@@ -396,3 +396,24 @@ export interface SalesGPTSession {
   isShared?: boolean;
   shareToken?: string;
 }
+
+export interface AppUpdate {
+  id: string;
+  title: string;
+  description: string;
+  detailedInfo: string;
+  timestamp: number;
+  isRead: boolean;
+  version?: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  summary: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+  };
+  location?: string;
+  description?: string;
+}
