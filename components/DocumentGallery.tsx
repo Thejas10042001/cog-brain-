@@ -39,7 +39,9 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
   activeFolderId,
   onActiveFolderChange
 }) => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [viewingDoc, setViewingDoc] = useState<StoredDocument | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<StoredDocument | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -121,6 +123,37 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
       ...prev,
       [id]: !prev[id]
     }));
+  };
+
+  const getFolderIcon = (folder: Folder, isActive: boolean) => {
+    const iconClass = `w-4 h-4 shrink-0 transition-all ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`;
+    
+    if (folder.id === "Global Library") return <ICONS.Sparkles className={iconClass} />;
+    
+    const name = folder.name.toLowerCase();
+    if (name.includes('sales')) return <ICONS.Growth className={iconClass} />;
+    if (name.includes('product')) return <ICONS.Innovation className={iconClass} />;
+    if (name.includes('security') || name.includes('legal') || name.includes('compliance')) return <ICONS.Security className={iconClass} />;
+    if (name.includes('financial') || name.includes('company')) return <ICONS.ROI className={iconClass} />;
+    if (name.includes('procurement') || name.includes('onboarding')) return <ICONS.Check className={iconClass} />;
+    if (name.includes('partnership') || name.includes('ecosystem')) return <ICONS.Map className={iconClass} />;
+    if (name.includes('event') || name.includes('community')) return <ICONS.Speaker className={iconClass} />;
+    if (name.includes('customer')) return <ICONS.User className={iconClass} />;
+    if (name.includes('research') || name.includes('leadership')) return <ICONS.Research className={iconClass} />;
+    if (name.includes('meeting')) return <ICONS.Calendar className={iconClass} />;
+    
+    return <ICONS.Folder className={iconClass} />;
+  };
+
+  const getSubFolderIcon = (folder: Folder, isActive: boolean) => {
+    const iconClass = `w-3 h-3 shrink-0 transition-all ${isActive ? 'text-white' : 'text-slate-600 group-hover:text-indigo-400 opacity-70'}`;
+    
+    const name = folder.name.toLowerCase();
+    if (name.includes('notes') || name.includes('transcript')) return <ICONS.Document className={iconClass} />;
+    if (name.includes('deck') || name.includes('presentation')) return <ICONS.Play className={iconClass} />;
+    if (name.includes('data') || name.includes('sheet')) return <ICONS.Efficiency className={iconClass} />;
+    
+    return <ICONS.Folder className={iconClass} />;
   };
 
   const handleDeleteFolder = async (e: React.MouseEvent, id: string) => {
@@ -270,18 +303,55 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
     return [...predefinedMain, ...virtualSubs, ...filteredDbFolders];
   }, [folders]);
 
-  const mainFolders = useMemo(() => 
-    allFolders.filter(f => (f.type === 'main' || !f.type) && !f.parentId), 
-  [allFolders]);
+  const subFolders = useMemo(() => {
+    const base = allFolders.filter(f => f.type === 'sub' || (f.parentId !== null && f.parentId !== undefined));
+    if (!searchQuery.trim()) return base;
+    const query = searchQuery.toLowerCase().trim();
+    return base.filter(f => f.name.toLowerCase().includes(query));
+  }, [allFolders, searchQuery]);
 
-  const subFolders = useMemo(() => 
-    allFolders.filter(f => f.type === 'sub' || (f.parentId !== null && f.parentId !== undefined)), 
-  [allFolders]);
+  const mainFolders = useMemo(() => {
+    const base = allFolders.filter(f => (f.type === 'main' || !f.type) && !f.parentId);
+    if (!searchQuery.trim()) return base;
+    const query = searchQuery.toLowerCase().trim();
+    
+    // Include main folders that match OR have a subfolder that matches
+    return base.filter(f => {
+      const matches = f.name.toLowerCase().includes(query);
+      const hasMatchingSub = subFolders.some(sf => sf.parentId === f.id);
+      return matches || hasMatchingSub;
+    });
+  }, [allFolders, searchQuery, subFolders]);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      const newExpanded: Record<string, boolean> = { ...expandedFolders };
+      mainFolders.forEach(f => {
+        const hasMatchingSub = subFolders.some(sf => sf.parentId === f.id);
+        if (hasMatchingSub) {
+          newExpanded[f.id] = true;
+        }
+      });
+      setExpandedFolders(newExpanded);
+    }
+  }, [searchQuery, mainFolders, subFolders]);
 
   const filteredDocuments = useMemo(() => {
     try {
+      let baseDocs = documents;
+
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        return documents.filter(doc => 
+          doc.name.toLowerCase().includes(query) || 
+          doc.content.toLowerCase().includes(query) ||
+          (doc.category && doc.category.toLowerCase().includes(query))
+        );
+      }
+
       if (!activeFolderId || activeFolderId === "Global Library") {
-        return documents;
+        return baseDocs;
       }
 
       const activeFolder = allFolders.find(f => f.id === activeFolderId);
@@ -323,26 +393,35 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
   }, [documents, activeFolderId, allFolders]);
 
   const folderCounts = useMemo(() => {
-    const counts: Record<string, number> = { "Global Library": documents.length };
+    const baseDocs = searchQuery.trim() 
+      ? documents.filter(doc => {
+          const query = searchQuery.toLowerCase().trim();
+          return doc.name.toLowerCase().includes(query) || 
+                 doc.content.toLowerCase().includes(query) ||
+                 (doc.category && doc.category.toLowerCase().includes(query));
+        })
+      : documents;
+
+    const counts: Record<string, number> = { "Global Library": baseDocs.length };
     
     allFolders.forEach(f => {
       if (f.id === "Global Library") return;
       
       if (f.type === 'sub') {
         if (f.id.startsWith('global-') || f.id.startsWith('virtual-')) {
-          counts[f.id] = documents.filter(d => d.folderId === f.id || d.category === f.name).length;
+          counts[f.id] = baseDocs.filter(d => d.folderId === f.id || d.category === f.name).length;
         } else {
-          counts[f.id] = documents.filter(d => d.folderId === f.id).length;
+          counts[f.id] = baseDocs.filter(d => d.folderId === f.id).length;
         }
       } else {
         // Main folder: count documents directly in it + documents in its subfolders
         const subIds = allFolders.filter(sf => sf.parentId === f.id).map(sf => sf.id);
-        counts[f.id] = documents.filter(d => d.folderId === f.id || (d.folderId && subIds.includes(d.folderId))).length;
+        counts[f.id] = baseDocs.filter(d => d.folderId === f.id || (d.folderId && subIds.includes(d.folderId))).length;
       }
     });
     
     return counts;
-  }, [documents, allFolders]);
+  }, [documents, allFolders, searchQuery]);
 
   useEffect(() => {
     if (viewingDoc) {
@@ -362,7 +441,10 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         setConfirmModal(prev => prev ? { ...prev, isLoading: true } : null);
         try {
           const success = await deleteDocumentFromFirebase(id);
-          if (success) onRefresh();
+          if (success) {
+            if (previewDoc?.id === id) setPreviewDoc(null);
+            onRefresh();
+          }
         } finally {
           setConfirmModal(null);
         }
@@ -382,6 +464,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         setIsDeleting(true);
         try {
           await Promise.all(selectedIds.map(id => deleteDocumentFromFirebase(id)));
+          if (previewDoc && selectedIds.includes(previewDoc.id)) setPreviewDoc(null);
           onClearSelection();
           onRefresh();
         } catch (err) {
@@ -403,6 +486,9 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
       onRefresh();
       const updatedDoc = { ...viewingDoc, content: editContent, updatedAt: Date.now() };
       setViewingDoc(updatedDoc);
+      if (previewDoc?.id === viewingDoc.id) {
+        setPreviewDoc(updatedDoc);
+      }
     }
     setIsSaving(false);
   };
@@ -541,7 +627,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                       `}
                     >
                       <div className="flex items-center gap-3 w-full">
-                        <ICONS.Folder className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`} />
+                        {getFolderIcon(folder, isActive)}
                         {isRenaming ? (
                           <input
                             autoFocus
@@ -560,9 +646,9 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                         )}
                       </div>
                       {!isRenaming && (
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg shrink-0 ${isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                        <div className={`flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-[9px] font-black tracking-tighter transition-all ${isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500 group-hover:bg-indigo-900/40 group-hover:text-indigo-400'}`}>
                           {count}
-                        </span>
+                        </div>
                       )}
                     </div>
                     
@@ -618,7 +704,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                               `}
                             >
                               <div className="flex items-center gap-2 w-full">
-                                <ICONS.Folder className="w-3 h-3 opacity-50 shrink-0" />
+                                {getSubFolderIcon(sub, isSubActive)}
                                 {isSubRenaming ? (
                                   <input
                                     autoFocus
@@ -636,11 +722,11 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                                   </span>
                                 )}
                               </div>
-                              {!isSubRenaming && (
-                                <span className="text-[8px] font-black opacity-50 shrink-0">
-                                  {subCount}
-                                </span>
-                              )}
+                                {!isSubRenaming && (
+                                  <span className={`text-[8px] font-black transition-all ${isSubActive ? 'text-white/70' : 'text-slate-600 group-hover:text-indigo-400'}`}>
+                                    {subCount}
+                                  </span>
+                                )}
                             </div>
                             {sub.isCustom && !isSubRenaming && (
                               <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -751,7 +837,11 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
-                {activeFolderId === "Global Library" ? "Global Library" : `Folder: ${allFolders.find(f => f.id === activeFolderId)?.name || activeFolderId}`}
+                {searchQuery.trim() 
+                  ? `Search Results for "${searchQuery}"`
+                  : activeFolderId === "Global Library" 
+                    ? "Global Library" 
+                    : `Folder: ${allFolders.find(f => f.id === activeFolderId)?.name || activeFolderId}`}
               </h4>
               <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mt-1">
                 {filteredDocuments.length} Intelligence Nodes
@@ -772,6 +862,24 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
+            <div className="relative group">
+              <ICONS.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+              <input 
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search name or content..."
+                className="bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 w-48 lg:w-64 transition-all"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-white transition-colors"
+                >
+                  <ICONS.X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
             <button 
               onClick={onRefresh}
               className="p-2.5 hover:bg-slate-800 rounded-xl transition-colors text-slate-500 border border-slate-800"
@@ -782,41 +890,48 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
           </div>
         </div>
 
-        {filteredDocuments.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="py-20 border-2 border-dashed border-slate-800 rounded-[3rem] text-center bg-slate-900/30"
-          >
-            <ICONS.Document className="w-12 h-12 mx-auto text-slate-800 mb-4" />
-            <p className="text-slate-600 text-xs font-black uppercase tracking-widest">No intelligence nodes found in this folder.</p>
-          </motion.div>
-        ) : (
-          <motion.div 
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredDocuments.map((doc) => {
-                const isSelected = selectedIds.includes(doc.id);
-                const isMoving = movingDocId === doc.id;
-                
-                return (
-                  <motion.div 
-                    layout
-                    key={doc.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    whileHover={{ y: -5 }}
-                    draggable
-                    onDragStart={(e: any) => onDragStart(e, doc.id)}
-                    onClick={() => onToggleSelect(doc.id)}
-                    className={`
-                      bg-slate-900 border p-6 rounded-[2.5rem] transition-all cursor-pointer group relative h-full flex flex-col
-                      ${isSelected ? 'border-indigo-600 ring-8 ring-indigo-900/20 shadow-2xl scale-[1.02]' : 'border-slate-800 hover:border-indigo-700 shadow-sm'}
-                    `}
-                  >
+          <div className="flex gap-6 items-start">
+            <div className={`flex-1 transition-all duration-500 ${previewDoc ? 'lg:w-1/2' : 'w-full'}`}>
+              {filteredDocuments.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="py-20 border-2 border-dashed border-slate-800 rounded-[3rem] text-center bg-slate-900/30"
+                >
+                  <ICONS.Document className="w-12 h-12 mx-auto text-slate-800 mb-4" />
+                  <p className="text-slate-600 text-xs font-black uppercase tracking-widest">No intelligence nodes found in this folder.</p>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  layout
+                  className={`grid grid-cols-1 gap-5 ${previewDoc ? 'sm:grid-cols-1 xl:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'}`}
+                >
+                  <AnimatePresence mode="popLayout">
+                    {filteredDocuments.map((doc) => {
+                      const isSelected = selectedIds.includes(doc.id);
+                      const isMoving = movingDocId === doc.id;
+                      const isPreviewing = previewDoc?.id === doc.id;
+                      
+                      return (
+                        <motion.div 
+                          layout
+                          key={doc.id}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          whileHover={{ y: -5 }}
+                          draggable
+                          onDragStart={(e: any) => onDragStart(e, doc.id)}
+                          onClick={() => {
+                            onToggleSelect(doc.id);
+                            setPreviewDoc(doc);
+                          }}
+                          className={`
+                            bg-slate-900 border p-6 rounded-[2.5rem] transition-all cursor-pointer group relative h-full flex flex-col
+                            ${isSelected ? 'border-indigo-600 ring-8 ring-indigo-900/20 shadow-2xl scale-[1.02]' : 'border-slate-800 hover:border-indigo-700 shadow-sm'}
+                            ${isPreviewing ? 'border-indigo-400 bg-slate-800/50' : ''}
+                          `}
+                        >
                     <div className="flex items-start justify-between mb-5">
                       <div className={`p-4 rounded-2xl transition-all ml-8 ${isSelected ? 'bg-indigo-600 text-white shadow-xl shadow-none' : 'bg-indigo-900/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-xl group-hover:shadow-none'}`}>
                         <ICONS.Document className="w-5 h-5" />
@@ -943,10 +1058,90 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                   </motion.div>
                 );
               })}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Preview Pane */}
+            <AnimatePresence>
+              {previewDoc && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20, width: 0 }}
+                  animate={{ opacity: 1, x: 0, width: 'auto' }}
+                  exit={{ opacity: 0, x: 20, width: 0 }}
+                  className="hidden lg:flex flex-col w-[450px] shrink-0 sticky top-8 h-[calc(100vh-8rem)] bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden"
+                >
+                  <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-800/30">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-indigo-600 text-white rounded-xl">
+                        <ICONS.Document className="w-4 h-4" />
+                      </div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">Intelligence Preview</h4>
+                    </div>
+                    <button 
+                      onClick={() => setPreviewDoc(null)}
+                      className="p-2 text-slate-500 hover:text-white transition-colors"
+                    >
+                      <ICONS.X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8">
+                    <div>
+                      <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 leading-tight">
+                        {previewDoc.name}
+                      </h3>
+                      <div className="flex items-center gap-3 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                        <span>{formatDate(previewDoc.timestamp)}</span>
+                        <span className="w-1 h-1 bg-slate-800 rounded-full"></span>
+                        <span>{formatTime(previewDoc.timestamp)}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-5 bg-indigo-900/10 border border-indigo-900/20 rounded-2xl">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ICONS.Brain className="w-3 h-3 text-indigo-400" />
+                        <span className="text-[8px] font-black uppercase tracking-widest text-indigo-300">AI Categorization</span>
+                      </div>
+                      <p className="text-[10px] text-indigo-200/70 font-medium italic leading-relaxed">
+                        {previewDoc.categorizationReasoning || "No reasoning available for this node."}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-[9px] font-black uppercase tracking-widest text-slate-500">Extracted Content</h5>
+                        <button 
+                          onClick={() => setViewingDoc(previewDoc)}
+                          className="text-[8px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+                        >
+                          Full Editor <ICONS.ArrowRight className="w-2 h-2" />
+                        </button>
+                      </div>
+                      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 font-mono text-[11px] leading-relaxed text-slate-400 whitespace-pre-wrap min-h-[200px]">
+                        {previewDoc.content || "No content available."}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border-t border-slate-800 bg-slate-800/30">
+                    <button 
+                      onClick={() => onToggleSelect(previewDoc.id)}
+                      className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                        selectedIds.includes(previewDoc.id)
+                          ? 'bg-rose-600/10 text-rose-500 border border-rose-500/20 hover:bg-rose-600/20'
+                          : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-900/20'
+                      }`}
+                    >
+                      {selectedIds.includes(previewDoc.id) ? 'Deselect Node' : 'Select for Synthesis'}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
-          </motion.div>
-        )}
-      </div>
+          </div>
+        </div>
 
       {/* OCR Result Viewer & Editor Modal */}
       <AnimatePresence>
@@ -1083,9 +1278,9 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                       </div>
                       <div>
                          <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Memory Integrity</p>
-                         <p className="text-sm font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-2 uppercase tracking-widest">
+                         <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-2 uppercase tracking-widest">
                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div> Verified
-                         </p>
+                         </div>
                       </div>
                    </div>
                 </div>

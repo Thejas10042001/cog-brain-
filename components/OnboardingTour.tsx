@@ -75,13 +75,28 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
     return () => clearTimeout(timer);
   }, []);
 
+  const stepsRef = useRef(steps);
+  stepsRef.current = steps;
+
   useLayoutEffect(() => {
+    let isMounted = true;
     const updateRect = () => {
-      const step = steps[currentStep];
+      if (!isMounted) return;
+      const step = stepsRef.current[currentStep];
       if (step.targetId) {
         const el = document.getElementById(step.targetId);
         if (el) {
-          setTargetRect(el.getBoundingClientRect());
+          const rect = el.getBoundingClientRect();
+          setTargetRect(prev => {
+            if (prev && 
+                prev.top === rect.top && 
+                prev.left === rect.left && 
+                prev.width === rect.width && 
+                prev.height === rect.height) {
+              return prev;
+            }
+            return rect;
+          });
         } else {
           setTargetRect(null);
         }
@@ -96,10 +111,11 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
     const timer = setTimeout(updateRect, 500);
     
     return () => {
+      isMounted = false;
       window.removeEventListener('resize', updateRect);
       clearTimeout(timer);
     };
-  }, [currentStep, steps]);
+  }, [currentStep]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
