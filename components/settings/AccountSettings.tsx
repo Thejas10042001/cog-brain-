@@ -207,6 +207,14 @@ export const AccountSettings: React.FC<{ onClose: () => void }> = ({ onClose }) 
 const ProfileTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<UserSettings>) => void, showToast: (m: string, t?: 'success' | 'error') => void }> = ({ settings, onUpdate, showToast }) => {
   const [formData, setFormData] = useState(settings.profile);
   const [uploading, setUploading] = useState(false);
+  const [verificationCooldown, setVerificationCooldown] = useState(0);
+
+  useEffect(() => {
+    if (verificationCooldown > 0) {
+      const timer = setTimeout(() => setVerificationCooldown(prev => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [verificationCooldown]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,14 +317,23 @@ const ProfileTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<UserS
         <div className="pt-8 flex items-center justify-between gap-4">
           <button 
             type="button"
+            disabled={verificationCooldown > 0}
             onClick={async () => {
+              if (verificationCooldown > 0) return;
               const success = await verifyUserEmail();
-              if (success) showToast('Verification email sent');
-              else showToast('Failed to send email', 'error');
+              if (success) {
+                showToast('Verification email sent');
+                setVerificationCooldown(60); // 60 second cooldown
+              } else {
+                showToast('Failed to send email. Please wait before retrying.', 'error');
+              }
             }}
-            className="px-8 py-4 bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:text-white hover:bg-slate-800 transition-all"
+            className={cn(
+              "px-8 py-4 bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all",
+              verificationCooldown > 0 ? "opacity-50 cursor-not-allowed" : "hover:text-white hover:bg-slate-800"
+            )}
           >
-            Verify Email Address
+            {verificationCooldown > 0 ? `Retry in ${verificationCooldown}s` : 'Verify Email Address'}
           </button>
           <button 
             type="submit"

@@ -851,8 +851,12 @@ export const verifyUserEmail = async (): Promise<boolean> => {
   try {
     await sendEmailVerification(auth.currentUser);
     return true;
-  } catch (error) {
-    console.error("Error sending verification email:", error);
+  } catch (error: any) {
+    if (error.code === 'auth/too-many-requests') {
+      console.warn("Rate limit hit for email verification:", error.message);
+    } else {
+      console.error("Error sending verification email:", error);
+    }
     return false;
   }
 };
