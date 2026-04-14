@@ -381,7 +381,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
                   <div className="flex gap-1.5">
                     {steps.map((_, i) => (
                       <div 
-                        key={i} 
+                        key={`step-${i}`} 
                         className={`h-1 rounded-full transition-all duration-500 ${i === currentStepIndex ? 'w-6 bg-indigo-600' : 'w-1.5 bg-slate-800'}`} 
                       />
                     ))}

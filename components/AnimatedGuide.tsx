@@ -78,7 +78,7 @@ export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
           <div className="relative flex gap-2 items-end h-24">
             {[0.6, 0.9, 0.4, 0.75].map((h, i) => (
               <motion.div
-                key={i}
+                key={`bar-${i}`}
                 initial={{ height: 0 }}
                 animate={{ height: `${h * 100}%` }}
                 transition={{ duration: 1, delay: i * 0.2, repeat: Infinity, repeatType: 'reverse' }}
@@ -163,7 +163,7 @@ export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
           <div className="absolute inset-0 pointer-events-none">
             {[...Array(6)].map((_, i) => (
               <motion.div
-                key={i}
+                key={`particle-${i}`}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ 
                   opacity: [0, 1, 0],
@@ -218,7 +218,7 @@ export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
         <div className="relative w-full h-48 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
           <div className="absolute inset-0 grid grid-cols-12 gap-1 p-2 opacity-5">
             {Array.from({ length: 144 }).map((_, i) => (
-              <div key={i} className="h-1 bg-white rounded-full" />
+              <div key={`line-${i}`} className="h-1 bg-white rounded-full" />
             ))}
           </div>
           
@@ -278,7 +278,7 @@ export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
             <div className="flex gap-1">
               {[0, 1, 2].map(i => (
                 <motion.div
-                  key={i}
+                  key={`dot-${i}`}
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ duration: 1, delay: i * 0.2, repeat: Infinity }}
                   className="w-1 h-1 rounded-full bg-red-600"

@@ -626,7 +626,7 @@ OPERATIONAL CONSTRAINTS:
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Client's Keywords</label>
                         <div className="flex flex-wrap gap-2 p-3 bg-slate-800/50 rounded-xl border border-slate-700 min-h-[44px]">
                           {context.clientsKeywords.map((kw, i) => (
-                            <span key={i} className="px-2 py-1 bg-indigo-900/30 text-indigo-400 text-[10px] font-bold rounded-md border border-indigo-900/50">{kw}</span>
+                            <span key={`${kw}-${i}`} className="px-2 py-1 bg-indigo-900/30 text-indigo-400 text-[10px] font-bold rounded-md border border-indigo-900/50">{kw}</span>
                           ))}
                           {context.clientsKeywords.length === 0 && <span className="text-[10px] text-slate-600 italic">No keywords extracted</span>}
                         </div>
@@ -688,7 +688,7 @@ OPERATIONAL CONSTRAINTS:
                         <AnimatePresence>
                           {context.potentialObjections.map((obj, i) => (
                             <motion.div 
-                              key={i}
+                              key={`${obj}-${i}`}
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.8 }}

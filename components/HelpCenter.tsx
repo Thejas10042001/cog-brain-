@@ -359,7 +359,7 @@ export const HelpCenter: React.FC = () => {
                               </h4>
                               <ul className="space-y-2">
                                 {item.details.dos.map((doItem, dIdx) => (
-                                  <li key={dIdx} className="text-[11px] text-slate-500 flex items-start gap-2">
+                                  <li key={`do-${dIdx}`} className="text-[11px] text-slate-500 flex items-start gap-2">
                                     <span className="text-green-500">+</span> {doItem}
                                   </li>
                                 ))}
@@ -372,7 +372,7 @@ export const HelpCenter: React.FC = () => {
                               </h4>
                               <ul className="space-y-2">
                                 {item.details.donts.map((dontItem, dIdx) => (
-                                  <li key={dIdx} className="text-[11px] text-slate-500 flex items-start gap-2">
+                                  <li key={`dont-${dIdx}`} className="text-[11px] text-slate-500 flex items-start gap-2">
                                     <span className="text-red-500">×</span> {dontItem}
                                   </li>
                                 ))}

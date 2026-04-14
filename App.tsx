@@ -15,6 +15,7 @@ import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
 import { OnboardingTour } from './components/OnboardingTour';
+import { AccountSettings } from './components/settings/AccountSettings';
 import { analyzeSalesContext, generateVoiceSample } from './services/geminiService';
 import { 
   fetchDocumentsFromFirebase, 
@@ -151,6 +152,7 @@ const App: React.FC = () => {
   const [sharedSession, setSharedSession] = useState<SalesGPTSession | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isSupportPage, setIsSupportPage] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [darkMode] = useState(true);
   const [showTour, setShowTour] = useState(false);
 
@@ -752,6 +754,7 @@ const App: React.FC = () => {
         onTextZoomChange={setTextZoom}
         darkMode={darkMode}
         onStartTour={() => setShowTour(true)}
+        onOpenSettings={() => setShowSettings(true)}
       />
 
       {showTour && (
@@ -761,6 +764,7 @@ const App: React.FC = () => {
           activeTab={activeTab}
         />
       )}
+      {showSettings && <AccountSettings onClose={() => setShowSettings(false)} />}
       
       <div className="pt-20 flex flex-1 overflow-hidden text-magnifier relative z-10">
         

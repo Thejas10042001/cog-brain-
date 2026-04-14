@@ -45,14 +45,14 @@ const CognitiveRadarChart = ({ data, size = 320 }: { data: { label: string, valu
           </radialGradient>
         </defs>
         {[0.2, 0.4, 0.6, 0.8, 1].map((r, idx) => (
-          <circle key={idx} cx={center} cy={center} r={radius * r} fill={idx === 4 ? "url(#radarGrad)" : "none"} stroke="rgba(79, 70, 229, 0.1)" strokeWidth="1" />
+          <circle key={`radar-ring-${idx}`} cx={center} cy={center} r={radius * r} fill={idx === 4 ? "url(#radarGrad)" : "none"} stroke="rgba(79, 70, 229, 0.1)" strokeWidth="1" />
         ))}
         {data.map((_, i) => (
-          <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(i * angleStep - Math.PI / 2)} y2={center + radius * Math.sin(i * angleStep - Math.PI / 2)} stroke="rgba(79, 70, 229, 0.15)" strokeWidth="1" />
+          <line key={`radar-line-${i}`} x1={center} y1={center} x2={center + radius * Math.cos(i * angleStep - Math.PI / 2)} y2={center + radius * Math.sin(i * angleStep - Math.PI / 2)} stroke="rgba(79, 70, 229, 0.15)" strokeWidth="1" />
         ))}
         <polygon points={polygonPath} fill="rgba(79, 70, 229, 0.3)" stroke="rgba(79, 70, 229, 0.8)" strokeWidth="3" />
         {data.map((d, i) => (
-          <text key={i} x={points[i].labelX} y={points[i].labelY} textAnchor="middle" className="text-[9px] font-black uppercase fill-slate-500 tracking-widest">{d.label}</text>
+          <text key={`radar-label-${i}`} x={points[i].labelX} y={points[i].labelY} textAnchor="middle" className="text-[9px] font-black uppercase fill-slate-500 tracking-widest">{d.label}</text>
         ))}
       </svg>
     </div>
@@ -67,7 +67,7 @@ const SWOTItem = ({ label, items, color, symbol }: { label: string, items: strin
     </div>
     <ul className="space-y-2">
       {items.map((item, idx) => (
-        <li key={idx} className="flex gap-2 text-[10px] text-slate-600 leading-relaxed font-medium">
+        <li key={`${item}-${idx}`} className="flex gap-2 text-[10px] text-slate-600 leading-relaxed font-medium">
           <span className={`text-${color}-500 mt-1 shrink-0`}>•</span>
           <span>{item}</span>
         </li>
@@ -417,7 +417,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {result.openingLines.map((line, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 p-10 rounded-[3rem] hover:bg-white/10 hover:border-indigo-400/50 transition-all duration-500 group/hook flex flex-col justify-between">
+              <div key={`opening-${i}`} className="bg-white/5 border border-white/10 p-10 rounded-[3rem] hover:bg-white/10 hover:border-indigo-400/50 transition-all duration-500 group/hook flex flex-col justify-between">
                 <div>
                    <div className="flex items-center justify-between mb-6">
                       <span className="px-4 py-1.5 bg-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-indigo-500/20">
@@ -497,7 +497,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
                    <>
                       <div className="w-1 h-10 flex gap-1 items-center">
                          {[...Array(5)].map((_, i) => (
-                           <div key={i} className="w-1 bg-white rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s`, height: `${40 + Math.random() * 60}%` }}></div>
+                           <div key={`wave-${i}`} className="w-1 bg-white rounded-full animate-waveform-sm" style={{ animationDelay: `${i*0.1}s`, height: `${40 + Math.random() * 60}%` }}></div>
                          ))}
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest">Terminate</span>
@@ -522,7 +522,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
           <h2 className="text-4xl font-black text-slate-900 mb-10">Cognitive Ground Matrix</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {result.groundMatrix.map((item, idx) => (
-              <div key={idx} className="bg-slate-50 border border-slate-100 p-8 rounded-[2.5rem] flex flex-col hover:bg-white hover:border-indigo-300 hover:shadow-xl transition-all group">
+              <div key={`ground-${idx}`} className="bg-slate-50 border border-slate-100 p-8 rounded-[2.5rem] flex flex-col hover:bg-white hover:border-indigo-300 hover:shadow-xl transition-all group">
                 <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500 mb-3 px-2 py-1 bg-white border border-indigo-50 rounded-full inline-block w-fit">
                   {item.category}
                 </span>
@@ -559,7 +559,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
                 {radarData.map((d, i) => (
-                  <div key={i} className="space-y-2">
+                  <div key={`radar-metric-${i}`} className="space-y-2">
                     <div className="flex justify-between text-[9px] font-black uppercase text-slate-400">
                       <span>{d.label}</span>
                       <span>{d.value}%</span>
@@ -584,7 +584,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
                 {result.snapshot.likelyObjections.slice(0, 3).map((objection, i) => {
                   const handle = result.objectionHandling.find(oh => oh.objection.toLowerCase().includes(objection.text.toLowerCase().substring(0, 10)));
                   return (
-                    <div key={i} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-rose-200 transition-all group">
+                    <div key={`likely-obj-${i}`} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-rose-200 transition-all group">
                        <p className="text-xs font-black text-slate-800 mb-2 tracking-tight group-hover:text-rose-600 transition-colors">“{objection.text}”</p>
                        <div className="flex items-start gap-2">
                           <span className="text-[9px] font-black uppercase text-indigo-500 mt-0.5 tracking-widest shrink-0">Strategy:</span>
@@ -636,7 +636,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
           <CompetitorCard comp={result.competitiveHub.cognigy} name="Cognigy" />
           <CompetitorCard comp={result.competitiveHub.amelia} name="Amelia" />
-          {result.competitiveHub.others.map((c, i) => <CompetitorCard key={i} comp={c} name={c.name} />)}
+          {result.competitiveHub.others.map((c, i) => <CompetitorCard key={`comp-${c.name}-${i}`} comp={c} name={c.name} />)}
         </div>
       </section>
 
@@ -651,7 +651,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ result, files, conte
         
         <div className="space-y-16">
           {result.objectionHandling.map((o, i) => (
-            <div key={i} className="relative group">
+            <div key={`obj-drill-${i}`} className="relative group">
               <div className="p-10 rounded-[3.5rem] bg-slate-800/50 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800 transition-all duration-500 overflow-hidden relative">
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12">
                   <div className="lg:col-span-5 space-y-8">

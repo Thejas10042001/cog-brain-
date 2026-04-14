@@ -243,7 +243,7 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           {strategy.strategicPillars.map((pillar, i) => (
-                            <div key={i} className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-6 group hover:border-emerald-900/50 transition-all">
+                            <div key={`${pillar.title}-${i}`} className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-6 group hover:border-emerald-900/50 transition-all">
                               <div className="flex items-center gap-3">
                                 <span className="text-emerald-500 font-black text-xl">0{i+1}</span>
                                 <h4 className="text-xl font-black text-white">{pillar.title}</h4>
@@ -251,7 +251,7 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
                               <p className="text-slate-400 text-sm font-medium leading-relaxed">{pillar.description}</p>
                               <div className="space-y-3 pt-4 border-t border-slate-800">
                                 {pillar.tacticalActions.map((action, j) => (
-                                  <div key={j} className="flex items-start gap-3">
+                                  <div key={`${action}-${j}`} className="flex items-start gap-3">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                                     <p className="text-xs font-bold text-slate-300">{action}</p>
                                   </div>
@@ -292,7 +292,7 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
                         </div>
                         <div className="space-y-6">
                           {strategy.objectionDefense.map((item, i) => (
-                            <div key={i} className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] flex flex-col md:flex-row gap-8 items-start">
+                            <div key={`${item.objection}-${i}`} className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] flex flex-col md:flex-row gap-8 items-start">
                               <div className="flex-1 space-y-3">
                                 <h5 className="text-[10px] font-black uppercase tracking-widest text-rose-400">The Friction Node</h5>
                                 <p className="text-xl font-bold text-white">“{item.objection}”</p>
@@ -319,7 +319,7 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
                         <div className="relative space-y-12">
                           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-800" />
                           {strategy.roadmap.map((step, i) => (
-                            <div key={i} className="relative pl-20 group">
+                            <div key={`${step.phase}-${i}`} className="relative pl-20 group">
                               <div className="absolute left-0 top-0 w-12 h-12 bg-slate-950 border-2 border-indigo-600 rounded-full flex items-center justify-center z-10 group-hover:scale-110 transition-transform">
                                 <span className="text-white font-black text-sm">{i+1}</span>
                               </div>
@@ -327,7 +327,7 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
                                 <h4 className="text-xl font-black text-white uppercase tracking-tight">{step.phase}</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   {step.milestones.map((m, j) => (
-                                    <div key={j} className="flex items-center gap-3 p-3 bg-slate-950/50 rounded-xl border border-slate-800/50">
+                                    <div key={`${m}-${j}`} className="flex items-center gap-3 p-3 bg-slate-950/50 rounded-xl border border-slate-800/50">
                                       <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                                       <span className="text-xs font-bold text-slate-400">{m}</span>
                                     </div>

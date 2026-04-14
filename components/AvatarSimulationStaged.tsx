@@ -970,7 +970,7 @@ export const AvatarSimulationStaged: FC<{
            <div className="text-center animate-celebrate-text">
               <div className="flex justify-center mb-6 gap-2">
                  {[...Array(20)].map((_, i) => (
-                   <div key={i} className="confetti" style={{ 
+                   <div key={`confetti-${i}`} className="confetti" style={{ 
                      backgroundColor: ['#4f46e5', '#10b981', '#fbbf24', '#f43f5e'][i % 4],
                      left: `${Math.random() * 100}%`,
                      animationDelay: `${Math.random() * 2}s`
@@ -1454,7 +1454,7 @@ export const AvatarSimulationStaged: FC<{
                                  <p className="text-[9px] font-bold text-slate-400 italic border-l-2 border-slate-200 pl-4 py-1" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>Awaiting interaction node...</p>
                               ) : (
                                  attempts.map((at, i) => (
-                                    <div key={i} className={`p-4 rounded-2xl border ${at.result === 'SUCCESS' ? 'bg-emerald-50 border-emerald-100' : at.result === 'SKIPPED' ? 'bg-slate-50 border-slate-100' : 'bg-rose-50 border-rose-100'}`}>
+                                    <div key={`at-${i}`} className={`p-4 rounded-2xl border ${at.result === 'SUCCESS' ? 'bg-emerald-50 border-emerald-100' : at.result === 'SKIPPED' ? 'bg-slate-50 border-slate-100' : 'bg-rose-50 border-rose-100'}`}>
                                        <div className="flex justify-between items-center mb-3">
                                           <div className="flex items-center gap-2">
                                              <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${at.result === 'SUCCESS' ? 'bg-emerald-500 text-white' : at.result === 'SKIPPED' ? 'bg-slate-400 text-white' : 'bg-rose-600 text-white'}`} style={{ fontSize: `${historyFontScale * 0.5}rem` }}>

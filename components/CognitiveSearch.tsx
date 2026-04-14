@@ -10,12 +10,12 @@ const FormattedText: FC<{ text: string }> = ({ text }) => {
     <div className="space-y-6 text-slate-300 leading-relaxed text-lg font-serif">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
-        if (!trimmed) return <div key={idx} className="h-4" />;
+        if (!trimmed) return <div key={`empty-${idx}`} className="h-4" />;
 
         if (trimmed.startsWith('### ')) {
           const title = trimmed.replace('### ', '');
           return (
-            <div key={idx} className="pt-8 pb-4 border-b-2 border-slate-800 mb-4 animate-in fade-in slide-in-from-left-4 first:pt-0">
+            <div key={`title-${idx}`} className="pt-8 pb-4 border-b-2 border-slate-800 mb-4 animate-in fade-in slide-in-from-left-4 first:pt-0">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-6 bg-indigo-600 rounded-full shadow-sm"></div>
                 <h4 className="text-[13px] font-black uppercase tracking-[0.3em] text-white drop-shadow-sm">{title}</h4>
@@ -26,16 +26,16 @@ const FormattedText: FC<{ text: string }> = ({ text }) => {
 
         const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ');
         return (
-          <div key={idx} className={isBullet ? "flex gap-4 pl-6 border-l-4 border-indigo-900/30 py-2 bg-slate-800/40 rounded-r-xl" : "py-1"}>
+          <div key={`line-${idx}`} className={isBullet ? "flex gap-4 pl-6 border-l-4 border-indigo-900/30 py-2 bg-slate-800/40 rounded-r-xl" : "py-1"}>
             {isBullet && <div className="mt-2.5 w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-sm shrink-0"></div>}
             <div className="flex-1">
               {trimmed.split(/(\*\*.*?\*\*|\*.*?\*)/g).map((part, i) => {
                 if (part.startsWith('**') && part.endsWith('**')) {
                   const inner = part.slice(2, -2);
-                  return <strong key={i} className="font-extrabold text-white bg-indigo-900/50 px-2 py-0.5 rounded">{inner}</strong>;
+                  return <strong key={`bold-${i}`} className="font-extrabold text-white bg-indigo-900/50 px-2 py-0.5 rounded">{inner}</strong>;
                 }
                 if (part.startsWith('*') && part.endsWith('*')) {
-                  return <em key={i} className="italic text-indigo-400 font-semibold">{part.slice(1, -1)}</em>;
+                  return <em key={`italic-${i}`} className="italic text-indigo-400 font-semibold">{part.slice(1, -1)}</em>;
                 }
                 return part;
               })}
@@ -330,7 +330,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
                
                <div className="flex flex-wrap gap-2 justify-end max-w-lg">
                   {context.answerStyles.map((style, i) => (
-                    <span key={i} className="px-4 py-2 bg-indigo-900/10 text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-indigo-800 shadow-sm">
+                    <span key={`${style}-${i}`} className="px-4 py-2 bg-indigo-900/10 text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-indigo-800 shadow-sm">
                       {style}
                     </span>
                   ))}
@@ -351,7 +351,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    {result.citations.map((cit, i) => (
-                     <div key={i} className="p-8 bg-slate-800/50 border border-slate-800 rounded-[2rem] group hover:bg-slate-800 hover:border-indigo-500/50 transition-all duration-500">
+                     <div key={`${cit.sourceFile}-${i}`} className="p-8 bg-slate-800/50 border border-slate-800 rounded-[2rem] group hover:bg-slate-800 hover:border-indigo-500/50 transition-all duration-500">
                         <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                           <ICONS.Document className="w-3.5 h-3.5" /> {cit.sourceFile || 'Intelligence Store'}
                         </p>
@@ -372,7 +372,7 @@ export const CognitiveSearch: FC<CognitiveSearchProps> = ({ activeDocuments, con
           <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 text-center">Reasoning Suggestions</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {suggestions.map((text, i) => (
-              <button key={i} onClick={() => {setQuery(text); handleSearch(undefined, text);}} className="p-10 bg-slate-900 border border-slate-800 rounded-[2.5rem] text-left hover:border-indigo-500 hover:shadow-2xl transition-all shadow-xl group border-b-4 border-b-indigo-900 hover:border-b-indigo-600 active:scale-95 duration-300">
+              <button key={`${text}-${i}`} onClick={() => {setQuery(text); handleSearch(undefined, text);}} className="p-10 bg-slate-900 border border-slate-800 rounded-[2.5rem] text-left hover:border-indigo-500 hover:shadow-2xl transition-all shadow-xl group border-b-4 border-b-indigo-900 hover:border-b-indigo-600 active:scale-95 duration-300">
                 <p className="text-indigo-400 text-[9px] font-black uppercase tracking-widest mb-4 group-hover:translate-x-1 transition-transform">Suggested Node {i + 1}</p>
                 <p className="text-lg font-bold text-white leading-tight">“{text}”</p>
               </button>

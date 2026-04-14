@@ -679,10 +679,10 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                             className="w-full bg-slate-900 border-4 border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-white outline-none focus:border-indigo-600 transition-all shadow-2xl appearance-none"
                           >
                             <optgroup label="Critical Objections">
-                              {analysis.objectionHandling.map((o, i) => <option key={i} value={o.objection}>{o.objection}</option>)}
+                              {analysis.objectionHandling.map((o, i) => <option key={`obj-${i}`} value={o.objection}>{o.objection}</option>)}
                             </optgroup>
                             <optgroup label="Anticipated Questions">
-                              {analysis.predictedQuestions.map((q, i) => <option key={i} value={q.customerAsks}>{q.customerAsks}</option>)}
+                              {analysis.predictedQuestions.map((q, i) => <option key={`q-${i}`} value={q.customerAsks}>{q.customerAsks}</option>)}
                             </optgroup>
                           </select>
                           <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -700,11 +700,11 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                            className="w-full bg-slate-900 border-4 border-slate-800 rounded-[2rem] px-10 py-6 text-lg font-black text-white outline-none focus:border-indigo-600 transition-all shadow-2xl appearance-none"
                          >
                            <optgroup label="Key Strategic Points">
-                             {analysis.finalCoaching.dos.map((d, i) => <option key={i} value={d}>{d}</option>)}
+                             {analysis.finalCoaching.dos.map((d, i) => <option key={`do-${i}`} value={d}>{d}</option>)}
                              <option value={analysis.finalCoaching.finalAdvice}>Final Coaching Advice</option>
                            </optgroup>
                            <optgroup label="Opening Lines">
-                             {analysis.openingLines.map((o, i) => <option key={i} value={o.text}>{o.text}</option>)}
+                             {analysis.openingLines.map((o, i) => <option key={`hook-${i}`} value={o.text}>{o.text}</option>)}
                            </optgroup>
                          </select>
                          <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -754,7 +754,7 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                           <div className="flex flex-wrap gap-1.5">
                             {meetingContext.clientsKeywords.length > 0 ? (
                               meetingContext.clientsKeywords.slice(0, 6).map((kw, i) => (
-                                <span key={i} className="px-2 py-0.5 bg-indigo-900/30 text-indigo-400 text-[8px] font-black uppercase rounded border border-indigo-900/50">{kw}</span>
+                                <span key={`${kw}-${i}`} className="px-2 py-0.5 bg-indigo-900/30 text-indigo-400 text-[8px] font-black uppercase rounded border border-indigo-900/50">{kw}</span>
                               ))
                             ) : (
                               <span className="text-[9px] text-slate-600 italic">No keywords extracted</span>
@@ -875,7 +875,7 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                       {evaluation.breathPacingGuide.split(/(\[Take Breath\]|\[Pause - \d+s\]|\[Slow Down\])/g).map((part, i) => (
                         (part.startsWith('[Take Breath]') || part.startsWith('[Pause') || part.startsWith('[Slow'))
                         ? <motion.span 
-                            key={i} 
+                            key={`${part}-${i}`} 
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: i * 0.05 }}
@@ -1089,7 +1089,7 @@ Target Products: ${meetingContext.targetProducts || 'Core solution suite'}
                 )}
                 {transcription.map((turn, i) => (
                   <motion.div 
-                    key={i} 
+                    key={`${turn.user.slice(0, 20)}-${i}`} 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-4"

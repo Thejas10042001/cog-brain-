@@ -407,6 +407,80 @@ export interface AppUpdate {
   version?: string;
 }
 
+export interface UserProfile {
+  name: string;
+  email: string;
+  phone: string;
+  photoURL: string;
+  role: string;
+  organization?: string;
+}
+
+export interface UserSecurity {
+  mfaEnabled: boolean;
+  mfaType?: 'email' | 'authenticator';
+  lastLogin: number;
+  sessions: Array<{
+    id: string;
+    device: string;
+    lastActive: number;
+    isCurrent: boolean;
+  }>;
+}
+
+export interface UserPin {
+  hashedPin: string;
+  recoveryQuestion: string;
+  recoveryAnswerHash: string;
+  failedAttempts: number;
+  isLocked: boolean;
+}
+
+export interface UserIntegrations {
+  googleDrive: {
+    connected: boolean;
+    lastSync?: number;
+  };
+  googleCalendar: {
+    connected: boolean;
+    lastSync?: number;
+  };
+}
+
+export interface UserPreferences {
+  notifications: {
+    email: boolean;
+    inApp: boolean;
+    onSimulationComplete: boolean;
+    onNewRecommendations: boolean;
+    onErrors: boolean;
+  };
+  defaultWorkspace: 'simulation' | 'grooming' | 'testing';
+  experimentalFeatures: boolean;
+}
+
+export interface UserPrivacy {
+  dataSharing: boolean;
+  consentTimestamp: number;
+}
+
+export interface ActivityLog {
+  id: string;
+  type: 'simulation' | 'upload' | 'login' | 'security' | 'integration';
+  action: string;
+  timestamp: number;
+  details?: string;
+}
+
+export interface UserSettings {
+  profile: UserProfile;
+  security: UserSecurity;
+  pin: UserPin;
+  integrations: UserIntegrations;
+  preferences: UserPreferences;
+  privacy: UserPrivacy;
+}
+
 export interface CalendarEvent {
   id: string;
   summary: string;

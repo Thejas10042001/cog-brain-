@@ -37,8 +37,16 @@ const {
   signOut,
   signInWithPopup,
   GoogleAuthProvider,
-  updateProfile
+  updateProfile,
+  updateEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  sendEmailVerification
 } = firebaseAuth as any;
+
+import * as firebaseStorage from "firebase/storage";
+const { getStorage, ref, uploadBytes, getDownloadURL } = firebaseStorage as any;
 
 // Import the Firebase configuration
 import firebaseConfig from '../firebase-applet-config.json';
@@ -47,7 +55,7 @@ import firebaseConfig from '../firebase-applet-config.json';
 export type User = any;
 export type Auth = any;
 
-import { StoredDocument, SalesGPTSession } from "../types";
+import { StoredDocument, SalesGPTSession, UserSettings, ActivityLog } from "../types";
 
 // State to track if we've hit a permission error
 let internalPermissionError = false;
@@ -55,6 +63,7 @@ let internalPermissionError = false;
 // Properly type db and auth instances instead of using any
 export let db: Firestore | null = null;
 export let auth: Auth | null = null;
+export let storage: any = null;
 
 // Initialize Firebase App, Firestore, and Auth
 try {
@@ -78,6 +87,7 @@ try {
     }
     
     auth = getAuth(app);
+    storage = getStorage(app);
   }
 } catch (error) {
   console.error("Firebase Initialization Error:", error);
@@ -157,6 +167,7 @@ const INVITES_COLLECTION = "group_invites";
 const MESSAGES_COLLECTION = "group_messages";
 const USERS_COLLECTION = "users";
 const UPDATES_COLLECTION = "app_updates";
+const ACTIVITY_LOGS_COLLECTION = "activity_logs";
 
 // Helper to remove undefined values from objects recursively for Firestore
 const sanitizeData = (data: any): any => {
@@ -739,6 +750,125 @@ export const markUpdateAsRead = async (updateId: string): Promise<boolean> => {
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
     return false;
+  }
+};
+
+// User Settings & Profile Functions
+export const fetchUserSettings = async (): Promise<UserSettings | null> => {
+  if (!db || !auth || !auth.currentUser) return null;
+  const path = USERS_COLLECTION;
+  try {
+    const userRef = doc(db, path, auth.currentUser.uid);
+    const docSnap = await getDoc(userRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return {
+        profile: data.profile || { name: '', email: auth.currentUser.email, phone: '', photoURL: auth.currentUser.photoURL, role: '' },
+        security: data.security || { mfaEnabled: false, lastLogin: Date.now(), sessions: [] },
+        pin: data.pin || { hashedPin: '', recoveryQuestion: '', recoveryAnswerHash: '', failedAttempts: 0, isLocked: false },
+        integrations: data.integrations || { googleDrive: { connected: false }, googleCalendar: { connected: false } },
+        preferences: data.preferences || { notifications: { email: true, inApp: true, onSimulationComplete: true, onNewRecommendations: true, onErrors: true }, defaultWorkspace: 'simulation', experimentalFeatures: false },
+        privacy: data.privacy || { dataSharing: true, consentTimestamp: Date.now() }
+      } as UserSettings;
+    }
+    return null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return null;
+  }
+};
+
+export const updateUserSettings = async (settings: Partial<UserSettings>): Promise<boolean> => {
+  if (!db || !auth || !auth.currentUser) return false;
+  const path = USERS_COLLECTION;
+  try {
+    const userRef = doc(db, path, auth.currentUser.uid);
+    await updateDoc(userRef, sanitizeData(settings));
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+    return false;
+  }
+};
+
+export const uploadProfilePicture = async (file: File): Promise<string | null> => {
+  if (!storage || !auth || !auth.currentUser) return null;
+  try {
+    const storageRef = ref(storage, `users/${auth.currentUser.uid}/profile_pic_${Date.now()}`);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    return null;
+  }
+};
+
+export const logActivity = async (activity: Omit<ActivityLog, 'id' | 'timestamp'>): Promise<void> => {
+  if (!db || !auth || !auth.currentUser) return;
+  const path = ACTIVITY_LOGS_COLLECTION;
+  try {
+    await addDoc(getUserCollection(path), {
+      ...activity,
+      timestamp: Timestamp.now()
+    });
+  } catch (error) {
+    console.error("Error logging activity:", error);
+  }
+};
+
+export const fetchActivityLogs = async (limitCount: number = 20): Promise<ActivityLog[]> => {
+  if (!db || !auth || !auth.currentUser) return [];
+  const path = ACTIVITY_LOGS_COLLECTION;
+  try {
+    const q = query(getUserCollection(path));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: doc.data().timestamp?.toMillis() || Date.now()
+    })).sort((a, b) => b.timestamp - a.timestamp).slice(0, limitCount) as ActivityLog[];
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return [];
+  }
+};
+
+export const changeUserPassword = async (currentPass: string, newPass: string): Promise<boolean> => {
+  if (!auth || !auth.currentUser) return false;
+  try {
+    const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPass);
+    await reauthenticateWithCredential(auth.currentUser, credential);
+    await updatePassword(auth.currentUser, newPass);
+    return true;
+  } catch (error) {
+    console.error("Error changing password:", error);
+    throw error;
+  }
+};
+
+export const verifyUserEmail = async (): Promise<boolean> => {
+  if (!auth || !auth.currentUser) return false;
+  try {
+    await sendEmailVerification(auth.currentUser);
+    return true;
+  } catch (error) {
+    console.error("Error sending verification email:", error);
+    return false;
+  }
+};
+
+export const deleteUserAccount = async (): Promise<boolean> => {
+  if (!auth || !auth.currentUser || !db) return false;
+  try {
+    const userId = auth.currentUser.uid;
+    // Delete user data from Firestore first (optional, depends on your policy)
+    // await deleteDoc(doc(db, USERS_COLLECTION, userId));
+    
+    await auth.currentUser.delete();
+    return true;
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    throw error;
   }
 };
 

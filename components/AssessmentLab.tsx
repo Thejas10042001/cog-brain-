@@ -532,7 +532,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
                     {currentQ.options?.map((opt, i) => (
                       <button
-                        key={i}
+                        key={`${opt}-${i}`}
                         onClick={() => setAnswers(prev => ({ ...prev, [currentQ.id]: opt }))}
                         className={`p-8 rounded-[2rem] border-2 text-left transition-all flex items-center gap-6 ${answers[currentQ.id] === opt ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-900 border-slate-800 text-slate-100 hover:border-indigo-500/50'}`}
                       >

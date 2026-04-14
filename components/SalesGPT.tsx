@@ -783,13 +783,13 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     </div>
                   )}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {COGNITIVE_PRO_OPTIONS.map(option => {
+                    {COGNITIVE_PRO_OPTIONS.map((option, oIdx) => {
                       const isSelected = selectedStyles.includes(option);
                       const validation = styleValidation[option];
                       const isWrong = validation && !validation.isValid;
                       
                       return (
-                        <div key={option} className="flex flex-col gap-2">
+                        <div key={`opt-${option}-${oIdx}`} className="flex flex-col gap-2">
                           <button
                             onClick={() => toggleStyle(option)}
                             className={`px-4 py-4 rounded-2xl border-2 text-left transition-all flex flex-col gap-2 relative ${
@@ -975,8 +975,8 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                   
                   {msg.selectedStyles && msg.selectedStyles.length > 0 && (
                     <div className={`flex flex-wrap gap-2 mb-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      {msg.selectedStyles.map(style => (
-                        <span key={style} className="px-3 py-1 bg-slate-800/50 border border-slate-700/50 rounded-full text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                      {msg.selectedStyles.map((style, sIdx) => (
+                        <span key={`style-${style}-${sIdx}`} className="px-3 py-1 bg-slate-800/50 border border-slate-700/50 rounded-full text-[9px] font-black text-indigo-400 uppercase tracking-widest">
                           {style}
                         </span>
                       ))}
@@ -1120,7 +1120,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                         <div className="flex flex-wrap gap-3">
                           {msg.citations.map((citation, idx) => (
                             <button
-                              key={idx}
+                              key={`${citation.sourceFile}-${idx}`}
                               onClick={() => setSelectedCitation(citation)}
                               className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm text-slate-300 group"
                             >
@@ -1149,7 +1149,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                         <div className="flex flex-col gap-2">
                           {msg.followUpQuestions.map((q, idx) => (
                             <motion.button
-                              key={idx}
+                              key={`${q}-${idx}`}
                               whileHover={{ x: 5, backgroundColor: 'rgba(79, 70, 229, 0.1)' }}
                               whileTap={{ scale: 0.99 }}
                               onClick={() => handleSend(q)}
