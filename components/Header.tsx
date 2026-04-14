@@ -220,16 +220,6 @@ export const Header: React.FC<HeaderProps> = ({
                       </button>
                       <button 
                         onClick={() => {
-                          setShowEditProfile(true);
-                          setShowProfileDropdown(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all group"
-                      >
-                        <ICONS.User className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
-                        <span className="text-xs font-bold">Edit Profile</span>
-                      </button>
-                      <button 
-                        onClick={() => {
                           setShowNotifications(true);
                           setShowProfileDropdown(false);
                         }}
