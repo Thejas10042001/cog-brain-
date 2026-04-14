@@ -758,6 +758,7 @@ const App: React.FC = () => {
         <OnboardingTour 
           onComplete={completeTour} 
           onTabChange={(tab) => setActiveTab(tab as any)} 
+          activeTab={activeTab}
         />
       )}
       

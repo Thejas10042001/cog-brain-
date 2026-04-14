@@ -143,6 +143,7 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
 
             {strategy && (
               <button 
+                id="tour-send-report"
                 onClick={handleSendEmail}
                 disabled={isSendingEmail}
                 className={`px-8 py-4 ${emailSent ? 'bg-emerald-600' : 'bg-slate-800'} hover:bg-slate-700 disabled:opacity-50 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center gap-3 border border-slate-700`}

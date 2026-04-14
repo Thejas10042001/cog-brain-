@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ICONS } from '../constants';
 
 interface AnimatedGuideProps {
-  type: 'getting-started' | 'strategy-lab' | 'simulations' | 'intelligence-tools';
+  type: 'getting-started' | 'strategy-lab' | 'simulations' | 'intelligence-tools' | 'privacy-policy' | 'terms-of-service' | 'security-audit';
 }
 
 export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
@@ -175,6 +175,116 @@ export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
                 className="absolute top-1/2 left-1/2 w-1 h-1 bg-indigo-400 rounded-full"
               />
             ))}
+          </div>
+        </div>
+      );
+
+    case 'privacy-policy':
+      return (
+        <div className="relative w-full h-48 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.1, 0.2, 0.1]
+              }}
+              transition={{ duration: 4, repeat: Infinity }}
+              className="w-40 h-40 bg-green-500 rounded-full blur-3xl"
+            />
+          </div>
+          
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative z-10 bg-slate-800/80 backdrop-blur-md p-6 rounded-2xl border border-green-500/30 shadow-2xl flex flex-col items-center gap-4"
+          >
+            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+              <ICONS.Lock className="w-6 h-6 text-green-500" />
+            </div>
+            <div className="space-y-2 text-center">
+              <div className="h-2 w-24 bg-green-500/20 rounded-full mx-auto" />
+              <div className="h-1.5 w-32 bg-slate-700/50 rounded-full mx-auto" />
+            </div>
+            <div className="flex gap-2">
+              <div className="px-2 py-1 bg-green-500/10 rounded border border-green-500/20 text-[8px] font-black text-green-500 uppercase">Encrypted</div>
+              <div className="px-2 py-1 bg-green-500/10 rounded border border-green-500/20 text-[8px] font-black text-green-500 uppercase">Isolated</div>
+            </div>
+          </motion.div>
+        </div>
+      );
+
+    case 'terms-of-service':
+      return (
+        <div className="relative w-full h-48 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+          <div className="absolute inset-0 grid grid-cols-12 gap-1 p-2 opacity-5">
+            {Array.from({ length: 144 }).map((_, i) => (
+              <div key={i} className="h-1 bg-white rounded-full" />
+            ))}
+          </div>
+          
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="relative z-10 bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-2xl w-40 space-y-3"
+          >
+            <div className="flex justify-between items-center">
+              <div className="w-8 h-1 bg-indigo-500 rounded-full" />
+              <div className="w-3 h-3 bg-indigo-500/20 rounded-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-1 w-full bg-slate-700 rounded-full" />
+              <div className="h-1 w-full bg-slate-700 rounded-full" />
+              <div className="h-1 w-2/3 bg-slate-700 rounded-full" />
+            </div>
+            <div className="pt-2 border-t border-slate-700 flex justify-end">
+              <div className="w-12 h-4 bg-indigo-600 rounded flex items-center justify-center">
+                <span className="text-[6px] font-black text-white uppercase">Accept</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      );
+
+    case 'security-audit':
+      return (
+        <div className="relative w-full h-48 bg-slate-900/50 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <div className="w-40 h-40 border border-red-600/10 rounded-full border-dashed" />
+          </motion.div>
+          
+          <div className="relative z-10 flex flex-col items-center gap-3">
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                boxShadow: [
+                  "0 0 0px rgba(220, 38, 38, 0)",
+                  "0 0 20px rgba(220, 38, 38, 0.3)",
+                  "0 0 0px rgba(220, 38, 38, 0)"
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-16 h-16 bg-red-600/20 rounded-2xl border border-red-600/50 flex items-center justify-center"
+            >
+              <ICONS.Shield className="w-8 h-8 text-red-600" />
+            </motion.div>
+            <div className="text-center">
+              <div className="text-[10px] font-black text-white uppercase tracking-widest">System Audit</div>
+              <div className="text-[8px] font-bold text-red-500 uppercase tracking-[0.2em] mt-1">Status: Secure</div>
+            </div>
+            <div className="flex gap-1">
+              {[0, 1, 2].map(i => (
+                <motion.div
+                  key={i}
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1, delay: i * 0.2, repeat: Infinity }}
+                  className="w-1 h-1 rounded-full bg-red-600"
+                />
+              ))}
+            </div>
           </div>
         </div>
       );

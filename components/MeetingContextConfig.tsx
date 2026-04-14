@@ -962,7 +962,7 @@ OPERATIONAL CONSTRAINTS:
   };
 
   return (
-    <div className="space-y-12" id="config-top">
+    <div className="space-y-12" id="tour-context-config">
       <AnimatePresence>
         {showKycGuide && (
           <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">

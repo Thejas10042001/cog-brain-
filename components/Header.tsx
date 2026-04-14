@@ -1,8 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ICONS } from '../constants';
-import { logoutUser, User, fetchAppUpdates, markUpdateAsRead, seedInitialUpdates } from '../services/firebaseService';
+import { logoutUser, User, fetchAppUpdates, markUpdateAsRead, seedInitialUpdates, updateUserProfile } from '../services/firebaseService';
 import { googleService, CalendarEvent } from '../services/googleService';
 import { AppUpdate } from '../types';
 
@@ -28,10 +29,15 @@ export const Header: React.FC<HeaderProps> = ({
   const [showUtility, setShowUtility] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhoto, setEditPhoto] = useState('');
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [updates, setUpdates] = useState<AppUpdate[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [selectedUpdate, setSelectedUpdate] = useState<AppUpdate | null>(null);
   const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+  const [isSyncingCalendar, setIsSyncingCalendar] = useState(false);
   const [activeMagnifierTab, setActiveMagnifierTab] = useState<'simulation' | 'typography'>('simulation');
   const utilityRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -41,6 +47,8 @@ export const Header: React.FC<HeaderProps> = ({
     if (user) {
       loadUpdates();
       checkCalendarStatus();
+      setEditName(user.displayName || '');
+      setEditPhoto(user.photoURL || '');
     }
   }, [user]);
 
@@ -51,6 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const checkCalendarStatus = async () => {
+    setIsSyncingCalendar(true);
     try {
       const status = await googleService.getAuthStatus();
       setIsCalendarConnected(status);
@@ -60,6 +69,8 @@ export const Header: React.FC<HeaderProps> = ({
       }
     } catch (error) {
       console.error("Calendar status check failed:", error);
+    } finally {
+      setIsSyncingCalendar(false);
     }
   };
 
@@ -67,6 +78,16 @@ export const Header: React.FC<HeaderProps> = ({
     const success = await markUpdateAsRead(id);
     if (success) {
       setUpdates(prev => prev.map(u => u.id === id ? { ...u, isRead: true } : u));
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingProfile(true);
+    const success = await updateUserProfile(editName, editPhoto);
+    setIsUpdatingProfile(false);
+    if (success) {
+      setShowEditProfile(false);
     }
   };
 
@@ -87,6 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   const unreadCount = updates.filter(u => !u.isRead).length;
+  const meetingCount = calendarEvents.length;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-slate-800/50 h-20 transition-all duration-500">
@@ -110,7 +132,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="flex items-center gap-6">
           {user && (
-            <div className="relative" ref={profileRef}>
+            <div className="relative" ref={profileRef} id="tour-profile-dropdown">
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -119,10 +141,14 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <div className="flex flex-col items-end">
                   <span className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Neural Link Active</span>
-                  <span className="text-[11px] font-black text-slate-200 truncate max-w-[150px]">{user.email}</span>
+                  <span className="text-[11px] font-black text-slate-200 truncate max-w-[150px]">{user.displayName || user.email}</span>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-lg">
-                  {user.email?.[0].toUpperCase()}
+                <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-lg overflow-hidden">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    (user.displayName?.[0] || user.email?.[0] || 'U').toUpperCase()
+                  )}
                 </div>
                 <ICONS.ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
               </motion.button>
@@ -135,11 +161,31 @@ export const Header: React.FC<HeaderProps> = ({
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     className="absolute right-0 mt-4 w-64 bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden z-50"
                   >
-                    <div className="p-4 border-b border-slate-800 bg-slate-800/30">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Authenticated User</p>
-                      <p className="text-xs font-bold text-white truncate">{user.email}</p>
+                    <div className="p-4 border-b border-slate-800 bg-slate-800/30 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg overflow-hidden shrink-0">
+                        {user.photoURL ? (
+                          <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          (user.displayName?.[0] || user.email?.[0] || 'U').toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Authenticated User</p>
+                        <p className="text-xs font-bold text-white truncate">{user.displayName || 'Neural Agent'}</p>
+                        <p className="text-[9px] text-slate-500 truncate">{user.email}</p>
+                      </div>
                     </div>
                     <div className="p-2">
+                      <button 
+                        onClick={() => {
+                          setShowEditProfile(true);
+                          setShowProfileDropdown(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all group"
+                      >
+                        <ICONS.User className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
+                        <span className="text-xs font-bold">Edit Profile</span>
+                      </button>
                       <button 
                         onClick={() => {
                           onStartTour?.();
@@ -149,6 +195,16 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         <ICONS.Sparkles className="w-4 h-4 text-indigo-500 group-hover:text-indigo-400" />
                         <span className="text-xs font-bold">Start Onboarding Tour</span>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          window.open('/?page=support', '_blank');
+                          setShowProfileDropdown(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/20 rounded-xl transition-all group"
+                      >
+                        <ICONS.Brain className="w-4 h-4 text-emerald-500 group-hover:text-emerald-400" />
+                        <span className="text-xs font-bold">Neural Support</span>
                       </button>
                       <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all group">
                         <ICONS.Settings className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
@@ -288,7 +344,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Notifications Overlay */}
-          <div className="relative" ref={notificationRef}>
+          <div className="relative" ref={notificationRef} id="tour-notifications">
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -298,8 +354,10 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <div className="relative">
                 <ICONS.Bell className="w-6 h-6" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
+                {(unreadCount > 0 || meetingCount > 0) && (
+                  <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-600 rounded-full border-2 border-slate-900 shadow-[0_0_10px_rgba(239,68,68,0.5)] flex items-center justify-center text-[8px] font-black text-white px-1">
+                    {unreadCount + meetingCount}
+                  </span>
                 )}
               </div>
             </motion.button>
@@ -331,8 +389,25 @@ export const Header: React.FC<HeaderProps> = ({
                         <div className="flex items-center gap-2">
                           <ICONS.Calendar className="w-3 h-3 text-indigo-400" />
                           <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Upcoming Strategy Sessions</span>
+                          {isCalendarConnected && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                checkCalendarStatus();
+                              }}
+                              disabled={isSyncingCalendar}
+                              className={`p-1 hover:bg-indigo-500/20 rounded-md transition-all ${isSyncingCalendar ? 'animate-spin opacity-50' : ''}`}
+                              title="Sync Neural Calendar"
+                            >
+                              <ICONS.Refresh className="w-2.5 h-2.5 text-indigo-400" />
+                            </button>
+                          )}
                         </div>
-                        {!isCalendarConnected && (
+                        {isCalendarConnected && calendarEvents.length > 0 ? (
+                          <div className="px-2 py-0.5 bg-indigo-600 text-[8px] font-black text-white rounded-full shadow-lg shadow-indigo-900/40">
+                            {calendarEvents.length} Scheduled
+                          </div>
+                        ) : !isCalendarConnected && (
                           <button 
                             onClick={async () => {
                               const url = await googleService.getAuthUrl();
@@ -348,8 +423,8 @@ export const Header: React.FC<HeaderProps> = ({
                       {isCalendarConnected ? (
                         <div className="space-y-2">
                           {calendarEvents.length > 0 ? (
-                            calendarEvents.slice(0, 3).map(event => (
-                              <div key={event.id} className="flex items-center gap-3 p-2 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                            calendarEvents.slice(0, 3).map((event, i) => (
+                              <div key={`${event.id || 'event'}-${i}`} className="flex items-center gap-3 p-2 bg-slate-800/40 rounded-xl border border-slate-700/30">
                                 <div className="w-8 h-8 rounded-lg bg-indigo-600/20 flex flex-col items-center justify-center text-indigo-400">
                                   <span className="text-[8px] font-black leading-none">
                                     {event.start.dateTime ? new Date(event.start.dateTime).getDate() : ''}
@@ -388,9 +463,9 @@ export const Header: React.FC<HeaderProps> = ({
 
                     {/* Updates List */}
                     <div className="p-2 space-y-1">
-                      {updates.map(update => (
+                      {updates.map((update, i) => (
                         <button
-                          key={update.id}
+                          key={`${update.id || 'update'}-${i}`}
                           onClick={() => {
                             setSelectedUpdate(update);
                             handleMarkAsRead(update.id);
@@ -423,26 +498,26 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </AnimatePresence>
 
-            {/* Detailed Update Modal */}
-            <AnimatePresence>
-              {selectedUpdate && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            {/* Detailed Update Modal - Portaled to body to escape parent constraints */}
+            {selectedUpdate && createPortal(
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-12 pointer-events-none">
+                <AnimatePresence>
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setSelectedUpdate(null)}
-                    className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+                    className="absolute inset-0 bg-slate-950/90 backdrop-blur-md pointer-events-auto"
                   />
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    initial={{ opacity: 0, scale: 0.9, y: 40 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden"
+                    exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                    className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden pointer-events-auto flex flex-col max-h-[90vh]"
                   >
-                    <div className="p-10 space-y-8">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-2">
+                    <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar">
+                      <div className="flex items-start justify-between gap-6 mb-8">
+                        <div className="space-y-3">
                           <div className="flex items-center gap-3">
                             <span className="px-3 py-1 bg-indigo-600 text-[10px] font-black text-white rounded-full uppercase tracking-widest">
                               {selectedUpdate.version}
@@ -451,42 +526,140 @@ export const Header: React.FC<HeaderProps> = ({
                               {new Date(selectedUpdate.timestamp).toLocaleDateString()}
                             </span>
                           </div>
-                          <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
+                          <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter leading-tight">
                             {selectedUpdate.title}
                           </h2>
                         </div>
                         <button 
                           onClick={() => setSelectedUpdate(null)}
-                          className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-all"
+                          className="w-12 h-12 shrink-0 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:bg-slate-700"
                         >
                           <ICONS.X className="w-6 h-6" />
                         </button>
                       </div>
 
-                      <div className="space-y-6">
-                        <div className="h-1 w-20 bg-indigo-600 rounded-full" />
-                        <p className="text-slate-300 text-lg font-medium leading-relaxed">
-                          {selectedUpdate.detailedInfo}
-                        </p>
+                      <div className="space-y-8">
+                        <div className="h-1.5 w-24 bg-indigo-600 rounded-full" />
+                        <div className="prose prose-invert max-w-none">
+                          <p className="text-slate-300 text-lg md:text-xl font-medium leading-relaxed">
+                            {selectedUpdate.detailedInfo}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="pt-8 border-t border-slate-800 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Neural Integrity Verified</span>
+                      <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                          <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Neural Integrity Verified</span>
                         </div>
                         <button 
                           onClick={() => setSelectedUpdate(null)}
-                          className="px-8 py-4 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 transition-all active:scale-95 shadow-xl shadow-indigo-900/20"
+                          className="w-full md:w-auto px-10 py-5 bg-indigo-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-700 transition-all active:scale-95 shadow-2xl shadow-indigo-900/40"
                         >
                           Acknowledge Update
                         </button>
                       </div>
                     </div>
                   </motion.div>
-                </div>
-              )}
-            </AnimatePresence>
+                </AnimatePresence>
+              </div>,
+              document.body
+            )}
+
+            {/* Edit Profile Modal */}
+            {showEditProfile && createPortal(
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+                <AnimatePresence>
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowEditProfile(false)}
+                    className="absolute inset-0 bg-slate-950/90 backdrop-blur-md pointer-events-auto"
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9, y: 40 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                    className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto"
+                  >
+                    <div className="p-8 md:p-10">
+                      <div className="flex items-center justify-between mb-8">
+                        <div>
+                          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-1">Neural Identity</h4>
+                          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Edit Profile</h2>
+                        </div>
+                        <button 
+                          onClick={() => setShowEditProfile(false)}
+                          className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-all"
+                        >
+                          <ICONS.X className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleUpdateProfile} className="space-y-6">
+                        <div className="flex justify-center mb-8">
+                          <div className="relative group">
+                            <div className="w-24 h-24 rounded-3xl bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-white font-black text-3xl shadow-2xl overflow-hidden">
+                              {editPhoto ? (
+                                <img src={editPhoto} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              ) : (
+                                (editName?.[0] || user?.email?.[0] || 'U').toUpperCase()
+                              )}
+                            </div>
+                            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg border-2 border-slate-900">
+                              <ICONS.User className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Name</label>
+                          <input 
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="Enter your name"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm font-medium text-white outline-none focus:border-indigo-500 transition-all"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Profile Picture URL</label>
+                          <input 
+                            type="url"
+                            value={editPhoto}
+                            onChange={(e) => setEditPhoto(e.target.value)}
+                            placeholder="https://example.com/photo.jpg"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-sm font-medium text-white outline-none focus:border-indigo-500 transition-all"
+                          />
+                          <p className="text-[9px] text-slate-500 font-bold italic ml-1">Provide a direct link to an image (JPG, PNG, WebP).</p>
+                        </div>
+
+                        <div className="pt-4">
+                          <button 
+                            type="submit"
+                            disabled={isUpdatingProfile}
+                            className="w-full py-5 bg-indigo-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-700 transition-all active:scale-95 shadow-2xl shadow-indigo-900/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                          >
+                            {isUpdatingProfile ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Synchronizing...
+                              </>
+                            ) : (
+                              'Update Identity'
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>,
+              document.body
+            )}
           </div>
         </div>
       </div>

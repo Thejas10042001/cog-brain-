@@ -36,7 +36,8 @@ const {
   createUserWithEmailAndPassword, 
   signOut,
   signInWithPopup,
-  GoogleAuthProvider
+  GoogleAuthProvider,
+  updateProfile
 } = firebaseAuth as any;
 
 // Import the Firebase configuration
@@ -393,6 +394,28 @@ export const registerUser = async (email: string, pass: string) => {
   return result;
 };
 export const logoutUser = () => auth && signOut(auth);
+
+export const updateUserProfile = async (displayName: string, photoURL: string) => {
+  if (!auth || !auth.currentUser || !db) return false;
+  try {
+    await updateProfile(auth.currentUser, {
+      displayName,
+      photoURL
+    });
+    // Also update Firestore
+    const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
+    await updateDoc(userRef, {
+      displayName,
+      photoURL,
+      updatedAt: Timestamp.now()
+    });
+    return true;
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    return false;
+  }
+};
+
 export const subscribeToAuth = (callback: (user: User | null) => void) => {
   if (auth) {
     return onAuthStateChanged(auth, callback);

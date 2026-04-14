@@ -7,10 +7,20 @@ interface HelpItem {
   subtitle: string;
   text: string;
   points?: string[];
+  visual?: React.ReactNode;
+  details?: {
+    what: string;
+    why: string;
+    where: string;
+    how: string;
+    dos: string[];
+    donts: string[];
+    storage: string;
+  };
 }
 
 interface HelpSection {
-  id: 'getting-started' | 'strategy-lab' | 'simulations' | 'intelligence-tools';
+  id: 'getting-started' | 'strategy-lab' | 'simulations' | 'intelligence-tools' | 'privacy-policy' | 'terms-of-service' | 'security-audit';
   title: string;
   icon: React.ReactNode;
   description: string;
@@ -27,6 +37,27 @@ const HELP_SECTIONS: HelpSection[] = [
       {
         subtitle: 'Step 1: Context Configuration',
         text: 'Navigate to the "Settings" node to define the operational landscape of your deal.',
+        visual: (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-3 w-24 bg-red-600/20 rounded-full" />
+              <div className="h-3 w-12 bg-slate-800 rounded-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-12 bg-slate-800 rounded-xl border border-slate-700 flex flex-col p-2 gap-1">
+                <div className="h-1.5 w-12 bg-slate-600 rounded-full" />
+                <div className="h-2 w-full bg-slate-700 rounded-full" />
+              </div>
+              <div className="h-12 bg-slate-800 rounded-xl border border-slate-700 flex flex-col p-2 gap-1">
+                <div className="h-1.5 w-12 bg-slate-600 rounded-full" />
+                <div className="h-2 w-full bg-slate-700 rounded-full" />
+              </div>
+            </div>
+            <div className="h-8 bg-red-600 rounded-xl flex items-center justify-center">
+              <div className="h-2 w-20 bg-white/50 rounded-full" />
+            </div>
+          </div>
+        ),
         points: [
           'Define the Seller Profile: Your company, value prop, and team.',
           'Define the Client Profile: Target organization, industry, and pain points.',
@@ -53,6 +84,25 @@ const HELP_SECTIONS: HelpSection[] = [
       {
         subtitle: 'Step 1: Strategy Synthesis',
         text: 'Review the AI-generated strategic framework designed to penetrate the target account.',
+        visual: (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-red-600/20 flex items-center justify-center">
+                <ICONS.Brain className="w-4 h-4 text-red-600" />
+              </div>
+              <div className="h-3 w-32 bg-slate-700 rounded-full" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-2 w-full bg-slate-800 rounded-full" />
+              <div className="h-2 w-full bg-slate-800 rounded-full" />
+              <div className="h-2 w-4/5 bg-slate-800 rounded-full" />
+            </div>
+            <div className="p-3 bg-red-600/5 border border-red-600/20 rounded-xl">
+              <div className="h-1.5 w-20 bg-red-600/40 rounded-full mb-2" />
+              <div className="h-2 w-full bg-red-600/10 rounded-full" />
+            </div>
+          </div>
+        ),
         points: [
           'Executive Summary: A high-level overview of the winning approach.',
           'Strategic Pillars: The three core themes that will drive your value.',
@@ -120,6 +170,93 @@ const HELP_SECTIONS: HelpSection[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'privacy-policy',
+    title: 'Privacy Policy',
+    icon: <ICONS.Lock className="w-5 h-5" />,
+    description: 'Our commitment to your data sovereignty and neural privacy.',
+    content: [
+      {
+        subtitle: 'Neural Data Sovereignty',
+        text: 'We treat your sales intelligence as a sacred asset. Your data is never used to train global models.',
+        details: {
+          what: 'A comprehensive framework governing the collection, processing, and protection of your deal data.',
+          why: 'To ensure that your competitive advantages and proprietary sales methods remain exclusively yours.',
+          where: 'Data is processed in secure, isolated compute environments with strict residency controls.',
+          how: 'Through end-to-end encryption and zero-trust architecture at every layer of the neural stack.',
+          dos: [
+            'Upload only relevant deal documents.',
+            'Use the "Clear Context" feature when a deal is closed.',
+            'Review your shared intelligence periodically.'
+          ],
+          donts: [
+            'Do not upload PII (Personally Identifiable Information) of unauthorized third parties.',
+            'Do not share your neural access keys with unauthorized personnel.',
+            'Do not attempt to bypass data isolation protocols.'
+          ],
+          storage: 'All intelligence is stored in AES-256 encrypted Firestore buckets, isolated by organization ID. Retention is strictly managed by user-defined policies.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'terms-of-service',
+    title: 'Terms of Service',
+    icon: <ICONS.Document className="w-5 h-5" />,
+    description: 'The operational agreement between you and the SPIKED AI Protocol.',
+    content: [
+      {
+        subtitle: 'Operational Framework',
+        text: 'The legal boundaries and usage rights for the SPIKED AI platform.',
+        details: {
+          what: 'The binding agreement defining the rights, responsibilities, and limitations of using SPIKED AI.',
+          why: 'To establish a clear legal foundation for our partnership and protect both parties.',
+          where: 'Applicable globally, governed by the jurisdiction specified in your enterprise contract.',
+          how: 'By accessing the platform, you agree to the ethical and operational standards defined herein.',
+          dos: [
+            'Use the platform for professional sales intelligence only.',
+            'Report any system anomalies immediately.',
+            'Maintain the confidentiality of generated strategies.'
+          ],
+          donts: [
+            'Do not reverse-engineer the neural synthesis engine.',
+            'Do not use the platform for malicious social engineering.',
+            'Do not exceed your allocated cognitive compute quota.'
+          ],
+          storage: 'Usage logs and audit trails are maintained for 90 days to ensure compliance and system integrity.'
+        }
+      }
+    ]
+  },
+  {
+    id: 'security-audit',
+    title: 'Security Audit',
+    icon: <ICONS.Shield className="w-5 h-5" />,
+    description: 'Continuous verification of our neural defenses and architectural integrity.',
+    content: [
+      {
+        subtitle: 'Defensive Architecture',
+        text: 'Our systems undergo rigorous, continuous auditing to maintain peak security posture.',
+        details: {
+          what: 'A multi-layered security verification process including penetration testing and code audits.',
+          why: 'To proactively identify and neutralize potential vulnerabilities in the neural pipeline.',
+          where: 'Conducted across our entire infrastructure, from edge nodes to core synthesis engines.',
+          how: 'Through automated vulnerability scanning and quarterly third-party security assessments.',
+          dos: [
+            'Enable Multi-Factor Authentication (MFA).',
+            'Monitor your account activity logs.',
+            'Follow the principle of least privilege for team access.'
+          ],
+          donts: [
+            'Do not ignore security alerts from the Neural Feed.',
+            'Do not use weak or recycled credentials.',
+            'Do not expose API endpoints to public networks.'
+          ],
+          storage: 'Security telemetry is stored in an immutable, append-only ledger for forensic analysis.'
+        }
+      }
+    ]
   }
 ];
 
@@ -141,7 +278,7 @@ export const HelpCenter: React.FC = () => {
       <div className="grid grid-cols-1 gap-12">
         {HELP_SECTIONS.map((section, idx) => (
           <motion.div
-            key={section.id}
+            key={`${section.id}-${idx}`}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -165,7 +302,7 @@ export const HelpCenter: React.FC = () => {
 
                 <div className="space-y-10">
                   {section.content.map((item, i) => (
-                    <div key={i} className="space-y-4">
+                    <div key={`${item.subtitle}-${i}`} className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="w-1 h-4 bg-red-600 rounded-full" />
                         <h3 className="text-white text-sm font-black uppercase tracking-widest">{item.subtitle}</h3>
@@ -173,10 +310,92 @@ export const HelpCenter: React.FC = () => {
                       <p className="text-slate-400 text-sm leading-relaxed font-medium pl-4">
                         {item.text}
                       </p>
+
+                      {item.visual && (
+                        <div className="pl-4 mt-6">
+                          <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900 shadow-2xl">
+                            <div className="px-4 py-2 border-b border-slate-800 bg-slate-800/50 flex items-center gap-2">
+                              <div className="flex gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-500/50" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500/50" />
+                              </div>
+                              <div className="h-2 w-32 bg-slate-700/50 rounded-full" />
+                            </div>
+                            <div className="p-4">
+                              {item.visual}
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-3 text-center">Neural Interface Screenshot // Protocol v4.2</p>
+                        </div>
+                      )}
+
+                      {item.details && (
+                        <div className="pl-4 mt-6 space-y-6">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                              <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">What</h4>
+                              <p className="text-xs text-slate-300 leading-relaxed">{item.details.what}</p>
+                            </div>
+                            <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                              <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Why</h4>
+                              <p className="text-xs text-slate-300 leading-relaxed">{item.details.why}</p>
+                            </div>
+                            <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                              <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Where</h4>
+                              <p className="text-xs text-slate-300 leading-relaxed">{item.details.where}</p>
+                            </div>
+                            <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                              <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">How</h4>
+                              <p className="text-xs text-slate-300 leading-relaxed">{item.details.how}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                              <h4 className="text-[10px] font-black text-green-500 uppercase tracking-widest flex items-center gap-2">
+                                <div className="w-1 h-1 rounded-full bg-green-500" />
+                                Protocol Dos
+                              </h4>
+                              <ul className="space-y-2">
+                                {item.details.dos.map((doItem, dIdx) => (
+                                  <li key={dIdx} className="text-[11px] text-slate-500 flex items-start gap-2">
+                                    <span className="text-green-500">+</span> {doItem}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="space-y-3">
+                              <h4 className="text-[10px] font-black text-red-500 uppercase tracking-widest flex items-center gap-2">
+                                <div className="w-1 h-1 rounded-full bg-red-500" />
+                                Protocol Don'ts
+                              </h4>
+                              <ul className="space-y-2">
+                                {item.details.donts.map((dontItem, dIdx) => (
+                                  <li key={dIdx} className="text-[11px] text-slate-500 flex items-start gap-2">
+                                    <span className="text-red-500">×</span> {dontItem}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-red-600/5 rounded-xl border border-red-600/20">
+                            <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                              <ICONS.Shield className="w-3 h-3" />
+                              Data Storage & Encryption
+                            </h4>
+                            <p className="text-xs text-slate-400 leading-relaxed italic">
+                              {item.details.storage}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
                       {item.points && (
                         <ul className="space-y-3 pl-8">
                           {item.points.map((point, pIdx) => (
-                            <li key={pIdx} className="flex items-start gap-3 text-xs text-slate-500 font-bold group/point">
+                            <li key={`${point.slice(0, 20)}-${pIdx}`} className="flex items-start gap-3 text-xs text-slate-500 font-bold group/point">
                               <ICONS.Check className="w-3 h-3 text-red-600 mt-0.5 shrink-0 group-hover/point:scale-125 transition-transform" />
                               <span className="group-hover/point:text-slate-300 transition-colors">{point}</span>
                             </li>
@@ -227,9 +446,24 @@ export const HelpCenter: React.FC = () => {
       <div className="pt-12 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6 opacity-50">
         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">© 2026 SPIKED AI // Neural Sales Intelligence Protocol</span>
         <div className="flex gap-8">
-          <button className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors">Privacy Policy</button>
-          <button className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors">Terms of Service</button>
-          <button className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors">Security Audit</button>
+          <button 
+            onClick={() => document.getElementById('privacy-policy')?.scrollIntoView({ behavior: 'smooth' })}
+            className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors"
+          >
+            Privacy Policy
+          </button>
+          <button 
+            onClick={() => document.getElementById('terms-of-service')?.scrollIntoView({ behavior: 'smooth' })}
+            className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors"
+          >
+            Terms of Service
+          </button>
+          <button 
+            onClick={() => document.getElementById('security-audit')?.scrollIntoView({ behavior: 'smooth' })}
+            className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors"
+          >
+            Security Audit
+          </button>
         </div>
       </div>
     </div>
