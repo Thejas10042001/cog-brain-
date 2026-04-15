@@ -142,7 +142,10 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     };
   }, []);
 
+  const [webcamError, setWebcamError] = useState<string | null>(null);
+
   const startWebcam = async () => {
+    setWebcamError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       streamRef.current = stream;
@@ -151,6 +154,15 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
       }
     } catch (err) {
       console.error("Error accessing webcam:", err);
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setWebcamError("Camera permission denied. Please enable camera access in your browser settings.");
+        } else {
+          setWebcamError(`Error accessing webcam: ${err.message}`);
+        }
+      } else {
+        setWebcamError("Failed to access webcam. Please check your hardware and permissions.");
+      }
     }
   };
 
@@ -833,11 +845,17 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                         <span className="text-[10px] font-black text-white uppercase tracking-widest">You (Seller)</span>
                      </div>
 
-                     {!streamRef.current && (
-                       <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+                     {(!streamRef.current || webcamError) && (
+                       <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm px-6">
                           <div className="text-center space-y-4">
-                             <ICONS.Security className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
-                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Webcam Protocol Initializing...</p>
+                             {webcamError ? (
+                                <ICONS.X className="w-12 h-12 text-rose-500 mx-auto" />
+                             ) : (
+                                <ICONS.Security className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
+                             )}
+                             <p className={`text-xs font-black uppercase tracking-widest ${webcamError ? 'text-rose-400' : 'text-slate-400'}`}>
+                                {webcamError || 'Webcam Protocol Initializing...'}
+                             </p>
                           </div>
                        </div>
                      )}

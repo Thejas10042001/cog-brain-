@@ -112,6 +112,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
   const [isRecording, setIsRecording] = useState(false);
   const [micPermissionError, setMicPermissionError] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [webcamError, setWebcamError] = useState<string | null>(null);
 
   const timerRef = useRef<any>(null);
   const lastTimeRef = useRef<number>(0);
@@ -144,14 +145,24 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
   }, [stage, currentIdx, questions]);
 
   const startCamera = async () => {
+    setWebcamError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-    } catch (e) {
-      console.error("Camera access denied:", e);
+    } catch (err) {
+      console.error("Camera access denied:", err);
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setWebcamError("Camera permission denied. Please enable camera access in your browser settings.");
+        } else {
+          setWebcamError(`Error accessing webcam: ${err.message}`);
+        }
+      } else {
+        setWebcamError("Failed to access webcam. Please check your hardware and permissions.");
+      }
     }
   };
 
@@ -562,6 +573,14 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
                          <div className="relative rounded-[3rem] overflow-hidden bg-slate-800 aspect-video flex items-center justify-center">
                             <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                            {webcamError && (
+                              <div className="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center p-8 text-center gap-4">
+                                <ICONS.X className="w-12 h-12 text-rose-500" />
+                                <p className="text-sm font-black text-rose-400 uppercase tracking-widest leading-relaxed">
+                                  {webcamError}
+                                </p>
+                              </div>
+                            )}
                          </div>
                          <div className="flex flex-col justify-center gap-6">
                             <textarea 

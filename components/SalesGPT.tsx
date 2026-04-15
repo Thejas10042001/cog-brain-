@@ -345,7 +345,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
     const currentStyles = overrideStyles || selectedStyles;
     const currentHistory = [...messages];
     const userMessage: GPTMessage = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       role: 'user',
       content: messageText,
       mode: mode,
@@ -359,7 +359,7 @@ export const SalesGPT: FC<SalesGPTProps> = ({ activeDocuments, meetingContext, i
     setIsProcessing(true);
     setShouldAutoScroll(true);
 
-    const assistantId = (Date.now() + 1).toString();
+    const assistantId = `asst-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const assistantMessage: GPTMessage = {
       id: assistantId,
       role: 'assistant',
