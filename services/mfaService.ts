@@ -1,6 +1,5 @@
 // @ts-ignore
-import otplib from 'otplib';
-const { authenticator } = otplib;
+import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
