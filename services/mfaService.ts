@@ -4,6 +4,7 @@ import qrcode from 'qrcode';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
 import { UAParser } from 'ua-parser-js';
+import crypto from 'crypto';
 
 // TOTP Configuration
 authenticator.options = {
@@ -59,12 +60,12 @@ export const hashBackupCodes = async (codes: string[]) => {
 };
 
 export const verifyBackupCode = async (code: string, hashedCodes: string[]) => {
-  for (const hashed of hashedCodes) {
-    if (await bcrypt.compare(code, hashed)) {
-      return true;
+  for (let i = 0; i < hashedCodes.length; i++) {
+    if (await bcrypt.compare(code, hashedCodes[i])) {
+      return i;
     }
   }
-  return false;
+  return null;
 };
 
 export const getDeviceInfo = (userAgent: string, ip: string) => {
@@ -75,4 +76,12 @@ export const getDeviceInfo = (userAgent: string, ip: string) => {
     location: ip === '::1' || ip === '127.0.0.1' ? 'Localhost' : 'Remote IP: ' + ip,
     deviceId: Buffer.from(`${userAgent}-${ip}`).toString('base64').slice(0, 16)
   };
+};
+
+export const generateDeviceToken = () => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+export const hashDeviceToken = (token: string) => {
+  return crypto.createHash('sha256').update(token).digest('hex');
 };

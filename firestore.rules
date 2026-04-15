@@ -21,6 +21,10 @@ service cloud.firestore {
     //   - lastMfaChallenge: timestamp
     //   - failedAttempts: number
     //   - lockoutUntil: timestamp
+    //   - consent: object
+    //     - termsAccepted: boolean
+    //     - privacyAccepted: boolean
+    //     - acceptedAt: timestamp
     //
     // ===============================================================
 
@@ -51,7 +55,8 @@ service cloud.firestore {
              data.uid == request.auth.uid &&
              isValidEmail(data.email) &&
              (!('failedAttempts' in data) || data.failedAttempts is number) &&
-             (!('mfa' in data) || data.mfa is map);
+             (!('mfa' in data) || data.mfa is map) &&
+             (!('consent' in data) || data.consent is map);
     }
 
     // ===============================================================

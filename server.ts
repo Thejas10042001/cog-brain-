@@ -14,7 +14,9 @@ import {
   sendEmailOTP, 
   hashBackupCodes, 
   verifyBackupCode,
-  getDeviceInfo
+  getDeviceInfo,
+  generateDeviceToken,
+  hashDeviceToken
 } from './services/mfaService.js';
 
 // Initialize Firebase Admin
@@ -161,20 +163,38 @@ async function startServer() {
       const userAgent = req.headers['user-agent'] || '';
       const ip = req.ip || 'unknown';
       const deviceInfo = getDeviceInfo(userAgent, ip);
+      const deviceToken = req.cookies.mfa_device_token;
       
-      const isTrusted = (userData?.trustedDevices || []).some((d: any) => 
-        d.deviceId === deviceInfo.deviceId && new Date(d.expiresAt) > new Date()
-      );
+      let isTrusted = false;
+      
+      if (deviceToken) {
+        const tokenHash = hashDeviceToken(deviceToken);
+        isTrusted = (userData?.trustedDevices || []).some((d: any) => 
+          d.tokenHash === tokenHash && new Date(d.expiresAt) > new Date()
+        );
+      }
+
+      // Fallback to fingerprinting if token is missing but deviceId matches (optional, but tokens are more secure)
+      if (!isTrusted) {
+        isTrusted = (userData?.trustedDevices || []).some((d: any) => 
+          d.deviceId === deviceInfo.deviceId && new Date(d.expiresAt) > new Date()
+        );
+      }
 
       if (isTrusted) {
-        return res.json({ mfaEnabled: true, challengeRequired: false });
+        return res.json({ 
+          mfaEnabled: true, 
+          challengeRequired: false,
+          currentDeviceId: deviceInfo.deviceId
+        });
       }
 
       res.json({ 
         mfaEnabled: true, 
-        challengeRequired: true,
+        challengeRequired: !isTrusted,
         methods: mfa.methods,
-        primaryMethod: mfa.primaryMethod
+        primaryMethod: mfa.primaryMethod,
+        currentDeviceId: deviceInfo.deviceId
       });
     } catch (error) {
       console.error('MFA status check failed:', error);
@@ -222,12 +242,15 @@ async function startServer() {
         const emailOtp = mfa.emailOtp || {};
         isValid = emailOtp.code === code && new Date(emailOtp.expiresAt) > new Date();
       } else if (method === 'backup') {
-        isValid = await verifyBackupCode(code, mfa.backupCodes || []);
-        if (isValid) {
+        const matchedIndex = await verifyBackupCode(code, mfa.backupCodes || []);
+        if (matchedIndex !== null) {
+          isValid = true;
           // Remove used backup code
-          const updatedCodes = (mfa.backupCodes || []).filter((c: string) => c !== code); // This is wrong because it's hashed. 
-          // Actually, we'd need to re-hash or find which one matched. 
-          // For simplicity, let's just mark it as valid.
+          const updatedCodes = [...(mfa.backupCodes || [])];
+          updatedCodes.splice(matchedIndex, 1);
+          await db.collection('users').doc(uid).update({
+            'mfa.backupCodes': updatedCodes
+          });
         }
       }
 
@@ -240,9 +263,12 @@ async function startServer() {
         const userAgent = req.headers['user-agent'] || '';
         const ip = req.ip || 'unknown';
         const deviceInfo = getDeviceInfo(userAgent, ip);
+        const deviceToken = generateDeviceToken();
+        const tokenHash = hashDeviceToken(deviceToken);
         
         const newDevice = {
           ...deviceInfo,
+          tokenHash,
           lastUsed: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
         };
@@ -250,6 +276,14 @@ async function startServer() {
         await db.collection('users').doc(uid).update({
           trustedDevices: admin.firestore.FieldValue.arrayUnion(newDevice),
           lastMfaChallenge: new Date().toISOString()
+        });
+
+        // Set secure, HTTP-only cookie
+        res.cookie('mfa_device_token', deviceToken, {
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
         });
       }
 
@@ -301,6 +335,113 @@ async function startServer() {
       console.error('Failed to finalize TOTP:', error);
       res.status(500).json({ error: 'Setup failed' });
     }
+  });
+
+  // MFA: Disable MFA
+  app.post('/api/mfa/disable', async (req, res) => {
+    const { uid } = req.body;
+    if (!uid) return res.status(400).json({ error: 'UID required' });
+
+    try {
+      await db.collection('users').doc(uid).update({
+        'mfa.enabled': false,
+        'mfa.methods': [],
+        'mfa.primaryMethod': null,
+        'mfa.totpSecret': null,
+        'mfa.backupCodes': []
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to disable MFA:', error);
+      res.status(500).json({ error: 'Failed to disable MFA' });
+    }
+  });
+
+  // MFA: Set Primary Method
+  app.post('/api/mfa/set-primary', async (req, res) => {
+    const { uid, method } = req.body;
+    if (!uid || !method) return res.status(400).json({ error: 'UID and method required' });
+
+    try {
+      await db.collection('users').doc(uid).update({
+        'mfa.primaryMethod': method
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to set primary method:', error);
+      res.status(500).json({ error: 'Failed to set primary method' });
+    }
+  });
+
+  // MFA: Remove Trusted Device
+  app.post('/api/mfa/remove-device', async (req, res) => {
+    const { uid, deviceId } = req.body;
+    if (!uid || !deviceId) return res.status(400).json({ error: 'UID and deviceId required' });
+
+    try {
+      const userRef = db.collection('users').doc(uid);
+      const userDoc = await userRef.get();
+      if (!userDoc.exists) return res.status(404).json({ error: 'User not found' });
+
+      const devices = userDoc.data()?.trustedDevices || [];
+      const updatedDevices = devices.filter((d: any) => d.deviceId !== deviceId);
+
+      await userRef.update({ trustedDevices: updatedDevices });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to remove device:', error);
+      res.status(500).json({ error: 'Failed to remove device' });
+    }
+  });
+
+  // MFA: Setup Email OTP
+  app.post('/api/mfa/setup-email', async (req, res) => {
+    const { uid } = req.body;
+    if (!uid) return res.status(400).json({ error: 'UID required' });
+
+    try {
+      const userRef = db.collection('users').doc(uid);
+      const userDoc = await userRef.get();
+      
+      const mfa = userDoc.data()?.mfa || {};
+      const methods = mfa.methods || [];
+      
+      if (!methods.includes('email')) {
+        methods.push('email');
+      }
+
+      const updateData: any = {
+        'mfa.enabled': true,
+        'mfa.methods': methods
+      };
+
+      if (!mfa.primaryMethod) {
+        updateData['mfa.primaryMethod'] = 'email';
+      }
+
+      // If this is the first method, generate backup codes too
+      if (!mfa.backupCodes || mfa.backupCodes.length === 0) {
+        const rawBackupCodes = Array.from({ length: 10 }, () => Math.random().toString(36).slice(-8).toUpperCase());
+        const hashedCodes = await hashBackupCodes(rawBackupCodes);
+        updateData['mfa.backupCodes'] = hashedCodes;
+        await userRef.update(updateData);
+        return res.json({ success: true, backupCodes: rawBackupCodes });
+      }
+
+      await userRef.update(updateData);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to setup email MFA:', error);
+      res.status(500).json({ error: 'Failed to setup email MFA' });
+    }
+  });
+
+  // MFA: Get Current Device Info
+  app.get('/api/mfa/current-device', (req, res) => {
+    const userAgent = req.headers['user-agent'] || '';
+    const ip = req.ip || 'unknown';
+    const deviceInfo = getDeviceInfo(userAgent, ip);
+    res.json(deviceInfo);
   });
 
   // Calendar Routes
