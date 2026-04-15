@@ -839,8 +839,8 @@ const App: React.FC = () => {
                       transition={{ delay: 0.2 }}
                       className="space-y-4"
                     >
-                      <h1 className="text-8xl md:text-9xl font-black text-slate-900 dark:text-white tracking-tighter leading-none uppercase">
-                        SPIKED<span className="text-red-600 drop-shadow-[0_0_20px_rgba(220,38,38,0.5)]">AI</span>
+                      <h1 className="text-8xl md:text-9xl font-display font-black text-slate-900 dark:text-white tracking-tighter leading-none uppercase">
+                        SPIKED<span className="text-brand-accent drop-shadow-[0_0_20px_rgba(244,63,94,0.5)]">AI</span>
                       </h1>
                       <motion.p 
                         initial={{ opacity: 0, y: 10 }}
@@ -928,25 +928,25 @@ const App: React.FC = () => {
                     className="h-full flex flex-col"
                   >
                     {/* Fixed Node Header */}
-                    <div className="px-8 py-10 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-20">
+                    <div className="px-8 py-10 bg-neural-900/50 backdrop-blur-md border-b border-white/5 sticky top-0 z-20">
                       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                         <div className="space-y-3">
                           <div className="flex items-center gap-4">
                             <motion.div 
                               whileHover={{ scale: 1.05, rotate: 5 }}
-                              className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl shadow-2xl"
+                              className="w-12 h-12 bg-brand-primary text-white rounded-2xl flex items-center justify-center font-display font-black text-xl shadow-2xl shadow-brand-primary/20"
                             >
                               {NODE_DETAILS[activeTab].stepNumber}
                             </motion.div>
                             <div>
-                              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">{NODE_DETAILS[activeTab].label}</h2>
+                              <h2 className="text-3xl font-display font-black text-white tracking-tighter uppercase leading-none">{NODE_DETAILS[activeTab].label}</h2>
                               <div className="flex items-center gap-2 mt-1">
-                                <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[9px] font-black rounded-md uppercase tracking-wider">Neural Node Active</span>
-                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                <span className="px-2 py-0.5 bg-brand-primary/10 text-brand-primary text-[9px] font-black rounded-md uppercase tracking-wider">Neural Node Active</span>
+                                <div className="w-1.5 h-1.5 bg-brand-secondary rounded-full animate-pulse"></div>
                               </div>
                             </div>
                           </div>
-                          <p className="text-indigo-600 dark:text-indigo-400 font-black text-[10px] uppercase tracking-[0.2em]">{NODE_DETAILS[activeTab].feature}</p>
+                          <p className="text-brand-primary font-black text-[10px] uppercase tracking-[0.2em]">{NODE_DETAILS[activeTab].feature}</p>
                         </div>
                         <div className="flex-1 max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8">
                           <div className="space-y-2">
@@ -1025,36 +1025,36 @@ const App: React.FC = () => {
 const SidebarBtn = ({ active, onClick, icon, label, scale = 1, step, id }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string, scale?: number, step?: string, id?: string }) => (
   <motion.button 
     id={id}
-    whileHover={{ x: 8, backgroundColor: active ? '' : 'rgba(79, 70, 229, 0.1)' }}
+    whileHover={{ x: 8, backgroundColor: active ? '' : 'rgba(99, 102, 241, 0.1)' }}
     whileTap={{ scale: 0.96 }}
     onClick={onClick}
     className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-black transition-all text-sm group relative overflow-hidden ${
       active 
-      ? 'bg-indigo-600 text-white shadow-[0_20px_50px_rgba(79,70,229,0.3)]' 
-      : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+      ? 'bg-brand-primary text-white shadow-[0_20px_50px_rgba(99, 102, 241, 0.3)]' 
+      : 'text-slate-500 hover:text-brand-primary'
     }`}
   >
     {active && (
       <motion.div 
         layoutId="sidebar-active"
-        className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-500 -z-10"
+        className="absolute inset-0 bg-gradient-to-r from-brand-primary to-indigo-500 -z-10"
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       />
     )}
     <div 
-      className={`relative ${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} transition-colors shrink-0`}
+      className={`relative ${active ? 'text-white' : 'text-slate-400 group-hover:text-brand-primary'} transition-colors shrink-0`}
       style={{ transform: `scale(${scale * 1.1})` }}
     >
       {icon}
       {!active && step && (
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center text-[6px] font-black text-slate-500 dark:text-slate-400 border border-white dark:border-slate-900">
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-slate-800 rounded-full flex items-center justify-center text-[6px] font-black text-slate-400 border border-slate-900">
           {step}
         </span>
       )}
     </div>
     {label && (
       <span 
-        className="tracking-tighter truncate uppercase"
+        className="font-display tracking-tighter truncate uppercase"
         style={{ fontSize: `${scale * 0.75}rem` }}
       >
         {label.replace(/^\d+\s/, '')}

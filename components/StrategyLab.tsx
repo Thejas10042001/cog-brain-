@@ -119,10 +119,10 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-900/20">
+                <div className="p-2.5 bg-brand-primary text-white rounded-xl shadow-lg shadow-brand-primary/20">
                   <ICONS.Brain className="w-5 h-5" />
                 </div>
-                <h2 className="text-4xl font-black text-white tracking-tighter uppercase">Strategy Lab</h2>
+                <h2 className="text-4xl font-display font-black text-white tracking-tighter uppercase">Strategy Lab</h2>
               </div>
               <p className="text-slate-400 font-medium text-lg">Enterprise Sales Strategy Synthesis & Refinement</p>
             </div>
@@ -222,10 +222,10 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
                     {activeSection === 'summary' && (
                       <div className="space-y-8">
                         <div className="flex items-center gap-4 mb-8">
-                          <div className="w-12 h-12 bg-indigo-900/30 text-indigo-400 rounded-2xl flex items-center justify-center">
+                          <div className="w-12 h-12 bg-brand-primary/10 text-brand-primary rounded-2xl flex items-center justify-center">
                             <ICONS.Document className="w-6 h-6" />
                           </div>
-                          <h3 className="text-3xl font-black text-white tracking-tight">Executive Summary</h3>
+                          <h3 className="text-3xl font-display font-black text-white tracking-tight">Executive Summary</h3>
                         </div>
                         <p className="text-2xl font-bold text-slate-200 leading-relaxed italic">
                           “{strategy.executiveSummary}”
@@ -353,9 +353,9 @@ export const StrategyLab: React.FC<StrategyLabProps> = ({ activeDocuments, meeti
 const NavButton = ({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) => (
   <button 
     onClick={onClick}
-    className={`w-full flex items-center gap-4 p-5 rounded-2xl transition-all border ${active ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl translate-x-2' : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+    className={`w-full flex items-center gap-4 p-5 rounded-2xl transition-all border ${active ? 'bg-brand-primary border-brand-primary text-white shadow-xl translate-x-2' : 'bg-neural-900 border-white/5 text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
   >
     <div className={`${active ? 'text-white' : 'text-slate-500'}`}>{icon}</div>
-    <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
+    <span className="text-[11px] font-display font-black uppercase tracking-widest">{label}</span>
   </button>
 );

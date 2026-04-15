@@ -113,18 +113,18 @@ export const Header: React.FC<HeaderProps> = ({
   const meetingCount = calendarEvents.length;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-slate-800/50 h-20 transition-all duration-500">
+    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 h-20 transition-all duration-500">
       <div className="w-full px-12 h-full flex items-center justify-between max-w-[1800px] mx-auto">
         <div className="flex flex-col items-start leading-none group cursor-pointer">
           <div className="flex items-center gap-4">
             <motion.div 
               whileHover={{ rotate: 180, scale: 1.1 }}
-              className="w-10 h-10 bg-red-600 text-white rounded-[1.25rem] flex items-center justify-center font-black text-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)]"
+              className="w-10 h-10 bg-brand-accent text-white rounded-[1.25rem] flex items-center justify-center font-black text-2xl shadow-[0_10px_30px_rgba(244,63,94,0.3)]"
             >
               !
             </motion.div>
-            <span className="font-black text-3xl tracking-tighter text-white uppercase">
-              SPIKED<span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.4)]">AI</span>
+            <span className="font-display font-black text-3xl tracking-tighter text-white uppercase">
+              SPIKED<span className="text-brand-accent drop-shadow-[0_0_15px_rgba(244,63,94,0.4)]">AI</span>
             </span>
           </div>
           <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 ml-1 hidden md:block">
@@ -163,8 +163,8 @@ export const Header: React.FC<HeaderProps> = ({
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     className="absolute right-0 mt-4 w-64 bg-slate-900 border border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden z-50"
                   >
-                    <div className="p-4 border-b border-slate-800 bg-slate-800/30 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg overflow-hidden shrink-0">
+                    <div className="p-4 border-b border-white/5 bg-white/5 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center text-white font-black text-sm shadow-lg overflow-hidden shrink-0">
                         {user.photoURL ? (
                           <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         ) : (
@@ -289,24 +289,24 @@ export const Header: React.FC<HeaderProps> = ({
                       <div className="space-y-5">
                         <div className="flex items-center justify-between">
                            <h5 className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em]">Viewport Magnifier</h5>
-                           <span className="text-sm font-black text-indigo-400">{zoom}%</span>
+                           <span className="text-sm font-black text-brand-primary font-mono">{zoom}%</span>
                         </div>
                         <div className="flex items-center gap-3">
                            <button 
                              onClick={() => onZoomChange(Math.max(50, zoom - 10))}
-                             className="flex-1 flex items-center justify-center py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors border border-slate-700"
+                             className="flex-1 flex items-center justify-center py-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors border border-white/5"
                            >
                              <ICONS.ZoomOut className="w-4 h-4 text-slate-400" />
                            </button>
                            <button 
                              onClick={() => onZoomChange(100)}
-                             className="px-5 py-3 bg-indigo-600 text-[10px] font-black text-white rounded-2xl shadow-lg hover:bg-indigo-700 transition-colors"
+                             className="px-5 py-3 bg-brand-primary text-[10px] font-black text-white rounded-2xl shadow-lg hover:bg-indigo-500 transition-colors"
                            >
                              RESET
                            </button>
                            <button 
                              onClick={() => onZoomChange(Math.min(200, zoom + 10))}
-                             className="flex-1 flex items-center justify-center py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors border border-slate-700"
+                             className="flex-1 flex items-center justify-center py-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors border border-white/5"
                            >
                              <ICONS.ZoomIn className="w-4 h-4 text-slate-400" />
                            </button>
@@ -317,24 +317,24 @@ export const Header: React.FC<HeaderProps> = ({
                       <div className="space-y-5">
                         <div className="flex items-center justify-between">
                            <h5 className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em]">Text Intelligence Focus</h5>
-                           <span className="text-sm font-black text-indigo-400">{textZoom}%</span>
+                           <span className="text-sm font-black text-brand-primary font-mono">{textZoom}%</span>
                         </div>
                         <div className="flex items-center gap-3">
                            <button 
                              onClick={() => onTextZoomChange(Math.max(80, textZoom - 10))}
-                             className="flex-1 flex items-center justify-center py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors border border-slate-700"
+                             className="flex-1 flex items-center justify-center py-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors border border-white/5"
                            >
                              <ICONS.ZoomOut className="w-4 h-4 text-slate-400" />
                            </button>
                            <button 
                              onClick={() => onTextZoomChange(100)}
-                             className="px-5 py-3 bg-indigo-600 text-[10px] font-black text-white rounded-2xl shadow-lg hover:bg-indigo-700 transition-colors"
+                             className="px-5 py-3 bg-brand-primary text-[10px] font-black text-white rounded-2xl shadow-lg hover:bg-indigo-500 transition-colors"
                            >
                              RESET
                            </button>
                            <button 
                              onClick={() => onTextZoomChange(Math.min(250, textZoom + 10))}
-                             className="flex-1 flex items-center justify-center py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors border border-slate-700"
+                             className="flex-1 flex items-center justify-center py-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors border border-white/5"
                            >
                              <ICONS.ZoomIn className="w-4 h-4 text-slate-400" />
                            </button>

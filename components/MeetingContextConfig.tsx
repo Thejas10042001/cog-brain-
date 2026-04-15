@@ -467,10 +467,10 @@ OPERATIONAL CONSTRAINTS:
           >
             {activeSection === 'library' && (
               <div className="space-y-12" id="tour-context-config">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
-                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">01</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-white/5">
+                  <div className="w-16 h-16 bg-brand-primary text-white rounded-3xl flex items-center justify-center font-display font-black text-2xl shadow-2xl shadow-brand-primary/20">01</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Cognitive Library Hub</h3>
+                    <h3 className="text-5xl font-display font-black uppercase tracking-tighter text-white">Cognitive Library Hub</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Ingest and categorize documentary intelligence to establish a high-fidelity knowledge base.</p>
                   </div>
                 </div>
@@ -514,10 +514,10 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'core' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
-                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">02</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-white/5">
+                  <div className="w-16 h-16 bg-brand-primary text-white rounded-3xl flex items-center justify-center font-display font-black text-2xl shadow-2xl shadow-brand-primary/20">02</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Mind Core & Strategy</h3>
+                    <h3 className="text-5xl font-display font-black uppercase tracking-tighter text-white">Mind Core & Strategy</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Anchor the cognitive simulation and define the specific focus of the meeting.</p>
                   </div>
                 </div>
@@ -713,10 +713,10 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'persona' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
-                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">03</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-white/5">
+                  <div className="w-16 h-16 bg-brand-primary text-white rounded-3xl flex items-center justify-center font-display font-black text-2xl shadow-2xl shadow-brand-primary/20">03</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Target Buyer Persona</h3>
+                    <h3 className="text-5xl font-display font-black uppercase tracking-tighter text-white">Target Buyer Persona</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Select the psychological profile of your primary decision-maker to calibrate resistance levels.</p>
                   </div>
                 </div>
@@ -750,10 +750,10 @@ OPERATIONAL CONSTRAINTS:
 
             {activeSection === 'vocal' && (
               <div className="space-y-12">
-                <div className="flex items-center gap-6 pb-6 border-b-4 border-slate-800">
-                  <div className="w-16 h-16 bg-slate-800 text-white rounded-3xl flex items-center justify-center font-black text-2xl shadow-2xl border border-slate-700">04</div>
+                <div className="flex items-center gap-6 pb-6 border-b-4 border-white/5">
+                  <div className="w-16 h-16 bg-brand-primary text-white rounded-3xl flex items-center justify-center font-display font-black text-2xl shadow-2xl shadow-brand-primary/20">04</div>
                   <div className="flex flex-col">
-                    <h3 className="text-5xl font-black uppercase tracking-tighter text-white">Neural Vocal Sync</h3>
+                    <h3 className="text-5xl font-display font-black uppercase tracking-tighter text-white">Neural Vocal Sync</h3>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 mt-2">Calibrate the AI's vocal signature and behavioral mimicry to match the target persona's baseline.</p>
                   </div>
                 </div>

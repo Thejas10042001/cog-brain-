@@ -32,25 +32,25 @@ interface SalesGPTProps {
 }
 
 const TypingIndicator = () => (
-  <div className="flex gap-4 items-center py-3 px-6 bg-slate-800/30 rounded-2xl border border-slate-700/50 w-fit">
+  <div className="flex gap-4 items-center py-3 px-6 bg-white/5 rounded-2xl border border-white/5 w-fit">
     <div className="flex gap-2">
       <motion.div
         animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
         transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-        className="w-2 h-2 bg-indigo-500 rounded-full"
+        className="w-2 h-2 bg-brand-primary rounded-full"
       />
       <motion.div
         animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
         transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.2 }}
-        className="w-2 h-2 bg-indigo-500 rounded-full"
+        className="w-2 h-2 bg-brand-primary rounded-full"
       />
       <motion.div
         animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
         transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.4 }}
-        className="w-2 h-2 bg-indigo-500 rounded-full"
+        className="w-2 h-2 bg-brand-primary rounded-full"
       />
     </div>
-    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 animate-pulse">Cognitive Analysis Active</span>
+    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary animate-pulse">Cognitive Analysis Active</span>
   </div>
 );
 
@@ -679,11 +679,11 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
   return (
     <div className="flex h-full bg-slate-950 relative overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-80 border-r border-slate-800/50 bg-slate-900/30 flex flex-col z-30">
-        <div className="p-6 border-b border-slate-800/50 space-y-3">
+      <aside className="w-80 border-r border-white/5 bg-neural-900/30 flex flex-col z-30">
+        <div className="p-6 border-b border-white/5 space-y-3">
           <button 
             onClick={createNewSession}
-            className="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-lg shadow-indigo-900/20 active:scale-95"
+            className="w-full py-4 px-6 bg-brand-primary hover:bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-lg shadow-brand-primary/20 active:scale-95"
           >
             <Plus className="w-4 h-4" /> New Strategic Session
           </button>
@@ -761,7 +761,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
               >
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Cognitive Pro</h2>
+                    <h2 className="text-3xl font-display font-black text-white uppercase tracking-tighter mb-2">Cognitive Pro</h2>
                     <p className="text-slate-400 font-medium">Select strategic reasoning frameworks for this inquiry</p>
                   </div>
                   <button 
@@ -860,7 +860,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                   <ICONS.Brain className="w-6 h-6" />
                </div>
                <div>
-                  <h3 className="text-xl font-black text-white tracking-tighter uppercase">
+                  <h3 className="text-xl font-display font-black text-white tracking-tighter uppercase">
                     Spiked GPT
                   </h3>
                   <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.4em]">
@@ -924,7 +924,7 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                     <ICONS.Brain className="w-24 h-24 md:w-40 md:h-40 relative z-10 text-indigo-500/20" />
                   </div>
                   <div className="space-y-6">
-                    <h4 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">Neural Core<br/>Standby</h4>
+                    <h4 className="text-4xl md:text-6xl font-display font-black text-white tracking-tighter uppercase leading-none">Neural Core<br/>Standby</h4>
                     <p className="text-slate-500 text-lg md:text-xl font-medium leading-relaxed max-w-xl mx-auto italic">
                       Intelligence core is synced with active document nodes. Awaiting strategic inquiry.
                     </p>
@@ -996,21 +996,21 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
                         <ReactMarkdown 
                           remarkPlugins={[remarkGfm]}
                           components={{
-                            p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
-                            h1: ({ children }) => <h1 className="text-2xl font-black uppercase tracking-tighter mb-4 mt-6 text-white">{children}</h1>,
-                            h2: ({ children }) => <h2 className="text-xl font-black uppercase tracking-tighter mb-3 mt-5 text-white/90">{children}</h2>,
-                            h3: ({ children }) => <h3 className="text-lg font-black uppercase tracking-tighter mb-2 mt-4 text-white/80">{children}</h3>,
+                            p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
+                            h1: ({ children }) => <h1 className="text-2xl font-display font-black uppercase tracking-tighter mb-4 mt-6 text-white">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-xl font-display font-black uppercase tracking-tighter mb-3 mt-5 text-white/90">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-lg font-display font-black uppercase tracking-tighter mb-2 mt-4 text-white/80">{children}</h3>,
                             ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-2">{children}</ul>,
                             ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-2">{children}</ol>,
                             li: ({ children }) => <li className="pl-1">{children}</li>,
-                            blockquote: ({ children }) => <blockquote className="border-l-4 border-indigo-500 pl-4 py-1 my-4 bg-indigo-500/5 rounded-r-xl italic text-slate-300">{children}</blockquote>,
+                            blockquote: ({ children }) => <blockquote className="border-l-4 border-brand-primary pl-4 py-1 my-4 bg-brand-primary/5 rounded-r-xl italic text-slate-300">{children}</blockquote>,
                             code: ({ node, inline, className, children, ...props }: any) => {
                               return inline ? (
-                                <code className="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-sm" {...props}>
+                                <code className="bg-slate-800 px-1.5 py-0.5 rounded text-brand-primary font-mono text-sm" {...props}>
                                   {children}
                                 </code>
                               ) : (
-                                <pre className="bg-slate-950 p-4 rounded-xl border border-slate-800 overflow-x-auto my-4 font-mono text-sm text-indigo-300">
+                                <pre className="bg-slate-950 p-4 rounded-xl border border-white/5 overflow-x-auto my-4 font-mono text-sm text-brand-primary">
                                   <code {...props}>{children}</code>
                                 </pre>
                               );
@@ -1360,19 +1360,19 @@ Executive Snapshot: ${meetingContext.executiveSnapshot}
 
 const ToolToggle = ({ active, onClick, icon, label, color = 'indigo' }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; color?: string }) => {
   const activeClasses = {
-    indigo: 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-105',
-    emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-200 dark:shadow-emerald-900/40 scale-105',
-    amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-200 dark:shadow-amber-900/40 scale-105',
-    purple: 'bg-purple-600 border-purple-600 text-white shadow-2xl shadow-purple-200 dark:shadow-purple-900/40 scale-105',
-    blue: 'bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-200 dark:shadow-blue-900/40 scale-105',
-  }[color as keyof typeof activeClasses] || 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-200 dark:shadow-indigo-900/40 scale-105';
+    indigo: 'bg-brand-primary border-brand-primary text-white shadow-2xl shadow-brand-primary/20 scale-105',
+    emerald: 'bg-emerald-600 border-emerald-600 text-white shadow-2xl shadow-emerald-900/40 scale-105',
+    amber: 'bg-amber-600 border-amber-600 text-white shadow-2xl shadow-amber-900/40 scale-105',
+    purple: 'bg-purple-600 border-purple-600 text-white shadow-2xl shadow-purple-900/40 scale-105',
+    blue: 'bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-900/40 scale-105',
+  }[color as keyof typeof activeClasses] || 'bg-brand-primary border-brand-primary text-white shadow-2xl shadow-brand-primary/20 scale-105';
 
   return (
     <motion.button 
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-black uppercase tracking-[0.1em] text-[10px] shadow-sm ${active ? activeClasses : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-indigo-900/50 hover:text-slate-300'}`}
+      className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-display font-black uppercase tracking-[0.1em] text-[10px] shadow-sm ${active ? activeClasses : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-brand-primary/50 hover:text-slate-300'}`}
     >
       {icon}
       {label}
