@@ -169,6 +169,13 @@ export const Auth: React.FC = () => {
     // Success! MFA is verified. 
     // The user is already logged in via Firebase, we just needed to verify the second factor.
     setMfaRequired(false);
+
+    // Check Legal Consent after MFA
+    const hasConsented = await checkUserConsent(mfaData.uid);
+    if (!hasConsented) {
+      setPendingUser(mfaData.uid);
+      setShowLegal(true);
+    }
   };
 
   const handleMfaCancel = async () => {

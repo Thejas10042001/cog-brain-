@@ -14,7 +14,6 @@
       // Shim process.env for the browser environment to prevent crashes
       window.process = window.process || { env: { API_KEY: '' } };
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- PDF.js for PDF parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -28,21 +27,6 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- jsPDF for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
-    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "firebase/app": "https://esm.sh/firebase@^12.9.0/app",
-    "firebase/firestore": "https://esm.sh/firebase@^12.9.0/firestore",
-    "firebase/auth": "https://esm.sh/firebase@^12.9.0/auth",
-    "firebase/": "https://esm.sh/firebase@^12.9.0/"
-  }
-}
-</script>
   </head>
   <body>
     <div id="root"></div>

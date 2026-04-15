@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0939952508",
-  "appId": "1:106293592797:web:eb2358fcea2714ece85134",
-  "apiKey": "AIzaSyA0swtkWolUfKksPx6FgSX4GKVhQFfdsYw",
-  "authDomain": "gen-lang-client-0939952508.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-5aa4caaa-4e76-4e18-b806-fc8ac33ba245",
-  "storageBucket": "gen-lang-client-0939952508.firebasestorage.app",
-  "messagingSenderId": "106293592797",
-  "measurementId": ""
+  "projectId": "spiked-ai-76993",
+  "appId": "1:937017757020:web:1a899a8be406844e26859",
+  "apiKey": "AIzaSyDf4CzUgSSGpRKlaLZiHTV25PHPUq4gltQ",
+  "authDomain": "spiked-ai-76993.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "spiked-ai-76993.firebasestorage.app",
+  "messagingSenderId": "937017757020",
+  "measurementId": "G-M90G0105MC"
 }
