@@ -876,42 +876,6 @@ export const deleteUserAccount = async (): Promise<boolean> => {
   }
 };
 
-export const saveUserConsent = async (userId: string): Promise<boolean> => {
-  if (!db) return false;
-  const path = USERS_COLLECTION;
-  try {
-    const userRef = doc(db, path, userId);
-    await updateDoc(userRef, {
-      consent: {
-        termsAccepted: true,
-        privacyAccepted: true,
-        acceptedAt: Timestamp.now()
-      }
-    });
-    return true;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, path);
-    return false;
-  }
-};
-
-export const checkUserConsent = async (userId: string): Promise<boolean> => {
-  if (!db) return false;
-  const path = USERS_COLLECTION;
-  try {
-    const userRef = doc(db, path, userId);
-    const docSnap = await getDoc(userRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      return !!data.consent?.termsAccepted && !!data.consent?.privacyAccepted;
-    }
-    return false;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, path);
-    return false;
-  }
-};
-
 export const seedInitialUpdates = async (): Promise<void> => {
   if (!db || !auth || !auth.currentUser) return;
   const path = UPDATES_COLLECTION;

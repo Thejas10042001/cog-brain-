@@ -39,15 +39,7 @@
         },
         "lastMfaChallenge": { "type": "string", "format": "date-time" },
         "failedAttempts": { "type": "number" },
-        "lockoutUntil": { "type": "string", "format": "date-time" },
-        "consent": {
-          "type": "object",
-          "properties": {
-            "termsAccepted": { "type": "boolean" },
-            "privacyAccepted": { "type": "boolean" },
-            "acceptedAt": { "type": "string", "format": "date-time" }
-          }
-        }
+        "lockoutUntil": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email"]
     }

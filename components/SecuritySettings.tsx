@@ -13,11 +13,9 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [setupStep, setSetupStep] = useState<'idle' | 'totp_qr' | 'backup_codes'>('idle');
   const [qrCode, setQrCode] = useState("");
-  const [totpSecret, setTotpSecret] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [currentDeviceId, setCurrentDeviceId] = useState<string | null>(null);
 
   const db = getFirestore();
 
@@ -26,12 +24,6 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user }) => {
       setUserData(doc.data());
       setLoading(false);
     });
-
-    fetch('/api/mfa/current-device')
-      .then(res => res.json())
-      .then(data => setCurrentDeviceId(data.deviceId))
-      .catch(err => console.error('Failed to fetch current device info'));
-
     return () => unsub();
   }, [user.uid]);
 
@@ -45,7 +37,6 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user }) => {
       });
       const data = await res.json();
       setQrCode(data.qrCode);
-      setTotpSecret(data.secret);
       setSetupStep('totp_qr');
     } catch (err: any) {
       setError('Failed to start setup');
@@ -62,76 +53,20 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user }) => {
       });
       if (!res.ok) throw new Error('Invalid verification code');
       const data = await res.json();
-      if (data.backupCodes) {
-        setBackupCodes(data.backupCodes);
-        setSetupStep('backup_codes');
-      } else {
-        setSetupStep('idle');
-      }
+      setBackupCodes(data.backupCodes);
+      setSetupStep('backup_codes');
     } catch (err: any) {
       setError(err.message);
     }
   };
 
-  const handleSetupEmail = async () => {
-    setError(null);
-    try {
-      const res = await fetch('/api/mfa/setup-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid })
-      });
-      const data = await res.json();
-      if (data.backupCodes) {
-        setBackupCodes(data.backupCodes);
-        setSetupStep('backup_codes');
-      }
-    } catch (err: any) {
-      setError('Failed to enable Email MFA');
-    }
-  };
-
-  const handleSetPrimary = async (method: string) => {
-    try {
-      await fetch('/api/mfa/set-primary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid, method })
-      });
-    } catch (err) {
-      console.error('Failed to set primary method');
-    }
-  };
-
-  const handleDisableMfa = async () => {
-    if (!window.confirm('Are you sure you want to disable MFA? This will reduce your account security.')) return;
-    try {
-      await fetch('/api/mfa/disable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid })
-      });
-    } catch (err) {
-      console.error('Failed to disable MFA');
-    }
-  };
-
   const handleRemoveDevice = async (deviceId: string) => {
-    try {
-      await fetch('/api/mfa/remove-device', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid, deviceId })
-      });
-    } catch (err) {
-      console.error('Failed to remove device');
-    }
+    // In a real app, you'd call an API to remove the device from the array
+    // For this demo, we'll suggest using a server-side update
+    console.log('Removing device:', deviceId);
   };
 
   if (loading) return <div className="p-12 text-center text-slate-500 font-black uppercase tracking-widest">Loading Security Protocol...</div>;
-
-  const mfaMethods = userData?.mfa?.methods || [];
-  const primaryMethod = userData?.mfa?.primaryMethod;
 
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-12">
@@ -163,63 +98,29 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user }) => {
           <AnimatePresence mode="wait">
             {setupStep === 'idle' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available Methods</p>
-                  
-                  {/* Authenticator App Method */}
-                  <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <ICONS.Smartphone className="w-5 h-5 text-slate-400" />
-                      <div>
-                        <p className="text-[11px] font-black text-white uppercase">Authenticator App</p>
-                        <p className="text-[9px] text-slate-500 font-bold">Google/Microsoft Authenticator</p>
-                      </div>
-                    </div>
-                    {mfaMethods.includes('totp') ? (
-                      <div className="flex items-center gap-2">
-                        {primaryMethod === 'totp' ? (
-                          <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-md">Primary</span>
-                        ) : (
-                          <button onClick={() => handleSetPrimary('totp')} className="text-[8px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300 transition-colors">Set Primary</button>
-                        )}
-                        <ICONS.Check className="w-4 h-4 text-emerald-500" />
-                      </div>
-                    ) : (
-                      <button onClick={handleStartTotpSetup} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all">Setup</button>
-                    )}
-                  </div>
-
-                  {/* Email OTP Method */}
-                  <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <ICONS.Mail className="w-5 h-5 text-slate-400" />
-                      <div>
-                        <p className="text-[11px] font-black text-white uppercase">Email OTP</p>
-                        <p className="text-[9px] text-slate-500 font-bold">Verification code via email</p>
-                      </div>
-                    </div>
-                    {mfaMethods.includes('email') ? (
-                      <div className="flex items-center gap-2">
-                        {primaryMethod === 'email' ? (
-                          <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-md">Primary</span>
-                        ) : (
-                          <button onClick={() => handleSetPrimary('email')} className="text-[8px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300 transition-colors">Set Primary</button>
-                        )}
-                        <ICONS.Check className="w-4 h-4 text-emerald-500" />
-                      </div>
-                    ) : (
-                      <button onClick={handleSetupEmail} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all">Setup</button>
-                    )}
-                  </div>
-                </div>
-
-                {userData?.mfa?.enabled && (
+                {!userData?.mfa?.enabled ? (
                   <button 
-                    onClick={handleDisableMfa}
-                    className="w-full py-5 bg-rose-900/20 text-rose-500 border border-rose-900/30 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] hover:bg-rose-900/30 transition-all"
+                    onClick={handleStartTotpSetup}
+                    className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-indigo-700 transition-all"
                   >
-                    Disable MFA Protocol
+                    Enable Multi-Factor Auth
                   </button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Active Methods</p>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.mfa.methods.map((m: string) => (
+                          <span key={m} className="px-4 py-2 bg-slate-700 text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest">
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <button className="w-full py-5 bg-rose-900/20 text-rose-500 border border-rose-900/30 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] hover:bg-rose-900/30 transition-all">
+                      Disable MFA Protocol
+                    </button>
+                  </div>
                 )}
               </motion.div>
             )}
@@ -230,23 +131,6 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user }) => {
                 <div className="flex justify-center p-4 bg-white rounded-[2rem] shadow-2xl">
                   <img src={qrCode} alt="TOTP QR Code" className="w-48 h-48" />
                 </div>
-                
-                <div className="space-y-2">
-                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Or enter key manually</p>
-                  <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-700 flex items-center justify-between">
-                    <code className="text-xs font-mono text-indigo-400 font-bold">{totpSecret}</code>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(totpSecret);
-                        // Optional: Show a "Copied!" toast or state
-                      }}
-                      className="p-2 text-slate-500 hover:text-white transition-colors"
-                    >
-                      <ICONS.Copy className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
                 <div className="space-y-4">
                   <input 
                     type="text"
@@ -304,14 +188,9 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ user }) => {
           <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {userData?.trustedDevices?.length > 0 ? (
               userData.trustedDevices.map((device: any) => (
-                <div key={device.deviceId} className={`p-6 bg-slate-800/30 rounded-3xl border flex items-center justify-between group transition-all ${device.deviceId === currentDeviceId ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-slate-800'}`}>
+                <div key={device.deviceId} className="p-6 bg-slate-800/30 rounded-3xl border border-slate-800 flex items-center justify-between group">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[11px] font-black text-white uppercase tracking-tight">{device.deviceName}</p>
-                      {device.deviceId === currentDeviceId && (
-                        <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[7px] font-black uppercase tracking-widest rounded-md">Current</span>
-                      )}
-                    </div>
+                    <p className="text-[11px] font-black text-white uppercase tracking-tight">{device.deviceName}</p>
                     <p className="text-[9px] text-slate-500 font-bold">{device.location} • Last used: {new Date(device.lastUsed).toLocaleDateString()}</p>
                   </div>
                   <button 

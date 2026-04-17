@@ -5,13 +5,10 @@ import {
   loginUser, 
   loginWithGoogle, 
   getAuthInstance,
-  logoutUser,
-  saveUserConsent,
-  checkUserConsent
+  logoutUser
 } from '../services/firebaseService';
 import { ICONS } from '../constants';
 import { MFAChallenge } from './MFAChallenge';
-import { LegalModal } from './LegalModal';
 
 export const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,12 +20,6 @@ export const Auth: React.FC = () => {
   // MFA State
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaData, setMfaData] = useState<{ uid: string, email: string, methods: string[], primaryMethod: string } | null>(null);
-
-  // Legal Consent State
-  const [showLegal, setShowLegal] = useState(false);
-  const [pendingUser, setPendingUser] = useState<string | null>(null);
-  const [infoModalOpen, setInfoModalOpen] = useState(false);
-  const [infoModalType, setInfoModalType] = useState<'tos' | 'privacy'>('tos');
   
   const SUPPORT_LINK = "https://www.spiked.ai/contact-sales";
 
@@ -61,36 +52,8 @@ export const Auth: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const userCredential = await loginWithGoogle();
-      const user = userCredential.user;
-
-      // Check MFA Status
-      const mfaRes = await fetch('/api/mfa/check-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid, email: user.email })
-      });
-
-      if (mfaRes.ok) {
-        const data = await mfaRes.json();
-        if (data.mfaEnabled && data.challengeRequired) {
-          setMfaData({ 
-            uid: user.uid, 
-            email: user.email || '', 
-            methods: data.methods, 
-            primaryMethod: data.primaryMethod 
-          });
-          setMfaRequired(true);
-          return; // Don't finish login yet
-        }
-      }
-
-      // Check Legal Consent
-      const hasConsented = await checkUserConsent(user.uid);
-      if (!hasConsented) {
-        setPendingUser(user.uid);
-        setShowLegal(true);
-      }
+      // Google handles its own MFA (Prompts, SMS, TOTP, Passkeys) during the popup flow.
+      await loginWithGoogle();
     } catch (err: any) {
       setError(mapAuthError(err.code));
     } finally {
@@ -133,13 +96,6 @@ export const Auth: React.FC = () => {
           return; // Don't finish login yet
         }
       }
-
-      // Check Legal Consent
-      const hasConsented = await checkUserConsent(user.uid);
-      if (!hasConsented) {
-        setPendingUser(user.uid);
-        setShowLegal(true);
-      }
     } catch (err: any) {
       setError(mapAuthError(err.code));
     } finally {
@@ -169,13 +125,6 @@ export const Auth: React.FC = () => {
     // Success! MFA is verified. 
     // The user is already logged in via Firebase, we just needed to verify the second factor.
     setMfaRequired(false);
-
-    // Check Legal Consent after MFA
-    const hasConsented = await checkUserConsent(mfaData.uid);
-    if (!hasConsented) {
-      setPendingUser(mfaData.uid);
-      setShowLegal(true);
-    }
   };
 
   const handleMfaCancel = async () => {
@@ -184,35 +133,8 @@ export const Auth: React.FC = () => {
     setMfaData(null);
   };
 
-  const handleLegalAccept = async () => {
-    if (!pendingUser) return;
-    const success = await saveUserConsent(pendingUser);
-    if (success) {
-      setShowLegal(false);
-      setPendingUser(null);
-      // The onAuthStateChanged in App.tsx will trigger the redirect
-    } else {
-      setError("Failed to save legal consent. Please try again.");
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12 transition-colors duration-500 relative overflow-hidden">
-      <LegalModal 
-        isOpen={showLegal}
-        type="tos"
-        onClose={() => {}} // Force acceptance
-        onAccept={handleLegalAccept}
-        showAcceptance={true}
-      />
-
-      <LegalModal 
-        isOpen={infoModalOpen}
-        type={infoModalType}
-        onClose={() => setInfoModalOpen(false)}
-        showAcceptance={false}
-      />
-
       {/* Background Accents */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-rose-500/10 dark:bg-rose-500/5 rounded-full blur-[120px] pointer-events-none"></div>
@@ -468,23 +390,9 @@ export const Auth: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] pt-12 flex flex-col items-center gap-4"
+          className="text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] pt-12"
         >
-          <span>Grounded Data Privacy v3.1 • End-to-End Encryption</span>
-          <div className="flex items-center gap-6">
-            <button 
-              onClick={() => { setInfoModalType('tos'); setInfoModalOpen(true); }}
-              className="hover:text-indigo-400 transition-colors cursor-pointer"
-            >
-              Read Full Terms of Service
-            </button>
-            <button 
-              onClick={() => { setInfoModalType('privacy'); setInfoModalOpen(true); }}
-              className="hover:text-indigo-400 transition-colors cursor-pointer"
-            >
-              Read Neural Privacy Policy
-            </button>
-          </div>
+          Grounded Data Privacy v3.1 • End-to-End Encryption
         </motion.p>
       </div>
     </div>
