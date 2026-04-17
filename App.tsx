@@ -13,7 +13,6 @@ import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
 import { HelpCenter } from './components/HelpCenter';
-import { SecuritySettings } from './components/SecuritySettings';
 import { SupportChatbot } from './components/SupportChatbot';
 import { OnboardingTour } from './components/OnboardingTour';
 import { AccountSettings } from './components/settings/AccountSettings';
@@ -148,7 +147,7 @@ const App: React.FC = () => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help' | 'security'>('context');
+  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
   const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<SalesGPTSession | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -756,7 +755,6 @@ const App: React.FC = () => {
         darkMode={darkMode}
         onStartTour={() => setShowTour(true)}
         onOpenSettings={() => setShowSettings(true)}
-        onOpenSecurity={() => setActiveTab('security')}
       />
 
       {showTour && (
@@ -1010,7 +1008,6 @@ const App: React.FC = () => {
                       {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
                       {activeTab === 'help' && <HelpCenter />}
-                      {activeTab === 'security' && user && <SecuritySettings user={user} />}
                     </div>
                   </motion.div>
                 </AnimatePresence>

@@ -16,7 +16,6 @@ interface HeaderProps {
   darkMode: boolean;
   onStartTour?: () => void;
   onOpenSettings?: () => void;
-  onOpenSecurity?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -27,8 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onTextZoomChange,
   darkMode,
   onStartTour,
-  onOpenSettings,
-  onOpenSecurity
+  onOpenSettings
 }) => {
   const [showUtility, setShowUtility] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -209,16 +207,6 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         <ICONS.Brain className="w-4 h-4 text-emerald-500 group-hover:text-emerald-400" />
                         <span className="text-xs font-bold">Neural Support</span>
-                      </button>
-                      <button 
-                        onClick={() => {
-                          onOpenSecurity?.();
-                          setShowProfileDropdown(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all group"
-                      >
-                        <ICONS.Security className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
-                        <span className="text-xs font-bold">Security Protocol</span>
                       </button>
                       <button 
                         onClick={() => {
