@@ -24,7 +24,8 @@ import {
   saveMeetingContext, 
   fetchMeetingContext, 
   deleteMeetingContext,
-  fetchSharedGPTSession
+  fetchSharedGPTSession,
+  syncHeartbeat
 } from './services/firebaseService';
 import { AnalysisResult, UploadedFile, MeetingContext, StoredDocument, SalesGPTSession } from './types';
 import { ICONS } from './constants';
@@ -160,6 +161,15 @@ const App: React.FC = () => {
     const hasSeenTour = localStorage.getItem('spiked_tour_seen');
     if (!hasSeenTour && user) {
       setShowTour(true);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      const interval = setInterval(() => {
+        syncHeartbeat();
+      }, 5 * 60 * 1000); // 5 minutes
+      return () => clearInterval(interval);
     }
   }, [user]);
 

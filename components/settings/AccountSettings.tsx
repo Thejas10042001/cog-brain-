@@ -16,6 +16,9 @@ import {
 import { UserSettings, ActivityLog, StoredDocument, UserPreferences } from '../../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { ActiveSessions } from './ActiveSessions';
+import { LegalModal } from '../LegalModal';
+import { LEGAL_CONTENT } from '../legal/LegalContent';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -69,6 +72,38 @@ export const AccountSettings: React.FC<{ onClose: () => void }> = ({ onClose }) 
     { id: 'advanced', label: 'Advanced', icon: ICONS.Settings },
     { id: 'legal', label: 'Legal', icon: ICONS.Document },
   ];
+
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [hasConsented, setHasConsented] = useState(settings?.privacy.acceptedTerms && settings?.privacy.acceptedPrivacyPolicy);
+
+  useEffect(() => {
+    if (settings) {
+      setHasConsented(settings.privacy.acceptedTerms && settings.privacy.acceptedPrivacyPolicy);
+    }
+  }, [settings]);
+
+  const handleConsentUpdate = async (checked: boolean) => {
+    if (!settings) return;
+    try {
+      const newPrivacy = {
+        ...settings.privacy,
+        acceptedTerms: checked,
+        acceptedPrivacyPolicy: checked,
+        consentTimestamp: Date.now()
+      };
+      const success = await updateUserSettings({ privacy: newPrivacy });
+      if (success) {
+        setHasConsented(checked);
+        logActivity({
+          type: 'security',
+          action: checked ? 'Accepted Legal Agreements' : 'Revoked Legal Agreements'
+        });
+      }
+    } catch (err) {
+      console.error('Failed to update consent:', err);
+    }
+  };
 
   if (loading) {
     return (
@@ -177,7 +212,15 @@ export const AccountSettings: React.FC<{ onClose: () => void }> = ({ onClose }) 
                 <PinTab settings={settings} onUpdate={handleUpdateSettings} showToast={showToast} />
               )}
               {activeTab === 'data' && settings && (
-                <DataPrivacyTab settings={settings} onUpdate={handleUpdateSettings} showToast={showToast} />
+                <DataPrivacyTab 
+                  settings={settings} 
+                  onUpdate={handleUpdateSettings} 
+                  showToast={showToast}
+                  onOpenTerms={() => setIsTermsOpen(true)}
+                  onOpenPrivacy={() => setIsPrivacyOpen(true)}
+                  hasConsented={hasConsented}
+                  onConsentUpdate={handleConsentUpdate}
+                />
               )}
               {activeTab === 'integrations' && settings && (
                 <IntegrationsTab settings={settings} onUpdate={handleUpdateSettings} showToast={showToast} />
@@ -192,10 +235,34 @@ export const AccountSettings: React.FC<{ onClose: () => void }> = ({ onClose }) 
                 <AdvancedTab settings={settings} onUpdate={handleUpdateSettings} showToast={showToast} />
               )}
               {activeTab === 'legal' && settings && (
-                <LegalTab settings={settings} onUpdate={handleUpdateSettings} showToast={showToast} />
+                <LegalTab 
+                  settings={settings} 
+                  onUpdate={handleUpdateSettings} 
+                  showToast={showToast}
+                  onOpenTerms={() => setIsTermsOpen(true)}
+                  onOpenPrivacy={() => setIsPrivacyOpen(true)}
+                  hasConsented={hasConsented}
+                  onConsentUpdate={handleConsentUpdate}
+                />
               )}
             </motion.div>
           </AnimatePresence>
+
+          {/* Legal Modals */}
+          <LegalModal 
+            isOpen={isTermsOpen} 
+            onClose={() => setIsTermsOpen(false)} 
+            title="Neural Terms of Service" 
+            content={LEGAL_CONTENT.terms}
+            onAccept={!hasConsented ? () => handleConsentUpdate(true) : undefined}
+          />
+          <LegalModal 
+            isOpen={isPrivacyOpen} 
+            onClose={() => setIsPrivacyOpen(false)} 
+            title="Neural Privacy Protocol" 
+            content={LEGAL_CONTENT.privacy}
+            onAccept={!hasConsented ? () => handleConsentUpdate(true) : undefined}
+          />
         </div>
       </div>
     </div>
@@ -353,6 +420,72 @@ const SecurityTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<User
   const [confirmPass, setConfirmPass] = useState('');
   const [changingPass, setChangingPass] = useState(false);
 
+  // MFA Setup State
+  const [isSettingUpMfa, setIsSettingUpMfa] = useState(false);
+  const [mfaQrCode, setMfaQrCode] = useState<string | null>(null);
+  const [mfaVerificationCode, setMfaVerificationCode] = useState('');
+  const [verifyingMfa, setVerifyingMfa] = useState(false);
+
+  const startMfaSetup = async () => {
+    try {
+      const res = await fetch('/api/mfa/setup');
+      const data = await res.json();
+      if (data.qrCode) {
+        setMfaQrCode(data.qrCode);
+        setIsSettingUpMfa(true);
+      } else {
+        showToast('Failed to initialize MFA setup', 'error');
+      }
+    } catch (err) {
+      showToast('Neural link failed during MFA setup', 'error');
+    }
+  };
+
+  const handleVerifyAndEnableMfa = async () => {
+    if (mfaVerificationCode.length !== 6) {
+      showToast('Neural code must be 6 digits', 'error');
+      return;
+    }
+    setVerifyingMfa(true);
+    try {
+      const res = await fetch('/api/mfa/verify-and-enable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: mfaVerificationCode })
+      });
+      const data = await res.json();
+      if (data.success) {
+        onUpdate({ security: { ...settings.security, mfaEnabled: true, mfaType: 'authenticator' } });
+        showToast('Multi-Factor Authentication Enabled');
+        logActivity({ type: 'security', action: 'Enabled MFA (Authenticator)' });
+        setIsSettingUpMfa(false);
+        setMfaQrCode(null);
+        setMfaVerificationCode('');
+      } else {
+        showToast(data.error || 'Invalid verification code', 'error');
+      }
+    } catch (err) {
+      showToast('Verification failed', 'error');
+    } finally {
+      setVerifyingMfa(false);
+    }
+  };
+
+  const handleDisableMfa = async () => {
+    if (!confirm('Are you sure you want to disable MFA? This will reduce your account security.')) return;
+    try {
+      const res = await fetch('/api/mfa/disable', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        onUpdate({ security: { ...settings.security, mfaEnabled: false } });
+        showToast('MFA Disabled', 'success');
+        logActivity({ type: 'security', action: 'Disabled MFA' });
+      }
+    } catch (err) {
+      showToast('Failed to disable MFA', 'error');
+    }
+  };
+
   const handlePassChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPass !== confirmPass) {
@@ -433,69 +566,84 @@ const SecurityTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<User
       </section>
 
       {/* MFA */}
-      <section className="p-8 bg-slate-900/50 border border-slate-800 rounded-[2.5rem] flex items-center justify-between gap-8">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <h3 className="text-xl font-black text-white uppercase tracking-tight">Multi-Factor Authentication</h3>
-            {settings.security.mfaEnabled && (
-              <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase rounded-md border border-emerald-500/20">Active</span>
-            )}
+      <section className="p-8 bg-slate-900/50 border border-slate-800 rounded-[2.5rem] space-y-8">
+        <div className="flex items-center justify-between gap-8">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-black text-white uppercase tracking-tight">Multi-Factor Authentication</h3>
+              {settings.security.mfaEnabled && (
+                <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase rounded-md border border-emerald-500/20">Active</span>
+              )}
+            </div>
+            <p className="text-slate-400 text-sm font-medium">Add an extra layer of security using an authenticator app (Google Authenticator, Authy, etc.).</p>
           </div>
-          <p className="text-slate-400 text-sm font-medium">Add an extra layer of security using an authenticator app or email OTP.</p>
-        </div>
-        <button 
-          onClick={() => {
-            onUpdate({ security: { ...settings.security, mfaEnabled: !settings.security.mfaEnabled } });
-            logActivity({ type: 'security', action: `${!settings.security.mfaEnabled ? 'Enabled' : 'Disabled'} MFA` });
-          }}
-          className={cn(
-            "px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
-            settings.security.mfaEnabled 
-              ? "bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20" 
-              : "bg-indigo-600 text-white hover:bg-indigo-500"
+          
+          {!isSettingUpMfa && (
+            <button 
+              onClick={() => settings.security.mfaEnabled ? handleDisableMfa() : startMfaSetup()}
+              className={cn(
+                "px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                settings.security.mfaEnabled 
+                  ? "bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20" 
+                  : "bg-indigo-600 text-white hover:bg-indigo-500"
+              )}
+            >
+              {settings.security.mfaEnabled ? 'Disable MFA' : 'Enable MFA'}
+            </button>
           )}
-        >
-          {settings.security.mfaEnabled ? 'Disable MFA' : 'Enable MFA'}
-        </button>
+        </div>
+
+        {isSettingUpMfa && mfaQrCode && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-8 bg-slate-900 border border-slate-800 rounded-3xl space-y-8"
+          >
+            <div className="flex flex-col md:flex-row gap-12 items-center">
+              <div className="p-4 bg-white rounded-2xl shadow-2xl">
+                <img src={mfaQrCode} alt="MFA QR Code" className="w-48 h-48" />
+              </div>
+              <div className="space-y-6 flex-1">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-black text-white uppercase tracking-widest">Step 1: Scan QR Code</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed font-medium">Open your authenticator app (like Google Authenticator or Authy) and scan this QR code to add your Spiked AI account.</p>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-black text-white uppercase tracking-widest">Step 2: Verify Access</h4>
+                    <input 
+                      type="text"
+                      maxLength={6}
+                      value={mfaVerificationCode}
+                      onChange={e => setMfaVerificationCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="000000"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-6 py-4 text-white font-black text-2xl tracking-[0.5em] text-center focus:border-indigo-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={handleVerifyAndEnableMfa}
+                      disabled={verifyingMfa || mfaVerificationCode.length !== 6}
+                      className="flex-1 py-4 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 transition-all disabled:opacity-50"
+                    >
+                      {verifyingMfa ? 'Verifying...' : 'Verify & Enable'}
+                    </button>
+                    <button 
+                      onClick={() => { setIsSettingUpMfa(false); setMfaQrCode(null); }}
+                      className="px-6 py-4 bg-slate-800 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-700 transition-all"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </section>
 
       {/* Active Sessions */}
-      <section className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-              <ICONS.History className="w-4 h-4 text-indigo-400" />
-            </div>
-            <h3 className="text-xl font-black text-white uppercase tracking-tight">Active Sessions</h3>
-          </div>
-          <button className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-400 transition-colors">Logout from all other devices</button>
-        </div>
-
-        <div className="space-y-4">
-          {[
-            { id: '1', device: 'Chrome on macOS (Current)', lastActive: 'Active now', isCurrent: true },
-            { id: '2', device: 'Safari on iPhone 15', lastActive: '2 hours ago', isCurrent: false },
-            { id: '3', device: 'Edge on Windows 11', lastActive: '3 days ago', isCurrent: false },
-          ].map(session => (
-            <div key={session.id} className="flex items-center justify-between p-6 bg-slate-900 border border-slate-800 rounded-2xl">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
-                  <ICONS.Efficiency className="w-5 h-5 text-slate-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white">{session.device}</p>
-                  <p className="text-[10px] font-medium text-slate-500">{session.lastActive}</p>
-                </div>
-              </div>
-              {!session.isCurrent && (
-                <button className="p-2 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-lg transition-all">
-                  <ICONS.LogOut className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+      <ActiveSessions />
     </div>
   );
 };
@@ -621,7 +769,15 @@ const PinTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<UserSetti
   );
 };
 
-const DataPrivacyTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<UserSettings>) => void, showToast: (m: string, t?: 'success' | 'error') => void }> = ({ settings, onUpdate, showToast }) => {
+const DataPrivacyTab: React.FC<{ 
+  settings: UserSettings, 
+  onUpdate: (s: Partial<UserSettings>) => void, 
+  showToast: (m: string, t?: 'success' | 'error') => void,
+  onOpenTerms: () => void,
+  onOpenPrivacy: () => void,
+  hasConsented?: boolean,
+  onConsentUpdate: (checked: boolean) => void
+}> = ({ settings, onUpdate, showToast, onOpenTerms, onOpenPrivacy, hasConsented, onConsentUpdate }) => {
   const [docs, setDocs] = useState<StoredDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -732,6 +888,46 @@ const DataPrivacyTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<U
 
       {/* Privacy Toggles */}
       <section className="space-y-6">
+        <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-white uppercase tracking-tight">Protocol Consent Status</h3>
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Neural Legal Integration</p>
+            </div>
+            {hasConsented ? (
+              <div className="flex items-center gap-2 text-emerald-400">
+                <ICONS.Shield className="w-4 h-4" />
+                <span className="text-xs font-black uppercase tracking-widest">Active</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-rose-500">
+                <ICONS.Alert className="w-4 h-4" />
+                <span className="text-xs font-black uppercase tracking-widest">Awaiting Consent</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="pt-4 border-t border-slate-800 flex flex-wrap gap-4">
+            <button onClick={onOpenTerms} className="text-indigo-400 text-[10px] font-black uppercase hover:underline">Full Terms of Service</button>
+            <span className="text-slate-800">•</span>
+            <button onClick={onOpenPrivacy} className="text-emerald-400 text-[10px] font-black uppercase hover:underline">Neural Privacy Policy</button>
+          </div>
+
+          <label className="flex items-start gap-4 cursor-pointer mt-4">
+            <div className="relative flex items-center mt-1">
+              <input 
+                type="checkbox"
+                checked={!!hasConsented}
+                onChange={(e) => onConsentUpdate(e.target.checked)}
+                className="peer h-5 w-5 opacity-0 absolute cursor-pointer"
+              />
+              <div className="h-5 w-5 rounded-md border border-slate-700 peer-checked:bg-indigo-600 peer-checked:border-indigo-600 transition-all flex items-center justify-center">
+                <ICONS.Check className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+              </div>
+            </div>
+            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Update agreement to neural intelligence framework protocols.</p>
+          </label>
+        </div>
         <div className="flex items-center justify-between p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem]">
           <div className="space-y-1">
             <h3 className="text-lg font-black text-white uppercase tracking-tight">Data Sharing Protocol</h3>
@@ -1141,50 +1337,105 @@ const AdvancedTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<User
   );
 };
 
-const LegalTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<UserSettings>) => void, showToast: (m: string, t?: 'success' | 'error') => void }> = ({ settings, onUpdate, showToast }) => {
+interface LegalTabProps {
+  settings: UserSettings;
+  onUpdate: (s: Partial<UserSettings>) => void;
+  showToast: (m: string, t?: 'success' | 'error') => void;
+  onOpenTerms: () => void;
+  onOpenPrivacy: () => void;
+  hasConsented?: boolean;
+  onConsentUpdate: (checked: boolean) => void;
+}
+
+const LegalTab: React.FC<LegalTabProps> = ({ 
+  settings, 
+  onUpdate, 
+  showToast, 
+  onOpenTerms, 
+  onOpenPrivacy,
+  hasConsented,
+  onConsentUpdate
+}) => {
   return (
-    <div className="space-y-12">
+    <div className="space-y-16">
       <header className="space-y-4">
         <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Legal & Consent</h2>
         <p className="text-slate-400 text-lg font-medium">Review operational agreements and neural privacy policies.</p>
       </header>
 
-      <div className="space-y-8">
-        <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-8">
-          <div className="prose prose-invert max-w-none">
-            <h3 className="text-xl font-black text-white uppercase tracking-tight">Neural Operational Agreement</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              By utilizing the SPIKED AI protocol, you acknowledge that all intelligence synthesis is grounded in your proprietary data. We maintain a zero-trust architecture to ensure your data sovereignty.
+      <div className="space-y-12">
+        <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2.5rem] space-y-10">
+          <div className="space-y-6">
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight">Neural Intelligence Framework</h3>
+            <p className="text-slate-400 text-base leading-relaxed">
+              By utilizing the SPIKED AI protocol, you acknowledge that all intelligence synthesis is grounded in your proprietary data. We maintain a zero-trust architecture to ensure your data sovereignty and privacy.
             </p>
-            <div className="flex flex-col gap-4 pt-4">
-              <a href="#" className="text-indigo-400 text-xs font-bold hover:underline flex items-center gap-2">
-                <ICONS.Document className="w-4 h-4" />
-                Read Full Terms of Service
-              </a>
-              <a href="#" className="text-indigo-400 text-xs font-bold hover:underline flex items-center gap-2">
-                <ICONS.Shield className="w-4 h-4" />
-                Read Neural Privacy Policy
-              </a>
-            </div>
           </div>
 
-          <div className="pt-8 border-t border-slate-800 flex items-center gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <button 
-              onClick={() => {
-                onUpdate({ privacy: { ...settings.privacy, consentTimestamp: Date.now() } });
-                showToast('Consent timestamp updated');
-              }}
-              className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white"
+              onClick={onOpenTerms}
+              className="p-6 bg-slate-800/40 border border-slate-700/50 rounded-2xl hover:border-indigo-500/50 hover:bg-slate-800/60 transition-all text-left group"
             >
-              <ICONS.Check className="w-4 h-4" />
+              <ICONS.Document className="w-6 h-6 text-indigo-400 mb-4 group-hover:scale-110 transition-transform" />
+              <p className="text-sm font-bold text-white uppercase tracking-tight">Terms of Service</p>
+              <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-black">Neural Intelligence Protocol</p>
+              <span className="inline-flex items-center gap-1.5 text-indigo-400 text-[10px] font-black uppercase mt-4">
+                Read Full Context <ICONS.ArrowRight className="w-3 h-3" />
+              </span>
             </button>
-            <p className="text-slate-400 text-xs font-medium">
-              I acknowledge and agree to the updated Neural Operational Agreement.
-            </p>
+
+            <button 
+              onClick={onOpenPrivacy}
+              className="p-6 bg-slate-800/40 border border-slate-700/50 rounded-2xl hover:border-emerald-500/50 hover:bg-slate-800/60 transition-all text-left group"
+            >
+              <ICONS.Shield className="w-6 h-6 text-emerald-400 mb-4 group-hover:scale-110 transition-transform" />
+              <p className="text-sm font-bold text-white uppercase tracking-tight">Privacy Policy</p>
+              <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-black">Neural Shield Directive</p>
+              <span className="inline-flex items-center gap-1.5 text-emerald-400 text-[10px] font-black uppercase mt-4">
+                View Protection Protocols <ICONS.ArrowRight className="w-3 h-3" />
+              </span>
+            </button>
           </div>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-            Last Consent: {new Date(settings.privacy.consentTimestamp).toLocaleString()}
-          </p>
+
+          <div className="pt-10 border-t border-slate-800 space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-6 bg-slate-950/50 rounded-2xl border border-slate-800/50">
+              <div className="flex items-start gap-4 cursor-pointer group flex-1">
+                <div className="relative flex items-center mt-1">
+                  <input 
+                    type="checkbox"
+                    checked={!!hasConsented}
+                    onChange={(e) => onConsentUpdate(e.target.checked)}
+                    className="peer h-5 w-5 opacity-0 absolute cursor-pointer"
+                  />
+                  <div className="h-6 w-6 rounded-lg border-2 border-slate-700 peer-checked:bg-indigo-600 peer-checked:border-indigo-600 transition-all flex items-center justify-center">
+                    <ICONS.Check className="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white uppercase tracking-tight">Acknowledge Legal Framework</p>
+                  <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-black">Mandatory for Protocol Access</p>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Last Protocol Update</p>
+                <p className="text-xs font-bold text-indigo-400">April 17, 2026</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                System Consent Timestamp: {settings.privacy.consentTimestamp ? new Date(settings.privacy.consentTimestamp).toLocaleString() : 'Not Recorded'}
+              </p>
+              {hasConsented && (
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <ICONS.Shield className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Neural Compliance Active</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

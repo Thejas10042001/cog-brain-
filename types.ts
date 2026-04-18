@@ -462,6 +462,9 @@ export interface UserPreferences {
 export interface UserPrivacy {
   dataSharing: boolean;
   consentTimestamp: number;
+  acceptedTerms?: boolean;
+  acceptedPrivacyPolicy?: boolean;
+  neuralPrivacyAccepted?: boolean;
 }
 
 export interface ActivityLog {

@@ -1,12 +1,12 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { AnalysisResult, MeetingContext, ThinkingLevel, DifficultyLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure, SalesStrategy } from "../types";
 
-// Upgraded thinking budget map for gemini-3-pro-preview capabilities
+// Upgraded thinking budget map for gemini-3.1-pro-preview capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
   'Minimal': 0,
   'Low': 8000,
   'Medium': 16000,
-  'High': 32768 // Max for gemini-3-pro-preview
+  'High': 32768 // Max for gemini-3.1-pro-preview
 };
 
 export async function generateExplanation(question: string, stageOrAnalysis: string | AnalysisResult, context?: MeetingContext): Promise<string> {
@@ -221,7 +221,7 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
 // Extract meeting metadata from multiple documents
 export async function extractMetadataFromMultipleDocuments(documents: { name: string; content: string }[]): Promise<Partial<MeetingContext>> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-preview'; // Use Pro for deeper analysis across multiple docs
+  const modelName = 'gemini-3.1-pro-preview'; // Use Pro for deeper analysis across multiple docs
   
   const combinedContent = documents.map(d => `FILE [${d.name}]:\n${d.content}`).join('\n\n');
   
@@ -565,7 +565,7 @@ export async function generateVoiceSample(
 
   try {
     const response = await withRetry(() => ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.1-flash-tts-preview",
       contents: [{ parts: [{ text: cleanText }] }],
       config: {
         responseModalities: [Modality.AUDIO],
@@ -690,7 +690,7 @@ export async function generateSalesStrategy(
   refinementPrompt?: string
 ): Promise<SalesStrategy> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-pro-preview';
+  const modelName = 'gemini-3.1-pro-preview';
   
   const prompt = `Act as an Elite Enterprise Sales Strategist and Competitive Intelligence Officer. 
   Your goal is to generate a high-fidelity, actionable sales strategy for the following deal context.
@@ -1698,12 +1698,12 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
 }
 
 /**
- * Generates a realistic professional corporate logo for the client's company using gemini-3-pro-image-preview.
+ * Generates a realistic professional corporate logo for the client's company using gemini-2.5-flash-image.
  * Uses googleSearch to find context about the brand identity and corporate aesthetic.
  */
 export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
-  const modelName = 'gemini-2.0-flash';
+  const modelName = 'gemini-2.5-flash-image';
   
   try {
     const prompt = `Perform an exhaustive look-up of the exact visual brand identity, official color hex codes, and vector logo characteristics of the company named "${company}". 
@@ -1987,7 +1987,7 @@ export async function generatePitchAudio(
 
   try {
     const response = await withRetry(() => ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.1-flash-tts-preview",
       contents: [{ parts: [{ text: cleanText }] }],
       config: {
         responseModalities: [Modality.AUDIO],

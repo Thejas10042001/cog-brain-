@@ -129,6 +129,13 @@ service cloud.firestore {
              data.messages is list;
     }
 
+    function isValidSession(data) {
+      return hasRequiredFields(['sessionId', 'deviceName', 'isRevoked']) &&
+             data.sessionId is string &&
+             data.deviceName is string &&
+             data.isRevoked is bool;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -172,6 +179,13 @@ service cloud.firestore {
         allow read: if isOwner(userId) || isAdmin() || (isAuthenticated() && resource.data.isShared == true);
         allow create: if isOwner(userId) && isValidSalesGPTSession(request.resource.data, userId);
         allow update: if isOwner(userId) && isValidSalesGPTSession(request.resource.data, userId);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
+      match /sessions/{sessionId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidSession(request.resource.data);
+        allow update: if isOwner(userId) && isValidSession(request.resource.data);
         allow delete: if isOwner(userId) || isAdmin();
       }
     }

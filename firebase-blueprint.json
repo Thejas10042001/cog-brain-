@@ -107,6 +107,25 @@
         "lastLogin": { "type": "object" }
       },
       "required": ["uid", "email"]
+    },
+    "Session": {
+      "title": "Session",
+      "description": "A user's active device session.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string" },
+        "deviceName": { "type": "string" },
+        "ipAddress": { "type": "string" },
+        "location": { "type": "string" },
+        "userAgent": { "type": "string" },
+        "createdAt": { "type": "object" },
+        "lastActive": { "type": "object" },
+        "isCurrent": { "type": "boolean" },
+        "isRevoked": { "type": "boolean" },
+        "expiresAt": { "type": "object" },
+        "deviceId": { "type": "string" }
+      },
+      "required": ["sessionId", "deviceName", "isRevoked"]
     }
   },
   "firestore": {
@@ -133,6 +152,10 @@
     "/users/{userId}/sales_gpt_history/{sessionId}": {
       "schema": "SalesGPTSession",
       "description": "History of SalesGPT chat sessions."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": "Session",
+      "description": "Active user device sessions."
     }
   }
 }

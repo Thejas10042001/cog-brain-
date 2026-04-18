@@ -93,18 +93,18 @@ try {
   console.error("Firebase Initialization Error:", error);
 }
 
-// Connection test
-async function testConnection() {
-  if (!db) return;
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. The client is offline.");
-    }
-  }
-}
-testConnection();
+// Connection test (Commented out to stop offline warnings when Firebase setup is declined)
+// async function testConnection() {
+//   if (!db) return;
+//   try {
+//     await getDocFromServer(doc(db, 'test', 'connection'));
+//   } catch (error) {
+//     if(error instanceof Error && error.message.includes('the client is offline')) {
+//       console.error("Please check your Firebase configuration. The client is offline.");
+//     }
+//   }
+// }
+// testConnection();
 
 export enum OperationType {
   CREATE = 'create',
@@ -386,6 +386,7 @@ export const loginUser = async (email: string, pass: string) => {
   if (!auth) return Promise.reject("Auth module not initialized");
   const result = await signInWithEmailAndPassword(auth, email, pass);
   await saveUserProfile(result.user);
+  await initializeBackendSession(result.user);
   return result;
 };
 
@@ -395,6 +396,7 @@ export const loginWithGoogle = async () => {
   // Google handles its own MFA (Prompts, SMS, TOTP, Passkeys) during the popup flow.
   const result = await signInWithPopup(auth, provider);
   await saveUserProfile(result.user);
+  await initializeBackendSession(result.user);
   return result;
 };
 
@@ -402,9 +404,42 @@ export const registerUser = async (email: string, pass: string) => {
   if (!auth) return Promise.reject("Auth module not initialized");
   const result = await createUserWithEmailAndPassword(auth, email, pass);
   await saveUserProfile(result.user);
+  await initializeBackendSession(result.user);
   return result;
 };
 export const logoutUser = () => auth && signOut(auth);
+
+// Session Helper Functions
+export const initializeBackendSession = async (user: any) => {
+  if (!user) return;
+  try {
+    const idToken = await user.getIdToken();
+    let deviceId = localStorage.getItem('deviceId');
+    if (!deviceId) {
+      deviceId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('deviceId', deviceId);
+    }
+    
+    const res = await fetch('/api/auth/session/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, deviceId })
+    });
+    
+    if (res.status === 401) {
+      // If backend says auth failed, log out
+      await logoutUser();
+    }
+  } catch (error) {
+    console.error("Failed to initialize backend session:", error);
+  }
+};
+
+export const syncHeartbeat = async () => {
+  try {
+    await fetch('/api/auth/heartbeat', { method: 'POST' });
+  } catch (e) {}
+};
 
 export const updateUserProfile = async (displayName: string, photoURL: string) => {
   if (!auth || !auth.currentUser || !db) return false;
@@ -429,7 +464,12 @@ export const updateUserProfile = async (displayName: string, photoURL: string) =
 
 export const subscribeToAuth = (callback: (user: User | null) => void) => {
   if (auth) {
-    return onAuthStateChanged(auth, callback);
+    return onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await initializeBackendSession(user);
+      }
+      callback(user);
+    });
   }
   // Return a no-op cleanup function if auth is not initialized
   return () => {};
@@ -755,38 +795,40 @@ export const markUpdateAsRead = async (updateId: string): Promise<boolean> => {
 
 // User Settings & Profile Functions
 export const fetchUserSettings = async (): Promise<UserSettings | null> => {
-  if (!db || !auth || !auth.currentUser) return null;
-  const path = USERS_COLLECTION;
   try {
-    const userRef = doc(db, path, auth.currentUser.uid);
-    const docSnap = await getDoc(userRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
+    const response = await fetch('/api/settings');
+    const data = await response.json();
+    if (data.settings) return data.settings;
+    
+    // Fallback if no settings exist yet
+    if (auth?.currentUser) {
       return {
-        profile: data.profile || { name: '', email: auth.currentUser.email, phone: '', photoURL: auth.currentUser.photoURL, role: '' },
-        security: data.security || { mfaEnabled: false, lastLogin: Date.now(), sessions: [] },
-        pin: data.pin || { hashedPin: '', recoveryQuestion: '', recoveryAnswerHash: '', failedAttempts: 0, isLocked: false },
-        integrations: data.integrations || { googleDrive: { connected: false }, googleCalendar: { connected: false } },
-        preferences: data.preferences || { notifications: { email: true, inApp: true, onSimulationComplete: true, onNewRecommendations: true, onErrors: true }, defaultWorkspace: 'simulation', experimentalFeatures: false },
-        privacy: data.privacy || { dataSharing: true, consentTimestamp: Date.now() }
+        profile: { name: '', email: auth.currentUser.email, phone: '', photoURL: auth.currentUser.photoURL, role: '' },
+        security: { mfaEnabled: false, lastLogin: Date.now(), sessions: [] },
+        pin: { hashedPin: '', recoveryQuestion: '', recoveryAnswerHash: '', failedAttempts: 0, isLocked: false },
+        integrations: { googleDrive: { connected: false }, googleCalendar: { connected: false } },
+        preferences: { notifications: { email: true, inApp: true, onSimulationComplete: true, onNewRecommendations: true, onErrors: true }, defaultWorkspace: 'simulation', experimentalFeatures: false },
+        privacy: { dataSharing: true, consentTimestamp: Date.now(), acceptedTerms: false, acceptedPrivacyPolicy: false, neuralPrivacyAccepted: false }
       } as UserSettings;
     }
     return null;
   } catch (error) {
-    handleFirestoreError(error, OperationType.GET, path);
+    console.error("Error fetching settings from API:", error);
     return null;
   }
 };
 
 export const updateUserSettings = async (settings: Partial<UserSettings>): Promise<boolean> => {
-  if (!db || !auth || !auth.currentUser) return false;
-  const path = USERS_COLLECTION;
   try {
-    const userRef = doc(db, path, auth.currentUser.uid);
-    await updateDoc(userRef, sanitizeData(settings));
-    return true;
+    const currentSettings = await fetchUserSettings();
+    const response = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: { ...currentSettings, ...settings } })
+    });
+    return response.ok;
   } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, path);
+    console.error("Error updating settings via API:", error);
     return false;
   }
 };
@@ -804,31 +846,27 @@ export const uploadProfilePicture = async (file: File): Promise<string | null> =
 };
 
 export const logActivity = async (activity: Omit<ActivityLog, 'id' | 'timestamp'>): Promise<void> => {
-  if (!db || !auth || !auth.currentUser) return;
-  const path = ACTIVITY_LOGS_COLLECTION;
   try {
-    await addDoc(getUserCollection(path), {
-      ...activity,
-      timestamp: Timestamp.now()
+    await fetch('/api/activity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activity)
     });
   } catch (error) {
-    console.error("Error logging activity:", error);
+    console.error("Error logging activity via API:", error);
   }
 };
 
 export const fetchActivityLogs = async (limitCount: number = 20): Promise<ActivityLog[]> => {
-  if (!db || !auth || !auth.currentUser) return [];
-  const path = ACTIVITY_LOGS_COLLECTION;
   try {
-    const q = query(getUserCollection(path));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      timestamp: doc.data().timestamp?.toMillis() || Date.now()
-    })).sort((a, b) => b.timestamp - a.timestamp).slice(0, limitCount) as ActivityLog[];
+    const response = await fetch(`/api/activity?limit=${limitCount}`);
+    const data = await response.json();
+    return (data.logs || []).map((l: any) => ({
+      ...l,
+      timestamp: new Date(l.timestamp).getTime()
+    }));
   } catch (error) {
-    handleFirestoreError(error, OperationType.GET, path);
+    console.error("Error fetching activity logs via API:", error);
     return [];
   }
 };
