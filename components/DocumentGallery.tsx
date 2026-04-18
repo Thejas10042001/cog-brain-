@@ -11,7 +11,8 @@ import {
   saveFolderToFirebase,
   deleteFolderFromFirebase,
   moveDocumentToFolder,
-  renameFolderInFirebase
+  renameFolderInFirebase,
+  saveDocumentToFirebase
 } from '../services/firebaseService';
 
 interface DocumentGalleryProps {
@@ -491,6 +492,29 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
       }
     }
     setIsSaving(false);
+  };
+
+  const handleDuplicateDocument = async (e: React.MouseEvent, doc: StoredDocument) => {
+    e.stopPropagation();
+    setIsSaving(true);
+    try {
+      const newName = `${doc.name} (Copy)`;
+      const newId = await saveDocumentToFirebase(
+        newName,
+        doc.content,
+        doc.type,
+        doc.folderId || undefined,
+        doc.category || undefined,
+        doc.categorizationReasoning || undefined
+      );
+      if (newId) {
+        onRefresh();
+      }
+    } catch (err) {
+      console.error("Duplication failed:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const formatDate = (ts: number) => {
@@ -979,6 +1003,14 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                           title="View & Edit Content"
                         >
                           <ICONS.Search className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={(e) => handleDuplicateDocument(e, doc)}
+                          disabled={isSaving}
+                          className="p-2.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-900/30 rounded-xl transition-all disabled:opacity-50"
+                          title="Duplicate Intelligence Node"
+                        >
+                          <ICONS.Copy className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={(e) => handleDelete(e, doc.id)}
