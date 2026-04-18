@@ -891,7 +891,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
         </div>
 
           <div className="flex gap-6 items-start">
-            <div className={`flex-1 transition-all duration-500 ${previewDoc ? 'lg:w-1/2' : 'w-full'}`}>
+            <div className="flex-1">
               {filteredDocuments.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0 }}
@@ -904,7 +904,7 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
               ) : (
                 <motion.div 
                   layout
-                  className={`grid grid-cols-1 gap-5 ${previewDoc ? 'sm:grid-cols-1 xl:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'}`}
+                  className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"
                 >
                   <AnimatePresence mode="popLayout">
                     {filteredDocuments.map((doc) => {
@@ -1063,80 +1063,132 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
               )}
             </div>
 
-            {/* Preview Pane */}
+            {/* Preview Pane - Modal Transformation */}
             <AnimatePresence>
               {previewDoc && (
                 <motion.div
-                  initial={{ opacity: 0, x: 20, width: 0 }}
-                  animate={{ opacity: 1, x: 0, width: 'auto' }}
-                  exit={{ opacity: 0, x: 20, width: 0 }}
-                  className="hidden lg:flex flex-col w-[450px] shrink-0 sticky top-8 h-[calc(100vh-8rem)] bg-slate-900 border border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-12 bg-slate-950/90 backdrop-blur-2xl"
+                  onClick={() => setPreviewDoc(null)}
                 >
-                  <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-800/30">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-indigo-600 text-white rounded-xl">
-                        <ICONS.Document className="w-4 h-4" />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-slate-900 border border-slate-800 w-full max-w-6xl h-[90vh] rounded-[3rem] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col"
+                  >
+                    {/* Header */}
+                    <div className="p-8 border-b border-slate-800/50 flex items-center justify-between bg-slate-800/30">
+                      <div className="flex items-center gap-5">
+                        <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-900/40">
+                          <ICONS.Document className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 mb-1">Intelligence Preview</h4>
+                          <h3 className="text-2xl font-black text-white uppercase tracking-tighter leading-tight max-w-2xl truncate">
+                            {previewDoc.name}
+                          </h3>
+                        </div>
                       </div>
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white">Intelligence Preview</h4>
-                    </div>
-                    <button 
-                      onClick={() => setPreviewDoc(null)}
-                      className="p-2 text-slate-500 hover:text-white transition-colors"
-                    >
-                      <ICONS.X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8">
-                    <div>
-                      <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2 leading-tight">
-                        {previewDoc.name}
-                      </h3>
-                      <div className="flex items-center gap-3 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                        <span>{formatDate(previewDoc.timestamp)}</span>
-                        <span className="w-1 h-1 bg-slate-800 rounded-full"></span>
-                        <span>{formatTime(previewDoc.timestamp)}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-5 bg-indigo-900/10 border border-indigo-900/20 rounded-2xl">
-                      <div className="flex items-center gap-2 mb-3">
-                        <ICONS.Brain className="w-3 h-3 text-indigo-400" />
-                        <span className="text-[8px] font-black uppercase tracking-widest text-indigo-300">AI Categorization</span>
-                      </div>
-                      <p className="text-[10px] text-indigo-200/70 font-medium italic leading-relaxed">
-                        {previewDoc.categorizationReasoning || "No reasoning available for this node."}
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h5 className="text-[9px] font-black uppercase tracking-widest text-slate-500">Extracted Content</h5>
+                      <div className="flex items-center gap-4">
                         <button 
                           onClick={() => setViewingDoc(previewDoc)}
-                          className="text-[8px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+                          className="px-6 py-3 bg-slate-800 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 hover:text-white transition-all border border-slate-700 flex items-center gap-2"
                         >
-                          Full Editor <ICONS.ArrowRight className="w-2 h-2" />
+                          <ICONS.Edit className="w-3.5 h-3.5" /> Full Editor
+                        </button>
+                        <button 
+                          onClick={() => setPreviewDoc(null)}
+                          className="p-4 bg-slate-800/50 hover:bg-rose-500/20 text-slate-400 hover:text-rose-500 rounded-2xl transition-all border border-slate-700/50"
+                        >
+                          <ICONS.X className="w-6 h-6" />
                         </button>
                       </div>
-                      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 font-mono text-[11px] leading-relaxed text-slate-400 whitespace-pre-wrap min-h-[200px]">
-                        {previewDoc.content || "No content available."}
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+                      {/* Meta & Summary Sidebar */}
+                      <div className="w-full lg:w-96 border-r border-slate-800/50 bg-slate-950/30 p-8 space-y-10 overflow-y-auto custom-scrollbar">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 text-indigo-400">
+                            <ICONS.Brain className="w-4 h-4" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Neural Reasoning</span>
+                          </div>
+                          <div className="p-6 bg-indigo-950/20 border border-indigo-500/10 rounded-[2rem] relative group">
+                            <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-indigo-500/30 rounded-tl-lg"></div>
+                            <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-indigo-500/30 rounded-br-lg"></div>
+                            <p className="text-xs text-indigo-200/80 leading-relaxed font-medium italic">
+                              "{previewDoc.categorizationReasoning || "No reasoning available for this node."}"
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-6 pt-10 border-t border-slate-800/50">
+                           <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Metadata Scan</h5>
+                           <div className="space-y-4">
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="text-slate-500 font-black uppercase tracking-widest">Format</span>
+                                <span className="text-white font-black uppercase tracking-widest">{(previewDoc.type.split('/')[1] || 'DOC').toUpperCase()}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="text-slate-500 font-black uppercase tracking-widest">Captured</span>
+                                <span className="text-white font-black uppercase tracking-widest">{formatDate(previewDoc.timestamp)}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="text-slate-500 font-black uppercase tracking-widest">Folder</span>
+                                <span className="text-indigo-400 font-black uppercase tracking-widest">{allFolders.find(f => f.id === previewDoc.folderId)?.name || 'Default'}</span>
+                              </div>
+                           </div>
+                        </div>
+                      </div>
+
+                      {/* Main Content Viewer */}
+                      <div className="flex-1 p-10 bg-slate-950/50 overflow-y-auto custom-scrollbar relative">
+                        <div className="absolute top-0 right-0 p-8 flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-widest">
+                          <ICONS.Efficiency className="w-3 h-3" /> Grounded Archive v4.2
+                        </div>
+                        <div className="space-y-6">
+                           <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-8 border-b border-slate-800/50 pb-4">Extracted Intelligence Base</h5>
+                           <div className="font-mono text-sm leading-relaxed text-slate-400 whitespace-pre-wrap selection:bg-indigo-500/30 selection:text-indigo-200">
+                              {previewDoc.content || "Neural scan empty or content missing from database index."}
+                           </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="p-6 border-t border-slate-800 bg-slate-800/30">
-                    <button 
-                      onClick={() => onToggleSelect(previewDoc.id)}
-                      className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                        selectedIds.includes(previewDoc.id)
-                          ? 'bg-rose-600/10 text-rose-500 border border-rose-500/20 hover:bg-rose-600/20'
-                          : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-900/20'
-                      }`}
-                    >
-                      {selectedIds.includes(previewDoc.id) ? 'Deselect Node' : 'Select for Synthesis'}
-                    </button>
-                  </div>
+                    {/* Footer Action */}
+                    <div className="p-8 border-t border-slate-800 bg-slate-800/30 flex items-center justify-between">
+                       <div className="flex items-center gap-4">
+                          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Cognitive Integrity Verified</span>
+                       </div>
+                       <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => setPreviewDoc(null)}
+                            className="px-8 py-4 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors"
+                          >
+                            Dismiss Preview
+                          </button>
+                          <button 
+                            onClick={() => {
+                              onToggleSelect(previewDoc.id);
+                              setPreviewDoc(null);
+                            }}
+                            className={`px-12 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                              selectedIds.includes(previewDoc.id)
+                                ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-900/20'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-900/20'
+                            }`}
+                          >
+                            {selectedIds.includes(previewDoc.id) ? 'Remove from Synthesis' : 'Add to Strategic Synthesis'}
+                          </button>
+                       </div>
+                    </div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
