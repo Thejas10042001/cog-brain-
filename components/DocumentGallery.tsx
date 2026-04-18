@@ -956,12 +956,12 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                             ${isPreviewing ? 'border-indigo-400 bg-slate-800/50' : ''}
                           `}
                         >
-                    <div className="flex items-start justify-between mb-5">
-                      <div className={`p-4 rounded-2xl transition-all ml-8 ${isSelected ? 'bg-indigo-600 text-white shadow-xl shadow-none' : 'bg-indigo-900/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-xl group-hover:shadow-none'}`}>
+                    <div className="flex items-start justify-between mb-5 gap-2">
+                      <div className={`p-4 rounded-2xl transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-xl shadow-none' : 'bg-indigo-900/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-xl group-hover:shadow-none'}`}>
                         <ICONS.Document className="w-5 h-5" />
                       </div>
                       
-                      <div className="flex items-center gap-2 transition-opacity">
+                      <div className="flex items-center gap-1.5 transition-opacity flex-wrap justify-end">
                         <div className="relative">
                           <button 
                             onClick={(e) => { e.stopPropagation(); setMovingDocId(isMoving ? null : doc.id); }}
@@ -1052,7 +1052,9 @@ export const DocumentGallery: React.FC<DocumentGalleryProps> = ({
                            <span className="text-[7px] font-black text-indigo-500 px-1">Modified: {formatDate(doc.updatedAt)}</span>
                          )}
                       </div>
-                      <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest">{(doc.type.split('/')[1] || 'DOC').toUpperCase()}</span>
+                      <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest truncate max-w-[80px] text-right shrink-0" title={(doc.type.split('/')[1] || 'DOC').toUpperCase()}>
+                        {(doc.type.split('/')[1] || 'DOC').toUpperCase()}
+                      </span>
 
                       <AnimatePresence>
                         {showReasoningId === doc.id && doc.categorizationReasoning && (
