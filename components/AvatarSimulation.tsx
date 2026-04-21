@@ -90,6 +90,8 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
 
   // Resizable Logic for Sidebar
   const [historyWidth, setHistoryWidth] = useState(400);
+  const [sidebarLeftWidth, setSidebarLeftWidth] = useState(380);
+  const [activeResizer, setActiveResizer] = useState<'left' | 'right' | null>(null);
   const [isResizing, setIsResizing] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -99,14 +101,27 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const startResizing = () => setIsResizing(true);
-  const stopResizing = () => setIsResizing(false);
+  const startResizing = (dir: 'left' | 'right') => {
+    setActiveResizer(dir);
+    setIsResizing(true);
+  };
+  const stopResizing = () => {
+    setActiveResizer(null);
+    setIsResizing(false);
+  };
   
   const resize = (e: MouseEvent) => {
-    if (isResizing) {
-      const newWidth = window.innerWidth - e.clientX;
-      if (newWidth > 150 && newWidth < 800) {
-        setHistoryWidth(newWidth);
+    if (isResizing && activeResizer) {
+      if (activeResizer === 'right') {
+         const newWidth = window.innerWidth - e.clientX;
+         if (newWidth > 150 && newWidth < 800) {
+           setHistoryWidth(newWidth);
+         }
+      } else {
+         const newWidth = e.clientX;
+         if (newWidth > 150 && newWidth < 800) {
+            setSidebarLeftWidth(newWidth);
+         }
       }
     }
   };
@@ -123,7 +138,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
       window.removeEventListener('mousemove', resize);
       window.removeEventListener('mouseup', stopResizing);
     };
-  }, [isResizing]);
+  }, [isResizing, activeResizer]);
 
   useEffect(() => {
     return () => {
@@ -202,20 +217,40 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
           const newClarity = Math.max(80, Math.min(100, 92 + (Math.random() * 8 - 4)));
 
           let audit = prev.behavioralAudit;
-          if (newStress > 75) audit = "CRITICAL: High autonomic arousal. Pause and reset breathing.";
-          else if (newStress > 55) audit = "Elevated cognitive load. Simplify your current logic.";
-          else if (newAttention < 75) audit = "Focus drift detected. Re-center on the prospect's last cue.";
-          else if (newEye < 65) audit = "Eye contact deficit. Re-establish visual connection to build trust.";
-          else if (isAISpeaking) audit = "Active listening protocol engaged. Mirroring prospect sentiment.";
-          else if (isUserListening) audit = "Strategic delivery active. Maintaining high-authority presence.";
-          else audit = "Neural baseline established. Ready for next tactical node.";
+          let suggestion = "";
+          
+          if (newStress > 80) {
+            audit = "CRITICAL: Autonomic overwhelm detected.";
+            suggestion = "Stop speaking immediately. Take a deep 4-second breath. Lower your vocal pitch to regain authority.";
+          } else if (newStress > 60) {
+            audit = "WARNING: Elevated stress response.";
+            suggestion = "Slow your pacing. Your heart rate is rising, which may lead to defensive communication.";
+          } else if (newAttention < 75) {
+            audit = "ALERT: Cognitive drift identified.";
+            suggestion = "Refocus on the client's ocular region. You are losing engagement depth.";
+          } else if (newEye < 70) {
+            audit = "ALERT: Relationship friction signal.";
+            suggestion = "Maintain more consistent eye contact to reinforce trust and sincerity.";
+          } else if (newClarity < 85) {
+            audit = "ADVISORY: Articulation deficit.";
+            suggestion = "Enunciate complex technical terms more clearly. Avoid 'um' and 'ah' fillers.";
+          } else if (isAISpeaking) {
+            audit = "Active listening protocol engaged.";
+            suggestion = "Nod slightly to show understanding. Prepare your strategic follow-up node.";
+          } else if (isUserListening) {
+            audit = "Strategic delivery under observation.";
+            suggestion = "Excellent vocal posture. Maintain this calm, authoritative cadence.";
+          } else {
+            audit = "Neural baseline synchronized.";
+            suggestion = "Optimal performance state achieved. Proceed with contextual inquiry.";
+          }
 
           return {
             stressLevel: newStress,
             attentionFocus: newAttention,
             eyeContact: newEye,
             clarityScore: newClarity,
-            behavioralAudit: audit
+            behavioralAudit: `${audit} | RECOMMENDATION: ${suggestion}`
           };
         });
       }, 1000); // Increased frequency for "real-time" feel
@@ -816,76 +851,149 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         </div>
       ) : (
         <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar py-16 px-12 gap-12 justify-center">
+          {/* NEURAL THREE-COLUMN CORE */}
+          <div className="flex-1 flex overflow-hidden">
+             {/* Left Sidebar: Cameras & Metrics */}
+             <aside 
+               style={{ 
+                 width: sidebarLeftWidth,
+                 transition: isResizing ? 'none' : 'all 0.3s ease'
+               }}
+               className="border-r border-slate-800 bg-slate-900/50 backdrop-blur-xl flex flex-col shrink-0 overflow-y-auto no-scrollbar"
+             >
+                <div className="p-8 space-y-10">
+                   {/* Sensors */}
+                   <div className="space-y-6">
+                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Neural Presence Node</h5>
+                      <div className="space-y-4">
+                        <div className="relative aspect-video rounded-[2rem] overflow-hidden border-2 border-slate-800 shadow-2xl group transition-all hover:scale-[1.02]">
+                           <AIAnimatedBotCIO />
+                        </div>
+                        
+                        <div className="relative aspect-video rounded-[2rem] overflow-hidden border-2 border-slate-800 shadow-2xl bg-slate-100 group transition-all hover:scale-[1.02]">
+                           <video 
+                             ref={videoRef} 
+                             autoPlay 
+                             playsInline 
+                             muted 
+                             className="w-full h-full object-cover mirror"
+                           />
+                           <div className="absolute top-4 left-4 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                              <span className="text-[8px] font-black text-white uppercase tracking-widest">User Profile</span>
+                           </div>
+
+                           {(!streamRef.current || webcamError) && (
+                             <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm px-6">
+                                <div className="text-center space-y-4">
+                                   {webcamError ? (
+                                      <ICONS.X className="w-8 h-8 text-rose-500 mx-auto" />
+                                   ) : (
+                                      <ICONS.Security className="w-8 h-8 text-slate-400 mx-auto animate-pulse" />
+                                   )}
+                                   <p className={`text-[8px] font-black uppercase tracking-widest ${webcamError ? 'text-rose-400' : 'text-slate-400'}`}>
+                                      {webcamError || 'Protocol Error'}
+                                   </p>
+                                </div>
+                             </div>
+                           )}
+                        </div>
+                      </div>
+                   </div>
+
+                   {/* Cognitive Metrics */}
+                   <div className="space-y-6">
+                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Biometric Trace</h5>
+                      <div className="grid grid-cols-1 gap-3">
+                        {[
+                          { label: 'Stress', value: biometrics.stressLevel, inverse: true },
+                          { label: 'Focus', value: biometrics.attentionFocus },
+                          { label: 'Eye Contact', value: biometrics.eyeContact },
+                          { label: 'Clarity', value: biometrics.clarityScore },
+                        ].map(metric => {
+                          const isHighStress = metric.label === 'Stress' && metric.value > 70;
+                          const isMedStress = metric.label === 'Stress' && metric.value > 40 && metric.value <= 70;
+                          
+                          const isLowPerf = metric.label !== 'Stress' && metric.value < 65;
+                          const isMedPerf = metric.label !== 'Stress' && metric.value >= 65 && metric.value < 85;
+
+                          let colors = "bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
+                          if (isHighStress || isLowPerf) colors = "bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse";
+                          else if (isMedStress || isMedPerf) colors = "bg-amber-500/10 border-amber-500/30 text-amber-400";
+
+                          return (
+                            <div key={metric.label} className={`p-4 rounded-2xl border flex items-center justify-between transition-all duration-500 ${colors}`}>
+                              <span className="text-[8px] font-black uppercase tracking-widest opacity-80">{metric.label}</span>
+                              <div className="flex items-center gap-3">
+                                <div className="w-16 h-1.5 bg-black/20 rounded-full overflow-hidden">
+                                   <div 
+                                     className="h-full bg-current transition-all duration-1000" 
+                                     style={{ width: `${metric.value}%` }}
+                                   ></div>
+                                </div>
+                                <span className="text-xs font-black w-8 text-right">{Math.round(metric.value)}%</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                   </div>
+
+                   {/* Behavioral Audit */}
+                   <div className="pt-6 border-t border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center">
+                              <ICONS.Research className="w-4 h-4 text-white" />
+                           </div>
+                           <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Behavioral Audit</h6>
+                        </div>
+                        <div className="flex gap-1">
+                           <div className={`w-1.5 h-1.5 rounded-full ${biometrics.stressLevel > 70 ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`}></div>
+                           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/30"></div>
+                           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/30"></div>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 shadow-inner">
+                           <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Observation</p>
+                           <p className="text-[10px] font-bold text-slate-100 leading-relaxed italic">{biometrics.behavioralAudit.split(' | RECOMMENDATION: ')[0]}</p>
+                        </div>
+                        {biometrics.behavioralAudit.includes(' | RECOMMENDATION: ') && (
+                          <div className="p-4 bg-indigo-600/10 rounded-2xl border border-indigo-600/30 border-dashed">
+                             <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                               <ICONS.Efficiency className="w-3 h-3" /> Actionable Logic
+                             </p>
+                             <p className="text-[10px] font-bold text-indigo-200 leading-relaxed italic">{biometrics.behavioralAudit.split(' | RECOMMENDATION: ')[1]}</p>
+                          </div>
+                        )}
+                      </div>
+                   </div>
+                </div>
+             </aside>
+
+             {/* Draggable Partition Handle */}
+             <div 
+               onMouseDown={() => startResizing('left')}
+               className="w-1.5 h-full cursor-col-resize hover:bg-indigo-500 active:bg-indigo-700 z-40 transition-colors relative"
+             >
+                <div className="absolute inset-y-0 -left-1 -right-1"></div>
+             </div>
+
+             <main className="flex-1 flex flex-col overflow-y-auto custom-scrollbar items-center py-20 px-12 gap-12 justify-center bg-slate-950">
                {/* Unified Single Focus Header */}
                <div className="text-center space-y-4">
-                  <span className="px-5 py-2 bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-[0.3em] rounded-full border border-indigo-100">
-                     Identity: {meetingContext.clientNames || 'Executive Client'}
+                  <span className="px-5 py-2 bg-indigo-900/40 text-indigo-300 text-[10px] font-black uppercase tracking-[0.4em] rounded-full border border-indigo-800/50">
+                     Dialogue Node Active
                   </span>
-                  <h3 className="text-5xl font-black tracking-tight leading-tight">
-                     {isAISpeaking ? 'Client is Speaking...' : isUserListening ? 'Listening to Architect...' : 'Dialogue Protocol Active'}
+                  <h3 className="text-5xl font-black tracking-tight leading-tight uppercase text-white">
+                     {meetingContext.clientNames || 'Executive Client'} Protocol
                   </h3>
                </div>
 
-               {/* Main Visual Core - Meeting Environment */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
-                  <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl group transition-all hover:scale-[1.02]">
-                     <AIAnimatedBotCIO />
-                  </div>
-                  
-                  <div className="relative aspect-video rounded-[3rem] overflow-hidden border-2 border-slate-200 shadow-2xl bg-slate-100 group transition-all hover:scale-[1.02]">
-                     <video 
-                       ref={videoRef} 
-                       autoPlay 
-                       playsInline 
-                       muted 
-                       className="w-full h-full object-cover mirror"
-                     />
-                     <div className="absolute top-6 left-6 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                        <span className="text-[10px] font-black text-white uppercase tracking-widest">You (Seller)</span>
-                     </div>
+               {/* Dialogue Protocol Node */}
 
-                     {(!streamRef.current || webcamError) && (
-                       <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm px-6">
-                          <div className="text-center space-y-4">
-                             {webcamError ? (
-                                <ICONS.X className="w-12 h-12 text-rose-500 mx-auto" />
-                             ) : (
-                                <ICONS.Security className="w-12 h-12 text-slate-400 mx-auto animate-pulse" />
-                             )}
-                             <p className={`text-xs font-black uppercase tracking-widest ${webcamError ? 'text-rose-400' : 'text-slate-400'}`}>
-                                {webcamError || 'Webcam Protocol Initializing...'}
-                             </p>
-                          </div>
-                       </div>
-                     )}
-                  </div>
-               </div>
-
-               {/* Biometric & Cognitive Trace Layer */}
-               <div className="w-full max-w-6xl mx-auto space-y-6">
-                  <div className="flex items-center justify-between">
-                     <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Biometric & Cognitive Trace</h5>
-                     <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
-                        <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Live Neural Audit Active</span>
-                     </div>
-                  </div>
-                  <BiometricDisplay />
-                  
-                  <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl flex items-start gap-4">
-                     <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg">
-                        <ICONS.Research className="w-5 h-5 text-white" />
-                     </div>
-                     <div>
-                        <h6 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-1">Behavioral Audit</h6>
-                        <p className="text-sm font-bold text-slate-600 italic leading-relaxed">"{biometrics.behavioralAudit}"</p>
-                     </div>
-                  </div>
-               </div>
-
-               {/* Cinematic Narrative Display */}
-               <div className="bg-slate-50 border border-slate-200 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+               {/* Cinematic Narrative Display - Question Node */}
+               <div className="bg-slate-900 border border-slate-800 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
                   <div className="flex items-center justify-between mb-2">
                      <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-500">Dialogue Node</h5>
                      <div className="flex items-center gap-3">
@@ -915,7 +1023,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                      </div>
                   </div>
                   <div className="flex flex-col md:flex-row gap-8 items-start">
-                    <p className="flex-1 text-4xl font-bold italic leading-[1.4] text-slate-900 tracking-tight">
+                    <p className="flex-1 text-4xl font-bold italic leading-[1.4] text-white tracking-tight">
                        {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
                     </p>
 
@@ -1001,19 +1109,19 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                )}
 
                {/* User Interaction Layer */}
-               <div className="space-y-8">
+               <div className="w-full max-w-4xl space-y-8 pb-20">
                   <div className="relative group">
                      <textarea 
                        value={currentCaption} 
                        onChange={(e) => setCurrentCaption(e.target.value)} 
-                       className="w-full bg-slate-50 border-2 border-slate-200 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-slate-900 shadow-inner h-48 resize-none placeholder:text-slate-400 leading-relaxed" 
+                       className="w-full bg-slate-900 border-2 border-slate-800 rounded-[3rem] px-12 py-10 text-2xl outline-none focus:border-indigo-500 transition-all font-medium italic text-white shadow-2xl h-48 resize-none placeholder:text-slate-700 leading-relaxed" 
                        placeholder={`${meetingContext.clientNames || 'The Executive'} is awaiting your strategic response...`} 
                      />
                      <button 
                        onClick={() => isUserListening ? stopListening() : startListening()} 
-                       className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200'}`}
+                       className={`absolute right-10 top-1/2 -translate-y-1/2 p-6 rounded-3xl transition-all border ${isUserListening ? 'bg-emerald-600 border-emerald-500 text-white animate-pulse shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-slate-800 border-slate-700 text-indigo-500'}`}
                      >
-                       <ICONS.Ear className={`w-8 h-8 ${isUserListening ? 'animate-bounce' : ''}`} />
+                       <ICONS.Ear className="w-8 h-8" />
                      </button>
                   </div>
 
@@ -1028,17 +1136,17 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                      <button 
                        onClick={handleEndSession} 
                        disabled={isProcessing} 
-                       className="px-12 py-8 bg-rose-600 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-rose-700 transition-all disabled:opacity-50"
+                       className="px-12 py-8 bg-rose-600/10 text-rose-500 border border-rose-900/30 rounded-[2.5rem] font-black text-xs uppercase tracking-widest hover:bg-rose-900/20 transition-all disabled:opacity-50"
                      >
-                       End & Audit
+                       End Simulation
                      </button>
                   </div>
                </div>
-          </div>
+          </main>
 
-          {/* Draggable Partition Handle */}
+          {/* Right Resizer */}
           <div 
-            onMouseDown={startResizing}
+            onMouseDown={() => startResizing('right')}
             className="w-1.5 h-full cursor-col-resize hover:bg-indigo-500 active:bg-indigo-700 z-40 transition-colors relative"
           >
              <div className="absolute inset-y-0 -left-1 -right-1"></div>
@@ -1129,6 +1237,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
              )}
           </aside>
         </div>
+      </div>
       )}
 
       <AnimatePresence>

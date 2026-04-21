@@ -595,42 +595,44 @@ OPERATIONAL CONSTRAINTS:
                           </select>
                           <button 
                             onClick={handleKycUploadTrigger}
-                            className="px-6 bg-slate-800 text-slate-400 rounded-[2rem] hover:bg-slate-700 transition-all flex items-center justify-center shadow-lg border border-slate-700"
+                            className="px-6 bg-slate-800 text-slate-400 rounded-[2rem] hover:bg-slate-700 transition-all flex items-center justify-center shadow-lg border border-slate-700 group"
                             title="Upload KYC Document"
                           >
-                            <ICONS.Plus className="w-6 h-6" />
+                            <ICONS.Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
                           </button>
                           {context.kycDocId && (
-                            <button 
-                              onClick={async () => {
-                                if (confirm("Permanently delete this KYC document from cloud memory?")) {
-                                  const idToDelete = context.kycDocId!;
-                                  handleChange('kycDocId', "");
-                                  await deleteDocumentFromFirebase(idToDelete);
-                                  onUploadSuccess(); // Refresh documents
-                                }
-                              }}
-                              className="px-6 bg-rose-900/20 text-rose-400 rounded-[2rem] hover:bg-rose-900/30 transition-all flex items-center justify-center shadow-lg border border-rose-900/30"
-                              title="Delete Selected KYC Document"
-                            >
-                              <ICONS.Trash className="w-6 h-6" />
-                            </button>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={async () => {
+                                  if (confirm("Permanently delete this KYC document from cloud memory?")) {
+                                    const idToDelete = context.kycDocId!;
+                                    handleChange('kycDocId', "");
+                                    await deleteDocumentFromFirebase(idToDelete);
+                                    onUploadSuccess(); // Refresh documents
+                                  }
+                                }}
+                                className="px-6 bg-rose-900/20 text-rose-400 rounded-[2rem] hover:bg-rose-900/30 transition-all flex items-center justify-center shadow-lg border border-rose-900/30"
+                                title="Delete Selected KYC Document"
+                              >
+                                <ICONS.Trash className="w-6 h-6" />
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  const doc = documents.find(d => d.id === context.kycDocId);
+                                  if (doc) {
+                                    setPreviewDoc(doc);
+                                  } else {
+                                    const el = document.getElementById('library-hub');
+                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                  }
+                                }}
+                                className="px-6 bg-indigo-900/20 text-indigo-400 rounded-[2rem] hover:bg-indigo-900/30 transition-all flex items-center justify-center shadow-lg border border-indigo-900/30"
+                                title="View Intelligence Preview"
+                              >
+                                <ICONS.Research className="w-6 h-6" />
+                              </button>
+                            </div>
                           )}
-                          <button 
-                            onClick={() => {
-                              const doc = documents.find(d => d.id === context.kycDocId);
-                              if (doc) {
-                                setPreviewDoc(doc);
-                              } else {
-                                const el = document.getElementById('library-hub');
-                                if (el) el.scrollIntoView({ behavior: 'smooth' });
-                              }
-                            }}
-                            className="px-6 bg-slate-800 text-slate-400 rounded-[2rem] hover:bg-slate-700 transition-all flex items-center justify-center shadow-lg border border-slate-700"
-                            title="Preview Intelligence Node"
-                          >
-                            <ICONS.Research className="w-6 h-6" />
-                          </button>
                         {isExtracting && (
                           <div className="absolute right-24 top-1/2 -translate-y-1/2">
                             <div className="w-6 h-6 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
