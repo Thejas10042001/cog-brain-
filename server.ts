@@ -294,44 +294,14 @@ async function startServer() {
         <html>
           <body>
             <script>
-              const message = { type: 'OAUTH_AUTH_SUCCESS' };
-              
-              // 1. Try BroadcastChannel (Modern & Robust)
-              try {
-                const bc = new BroadcastChannel('google_oauth_channel');
-                bc.postMessage(message);
-                bc.close();
-              } catch (e) {
-                console.error('BroadcastChannel failed:', e);
-              }
-
-              // 2. Try window.opener (Legacy but direct)
-              try {
-                if (window.opener) {
-                  window.opener.postMessage(message, '*');
-                }
-              } catch (e) {
-                console.error('postMessage failed:', e);
-              }
-
-              // 3. Try LocalStorage (Reliable fallback for same-origin)
-              try {
-                localStorage.setItem('google_oauth_success', Date.now().toString());
-              } catch (e) {
-                console.error('LocalStorage failed:', e);
-              }
-
-              // Close the window if possible
-              if (window.opener || window.name === 'google_oauth') {
-                setTimeout(() => window.close(), 500);
+              if (window.opener) {
+                window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
+                window.close();
               } else {
                 window.location.href = '/';
               }
             </script>
-            <div style="font-family: sans-serif; text-align: center; padding-top: 100px;">
-              <h2>Authentication Successful</h2>
-              <p>This window should close automatically. If not, you can close it manually.</p>
-            </div>
+            <p>Authentication successful. This window should close automatically.</p>
           </body>
         </html>
       `);
