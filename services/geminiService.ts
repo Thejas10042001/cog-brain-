@@ -1,12 +1,12 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { AnalysisResult, MeetingContext, ThinkingLevel, DifficultyLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure, SalesStrategy } from "../types";
 
-// Upgraded thinking budget map for gemini-3.1-pro-preview capabilities
+// Upgraded thinking budget map for capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
   'Minimal': 0,
   'Low': 8000,
   'Medium': 16000,
-  'High': 32768 // Max for gemini-3.1-pro-preview
+  'High': 32768
 };
 
 export async function generateExplanation(question: string, stageOrAnalysis: string | AnalysisResult, context?: MeetingContext): Promise<string> {
@@ -25,7 +25,7 @@ export async function generateExplanation(question: string, stageOrAnalysis: str
   }
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-preview",
+    model: "gemini-1.5-flash",
     contents: prompt,
   });
   return response.text || "No explanation available.";
@@ -34,8 +34,8 @@ export async function generateExplanation(question: string, stageOrAnalysis: str
 export async function generateNodeExplanation(stage: string, context: MeetingContext): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
   const response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-preview",
-    contents: `Act as a world-class executive coach powered by Gemini 3.1 Flash Live.
+    model: "gemini-1.5-flash",
+    contents: `Act as a world-class executive coach powered by Gemini 1.5 Flash.
     Provide a very brief (1-2 sentences) explanation of the "${stage}" stage in a sales simulation. 
     The client persona is: ${JSON.stringify(context.vocalPersonaAnalysis)}.
     Explain what the goal of this stage is for the seller. Make it sound professional and coaching-oriented.`,
@@ -152,7 +152,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries: number = 3): Promi
 // Extract meeting metadata from a document content
 export async function extractMetadataFromDocument(content: string): Promise<Partial<MeetingContext>> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const prompt = `Act as an Elite Sales Operations Analyst and Psychological Profiler. 
   Your goal is to perform high-fidelity strategic extraction from the provided document to prime a sales intelligence core.
@@ -222,7 +222,7 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
 // Extract meeting metadata from multiple documents
 export async function extractMetadataFromMultipleDocuments(documents: { name: string; content: string }[]): Promise<Partial<MeetingContext>> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3.1-pro-preview'; // Use Pro for deeper analysis across multiple docs
+  const modelName = 'gemini-1.5-pro'; // Use Pro for deeper analysis across multiple docs
   
   const combinedContent = documents.map(d => `FILE [${d.name}]:\n${d.content}`).join('\n\n');
   
@@ -262,7 +262,6 @@ export async function extractMetadataFromMultipleDocuments(documents: { name: st
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 16000 }, // Deep thinking for multi-doc synthesis
         responseSchema: {
           type: Type.OBJECT,
           properties: {
@@ -296,7 +295,7 @@ export async function extractMetadataFromMultipleDocuments(documents: { name: st
 // Analyze Audio for Vocal Persona
 export async function analyzeVocalPersona(base64Audio: string, mimeType: string): Promise<VocalPersonaStructure> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
 
   const prompt = `Analyze this audio sample of a human voice. 
   Extract the following vocal characteristics to create a high-fidelity "Neural Vocal Persona".
@@ -341,7 +340,7 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
 // Categorize a document into a folder
 export async function categorizeDocument(fileName: string, content: string, availableFolders: string[]): Promise<{ category: string; reasoning: string }> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const prompt = `Act as an Elite Sales Operations Analyst and Knowledge Management Expert. 
   Your goal is to categorize the following document into the most appropriate sub-folder based PRIMARILY on its content.
@@ -389,7 +388,7 @@ export async function categorizeDocument(fileName: string, content: string, avai
 // Suggest a vocal persona based on document content
 export async function suggestVocalPersonaFromDoc(content: string): Promise<VocalPersonaStructure> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
 
   const prompt = `Based on the following document content, suggest the most appropriate "Neural Vocal Persona" for an AI avatar that would be most effective in this context.
   
@@ -443,7 +442,7 @@ export async function suggestVocalPersonaFromDoc(content: string): Promise<Vocal
 // Generate Vocal Signature from a mimicry directive
 export async function generateVocalSignatureFromDirective(directive: string): Promise<VocalPersonaStructure> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
 
   const prompt = `Act as a Neural Vocal Engineer. 
   Analyze the following "Mimicry Directive" and generate a high-fidelity "Neural Vocal Signature" (vocal parameters) that would best represent this directive.
@@ -566,7 +565,7 @@ export async function generateVoiceSample(
 
   try {
     const response = await withRetry(() => ai.models.generateContent({
-      model: "gemini-3.1-flash-tts-preview",
+      model: "gemini-1.5-flash",
       contents: [{ parts: [{ text: cleanText }] }],
       config: {
         responseModalities: [Modality.AUDIO],
@@ -594,7 +593,7 @@ export async function generateVoiceSample(
 // Generate response for the Cogni Voice Assistant
 export async function generateAssistantResponse(query: string, context?: string): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const systemInstruction = `You are an Elite Cognitive Sales Intelligence Assistant for Spiked AI.
   Your goal is to provide concise, strategic, and helpful guidance to sales professionals using the Spiked AI platform.
@@ -637,7 +636,7 @@ export async function recommendAndValidateStyles(
   validation: { [style: string]: { isValid: boolean, reason?: string } } 
 }> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const systemInstruction = `You are an Elite Sales Intelligence Strategist. 
   Your goal is to recommend the most effective strategic reasoning frameworks (styles) for a given sales inquiry and validate the user's selection.
@@ -691,7 +690,7 @@ export async function generateSalesStrategy(
   refinementPrompt?: string
 ): Promise<SalesStrategy> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3.1-pro-preview';
+  const modelName = 'gemini-1.5-pro';
   
   const prompt = `Act as an Elite Enterprise Sales Strategist and Competitive Intelligence Officer. 
   Your goal is to generate a high-fidelity, actionable sales strategy for the following deal context.
@@ -739,8 +738,7 @@ export async function generateSalesStrategy(
       model: modelName,
       contents: prompt,
       config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 16000 }
+        responseMimeType: "application/json"
       }
     }));
     return safeJsonParse(response.text || "{}") as SalesStrategy;
@@ -757,7 +755,7 @@ async function performHighDepthEvaluation(
   personaUsed: string
 ): Promise<ComprehensiveAvatarReport> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const historyStr = history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n\n');
   
@@ -817,8 +815,7 @@ async function performHighDepthEvaluation(
       model: modelName,
       contents: prompt,
       config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 16000 }
+        responseMimeType: "application/json"
       }
     });
     return safeJsonParse(response.text || "{}") as ComprehensiveAvatarReport;
@@ -845,7 +842,7 @@ export async function* streamAvatarSimulationV2(
   context: MeetingContext
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3.1-flash-live-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -858,7 +855,7 @@ export async function* streamAvatarSimulationV2(
     activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
   }
 
-  const systemInstruction = `You are a high-fidelity Enterprise Simulation Core powered by Gemini 3.1 Flash Live.
+  const systemInstruction = `You are a high-fidelity Enterprise Simulation Core powered by Gemini 1.5 Flash.
 The user will specify which persona to activate by typing:
 PERSONA: CIO
 PERSONA: CFO
@@ -984,8 +981,7 @@ Meeting Objective: ${context.meetingFocus}`;
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction,
-        thinkingConfig: { thinkingBudget: 16000 }
+        systemInstruction
       }
     }));
 
@@ -1013,7 +1009,7 @@ export async function* streamAvatarSimulation(
   context: MeetingContext
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3.1-flash-live-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -1156,8 +1152,7 @@ Focus: ${context.meetingFocus}`;
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction: systemInstruction,
-        thinkingConfig: { thinkingBudget: 16000 }
+        systemInstruction: systemInstruction
       }
     }));
 
@@ -1179,7 +1174,7 @@ export async function* streamAvatarStagedSimulation(
   kycDocContent: string
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3.1-flash-live-preview';
+  const modelName = 'gemini-1.5-flash';
 
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -1191,7 +1186,7 @@ export async function* streamAvatarStagedSimulation(
     activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
   }
 
-  const systemInstruction = `You are ${context.clientNames || 'the Client'}, an elite decision maker at ${context.clientCompany} powered by Gemini 3.1 Flash Live.
+  const systemInstruction = `You are ${context.clientNames || 'the Client'}, an elite decision maker at ${context.clientCompany} powered by Gemini 1.5 Flash.
 You are in a Staged Strategic Simulation Mode.
 
 ===========================================================
@@ -1276,8 +1271,7 @@ Target Products: ${context.targetProducts}`;
         { role: 'user', parts: [{ text: prompt }] }
       ],
       config: {
-        systemInstruction,
-        thinkingConfig: { thinkingBudget: 16000 }
+        systemInstruction
       }
     }));
 
@@ -1297,7 +1291,7 @@ export async function generateAssessmentQuestions(
   perspective: 'document' | 'customer' = 'document'
 ): Promise<AssessmentQuestion[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const difficulty = config.difficulty || 'Medium';
   const difficultyInstruction = {
@@ -1364,8 +1358,7 @@ export async function generateAssessmentQuestions(
       model: modelName,
       contents: prompt,
       config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 16000 }
+        responseMimeType: "application/json"
       }
     }));
     return safeJsonParse(response.text || "[]");
@@ -1381,7 +1374,7 @@ export async function evaluateAssessment(
   answers: Record<string, string>
 ): Promise<AssessmentResult[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
 
   const results: AssessmentResult[] = [];
 
@@ -1469,10 +1462,10 @@ export async function evaluateAssessment(
   }
 }
 
-// Vision OCR using gemini-3-flash-preview
+// Vision OCR using gemini-1.5-flash
 export async function performVisionOcr(base64Data: string, mimeType: string): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview'; 
+  const modelName = 'gemini-1.5-flash'; 
   try {
     const response = await withRetry(() => ai.models.generateContent({
       model: modelName,
@@ -1503,7 +1496,7 @@ function formatHistory(history: GPTMessage[]) {
 // Normal Chat: Simple, direct, and non-structured intelligence
 export async function* streamNormalChat(prompt: string, history: GPTMessage[]): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const contents = [
     ...formatHistory(history),
@@ -1536,7 +1529,7 @@ export async function* streamNormalChat(prompt: string, history: GPTMessage[]): 
 // Sales GPT: Balanced grounded and general intelligence
 export async function* streamSalesGPT(prompt: string, history: GPTMessage[], context?: string): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const contents = [
     ...formatHistory(history),
@@ -1611,7 +1604,7 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
 
 export async function* streamCognitivePro(prompt: string, history: GPTMessage[], selectedStyles: string[], context?: string): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   
   const contents = [
     ...formatHistory(history),
@@ -1690,10 +1683,10 @@ export async function* streamCognitivePro(prompt: string, history: GPTMessage[],
   }
 }
 
-// Pineapple: Image Generation using nano banana model
+// Pineapple: Image Generation using flash model
 export async function generatePineappleImage(prompt: string): Promise<string | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
-  const modelName = 'gemini-2.5-flash-image';
+  const modelName = 'gemini-1.5-flash';
   try {
     const strategicPrompt = `Create a high-fidelity, enterprise-grade strategic visual asset for: "${prompt}". 
     The style should be a modern 3D render, minimalist, with soft cinematic lighting and a professional color palette. 
@@ -1722,12 +1715,12 @@ export async function generatePineappleImage(prompt: string): Promise<string | n
 }
 
 /**
- * Generates a realistic professional corporate logo for the client's company using gemini-2.5-flash-image.
+ * Generates a realistic professional corporate logo for the client's company using gemini-1.5-flash.
  * Uses googleSearch to find context about the brand identity and corporate aesthetic.
  */
 export async function generateClientAvatar(name: string, company: string): Promise<string | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
-  const modelName = 'gemini-2.5-flash-image';
+  const modelName = 'gemini-1.5-flash';
   
   try {
     const prompt = `Perform an exhaustive look-up of the exact visual brand identity, official color hex codes, and vector logo characteristics of the company named "${company}". 
@@ -1759,8 +1752,8 @@ export async function generateClientAvatar(name: string, company: string): Promi
 // Deep Study: Advanced Reasoning Core upgraded to Pro model
 export async function* streamDeepStudy(prompt: string, history: GPTMessage[], context?: string): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  // Using gemini-3-flash-preview for complex reasoning tasks
-  const modelName = 'gemini-3-flash-preview';
+  // Using gemini-1.5-flash for complex reasoning tasks
+  const modelName = 'gemini-1.5-flash';
   
   const contents = [
     ...formatHistory(history),
@@ -1821,8 +1814,7 @@ export async function* streamDeepStudy(prompt: string, history: GPTMessage[], co
             }
           },
           required: ["answer", "citations"]
-        },
-        thinkingConfig: { thinkingBudget: 32768 }
+        }
       }
     }));
 
@@ -1860,8 +1852,8 @@ export async function* performCognitiveSearchStream(
   context: MeetingContext
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  // Using gemini-3-flash-preview for advanced reasoning and complex query synthesis
-  const modelName = 'gemini-3-flash-preview';
+  // Using gemini-1.5-flash for advanced reasoning and complex query synthesis
+  const modelName = 'gemini-1.5-flash';
   const styleDirectives = context.answerStyles.map(style => `- Create a section exactly titled "### ${style}" and provide EXHAUSTIVE detail.`).join('\n');
 
   const responseSchema = {
@@ -1926,8 +1918,7 @@ export async function* performCognitiveSearchStream(
         CRITICAL: Use TABLES for structured data, comparisons, or metrics.
         CRITICAL: Use inline markers like [1](citation:1), [2](citation:2) in the answer text to refer to the citations provided in the citations array.`,
         responseMimeType: "application/json",
-        responseSchema,
-        thinkingConfig: { thinkingBudget: 32768 }
+        responseSchema
       }
     }));
 
@@ -1955,7 +1946,7 @@ export async function performCognitiveSearch(
 
 export async function generateDynamicSuggestions(filesContent: string, context: MeetingContext): Promise<string[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
   const prompt = `Suggest 3 highly strategic sales questions for ${context.clientCompany || 'the prospect'}. Return as a JSON array of strings.`;
   const response = await withRetry(() => ai.models.generateContent({ 
     model: modelName, 
@@ -1965,8 +1956,7 @@ export async function generateDynamicSuggestions(filesContent: string, context: 
       responseSchema: {
         type: Type.ARRAY,
         items: { type: Type.STRING }
-      },
-      thinkingConfig: { thinkingBudget: 0 }
+      }
     } 
   }));
   return safeJsonParse(response.text || "[]");
@@ -2011,7 +2001,7 @@ export async function generatePitchAudio(
 
   try {
     const response = await withRetry(() => ai.models.generateContent({
-      model: "gemini-3.1-flash-tts-preview",
+      model: "gemini-1.5-flash",
       contents: [{ parts: [{ text: cleanText }] }],
       config: {
         responseModalities: [Modality.AUDIO],
@@ -2045,8 +2035,8 @@ export async function generatePitchAudio(
 // Full Context Analysis upgraded to Pro model for comprehensive reasoning
 export async function analyzeSalesContext(filesContent: string, context: MeetingContext): Promise<AnalysisResult> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  // Using gemini-3-flash-preview for exhaustive material synthesis and competitive intelligence
-  const modelName = 'gemini-3-flash-preview';
+  // Using gemini-1.5-flash for exhaustive material synthesis and competitive intelligence
+  const modelName = 'gemini-1.5-flash';
   const citationSchema = {
     type: Type.OBJECT,
     properties: { snippet: { type: Type.STRING }, sourceFile: { type: Type.STRING } },
@@ -2187,8 +2177,7 @@ export async function analyzeSalesContext(filesContent: string, context: Meeting
         systemInstruction: `You are a Cognitive Brain Strategist. Provide grounded intelligence in JSON.`,
         responseMimeType: "application/json",
         responseSchema,
-        temperature: context.temperature,
-        thinkingConfig: { thinkingBudget: THINKING_LEVEL_MAP[context.thinkingLevel] }
+        temperature: context.temperature
       },
     }));
     return safeJsonParse(response.text || "{}") as AnalysisResult;
@@ -2201,7 +2190,7 @@ export async function generateFollowUpQuestions(
   context?: string
 ): Promise<string[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-1.5-flash';
 
   const historyStr = history.slice(-5).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
 

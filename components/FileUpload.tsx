@@ -153,12 +153,45 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFilesChange, files, on
 
         const handleMessage = async (event: MessageEvent) => {
           if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-            window.removeEventListener('message', handleMessage);
+            cleanup();
             await openPicker();
           }
         };
 
+        const bc = new BroadcastChannel('google_oauth_channel');
+        bc.onmessage = async (event) => {
+          if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+            cleanup();
+            await openPicker();
+          }
+        };
+
+        const handleStorage = async (event: StorageEvent) => {
+          if (event.key === 'google_oauth_success') {
+            cleanup();
+            await openPicker();
+          }
+        };
+
+        const cleanup = () => {
+          window.removeEventListener('message', handleMessage);
+          window.removeEventListener('storage', handleStorage);
+          bc.close();
+        };
+
         window.addEventListener('message', handleMessage);
+        window.addEventListener('storage', handleStorage);
+        
+        // Monitor window closure
+        const checkClosed = setInterval(() => {
+          if (authWindow.closed) {
+            clearInterval(checkClosed);
+            setTimeout(() => {
+              cleanup();
+              setIsGoogleLoading(false);
+            }, 1000);
+          }
+        }, 1000);
       } else {
         await openPicker();
       }
