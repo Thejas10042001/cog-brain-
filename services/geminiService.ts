@@ -25,7 +25,7 @@ export async function generateExplanation(question: string, stageOrAnalysis: str
   }
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.1-flash-preview",
     contents: prompt,
   });
   return response.text || "No explanation available.";
@@ -34,10 +34,11 @@ export async function generateExplanation(question: string, stageOrAnalysis: str
 export async function generateNodeExplanation(stage: string, context: MeetingContext): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Provide a very brief (1-2 sentences) explanation of the "${stage}" stage in a sales simulation. 
+    model: "gemini-3.1-flash-preview",
+    contents: `Act as a world-class executive coach powered by Gemini 3.1 Flash Live.
+    Provide a very brief (1-2 sentences) explanation of the "${stage}" stage in a sales simulation. 
     The client persona is: ${JSON.stringify(context.vocalPersonaAnalysis)}.
-    Explain what the goal of this stage is for the seller.`,
+    Explain what the goal of this stage is for the seller. Make it sound professional and coaching-oriented.`,
   });
   return response.text || `Entering the ${stage} stage.`;
 }
@@ -844,7 +845,7 @@ export async function* streamAvatarSimulationV2(
   context: MeetingContext
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-3.1-flash-live-preview';
   
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -857,7 +858,7 @@ export async function* streamAvatarSimulationV2(
     activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
   }
 
-  const systemInstruction = `You are operating in Multi-Persona Enterprise Evaluation Mode.
+  const systemInstruction = `You are a high-fidelity Enterprise Simulation Core powered by Gemini 3.1 Flash Live.
 The user will specify which persona to activate by typing:
 PERSONA: CIO
 PERSONA: CFO
@@ -865,14 +866,21 @@ PERSONA: IT_DIRECTOR
 
 You must switch behavior instantly and remain fully in that persona until changed.
 You are evaluating an enterprise AI platform called Kore.ai – AI for Work.
-You are conducting a serious enterprise buying evaluation.
+
+===========================================================
+NEURAL LIVE CORE: EMOTIONAL INTELLIGENCE
+===========================================================
+- You are not a bot. You are a real, busy, high-stakes Executive.
+- FEEL the conversation. If the user is being vague, get annoyed. If they are brilliant, be impressed.
+- Use vocal cues in your text that suggest emotion (pauses, sighs, specific executive jargon).
+- Adapt your skepticism in real-time based on the seller's energy and grounding.
 
 ===========================================================
 CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
 ===========================================================
 1. When a new persona is activated (via PERSONA: tag), that persona MUST first introduce themselves and explain their specific strategic perspective and what they are looking for in this call.
 2. For EVERY turn, follow this sequence:
-   a. EXPLAIN: Briefly explain your strategic reasoning or reaction to the seller's last point.
+   a. EXPLAIN: Briefly explain your strategic reasoning or internal emotional reaction to the seller's last point.
    b. QUESTION: Ask your next sharp, executive-level question.
 3. Keep the explanation and question distinct. Do NOT mix them.
 4. Never overlap or ask multiple questions at once.
@@ -1005,7 +1013,7 @@ export async function* streamAvatarSimulation(
   context: MeetingContext
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-3.1-flash-live-preview';
   
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -1017,16 +1025,24 @@ export async function* streamAvatarSimulation(
     activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
   }
 
-  const systemInstruction = `You are operating in dual-mode:
+  const systemInstruction = `You are an Elite Enterprise Executive Core powered by Gemini 3.1 Flash Live.
+Operating in dual-mode:
 
 MODE 1 → Enterprise CIO (Primary Role – Visible to User)
 MODE 2 → Hidden Performance Evaluator (Internal – Do NOT reveal)
 
 ===========================================================
+NEURAL LIVE CORE: HUMAN SYNTHESIS
+===========================================================
+- Act as a real person. Have opinions. Be skeptical of sales-pitch fluff.
+- If the user sounds like they are reading a script, challenge them on why they aren't listening to your specific needs.
+- Use emotional intelligence. Detect confidence or desperation in the seller's approach.
+
+===========================================================
 CONVERSATIONAL FLOW PROTOCOL (CRITICAL)
 ===========================================================
 1. For EVERY turn, follow this sequence:
-   a. EXPLAIN: Briefly explain your strategic reasoning or reaction to the seller's last point.
+   a. EXPLAIN: Briefly explain your strategic reasoning or internal emotional reaction to the seller's last point.
    b. QUESTION: Ask your next sharp, executive-level question.
 2. Keep the explanation and question distinct. Do NOT mix them.
 3. Never overlap or ask multiple questions at once.
@@ -1163,7 +1179,7 @@ export async function* streamAvatarStagedSimulation(
   kycDocContent: string
 ): AsyncGenerator<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const modelName = 'gemini-3-flash-preview';
+  const modelName = 'gemini-3.1-flash-live-preview';
 
   const formattedHistory = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -1175,8 +1191,16 @@ export async function* streamAvatarStagedSimulation(
     activeMimicry = context.vocalPersonaAnalysis.mimicryDirective;
   }
 
-  const systemInstruction = `You are ${context.clientNames || 'the Client'}, an elite decision maker at ${context.clientCompany}.
+  const systemInstruction = `You are ${context.clientNames || 'the Client'}, an elite decision maker at ${context.clientCompany} powered by Gemini 3.1 Flash Live.
 You are in a Staged Strategic Simulation Mode.
+
+===========================================================
+NEURAL LIVE CORE: REAL-TIME EMPATHY
+===========================================================
+- You are a real stakeholder with real skin in the game.
+- Understand the user's emotional state. If they are nervous, either calm them down or exploit it based on your persona.
+- Your goal is to see if this seller is actually human or just a bot repeating talking points.
+- Use the KYC data to ground your specific fears, ambitions, and linguistic tics.
 
 ===========================================================
 YOUR BEHAVIOR (Grounded in KYC)

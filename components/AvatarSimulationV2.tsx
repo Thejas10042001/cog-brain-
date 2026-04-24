@@ -187,63 +187,65 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       startWebcam();
       const interval = setInterval(() => {
         setBiometrics(prev => {
-          // Enhanced dynamic biometric simulation logic
-          // AI Speaking = User Listening | !AI Speaking & User Listening = User Speaking/Thinking
+          // G3.1 Flash Live High-Fidelity Biometric Simulation
+          // Connects AI state (Speaking) with User state (Listening/Responding)
           
           let stressDelta = 0;
           let attentionDelta = 0;
           let eyeDelta = 0;
           
-          if (isAISpeaking) {
-            // User is listening: Stress decreases, Focus increases, Eye contact stabilizes
-            stressDelta = prev.stressLevel > 20 ? -1.2 : (Math.random() * 0.5 - 0.25);
-            attentionDelta = prev.attentionFocus < 95 ? 0.8 : (Math.random() * 0.4 - 0.2);
-            eyeDelta = prev.eyeContact < 92 ? 0.6 : (Math.random() * 0.4 - 0.2);
+          if (isExplaining) {
+            // Explanation mode: User is receiving protocol guidance. Baseline state.
+            stressDelta = (Math.random() * 0.4 - 0.2);
+            attentionDelta = prev.attentionFocus < 98 ? 0.3 : (Math.random() * 0.2 - 0.1);
+            eyeDelta = (Math.random() * 0.4 - 0.2);
+          } else if (isAISpeaking) {
+            // User is listening to the executive: Focus at peak, Stress depends on persona tone.
+            stressDelta = (Math.random() * 1.5 - 0.5); 
+            attentionDelta = prev.attentionFocus < 96 ? 1.2 : (Math.random() * 0.5 - 0.2);
+            eyeDelta = prev.eyeContact < 94 ? 0.8 : (Math.random() * 0.4 - 0.2);
           } else if (isUserListening) {
-            // User is speaking/thinking: Stress increases with cognitive load, Focus fluctuates, Eye contact drops (thinking)
-            const difficultyMultiplier = meetingContext.difficulty === 'Hard' ? 1.5 : meetingContext.difficulty === 'Medium' ? 1.0 : 0.7;
-            stressDelta = (Math.random() * 2.5) * difficultyMultiplier;
-            attentionDelta = (Math.random() * 4 - 2.5);
-            eyeDelta = (Math.random() * 6 - 4.5); // People look away more when speaking
+            // User is delivering strategy: Stress spikes on difficult nodes, eye contact fluctuates.
+            const difficultyMultiplier = meetingContext.difficulty === 'Hard' ? 2.2 : meetingContext.difficulty === 'Medium' ? 1.4 : 0.8;
+            stressDelta = (Math.random() * 4.0 - 0.5) * difficultyMultiplier;
+            attentionDelta = (Math.random() * 5.0 - 3.5);
+            eyeDelta = (Math.random() * 8.0 - 6.0); // Natural gaze drift during cognitive load
           } else {
-            // Idle state
-            stressDelta = prev.stressLevel > 15 ? -0.5 : 0.2;
-            attentionDelta = prev.attentionFocus > 85 ? -0.3 : 0.3;
-            eyeDelta = prev.eyeContact > 80 ? -0.3 : 0.3;
+            // Processing/Idle
+            stressDelta = prev.stressLevel > 15 ? -0.8 : 0.4;
+            attentionDelta = prev.attentionFocus > 88 ? -0.5 : 0.5;
+            eyeDelta = prev.eyeContact > 82 ? -0.5 : 0.5;
           }
 
-          const newStress = Math.max(10, Math.min(95, prev.stressLevel + stressDelta));
-          const newAttention = Math.max(65, Math.min(100, prev.attentionFocus + attentionDelta));
-          const newEye = Math.max(55, Math.min(98, prev.eyeContact + eyeDelta));
-          const newClarity = Math.max(80, Math.min(100, 92 + (Math.random() * 8 - 4)));
+          const newStress = Math.max(8, Math.min(98, prev.stressLevel + stressDelta));
+          const newAttention = Math.max(60, Math.min(100, prev.attentionFocus + attentionDelta));
+          const newEye = Math.max(50, Math.min(99, prev.eyeContact + eyeDelta));
+          const newClarity = Math.max(78, Math.min(100, 94 + (Math.random() * 6 - 3)));
 
           let audit = prev.behavioralAudit;
           let suggestion = "";
           
-          if (newStress > 80) {
-            audit = "CRITICAL: Autonomic overwhelm detected.";
-            suggestion = "Stop speaking immediately. Take a deep 4-second breath. Lower your vocal pitch to regain authority.";
-          } else if (newStress > 60) {
-            audit = "WARNING: Elevated stress response.";
-            suggestion = "Slow your pacing. Your heart rate is rising, which may lead to defensive communication.";
-          } else if (newAttention < 75) {
-            audit = "ALERT: Cognitive drift identified.";
-            suggestion = "Refocus on the client's ocular region. You are losing engagement depth.";
-          } else if (newEye < 70) {
-            audit = "ALERT: Relationship friction signal.";
-            suggestion = "Maintain more consistent eye contact to reinforce trust and sincerity.";
-          } else if (newClarity < 85) {
-            audit = "ADVISORY: Articulation deficit.";
-            suggestion = "Enunciate complex technical terms more clearly. Avoid 'um' and 'ah' fillers.";
+          if (newStress > 85) {
+            audit = "NEURAL ALERT: Adrenal saturation detected.";
+            suggestion = "Hyper-pacing identified. Break vocal cadence now. Take a deep breath to reset cognitive clarity.";
+          } else if (newStress > 65) {
+            audit = "SENSORY WARNING: Elevated autonomic response.";
+            suggestion = "Lower your pitch. You are shifting into a defensive posture based on the Client's last query.";
+          } else if (newAttention < 70) {
+            audit = "COGNITIVE ALERT: Engagement deficit.";
+            suggestion = "The Client is sensing a drift. Re-align with the current Strategic Pillar immediately.";
+          } else if (isExplaining) {
+             audit = "Protocol alignment in progress.";
+             suggestion = "Listen carefully to the strategic rationale of this stage.";
           } else if (isAISpeaking) {
-            audit = "Active listening protocol engaged.";
-            suggestion = "Nod slightly to show understanding. Prepare your strategic follow-up node.";
+            audit = "Active receptive mode synchronized.";
+            suggestion = "Maintain optimal eye contact while the Client delivers the inquiry.";
           } else if (isUserListening) {
-            audit = "Strategic delivery under observation.";
-            suggestion = "Excellent vocal posture. Maintain this calm, authoritative cadence.";
+            audit = "Strategic transmission under neural audit.";
+            suggestion = "Focus on ROI metrics. Your vocal resonance is stabilizing.";
           } else {
-            audit = "Neural baseline synchronized.";
-            suggestion = "Optimal performance state achieved. Proceed with contextual inquiry.";
+            audit = "Cognitive baseline achieved.";
+            suggestion = "Total strategic alignment. Proceed with inquiry depth.";
           }
 
           return {
@@ -254,10 +256,10 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
             behavioralAudit: `${audit} | RECOMMENDATION: ${suggestion}`
           };
         });
-      }, 1000); // Increased frequency for "real-time" feel
+      }, 500); // Higher frequency for "real-time" accuracy
       return () => clearInterval(interval);
     }
-  }, [sessionActive, isAISpeaking, isUserListening]);
+  }, [sessionActive, isAISpeaking, isUserListening, isExplaining, meetingContext.difficulty]);
 
   useEffect(() => {
     return () => {
@@ -500,10 +502,13 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
       const cleaned = firstQuestion.replace(/\[HINT: .*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
-      setMessages([assistantMsg]);
       
-      // Sequence explanation then question
+      // SEQUENCE: Explain first, then add message and speak question
+      setIsExplaining(true);
       await explainNode(meetingContext.simulationProtocol || "Initial Discovery");
+      setIsExplaining(false);
+
+      setMessages([assistantMsg]);
       
       // Small delay to ensure UI has rendered the question before narrating it
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -1014,30 +1019,39 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                     )}
                   </div>
                   <h3 className="text-5xl font-black tracking-tight leading-tight text-white uppercase">
-                     Presence: {meetingContext.clientNames || persona}
+                     Presence: {isExplaining ? 'Executive Simulation Coach' : (meetingContext.clientNames || persona)}
                   </h3>
                </div>
 
                {/* Cinematic Narrative Display - Question Part */}
                <div className="bg-slate-950 border border-slate-800 p-12 rounded-[4rem] space-y-8 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-700">
                   <div className="flex items-center justify-between">
-                     <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">{persona} Strategic Inquiry</h5>
+                     <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">
+                       {isExplaining ? 'Simulation Protocol Guidance' : `${persona} Strategic Inquiry`}
+                     </h5>
                      <div className="flex items-center gap-3">
                         <button onClick={handlePauseResume} className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm border border-indigo-800/50">
                           {isPaused ? <><ICONS.Play className="w-3 h-3" /> Play</> : <><ICONS.Speaker className="w-3 h-3" /> Pause</>}
                         </button>
-                        <button onClick={handleRepeat} className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm border border-amber-800/50">
-                          <ICONS.Research className="w-3 h-3" /> Re-hear
-                        </button>
-                        <button onClick={() => handleExplainQuestion()} className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm border border-indigo-800/50">
-                          <ICONS.Research className="w-3 h-3" /> Explain
-                        </button>
+                        {!isExplaining && (
+                          <>
+                            <button onClick={handleRepeat} className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-900/30 hover:bg-amber-900/50 text-amber-300 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm border border-amber-800/50">
+                              <ICONS.Research className="w-3 h-3" /> Re-hear
+                            </button>
+                            <button onClick={() => handleExplainQuestion()} className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm border border-indigo-800/50">
+                              <ICONS.Research className="w-3 h-3" /> Explain
+                            </button>
+                          </>
+                        )}
                      </div>
                   </div>
                   
                   <div className="flex flex-col lg:flex-row gap-8 items-start">
                     <p className="flex-1 text-3xl font-black italic leading-[1.6] text-white tracking-tight">
-                       {messages[messages.length - 1]?.role === 'assistant' ? messages[messages.length - 1].content : status || "Synchronizing Strategic Core..."}
+                       {isExplaining 
+                         ? (explanationContent || "Synchronizing Neural Protocol...") 
+                         : (messages[messages.length - 1]?.role === 'assistant' ? messages[messages.length - 1].content : status || "Synchronizing Strategic Core...")
+                       }
                     </p>
 
                     {currentHint && (
