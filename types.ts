@@ -387,6 +387,37 @@ export interface SalesStrategy {
   }>;
 }
 
+export interface RoleplayQuestion {
+  id: string;
+  text: string;
+  priority: 'High' | 'Medium' | 'Low';
+  category: 'Financial' | 'Technical' | 'Strategic';
+}
+
+export interface RoleplayEvaluation {
+  score: {
+    confidence: number;
+    clarity: number;
+    relevance: number;
+    persuasiveness: number;
+    empathy: number;
+  };
+  feedback: string;
+  strengths: string[];
+  improvements: string[];
+  suggestedNextSteps: string[];
+}
+
+export interface RoleplaySession {
+  scenario: string;
+  role: string;
+  persona: string;
+  focusArea: string;
+  questions: RoleplayQuestion[];
+  history: GPTMessage[];
+  metrics: RoleplayEvaluation | null;
+}
+
 export interface SalesGPTSession {
   id: string;
   userId: string;

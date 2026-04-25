@@ -12,6 +12,7 @@ import { StrategyLab } from './components/StrategyLab';
 import { AvatarSimulation } from './components/AvatarSimulation';
 import { AvatarSimulationV2 } from './components/AvatarSimulationV2';
 import { AvatarSimulationStaged } from './components/AvatarSimulationStaged';
+import { RoleplaySimulation } from './components/RoleplaySimulation';
 import { HelpCenter } from './components/HelpCenter';
 import { SupportChatbot } from './components/SupportChatbot';
 import { OnboardingTour } from './components/OnboardingTour';
@@ -148,7 +149,7 @@ const App: React.FC = () => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'help'>('context');
+  const [activeTab, setActiveTab] = useState<'context' | 'strategy' | 'practice' | 'gpt' | 'qa' | 'avatar' | 'avatar2' | 'avatar-staged' | 'roleplay' | 'help'>('context');
   const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<SalesGPTSession | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -299,6 +300,15 @@ const App: React.FC = () => {
       howItHelps: 'Ensures you are maximizing the neural intelligence capabilities of the platform.',
       audioText: 'Welcome to the Help Center. This node provides comprehensive guides and strategic frameworks for the SPIKED AI protocol. It ensures you are maximizing the neural intelligence capabilities of the platform.',
       guideText: 'Review the operational documentation to master the neural sales intelligence protocol. Access strategic frameworks and support nodes for complex configurations.'
+    },
+    'roleplay': {
+      stepNumber: '10',
+      label: 'Role play',
+      feature: 'High-Pressure Sales Simulations',
+      purpose: 'Practice pitch resilience against skeptical personas in a professional 3-panel dashboard.',
+      howItHelps: 'Refines real-time objection handling and identifies strategic delivery gaps.',
+      audioText: 'Welcome to the Role Play Simulation. This high-pressure environment features a three-panel training dashboard to practice pitch resilience against skeptical personas. Refine your real-time objection handling and identify strategic delivery gaps.',
+      guideText: 'Initiate a role-play scenario and engage with the AI questions. Monitor your live performance metrics to calibrate your strategic empathy and persuasion.'
     }
   };
 
@@ -806,6 +816,7 @@ const App: React.FC = () => {
                       <SidebarBtn id="tour-tab-gpt" active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "07 Spiked GPT" : ""} scale={sidebarFontScale} step="07" />
                       <SidebarBtn id="tour-tab-practice" active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "08 Grooming" : ""} scale={sidebarFontScale} step="08" />
                       <SidebarBtn id="tour-tab-help" active={activeTab === 'help'} onClick={() => handleNodeClick('help')} icon={<ICONS.Help />} label={sidebarWidth > 180 ? "09 Help" : ""} scale={sidebarFontScale} step="09" />
+                      <SidebarBtn id="tour-tab-roleplay" active={activeTab === 'roleplay'} onClick={() => handleNodeClick('roleplay')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "10 Role play" : ""} scale={sidebarFontScale} step="10" />
                     </div>
                   </div>
 
@@ -1017,6 +1028,7 @@ const App: React.FC = () => {
                       )}
                       {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
+                      {activeTab === 'roleplay' && <RoleplaySimulation meetingContext={meetingContext} />}
                       {activeTab === 'help' && <HelpCenter />}
                     </div>
                   </motion.div>

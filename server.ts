@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import admin from 'firebase-admin';
 import db from './utils/db.js';
 import * as mfaService from './services/mfaService.js';
+import * as geminiService from './services/geminiService.js';
 import firebaseConfig from './firebase-applet-config.json' with { type: 'json' };
 
 // Initialize Firebase Admin

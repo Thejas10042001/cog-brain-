@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { AnalysisResult, MeetingContext, ThinkingLevel, DifficultyLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure, SalesStrategy } from "../types";
+import { AnalysisResult, MeetingContext, ThinkingLevel, DifficultyLevel, GPTMessage, AssessmentQuestion, AssessmentResult, QuestionType, ComprehensiveAvatarReport, StagedSimStage, VocalPersonaStructure, SalesStrategy, RoleplayQuestion, RoleplayEvaluation } from "../types";
 
 // Upgraded thinking budget map for gemini-3.1-pro-preview capabilities
 const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
@@ -9,8 +9,17 @@ const THINKING_LEVEL_MAP: Record<ThinkingLevel, number> = {
   'High': 32768 // Max for gemini-3.1-pro-preview
 };
 
+function getApiKey() {
+  const key = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!key || key.trim() === "") {
+    console.warn("Gemini API Key is missing or empty.");
+    return "";
+  }
+  return key.trim();
+}
+
 export async function generateExplanation(question: string, stageOrAnalysis: string | AnalysisResult, context?: MeetingContext): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   
   let prompt = "";
   if (typeof stageOrAnalysis === 'string' && context) {
@@ -32,7 +41,7 @@ export async function generateExplanation(question: string, stageOrAnalysis: str
 }
 
 export async function generateNodeExplanation(stage: string, context: MeetingContext): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: `Provide a very brief (1-2 sentences) explanation of the "${stage}" stage in a sales simulation. 
@@ -150,7 +159,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries: number = 3): Promi
 
 // Extract meeting metadata from a document content
 export async function extractMetadataFromDocument(content: string): Promise<Partial<MeetingContext>> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
   
   const prompt = `Act as an Elite Sales Operations Analyst and Psychological Profiler. 
@@ -220,7 +229,7 @@ export async function extractMetadataFromDocument(content: string): Promise<Part
 
 // Extract meeting metadata from multiple documents
 export async function extractMetadataFromMultipleDocuments(documents: { name: string; content: string }[]): Promise<Partial<MeetingContext>> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3.1-pro-preview'; // Use Pro for deeper analysis across multiple docs
   
   const combinedContent = documents.map(d => `FILE [${d.name}]:\n${d.content}`).join('\n\n');
@@ -294,7 +303,7 @@ export async function extractMetadataFromMultipleDocuments(documents: { name: st
 
 // Analyze Audio for Vocal Persona
 export async function analyzeVocalPersona(base64Audio: string, mimeType: string): Promise<VocalPersonaStructure> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Analyze this audio sample of a human voice. 
@@ -339,7 +348,7 @@ export async function analyzeVocalPersona(base64Audio: string, mimeType: string)
 
 // Categorize a document into a folder
 export async function categorizeDocument(fileName: string, content: string, availableFolders: string[]): Promise<{ category: string; reasoning: string }> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
   
   const prompt = `Act as an Elite Sales Operations Analyst and Knowledge Management Expert. 
@@ -387,7 +396,7 @@ export async function categorizeDocument(fileName: string, content: string, avai
 
 // Suggest a vocal persona based on document content
 export async function suggestVocalPersonaFromDoc(content: string): Promise<VocalPersonaStructure> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Based on the following document content, suggest the most appropriate "Neural Vocal Persona" for an AI avatar that would be most effective in this context.
@@ -441,7 +450,7 @@ export async function suggestVocalPersonaFromDoc(content: string): Promise<Vocal
 
 // Generate Vocal Signature from a mimicry directive
 export async function generateVocalSignatureFromDirective(directive: string): Promise<VocalPersonaStructure> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `Act as a Neural Vocal Engineer. 
@@ -557,7 +566,7 @@ export async function generateVoiceSample(
   gender?: string,
   analysis?: VocalPersonaStructure
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   
   // Clean text of markdown tags for better TTS
   const cleanText = text.replace(/\[.*?\]/g, '').trim();
@@ -592,7 +601,7 @@ export async function generateVoiceSample(
 
 // Generate response for the Cogni Voice Assistant
 export async function generateAssistantResponse(query: string, context?: string): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
   
   const systemInstruction = `You are an Elite Cognitive Sales Intelligence Assistant for Spiked AI.
@@ -635,7 +644,7 @@ export async function recommendAndValidateStyles(
   recommendedStyles: string[], 
   validation: { [style: string]: { isValid: boolean, reason?: string } } 
 }> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
   
   const systemInstruction = `You are an Elite Sales Intelligence Strategist. 
@@ -684,12 +693,184 @@ export async function recommendAndValidateStyles(
   }
 }
 
+export async function generateRoleplayQuestions(
+  scenario: string, 
+  role: string, 
+  persona: string, 
+  focusArea: string,
+  context?: MeetingContext
+): Promise<RoleplayQuestion[]> {
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const contextString = context ? `
+  STRATEGIC CONTEXT:
+  Seller: ${context.sellerCompany}
+  Client: ${context.clientCompany}
+  Stakeholders: ${context.clientNames}
+  Products: ${context.targetProducts}
+  Deal Brief: ${context.executiveSnapshot}
+  Known Objections: ${context.potentialObjections?.join(', ')}
+  ` : '';
+
+  const prompt = `Act as a ${role} with a ${persona} mindset. 
+  ${context ? 'You are the client in the following deal context.' : ''}
+  ${contextString}
+
+  Generate 5 challenging questions about ${focusArea} in a ${scenario} scenario for a sales professional.
+  
+  Return the questions in a JSON array format. Each object must have:
+  - text: string (the question)
+  - priority: "High" | "Medium" | "Low"
+  - category: "Financial" | "Technical" | "Strategic"
+  
+  Ensure the questions are tough, realistic, and tailored to the ${persona} persona and the provided deal context.`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              text: { type: Type.STRING },
+              priority: { type: Type.STRING, enum: ["High", "Medium", "Low"] },
+              category: { type: Type.STRING, enum: ["Financial", "Technical", "Strategic"] }
+            },
+            required: ["text", "priority", "category"]
+          }
+        }
+      }
+    }));
+    
+    const questions = safeJsonParse(response.text || "[]");
+    return questions.map((q: any, i: number) => ({
+      ...q,
+      id: `q-${Date.now()}-${i}`
+    }));
+  } catch (error) {
+    console.error("Roleplay question generation failed:", error);
+    return [];
+  }
+}
+
+export async function generateRoleplayResponse(
+  history: GPTMessage[],
+  role: string,
+  persona: string,
+  context?: MeetingContext
+): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const contextString = context ? `
+  STRATEGIC CONTEXT:
+  Seller: ${context.sellerCompany}
+  Client: ${context.clientCompany}
+  Products: ${context.targetProducts}
+  Deal Brief: ${context.executiveSnapshot}
+  ` : '';
+
+  const transcript = history.map(h => `${h.role === 'user' ? 'SELLER' : 'CLIENT'}: ${h.content}`).join('\n');
+  
+  const prompt = `You are playing the role of a ${role} with a ${persona} mindset in a high-stakes sales simulation.
+  ${context ? 'You are the client described in the deal context below.' : ''}
+  ${contextString}
+
+  TRANSCRIPT:
+  ${transcript}
+  
+  DIRECTIVE:
+  Continue the conversation realistically as the ${persona} ${role}. 
+  Acknowledge the seller's last response briefly and ask the next logical, challenging follow-up question. 
+  Stay in character and keep the pressure on.
+  Keep your response under 100 words.`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt
+    }));
+    return response.text || "That's interesting. Tell me more about the implementation timeline.";
+  } catch (error) {
+    console.error("Roleplay response generation failed:", error);
+    return "I need to see more solid data before we move forward.";
+  }
+}
+
+export async function evaluateRoleplayAnswer(
+  userAnswer: string,
+  aiQuestion: string,
+  history: GPTMessage[],
+  context?: MeetingContext
+): Promise<RoleplayEvaluation> {
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  const modelName = 'gemini-3-flash-preview';
+  
+  const contextString = context ? `
+  STRATEGIC CONTEXT:
+  Seller: ${context.sellerCompany}
+  Client: ${context.clientCompany}
+  Products: ${context.targetProducts}
+  Strategic Keywords: ${context.strategicKeywords?.join(', ')}
+  ` : '';
+
+  const prompt = `Act as an Elite Professional Sales Coach and Neural Performance Auditor.
+  Evaluate the seller's response to a tough client question in a roleplay simulation.
+  ${contextString}
+  
+  CLIENT QUESTION: ${aiQuestion}
+  SELLER RESPONSE: ${userAnswer}
+  
+  FULL CONTEXT:
+  ${history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n')}
+  
+  REQUIRED JSON STRUCTURE:
+  {
+    "score": {
+      "confidence": number (0-100),
+      "clarity": number (0-100),
+      "relevance": number (0-100),
+      "persuasiveness": number (0-100),
+      "empathy": number (0-100)
+    },
+    "feedback": "Concise coaching summary using high-fidelity cognitive sales terminology",
+    "strengths": ["string"],
+    "improvements": ["string"],
+    "suggestedNextSteps": ["string"]
+  }`;
+
+  try {
+    const response = await withRetry(() => ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    }));
+    return safeJsonParse(response.text || "{}");
+  } catch (error) {
+    console.error("Roleplay evaluation failed:", error);
+    return {
+      score: { confidence: 70, clarity: 70, relevance: 70, persuasiveness: 70, empathy: 70 },
+      feedback: "Failed to generate AI evaluation. Continue your practice session.",
+      strengths: [],
+      improvements: [],
+      suggestedNextSteps: []
+    };
+  }
+}
+
 export async function generateSalesStrategy(
   combinedContent: string, 
   context: MeetingContext,
   refinementPrompt?: string
 ): Promise<SalesStrategy> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3.1-pro-preview';
   
   const prompt = `Act as an Elite Enterprise Sales Strategist and Competitive Intelligence Officer. 
