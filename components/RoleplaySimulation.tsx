@@ -28,9 +28,10 @@ const FOCUS_AREAS = ['ROI', 'Risk', 'Growth', 'Security', 'Compliance', 'Technic
 
 interface RoleplaySimulationProps {
   meetingContext?: MeetingContext;
+  onStartSimulation?: () => void;
 }
 
-export const RoleplaySimulation: React.FC<RoleplaySimulationProps> = ({ meetingContext }) => {
+export const RoleplaySimulation: React.FC<RoleplaySimulationProps> = ({ meetingContext, onStartSimulation }) => {
   // Config state
   const [scenario, setScenario] = useState(SCENARIOS[0]);
   const [role, setRole] = useState(ROLES[0]);
@@ -80,6 +81,7 @@ export const RoleplaySimulation: React.FC<RoleplaySimulationProps> = ({ meetingC
   }, [messages, isThinking]);
 
   const handleGenerateQuestions = async () => {
+    if (onStartSimulation) onStartSimulation();
     setIsGenerating(true);
     try {
       const qResult = await generateRoleplayQuestions(

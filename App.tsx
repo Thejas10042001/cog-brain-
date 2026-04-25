@@ -1028,7 +1028,7 @@ const App: React.FC = () => {
                       )}
                       {activeTab === 'practice' && <PracticeSession analysis={analysis!} meetingContext={meetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'qa' && <AssessmentLab activeDocuments={activeDocuments} onStartSimulation={stopNarration} />}
-                      {activeTab === 'roleplay' && <RoleplaySimulation meetingContext={meetingContext} />}
+                      {activeTab === 'roleplay' && <RoleplaySimulation meetingContext={meetingContext} onStartSimulation={stopNarration} />}
                       {activeTab === 'help' && <HelpCenter />}
                     </div>
                   </motion.div>

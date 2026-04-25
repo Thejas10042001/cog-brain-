@@ -51,20 +51,45 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   const [highlightedButton, setHighlightedButton] = useState<string | null>(null);
   const [showGroomingJournal, setShowGroomingJournal] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const guidanceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const guidanceRequestRef = useRef<number>(0);
+
+  const stopGuidanceAudio = () => {
+    if (guidanceAudioRef.current) {
+      guidanceAudioRef.current.pause();
+      guidanceAudioRef.current.currentTime = 0;
+      guidanceAudioRef.current = null;
+    }
+    guidanceRequestRef.current++;
+  };
 
   const playGuidance = async (text: string, buttonToHighlight?: string) => {
     if (!text) return;
+    if (onStartSimulation) onStartSimulation();
+    const requestId = ++guidanceRequestRef.current;
+    stopGuidanceAudio();
+    // Restore our ID after stopGuidanceAudio incremented it
+    guidanceRequestRef.current = requestId;
+    
     try {
       if (buttonToHighlight) setHighlightedButton(buttonToHighlight);
       const audioUrl = await generatePitchAudio(text, 'Zephyr');
+      
+      // Check if this request is still valid
+      if (requestId !== guidanceRequestRef.current) return;
+
       if (audioUrl) {
         const audio = new Audio(URL.createObjectURL(new Blob([audioUrl], { type: 'audio/wav' })));
-        audio.onended = () => setHighlightedButton(null);
+        guidanceAudioRef.current = audio;
+        audio.onended = () => {
+          setHighlightedButton(null);
+          if (guidanceAudioRef.current === audio) guidanceAudioRef.current = null;
+        };
         audio.play();
       }
     } catch (error) {
       console.error("Guidance audio failed:", error);
-      setHighlightedButton(null);
+      if (requestId === guidanceRequestRef.current) setHighlightedButton(null);
     }
   };
 
@@ -78,6 +103,8 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
     } else if (sessionMode === 'speech') {
       playGuidance(`In Speech Practice, you can record your delivery of key sales points. Select a target and receive an elite audit on your tone, grammar, and pacing.`, 'commence');
     }
+
+    return () => stopGuidanceAudio();
   }, [sessionMode]);
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
@@ -176,6 +203,7 @@ export const PracticeSession: React.FC<PracticeSessionProps> = ({ analysis, meet
   };
 
   const startPractice = async () => {
+    stopGuidanceAudio();
     if (onStartSimulation) onStartSimulation();
     setStatus('connecting');
     try {
