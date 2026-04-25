@@ -560,24 +560,29 @@ export const AvatarSimulationStaged: FC<{
 
     try {
       setQuotaExceeded({ exceeded: false });
-      const stream = streamAvatarStagedSimulation(`START AT STAGE: ${targetStage}`, [], meetingContext, targetStage, kycContent);
-      let firstMsg = "";
-      for await (const chunk of stream) firstMsg += chunk;
       
-      if (!firstMsg.trim()) throw new Error("Neural core empty.");
+      const streamPromise = (async () => {
+        const stream = streamAvatarStagedSimulation(`START AT STAGE: ${targetStage}`, [], meetingContext, targetStage, kycContent);
+        let content = "";
+        for await (const chunk of stream) content += chunk;
+        return content;
+      })();
+
+      // Sequence explanation then question
+      await explainNode(targetStage);
+
+      const response = await streamPromise;
+      if (!response.trim()) throw new Error("Neural core empty.");
 
       // Robust extraction for hint
-      const hintMatch = firstMsg.match(/\[HINT: ([\s\S]*?)\]/);
+      const hintMatch = response.match(/\[HINT: ([\s\S]*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
-      const cleaned = firstMsg.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
+      const cleaned = response.replace(/\[RESULT: SUCCESS\]|\[RESULT: FAIL\]|\[RATING: \d+\]|\[HINT: [\s\S]*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
       setMessages([assistantMsg]);
 
-      // Sequence explanation then question
-      await explainNode(targetStage);
-      
       // Small delay to ensure UI has rendered the question before narrating it
       await new Promise(resolve => setTimeout(resolve, 50));
       await playAIQuestion(cleaned);
@@ -619,10 +624,18 @@ export const AvatarSimulationStaged: FC<{
 
     try {
       setQuotaExceeded({ exceeded: false });
-      const stream = streamAvatarStagedSimulation(`Manual Override: Jump to Stage ${stage}`, messages, meetingContext, stage, kycContent);
-      let response = "";
-      for await (const chunk of stream) response += chunk;
+      
+      const streamPromise = (async () => {
+        const stream = streamAvatarStagedSimulation(`Manual Override: Jump to Stage ${stage}`, messages, meetingContext, stage, kycContent);
+        let content = "";
+        for await (const chunk of stream) content += chunk;
+        return content;
+      })();
 
+      // Zero latency: play immediately
+      await explainNode(stage);
+
+      const response = await streamPromise;
       const hintMatch = response.match(/\[HINT: ([\s\S]*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
@@ -631,9 +644,6 @@ export const AvatarSimulationStaged: FC<{
       
       setMessages(prev => [...prev, aiMsg]);
 
-      // Zero latency: play immediately
-      await explainNode(stage);
-      
       // Small delay to ensure UI has rendered the question before narrating it
       await new Promise(resolve => setTimeout(resolve, 50));
       await playAIQuestion(cleaned);
@@ -697,7 +707,7 @@ export const AvatarSimulationStaged: FC<{
         
         if (rationale) {
           await playAIQuestion(rationale);
-          await new Promise(resolve => setTimeout(resolve, 800));
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
 
         const ratingMatch = response.match(/\[RATING: (\d+)\]/);

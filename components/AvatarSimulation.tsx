@@ -486,21 +486,29 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     setShowCoachingDetails(false);
     setIsExplainingProtocol(true);
     try {
-      // Step 1: Explain Protocol (Agent speaks, but no question shown yet)
-      const explanation = await generateNodeExplanation("Initial Discovery", meetingContext);
-      await playAIQuestion(explanation);
+      // Parallelize Protocol Explanation and Stream Initiation for Zero Latency
+      const streamPromise = (async () => {
+        const stream = streamAvatarSimulation("START SIMULATION", [], meetingContext);
+        let content = "";
+        for await (const chunk of stream) content += chunk;
+        return content;
+      })();
 
-      const stream = streamAvatarSimulation("START SIMULATION", [], meetingContext);
-      let firstQuestion = "";
-      for await (const chunk of stream) firstQuestion += chunk;
-      
+      const explanationPromise = (async () => {
+        const explanation = await generateNodeExplanation("Initial Discovery", meetingContext);
+        await playAIQuestion(explanation);
+      })();
+
+      await explanationPromise;
+      setIsExplainingProtocol(false);
+
+      const firstQuestion = await streamPromise;
       const hintMatch = firstQuestion.match(/\[HINT: (.*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
       const cleaned = firstQuestion.replace(/\[HINT: .*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
-      setIsExplainingProtocol(false);
       setMessages([assistantMsg]);
 
       // Step 2: Narrate Question
@@ -546,8 +554,9 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         const rationale = (coachMatch?.[1] || deficitMatch?.[1] || "").trim();
         if (rationale) {
           setFacialEmotion(isFail ? 'critical' : 'happy');
+          // Start rationale narration with a shorter block and reduced subsequent pause
           await playAIQuestion(rationale);
-          await new Promise(resolve => setTimeout(resolve, 800));
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
 

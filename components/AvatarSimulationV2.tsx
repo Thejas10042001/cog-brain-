@@ -545,18 +545,26 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     setShowCoachingDetails(false);
     setIsExplainingProtocol(true);
     try {
-      // Step 1: Explain Protocol (Agent speaks, but no question shown yet)
+      // Parallelize Protocol Explanation and Stream Initiation for Zero Latency
       const protocolName = meetingContext.simulationProtocol || "Initial Discovery";
-      const explanation = await generateNodeExplanation(protocolName, meetingContext);
       
-      // Zero Latency Hint: Pre-fetch or start stream early if possible
-      // For now, we narrate protocol first
-      await playAIQuestion(explanation);
+      const streamPromise = (async () => {
+        const stream = streamAvatarSimulationV2(`PERSONA: ${selected}`, [], meetingContext);
+        let content = "";
+        for await (const chunk of stream) content += chunk;
+        return content;
+      })();
 
+      const explanationPromise = (async () => {
+        const explanation = await generateNodeExplanation(protocolName, meetingContext);
+        await playAIQuestion(explanation);
+      })();
+
+      await explanationPromise;
+      setIsExplainingProtocol(false);
+
+      const firstQuestion = await streamPromise;
       setQuotaExceeded({ exceeded: false });
-      const stream = streamAvatarSimulationV2(`PERSONA: ${selected}`, [], meetingContext);
-      let firstQuestion = "";
-      for await (const chunk of stream) firstQuestion += chunk;
       
       const hintMatch = firstQuestion.match(/\[HINT: (.*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
@@ -564,8 +572,6 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       const cleaned = firstQuestion.replace(/\[HINT: .*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
-      // Stop explaining overlay before showing question
-      setIsExplainingProtocol(false);
       setMessages([assistantMsg]);
       
       // Step 2: Narrate Question immediately
@@ -626,9 +632,10 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         if (rationale) {
           setFacialEmotion(isFail ? 'critical' : 'happy');
           // Narrate the rationale/explanation BEFORE showing the next question
+          // Use a shorter timeout and don't block question display as heavily
           await playAIQuestion(rationale);
-          // Brief pause after rationale before next interaction
-          await new Promise(resolve => setTimeout(resolve, 800));
+          // Reduced pause after rationale
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
 
