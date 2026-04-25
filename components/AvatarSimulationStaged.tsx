@@ -360,6 +360,19 @@ export const AvatarSimulationStaged: FC<{
     });
   };
 
+  const stopAllAudio = () => {
+    if (activeAudioSource.current) {
+      try { 
+        activeAudioSource.current.stop(); 
+        activeAudioSource.current = null;
+      } catch (e) {}
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.resume();
+    }
+    setIsAISpeaking(false);
+  };
+
   const handlePauseResume = async () => {
     if (!audioContextRef.current) return;
     if (isPaused) {
@@ -502,6 +515,7 @@ export const AvatarSimulationStaged: FC<{
   };
 
   const handleInitiate = async (stage?: StagedSimStage) => {
+    stopAllAudio();
     if (onStartSimulation) onStartSimulation();
     if (!meetingContext.kycDocId) {
       alert("Please select a KYC Document in Configuration first.");
@@ -643,6 +657,8 @@ export const AvatarSimulationStaged: FC<{
 
   const handleCommit = async () => {
     if (isProcessing || !currentCaption.trim()) return;
+
+    stopAllAudio();
     const currentQuestion = messages[messages.length - 1]?.content || "";
     const userResponseText = currentCaption;
 
@@ -655,13 +671,14 @@ export const AvatarSimulationStaged: FC<{
     const userMsg: GPTMessage = { id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' };
     const updatedHistory = [...messages, userMsg];
     setMessages(updatedHistory);
+    setCurrentCaption(""); // Clear input on commit
 
     const kycDoc = documents.find(d => d.id === meetingContext.kycDocId);
     const kycContent = kycDoc ? kycDoc.content : "No KYC data provided.";
 
     try {
       setQuotaExceeded({ exceeded: false });
-      const stream = streamAvatarStagedSimulation(currentCaption, updatedHistory, meetingContext, currentStage, kycContent);
+      const stream = streamAvatarStagedSimulation(userMsg.content, updatedHistory, meetingContext, currentStage, kycContent);
       let response = "";
       for await (const chunk of stream) response += chunk;
 
@@ -673,6 +690,16 @@ export const AvatarSimulationStaged: FC<{
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
       if (isSuccess) {
+        // Extract rationale/coaching even on success
+        const coachMatch = response.match(/\[COACHING: ([\s\S]*?)\]/);
+        const deficitMatch = response.match(/\[DEFICIT: (.*?)\]/);
+        const rationale = (coachMatch?.[1] || deficitMatch?.[1] || "").trim();
+        
+        if (rationale) {
+          await playAIQuestion(rationale);
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
         const ratingMatch = response.match(/\[RATING: (\d+)\]/);
         const rating = ratingMatch ? parseInt(ratingMatch[1]) : 5;
         setStageRatings(prev => ({ ...prev, [currentStage]: rating }));

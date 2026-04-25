@@ -378,6 +378,9 @@ const App: React.FC = () => {
 
   // Auto-narrate re-enabled
   useEffect(() => {
+    // STOP any existing narration before switching or starting new one
+    stopNarration();
+
     if (hasInteracted && analysis && activeTab) {
       const details = NODE_DETAILS[activeTab];
       if (details) {
@@ -388,12 +391,7 @@ const App: React.FC = () => {
     
     // Cleanup: stop audio when tab changes or component unmounts
     return () => {
-      if (currentAudioRef.current) {
-        currentAudioRef.current.pause();
-        currentAudioRef.current = null;
-      }
-      // Invalidate pending requests on cleanup
-      audioRequestRef.current++;
+      stopNarration();
     };
   }, [activeTab, !!analysis, hasInteracted]);
 

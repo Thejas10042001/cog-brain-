@@ -78,7 +78,10 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     clarityScore: 92,
     behavioralAudit: "Professional, steady, and direct."
   });
-  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string; logicDeficit?: string } | null>(null);
+  const [facialEmotion, setFacialEmotion] = useState<'neutral' | 'happy' | 'critical' | 'thinking' | 'surprised'>('neutral');
+  const [isExplainingProtocol, setIsExplainingProtocol] = useState(false);
+  const [isAnalyzingPerformance, setIsAnalyzingPerformance] = useState(false);
+  const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string; logicDeficit?: string } | null> (null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const showExplanationRef = useRef(false);
@@ -184,79 +187,70 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   useEffect(() => {
     if (sessionActive) {
       startWebcam();
-      const interval = setInterval(() => {
-        setBiometrics(prev => {
-          // Enhanced dynamic biometric simulation logic
-          // AI Speaking = User Listening | !AI Speaking & User Listening = User Speaking/Thinking
-          
-          let stressDelta = 0;
-          let attentionDelta = 0;
-          let eyeDelta = 0;
-          
-          if (isAISpeaking) {
-            // User is listening: Stress decreases, Focus increases, Eye contact stabilizes
-            stressDelta = prev.stressLevel > 20 ? -1.2 : (Math.random() * 0.5 - 0.25);
-            attentionDelta = prev.attentionFocus < 95 ? 0.8 : (Math.random() * 0.4 - 0.2);
-            eyeDelta = prev.eyeContact < 92 ? 0.6 : (Math.random() * 0.4 - 0.2);
-          } else if (isUserListening) {
-            // User is speaking/thinking: Stress increases with cognitive load, Focus fluctuates, Eye contact drops (thinking)
-            const difficultyMultiplier = meetingContext.difficulty === 'Hard' ? 1.5 : meetingContext.difficulty === 'Medium' ? 1.0 : 0.7;
-            stressDelta = (Math.random() * 2.5) * difficultyMultiplier;
-            attentionDelta = (Math.random() * 4 - 2.5);
-            eyeDelta = (Math.random() * 6 - 4.5); // People look away more when speaking
-          } else {
-            // Idle state
-            stressDelta = prev.stressLevel > 15 ? -0.5 : 0.2;
-            attentionDelta = prev.attentionFocus > 85 ? -0.3 : 0.3;
-            eyeDelta = prev.eyeContact > 80 ? -0.3 : 0.3;
-          }
-
-          const newStress = Math.max(10, Math.min(95, prev.stressLevel + stressDelta));
-          const newAttention = Math.max(65, Math.min(100, prev.attentionFocus + attentionDelta));
-          const newEye = Math.max(55, Math.min(98, prev.eyeContact + eyeDelta));
-          const newClarity = Math.max(80, Math.min(100, 92 + (Math.random() * 8 - 4)));
-
-          let audit = prev.behavioralAudit;
-          let suggestion = "";
-          
-          if (newStress > 80) {
-            audit = "CRITICAL: Autonomic overwhelm detected.";
-            suggestion = "Stop speaking immediately. Take a deep 4-second breath. Lower your vocal pitch to regain authority.";
-          } else if (newStress > 60) {
-            audit = "WARNING: Elevated stress response.";
-            suggestion = "Slow your pacing. Your heart rate is rising, which may lead to defensive communication.";
-          } else if (newAttention < 75) {
-            audit = "ALERT: Cognitive drift identified.";
-            suggestion = "Refocus on the client's ocular region. You are losing engagement depth.";
-          } else if (newEye < 70) {
-            audit = "ALERT: Relationship friction signal.";
-            suggestion = "Maintain more consistent eye contact to reinforce trust and sincerity.";
-          } else if (newClarity < 85) {
-            audit = "ADVISORY: Articulation deficit.";
-            suggestion = "Enunciate complex technical terms more clearly. Avoid 'um' and 'ah' fillers.";
-          } else if (isAISpeaking) {
-            audit = "Active listening protocol engaged.";
-            suggestion = "Nod slightly to show understanding. Prepare your strategic follow-up node.";
-          } else if (isUserListening) {
-            audit = "Strategic delivery under observation.";
-            suggestion = "Excellent vocal posture. Maintain this calm, authoritative cadence.";
-          } else {
-            audit = "Neural baseline synchronized.";
-            suggestion = "Optimal performance state achieved. Proceed with contextual inquiry.";
-          }
-
-          return {
-            stressLevel: newStress,
-            attentionFocus: newAttention,
-            eyeContact: newEye,
-            clarityScore: newClarity,
-            behavioralAudit: `${audit} | RECOMMENDATION: ${suggestion}`
-          };
-        });
-      }, 1000); // Increased frequency for "real-time" feel
-      return () => clearInterval(interval);
     }
-  }, [sessionActive, isAISpeaking, isUserListening]);
+  }, [sessionActive]);
+
+  // Biometric Trace Live Modulation
+  useEffect(() => {
+    if (!sessionActive) return;
+    
+    const interval = setInterval(() => {
+      setBiometrics(prev => {
+        // Base values slightly fluctuate
+        const flux = () => (Math.random() - 0.5) * 4;
+        
+        // Context-aware modulation
+        let targetStress = prev.stressLevel;
+        let targetFocus = prev.attentionFocus;
+        
+        if (isAISpeaking) {
+          targetStress = Math.max(10, Math.min(30, prev.stressLevel + flux()));
+          targetFocus = Math.max(95, Math.min(100, prev.attentionFocus + flux()));
+        } else if (isUserListening) {
+          targetFocus = Math.max(90, Math.min(98, prev.attentionFocus + flux()));
+        } else if (isAnalyzingPerformance) {
+          targetStress = Math.max(40, Math.min(60, prev.stressLevel + 2)); 
+        }
+
+        let audit = prev.behavioralAudit;
+        let suggestion = "";
+        
+        if (targetStress > 80) {
+          audit = "CRITICAL: Autonomic overwhelm detected.";
+          suggestion = "Stop speaking immediately. Take a deep 4-second breath. Lower your vocal pitch to regain authority.";
+        } else if (targetStress > 60) {
+          audit = "WARNING: Elevated stress response.";
+          suggestion = "Slow your pacing. Your heart rate is rising, which may lead to defensive communication.";
+        } else if (isAISpeaking) {
+          audit = "Active listening protocol engaged.";
+          suggestion = "Nod slightly to show understanding. Prepare your strategic follow-up node.";
+        } else {
+          audit = "Neural baseline synchronized.";
+          suggestion = "Optimal performance state achieved. Proceed with contextual inquiry.";
+        }
+
+        return {
+          stressLevel: Math.max(5, Math.min(95, targetStress + flux())),
+          attentionFocus: Math.max(60, Math.min(100, targetFocus + flux())),
+          eyeContact: Math.max(80, Math.min(100, (isAISpeaking ? 98 : 92) + flux())),
+          clarityScore: Math.max(85, Math.min(100, 95 + flux())),
+          behavioralAudit: `${audit} | RECOMMENDATION: ${suggestion}`
+        };
+      });
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [sessionActive, isAISpeaking, isUserListening, isAnalyzingPerformance]);
+
+  const stopAllAudio = () => {
+    if (activeAudioSource.current) {
+      try { activeAudioSource.current.stop(); activeAudioSource.current = null; } catch (e) {}
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.resume();
+    }
+    setIsAISpeaking(false);
+  };
 
   useEffect(() => {
     return () => {
@@ -479,6 +473,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
   };
 
   const handleInitiate = async () => {
+    stopAllAudio();
     if (onStartSimulation) onStartSimulation();
     setSessionActive(true);
     setIsProcessing(true);
@@ -489,7 +484,12 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     setCurrentHint(null);
     setCoachingFeedback(null);
     setShowCoachingDetails(false);
+    setIsExplainingProtocol(true);
     try {
+      // Step 1: Explain Protocol (Agent speaks, but no question shown yet)
+      const explanation = await generateNodeExplanation("Initial Discovery", meetingContext);
+      await playAIQuestion(explanation);
+
       const stream = streamAvatarSimulation("START SIMULATION", [], meetingContext);
       let firstQuestion = "";
       for await (const chunk of stream) firstQuestion += chunk;
@@ -500,41 +500,58 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
       const cleaned = firstQuestion.replace(/\[HINT: .*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
       
+      setIsExplainingProtocol(false);
       setMessages([assistantMsg]);
 
-      // Sequence explanation then question
-      await explainNode("Initial Discovery");
-      
-      // Small delay to ensure UI has rendered the question before narrating it
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Step 2: Narrate Question
       await playAIQuestion(cleaned);
-    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); setIsExplainingProtocol(false); }
   };
 
   const handleNextNode = async () => {
     if (isProcessing || !currentCaption.trim()) return;
+    
+    stopAllAudio();
     stopListening();
     setIsProcessing(true);
+    setIsAnalyzingPerformance(true);
     setCoachingFeedback(null);
     setShowCoachingDetails(false);
     setCurrentHint(null);
+    setFacialEmotion('thinking');
 
     const userMsg: GPTMessage = { id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+    setCurrentCaption("");
+
     try {
-      const stream = streamAvatarSimulation(currentCaption, messages, meetingContext);
+      const stream = streamAvatarSimulation(userMsg.content, messages, meetingContext);
       let nextContent = "";
       for await (const chunk of stream) nextContent += chunk;
       
       const isFail = nextContent.includes('[RESULT: FAIL]');
-      
+      const isSuccess = nextContent.includes('[RESULT: SUCCESS]');
+
       const hintMatch = nextContent.match(/\[HINT: (.*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
+      // Extract rationale if available
+      const deficitMatch = nextContent.match(/\[DEFICIT: (.*?)\]/);
+      const coachMatch = nextContent.match(/\[COACHING: ([\s\S]*?)\]/);
+      
+      setIsAnalyzingPerformance(false);
+
+      if (coachMatch?.[1] || deficitMatch?.[1]) {
+        const rationale = (coachMatch?.[1] || deficitMatch?.[1] || "").trim();
+        if (rationale) {
+          setFacialEmotion(isFail ? 'critical' : 'happy');
+          await playAIQuestion(rationale);
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      }
+
       if (isFail) {
-        const deficitMatch = nextContent.match(/\[DEFICIT: (.*?)\]/);
-        const coachMatch = nextContent.match(/\[COACHING: ([\s\S]*?)\]/);
         const styleMatch = nextContent.match(/\[STYLE_GUIDE: ([\s\S]*?)\]/);
         const retryMatch = nextContent.match(/\[RETRY_PROMPT: ([\s\S]*?)\]/);
         const idealMatch = nextContent.match(/\[IDEAL_RESPONSE: ([\s\S]*?)\]/);
@@ -562,23 +579,19 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
         };
         
         setMessages([...updatedMessages, assistantMsg]);
-        setCurrentCaption("");
+        setFacialEmotion('thinking');
 
-        // Small delay to ensure UI renders the message first
-        await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(retryText);
       } else {
-        const cleaned = nextContent.replace(/\[HINT: .*?\]/, "").trim();
+        const cleaned = nextContent.replace(/\[HINT: .*?\]|\[RESULT: SUCCESS\]|\[COACHING: .*?\]|\[IDEAL_RESPONSE: .*?\]/g, "").trim();
         const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
         
         setMessages([...updatedMessages, assistantMsg]);
-        setCurrentCaption("");
+        setFacialEmotion('neutral');
 
-        // Small delay to ensure UI renders the message first
-        await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(cleaned);
       }
-    } catch (e) { console.error(e); } finally { setIsProcessing(false); }
+    } catch (e) { console.error(e); } finally { setIsProcessing(false); setIsAnalyzingPerformance(false); }
   };
 
   const handleTryAgain = () => {
@@ -692,10 +705,10 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
     }
   };
 
-  const AIAnimatedBotCIO = () => (
+  const AIAnimatedBotCIO = ({ emotion = 'neutral' }: { emotion?: 'neutral' | 'happy' | 'critical' | 'thinking' | 'surprised' }) => (
     <div className="relative w-full h-full bg-slate-900 overflow-hidden flex items-center justify-center">
       <div className={`absolute inset-0 bg-gradient-to-b from-indigo-900/20 to-black/40 transition-opacity duration-1000 ${isAISpeaking ? 'opacity-100' : 'opacity-40'}`}></div>
-      <svg viewBox="0 0 200 240" className={`w-full h-full max-w-[280px] transition-all duration-700 ${isAISpeaking ? 'drop-shadow-[0_0_40px_rgba(79,70,229,0.4)] scale-105' : 'drop-shadow-2xl'}`}>
+      <svg viewBox="0 0 200 240" className={`w-full h-full max-w-[280px] transition-all duration-700 ${isAISpeaking ? 'drop-shadow-[0_0_40px_rgba(79,70,229,0.4)] scale-105' : 'drop-shadow-2xl'} ${emotion === 'critical' ? 'brightness-90' : ''}`}>
         <defs>
           <linearGradient id="faceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#f8fafc" />
@@ -710,23 +723,55 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
           <path d="M10 240 C 10 180, 40 170, 100 170 C 160 170, 190 180, 190 240" fill="url(#suitGrad)" />
           <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.8" />
         </g>
-        <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
+        <motion.g 
+          animate={{ 
+            rotate: isUserListening ? [0, -1, 1, 0] : 0,
+            y: isAISpeaking ? [0, -2, 0] : 0
+          }}
+          transition={{ repeat: Infinity, duration: 4 }}
+        >
           <rect x="88" y="150" width="24" height="25" rx="12" fill="#e2e8f0" />
           <path d="M100 15 C 55 15, 50 55, 50 95 C 50 145, 70 165, 100 165 C 130 165, 150 145, 150 95 C 150 55, 145 15, 100 15" fill="url(#faceGrad)" stroke="#1e1b4b" strokeWidth="0.5" />
+          
+          {/* Eyebrows */}
+          <motion.path 
+            d={emotion === 'critical' ? "M65 72 Q 78 68, 90 72" : "M65 70 Q 78 70, 90 70"} 
+            stroke="#0f172a" strokeWidth="2" fill="none"
+            animate={emotion === 'surprised' ? { y: -5 } : { y: 0 }}
+          />
+          <motion.path 
+            d={emotion === 'critical' ? "M110 72 Q 122 68, 135 72" : "M110 70 Q 122 70, 135 70"} 
+            stroke="#0f172a" strokeWidth="2" fill="none"
+            animate={emotion === 'surprised' ? { y: -5 } : { y: 0 }}
+          />
+
           <g className="animate-blink">
             <circle cx="78" cy="82" r="4.5" fill="#0f172a" />
             <circle cx="122" cy="82" r="4.5" fill="#0f172a" />
-            <circle cx="78" cy="82" r="1.5" fill="#4f46e5" />
-            <circle cx="122" cy="82" r="1.5" fill="#4f46e5" />
+            <motion.circle 
+              cx="78" cy="82" r="1.5" fill="#4f46e5" 
+              animate={isAISpeaking ? { scale: [1, 1.2, 1] } : {}}
+            />
+            <motion.circle 
+              cx="122" cy="82" r="1.5" fill="#4f46e5" 
+              animate={isAISpeaking ? { scale: [1, 1.2, 1] } : {}}
+            />
           </g>
           <g transform="translate(100, 132)">
             {isAISpeaking ? (
-              <path d="M-12 0 Q 0 12, 12 0 Q 0 -2, -12 0" fill="#0f172a" className="animate-lip-morph" />
+              <motion.path 
+                d="M-12 0 Q 0 12, 12 0 Q 0 -2, -12 0" fill="#0f172a" 
+                animate={{ scaleY: [1, 1.5, 0.8, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 0.2 }}
+              />
             ) : (
-              <path d="M-10 0 Q 0 2, 10 0" stroke="#0f172a" strokeWidth="2.5" fill="none" strokeLinecap="round" className={isUserListening ? "animate-listen-mouth" : ""} />
+              <path 
+                d={emotion === 'happy' ? "M-10 0 Q 0 10, 10 0" : emotion === 'surprised' ? "M-8 0 Q 0 8, 8 0" : "M-10 0 Q 0 2, 10 0"} 
+                stroke="#0f172a" strokeWidth="2.5" fill="none" strokeLinecap="round" 
+              />
             )}
           </g>
-        </g>
+        </motion.g>
       </svg>
       {/* Simulation Overlay */}
       <div className="absolute bottom-4 left-4 flex items-center gap-2">
@@ -801,7 +846,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
       {!sessionActive ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 max-w-4xl mx-auto px-12">
            <div className="w-80 h-80 bg-slate-900/50 rounded-[4rem] border border-slate-800 flex items-center justify-center group shadow-[0_0_60px_rgba(79,70,229,0.1)] hover:shadow-[0_0_80px_rgba(79,70,229,0.2)] transition-all duration-700 overflow-hidden">
-              <AIAnimatedBotCIO />
+              <AIAnimatedBotCIO emotion={facialEmotion} />
            </div>
            <div className="space-y-6">
               <h2 className="text-6xl font-black tracking-tight bg-gradient-to-r from-white via-indigo-200 to-slate-400 bg-clip-text text-transparent">Initiate Presence: {meetingContext.clientNames || 'Executive CIO'}</h2>
@@ -867,7 +912,43 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                       <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Neural Presence Node</h5>
                       <div className="space-y-4">
                         <div className="relative aspect-video rounded-[2rem] overflow-hidden border-2 border-slate-800 shadow-2xl group transition-all hover:scale-[1.02]">
-                           <AIAnimatedBotCIO />
+                           <AIAnimatedBotCIO emotion={facialEmotion} />
+                           
+                           {/* Protocol Explanation Overlay */}
+                           <AnimatePresence>
+                             {isExplainingProtocol && (
+                               <motion.div 
+                                 initial={{ opacity: 0, scale: 0.9 }}
+                                 animate={{ opacity: 1, scale: 1 }}
+                                 exit={{ opacity: 0, scale: 0.9 }}
+                                 className="absolute inset-0 bg-indigo-600/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10"
+                               >
+                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center animate-pulse mb-4">
+                                   <ICONS.Info className="w-6 h-6 text-white" />
+                                 </div>
+                                 <h4 className="text-sm font-black uppercase tracking-widest text-white mb-2">Protocol Briefing</h4>
+                                 <p className="text-[10px] text-indigo-50 font-bold max-w-[120px]">Agent is outlining the simulation context and boundaries.</p>
+                               </motion.div>
+                             )}
+                           </AnimatePresence>
+
+                           {/* Analysis Overlay */}
+                           <AnimatePresence>
+                             {isAnalyzingPerformance && (
+                                <motion.div 
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-20 text-center p-6"
+                                >
+                                  <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                  <div>
+                                    <div className="text-xs font-black tracking-tight text-white uppercase mb-1">Synthesizing Feedback</div>
+                                    <div className="text-[8px] text-slate-400 max-w-[150px] mx-auto uppercase tracking-widest font-black">Evaluating Response...</div>
+                                  </div>
+                                </motion.div>
+                             )}
+                           </AnimatePresence>
                         </div>
                         
                         <div className="relative aspect-video rounded-[2rem] overflow-hidden border-2 border-slate-800 shadow-2xl bg-slate-100 group transition-all hover:scale-[1.02]">
@@ -990,7 +1071,46 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                   </h3>
                </div>
 
-               {/* Dialogue Protocol Node */}
+               {/* Visual Mastery Node - BIG AVATAR IN CENTER */}
+               <div className="relative w-full max-w-2xl aspect-video rounded-[3rem] overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 group">
+                  <AIAnimatedBotCIO emotion={facialEmotion} />
+                  
+                  {/* Protocol Explanation Overlay */}
+                  <AnimatePresence>
+                    {isExplainingProtocol && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="absolute inset-0 bg-indigo-600/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10"
+                      >
+                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center animate-pulse mb-4">
+                          <ICONS.Info className="w-8 h-8 text-white" />
+                        </div>
+                        <h4 className="text-xl font-black uppercase tracking-widest text-white mb-2">Protocol Briefing</h4>
+                        <p className="text-xs text-indigo-50 font-bold max-w-[200px]">Agent is outlining the simulation context and boundaries.</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Analysis Overlay */}
+                  <AnimatePresence>
+                    {isAnalyzingPerformance && (
+                       <motion.div 
+                         initial={{ opacity: 0 }}
+                         animate={{ opacity: 1 }}
+                         exit={{ opacity: 0 }}
+                         className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-20 text-center p-6"
+                       >
+                         <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                         <div>
+                           <div className="text-lg font-black tracking-tight text-white uppercase mb-1">Synthesizing Feedback</div>
+                           <div className="text-[10px] text-slate-400 max-w-[200px] mx-auto uppercase tracking-widest font-black">Evaluating Response...</div>
+                         </div>
+                       </motion.div>
+                    )}
+                  </AnimatePresence>
+               </div>
 
                {/* Cinematic Narrative Display - Question Node */}
                <div className="bg-slate-900 border border-slate-800 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
@@ -1024,7 +1144,10 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                   </div>
                   <div className="flex flex-col md:flex-row gap-8 items-start">
                     <p className="flex-1 text-4xl font-bold italic leading-[1.4] text-white tracking-tight">
-                       {messages[messages.length - 1]?.content || "Initializing behavioral synchronization..."}
+                       {isExplainingProtocol 
+                         ? "Commencing Protocol Briefing..." 
+                         : (messages[messages.length - 1]?.content || "Initializing behavioral synchronization...")
+                       }
                     </p>
 
                     {/* Neural Strategic Hint - Integrated */}
@@ -1185,7 +1308,9 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
              </div>
 
              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4" style={{ backgroundColor: '#111117' }}>
-                {messages.map((msg, idx) => (
+                {messages.map((msg, idx) => {
+                  if (msg.role === 'assistant' && idx === messages.length - 1 && isExplainingProtocol) return null;
+                  return (
                   <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-slate-900 border-slate-800' : 'bg-indigo-900/20 border-indigo-900/30'}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -1221,8 +1346,9 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                       </div>
                     )}
                   </div>
-                ))}
-             </div>
+                );
+              })}
+           </div>
 
              {historyWidth > 150 && (
                <div className="p-6 bg-slate-950 border-t border-slate-800">

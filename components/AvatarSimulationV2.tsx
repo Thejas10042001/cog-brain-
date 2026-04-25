@@ -78,6 +78,9 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     clarityScore: 95,
     behavioralAudit: "Highly focused, authoritative, and clear."
   });
+  const [facialEmotion, setFacialEmotion] = useState<'neutral' | 'happy' | 'critical' | 'thinking' | 'surprised'>('neutral');
+  const [isExplainingProtocol, setIsExplainingProtocol] = useState(false);
+  const [isAnalyzingPerformance, setIsAnalyzingPerformance] = useState(false);
   const [coachingFeedback, setCoachingFeedback] = useState<{ failReason?: string; styleGuide?: string; nextTry?: string; idealResponse?: string; logicDeficit?: string } | null>(null);
   const [showCoachingDetails, setShowCoachingDetails] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState<{ exceeded: boolean; retryAfter?: string }>({ exceeded: false });
@@ -187,55 +190,53 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       startWebcam();
       const interval = setInterval(() => {
         setBiometrics(prev => {
-          // Enhanced dynamic biometric simulation logic
-          // AI Speaking = User Listening | !AI Speaking & User Listening = User Speaking/Thinking
-          
           let stressDelta = 0;
           let attentionDelta = 0;
           let eyeDelta = 0;
           
           if (isAISpeaking) {
-            // User is listening: Stress decreases, Focus increases, Eye contact stabilizes
-            stressDelta = prev.stressLevel > 20 ? -1.2 : (Math.random() * 0.5 - 0.25);
-            attentionDelta = prev.attentionFocus < 95 ? 0.8 : (Math.random() * 0.4 - 0.2);
-            eyeDelta = prev.eyeContact < 92 ? 0.6 : (Math.random() * 0.4 - 0.2);
+            stressDelta = prev.stressLevel > 20 ? -1.5 : (Math.random() * 0.4 - 0.2);
+            attentionDelta = prev.attentionFocus < 96 ? 1.0 : (Math.random() * 0.4 - 0.2);
+            eyeDelta = prev.eyeContact < 94 ? 0.8 : (Math.random() * 0.4 - 0.2);
+            if (facialEmotion !== 'happy' && facialEmotion !== 'thinking') setFacialEmotion('neutral');
           } else if (isUserListening) {
-            // User is speaking/thinking: Stress increases with cognitive load, Focus fluctuates, Eye contact drops (thinking)
-            const difficultyMultiplier = meetingContext.difficulty === 'Hard' ? 1.5 : meetingContext.difficulty === 'Medium' ? 1.0 : 0.7;
-            stressDelta = (Math.random() * 2.5) * difficultyMultiplier;
-            attentionDelta = (Math.random() * 4 - 2.5);
-            eyeDelta = (Math.random() * 6 - 4.5); // People look away more when speaking
+            const difficultyMultiplier = meetingContext.difficulty === 'Hard' ? 1.8 : meetingContext.difficulty === 'Medium' ? 1.2 : 0.8;
+            stressDelta = (Math.random() * 3.0) * difficultyMultiplier;
+            attentionDelta = (Math.random() * 4.5 - 2.8);
+            eyeDelta = (Math.random() * 7 - 5); 
+            setFacialEmotion('critical');
           } else {
-            // Idle state
-            stressDelta = prev.stressLevel > 15 ? -0.5 : 0.2;
-            attentionDelta = prev.attentionFocus > 85 ? -0.3 : 0.3;
-            eyeDelta = prev.eyeContact > 80 ? -0.3 : 0.3;
+            stressDelta = prev.stressLevel > 18 ? -0.8 : 0.3;
+            attentionDelta = prev.attentionFocus > 88 ? -0.4 : 0.4;
+            eyeDelta = prev.eyeContact > 82 ? -0.4 : 0.4;
+            setFacialEmotion('neutral');
           }
 
-          const newStress = Math.max(10, Math.min(95, prev.stressLevel + stressDelta));
-          const newAttention = Math.max(65, Math.min(100, prev.attentionFocus + attentionDelta));
-          const newEye = Math.max(55, Math.min(98, prev.eyeContact + eyeDelta));
-          const newClarity = Math.max(80, Math.min(100, 92 + (Math.random() * 8 - 4)));
+          const newStress = Math.max(10, Math.min(98, prev.stressLevel + stressDelta));
+          const newAttention = Math.max(60, Math.min(100, prev.attentionFocus + attentionDelta));
+          const newEye = Math.max(50, Math.min(100, prev.eyeContact + eyeDelta));
+          const newClarity = Math.max(75, Math.min(100, 92 + (Math.random() * 6 - 3)));
 
           let audit = prev.behavioralAudit;
           let suggestion = "";
           
-          if (newStress > 80) {
-            audit = "CRITICAL: Autonomic overwhelm detected.";
-            suggestion = "Stop speaking immediately. Take a deep 4-second breath. Lower your vocal pitch to regain authority.";
-          } else if (newStress > 60) {
-            audit = "WARNING: Elevated stress response.";
-            suggestion = "Slow your pacing. Your heart rate is rising, which may lead to defensive communication.";
-          } else if (newAttention < 75) {
-            audit = "ALERT: Cognitive drift identified.";
-            suggestion = "Refocus on the client's ocular region. You are losing engagement depth.";
-          } else if (newEye < 70) {
-            audit = "ALERT: Relationship friction signal.";
-            suggestion = "Maintain more consistent eye contact to reinforce trust and sincerity.";
-          } else if (newClarity < 85) {
-            audit = "ADVISORY: Articulation deficit.";
-            suggestion = "Enunciate complex technical terms more clearly. Avoid 'um' and 'ah' fillers.";
-          } else if (isAISpeaking) {
+          if (newStress > 85) {
+            audit = "CRITICAL: Autonomic threshold breached.";
+            suggestion = "Vagus nerve stimulation required. Pause for 3 seconds. Reset your semantic baseline.";
+            setFacialEmotion('surprised');
+          } else if (newStress > 65) {
+            audit = "WARNING: Signal-to-noise ratio degrading.";
+            suggestion = "Semantic saturation detected. Simplify your syntax and lower your volume.";
+            setFacialEmotion('thinking');
+          } else if (newAttention < 70) {
+            audit = "ALERT: Cognitive disengagement.";
+            suggestion = "Incorporate a rhetorical hook or direct address to the client's CFO.";
+            setFacialEmotion('thinking');
+          } else if (newEye < 65) {
+            audit = "ALERT: Trust-signal attenuation.";
+            suggestion = "Project sincerity through ocular stabilization. Your gaze is too erratic.";
+          }
+ else if (isAISpeaking) {
             audit = "Active listening protocol engaged.";
             suggestion = "Nod slightly to show understanding. Prepare your strategic follow-up node.";
           } else if (isUserListening) {
@@ -405,10 +406,13 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
   const explainNode = async (nodeName: string): Promise<void> => {
     try {
+      setIsExplainingProtocol(true);
       const explanation = await generateNodeExplanation(nodeName, meetingContext);
       await playAIQuestion(explanation);
     } catch (e) {
       console.error("Node explanation failed:", e);
+    } finally {
+      setIsExplainingProtocol(false);
     }
   };
 
@@ -478,7 +482,57 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     }
   };
 
+  // Biometric Trace Live Modulation
+  useEffect(() => {
+    if (!sessionActive) return;
+    
+    const interval = setInterval(() => {
+      setBiometrics(prev => {
+        // Base values slightly fluctuate
+        const flux = () => (Math.random() - 0.5) * 4;
+        
+        // Context-aware modulation
+        let targetStress = prev.stressLevel;
+        let targetFocus = prev.attentionFocus;
+        
+        if (isAISpeaking) {
+          targetStress = Math.max(10, Math.min(30, prev.stressLevel + flux()));
+          targetFocus = Math.max(95, Math.min(100, prev.attentionFocus + flux()));
+        } else if (isUserListening) {
+          targetFocus = Math.max(90, Math.min(98, prev.attentionFocus + flux()));
+        } else if (isAnalyzingPerformance) {
+          targetStress = Math.max(40, Math.min(60, prev.stressLevel + 2)); 
+        }
+
+        return {
+          stressLevel: Math.max(5, Math.min(95, targetStress + flux())),
+          attentionFocus: Math.max(60, Math.min(100, targetFocus + flux())),
+          eyeContact: Math.max(80, Math.min(100, (isAISpeaking ? 98 : 92) + flux())),
+          clarityScore: Math.max(85, Math.min(100, 95 + flux())),
+          behavioralAudit: prev.behavioralAudit
+        };
+      });
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [sessionActive, isAISpeaking, isUserListening, isAnalyzingPerformance]);
+
+  const stopAllAudio = () => {
+    if (activeAudioSource.current) {
+      try { 
+        activeAudioSource.current.stop(); 
+        activeAudioSource.current = null;
+      } catch (e) {}
+    }
+    if (audioContextRef.current) {
+      // In case we were suspended
+      audioContextRef.current.resume();
+    }
+    setIsAISpeaking(false);
+  };
+
   const handleInitiate = async (selected: SimPersonaV2) => {
+    stopAllAudio();
     if (onStartSimulation) onStartSimulation();
     setPersona(selected);
     setSessionActive(true);
@@ -489,7 +543,16 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     setCurrentHint(null);
     setCoachingFeedback(null);
     setShowCoachingDetails(false);
+    setIsExplainingProtocol(true);
     try {
+      // Step 1: Explain Protocol (Agent speaks, but no question shown yet)
+      const protocolName = meetingContext.simulationProtocol || "Initial Discovery";
+      const explanation = await generateNodeExplanation(protocolName, meetingContext);
+      
+      // Zero Latency Hint: Pre-fetch or start stream early if possible
+      // For now, we narrate protocol first
+      await playAIQuestion(explanation);
+
       setQuotaExceeded({ exceeded: false });
       const stream = streamAvatarSimulationV2(`PERSONA: ${selected}`, [], meetingContext);
       let firstQuestion = "";
@@ -500,13 +563,12 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
       const cleaned = firstQuestion.replace(/\[HINT: .*?\]/, "").trim();
       const assistantMsg: GPTMessage = { id: Date.now().toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+      
+      // Stop explaining overlay before showing question
+      setIsExplainingProtocol(false);
       setMessages([assistantMsg]);
       
-      // Sequence explanation then question
-      await explainNode(meetingContext.simulationProtocol || "Initial Discovery");
-      
-      // Small delay to ensure UI has rendered the question before narrating it
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Step 2: Narrate Question immediately
       await playAIQuestion(cleaned);
     } catch (e: any) { 
       console.error(e); 
@@ -520,23 +582,31 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         setQuotaExceeded({ exceeded: true, retryAfter });
         setTimeout(() => setQuotaExceeded({ exceeded: false }), 10000);
       }
-    } finally { setIsProcessing(false); }
+    } finally { setIsProcessing(false); setIsExplainingProtocol(false); }
   };
 
   const handleNextNode = async () => {
     if (isProcessing || !currentCaption.trim()) return;
+
+    // Immediate stop of current narration when commit clicked
+    stopAllAudio();
+
     stopListening();
     setIsProcessing(true);
+    setIsAnalyzingPerformance(true);
     setCoachingFeedback(null);
     setShowCoachingDetails(false);
     setCurrentHint(null);
+    setFacialEmotion('thinking');
 
     const userMsg: GPTMessage = { id: Date.now().toString(), role: 'user', content: currentCaption, mode: 'standard' };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+    setCurrentCaption(""); // Clear input on commit
+
     try {
       setQuotaExceeded({ exceeded: false });
-      const stream = streamAvatarSimulationV2(currentCaption, messages, meetingContext);
+      const stream = streamAvatarSimulationV2(userMsg.content, messages, meetingContext);
       let nextContent = "";
       for await (const chunk of stream) nextContent += chunk;
       
@@ -545,9 +615,24 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
       const hintMatch = nextContent.match(/\[HINT: (.*?)\]/);
       if (hintMatch) setCurrentHint(hintMatch[1]);
 
+      // Extract rationale if available (how the agent feels about the response)
+      const deficitMatch = nextContent.match(/\[DEFICIT: (.*?)\]/);
+      const coachMatch = nextContent.match(/\[COACHING: ([\s\S]*?)\]/);
+      
+      setIsAnalyzingPerformance(false);
+
+      if (coachMatch?.[1] || deficitMatch?.[1]) {
+        const rationale = (coachMatch?.[1] || deficitMatch?.[1] || "").trim();
+        if (rationale) {
+          setFacialEmotion(isFail ? 'critical' : 'happy');
+          // Narrate the rationale/explanation BEFORE showing the next question
+          await playAIQuestion(rationale);
+          // Brief pause after rationale before next interaction
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      }
+
       if (isFail) {
-        const deficitMatch = nextContent.match(/\[DEFICIT: (.*?)\]/);
-        const coachMatch = nextContent.match(/\[COACHING: ([\s\S]*?)\]/);
         const styleMatch = nextContent.match(/\[STYLE_GUIDE: ([\s\S]*?)\]/);
         const retryMatch = nextContent.match(/\[RETRY_PROMPT: ([\s\S]*?)\]/);
         const idealMatch = nextContent.match(/\[IDEAL_RESPONSE: ([\s\S]*?)\]/);
@@ -576,21 +661,23 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         
         setMessages([...updatedMessages, assistantMsg]);
         setCurrentCaption("");
+        setFacialEmotion('thinking');
 
         // Small delay to ensure UI renders the message first
         await new Promise(resolve => setTimeout(resolve, 50));
         await playAIQuestion(retryText);
       } else {
-      const cleaned = nextContent.replace(/\[HINT: .*?\]/, "").trim();
-      const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
-      
-      setMessages([...updatedMessages, assistantMsg]);
-      setCurrentCaption("");
+        const cleaned = nextContent.replace(/\[HINT: .*?\]|\[RESULT: SUCCESS\]|\[COACHING: .*?\]|\[IDEAL_RESPONSE: .*?\]/g, "").trim();
+        const assistantMsg: GPTMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: cleaned, mode: 'standard' };
+        
+        setMessages([...updatedMessages, assistantMsg]);
+        setCurrentCaption("");
+        setFacialEmotion('neutral');
 
-      // Small delay to ensure UI renders the message first
-      await new Promise(resolve => setTimeout(resolve, 50));
-      await playAIQuestion(cleaned);
-    }
+        // Small delay to ensure UI renders the message first
+        await new Promise(resolve => setTimeout(resolve, 50));
+        await playAIQuestion(cleaned);
+      }
     } catch (e: any) { 
       console.error(e); 
       const errorStr = JSON.stringify(e);
@@ -603,7 +690,7 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
         setQuotaExceeded({ exceeded: true, retryAfter });
         setTimeout(() => setQuotaExceeded({ exceeded: false }), 10000);
       }
-    } finally { setIsProcessing(false); }
+    } finally { setIsProcessing(false); setIsAnalyzingPerformance(false); }
   };
 
   const handleTryAgain = () => {
@@ -704,12 +791,12 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
     } catch (e) { console.error(e); } finally { setIsExporting(false); }
   };
 
-  const AnimatedBotV2 = ({ type }: { type: SimPersonaV2 }) => {
+  const AnimatedBotV2 = ({ type, emotion = 'neutral' }: { type: SimPersonaV2, emotion?: 'neutral' | 'happy' | 'critical' | 'thinking' | 'surprised' }) => {
     const config = PERSONA_CONFIG[type];
     return (
       <div className="relative w-full h-full bg-slate-900 overflow-hidden flex items-center justify-center">
         <div className={`absolute inset-0 bg-gradient-to-b from-indigo-900/20 to-black/40 transition-opacity duration-1000 ${isAISpeaking ? 'opacity-100' : 'opacity-40'}`}></div>
-        <svg viewBox="0 0 200 240" className={`w-full h-full max-w-[280px] transition-all duration-700 ${isAISpeaking ? `drop-shadow-[0_0_40px_${config.color}88] scale-105` : 'drop-shadow-2xl'}`}>
+        <svg viewBox="0 0 200 240" className={`w-full h-full max-w-[280px] transition-all duration-700 ${isAISpeaking ? `drop-shadow-[0_0_40px_${config.color}88] scale-105` : 'drop-shadow-2xl'} ${emotion === 'critical' ? 'brightness-90' : ''}`}>
           <defs>
             <linearGradient id={`faceGrad-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#ffffff" />
@@ -725,23 +812,55 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
             <path d="M85 170 L 100 185 L 115 170" fill="white" opacity="0.9" />
             <path d="M97 170 L 100 220 L 103 170" fill={config.color} opacity="0.7" />
           </g>
-          <g className={`${isUserListening ? 'animate-listen-tilt' : 'animate-breathe'}`}>
+          <motion.g 
+            animate={{ 
+              rotate: isUserListening ? [0, -1, 1, 0] : 0,
+              y: isAISpeaking ? [0, -2, 0] : 0
+            }}
+            transition={{ repeat: Infinity, duration: 4 }}
+          >
             <rect x="90" y="155" width="20" height="20" rx="10" fill="#f1f5f9" />
             <path d="M100 20 C 60 20, 50 60, 50 100 C 50 150, 70 170, 100 170 C 130 170, 150 150, 150 100 C 150 60, 140 20, 100 20" fill={`url(#faceGrad-${type})`} stroke="#1e293b" strokeWidth="0.5" />
+            
+            {/* Eyebrows for emotions */}
+            <motion.path 
+              d={emotion === 'critical' ? "M65 72 Q 78 68, 90 72" : "M65 70 Q 78 70, 90 70"} 
+              stroke="#0f172a" strokeWidth="2" fill="none"
+              animate={emotion === 'surprised' ? { y: -5 } : { y: 0 }}
+            />
+            <motion.path 
+              d={emotion === 'critical' ? "M110 72 Q 122 68, 135 72" : "M110 70 Q 122 70, 135 70"} 
+              stroke="#0f172a" strokeWidth="2" fill="none"
+              animate={emotion === 'surprised' ? { y: -5 } : { y: 0 }}
+            />
+
             <g className="animate-blink">
               <circle cx="78" cy="85" r="5" fill="#0f172a" />
               <circle cx="122" cy="85" r="5" fill="#0f172a" />
-              <circle cx="78" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
-              <circle cx="122" cy="85" r="2" fill={config.accent} opacity={isAISpeaking ? "1" : "0.6"} />
+              <motion.circle 
+                cx="78" cy="85" r="2" fill={config.accent} 
+                animate={isAISpeaking ? { scale: [1, 1.2, 1] } : {}}
+              />
+              <motion.circle 
+                cx="122" cy="85" r="2" fill={config.accent} 
+                animate={isAISpeaking ? { scale: [1, 1.2, 1] } : {}}
+              />
             </g>
             <g transform="translate(100, 135)">
               {isAISpeaking ? (
-                <path d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" fill="#0f172a" className="animate-lip-morph-v2" />
+                <motion.path 
+                  d="M-14 0 Q 0 14, 14 0 Q 0 -3, -14 0" fill="#0f172a" 
+                  animate={{ scaleY: [1, 1.5, 0.8, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 0.2 }}
+                />
               ) : (
-                <path d="M-12 0 Q 0 3, 12 0" stroke="#0f172a" strokeWidth="3" fill="none" strokeLinecap="round" className={isUserListening ? "animate-listen-mouth" : ""} />
+                <path 
+                  d={emotion === 'happy' ? "M-12 0 Q 0 10, 12 0" : emotion === 'surprised' ? "M-8 0 Q 0 8, 8 0" : "M-10 0 Q 0 3, 12 0"} 
+                  stroke="#0f172a" strokeWidth="3" fill="none" strokeLinecap="round" 
+                />
               )}
             </g>
-          </g>
+          </motion.g>
         </svg>
         {/* Simulation Overlay */}
         <div className="absolute bottom-4 left-4 flex items-center gap-2">
@@ -899,7 +1018,43 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
 
                   <div className="space-y-4">
                     <div className="relative aspect-square rounded-[2rem] overflow-hidden border-2 border-slate-800 shadow-2xl group transition-all hover:scale-[1.02]">
-                       {persona && <AnimatedBotV2 type={persona} />}
+                       {persona && <AnimatedBotV2 type={persona} emotion={facialEmotion} />}
+                       
+                       {/* Protocol Explanation Overlay */}
+                       <AnimatePresence>
+                         {isExplainingProtocol && (
+                           <motion.div 
+                             initial={{ opacity: 0, scale: 0.9 }}
+                             animate={{ opacity: 1, scale: 1 }}
+                             exit={{ opacity: 0, scale: 0.9 }}
+                             className="absolute inset-0 bg-indigo-600/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10"
+                           >
+                             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center animate-pulse mb-4">
+                               <ICONS.Info className="w-6 h-6 text-white" />
+                             </div>
+                             <h4 className="text-sm font-black uppercase tracking-widest text-white mb-2">Protocol Briefing</h4>
+                             <p className="text-[10px] text-indigo-50 font-bold max-w-[120px]">Agent is outlining the simulation context and boundaries.</p>
+                           </motion.div>
+                         )}
+                       </AnimatePresence>
+
+                       {/* Analysis Overlay */}
+                       <AnimatePresence>
+                         {isAnalyzingPerformance && (
+                            <motion.div 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-20 text-center p-6"
+                            >
+                              <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                              <div>
+                                <div className="text-xs font-black tracking-tight text-white uppercase mb-1">Synthesizing Feedback</div>
+                                <div className="text-[8px] text-slate-400 max-w-[150px] mx-auto uppercase tracking-widest font-black">Evaluating Response...</div>
+                              </div>
+                            </motion.div>
+                         )}
+                       </AnimatePresence>
                     </div>
                     
                     <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border-2 border-slate-800 shadow-2xl bg-slate-100 group transition-all hover:scale-[1.02]">
@@ -1037,7 +1192,10 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
                   
                   <div className="flex flex-col lg:flex-row gap-8 items-start">
                     <p className="flex-1 text-3xl font-black italic leading-[1.6] text-white tracking-tight">
-                       {messages[messages.length - 1]?.role === 'assistant' ? messages[messages.length - 1].content : status || "Synchronizing Strategic Core..."}
+                       {isExplainingProtocol 
+                         ? "Commencing Protocol Briefing..." 
+                         : (messages[messages.length - 1]?.role === 'assistant' ? messages[messages.length - 1].content : status || "Synchronizing Strategic Core...")
+                       }
                     </p>
 
                     {currentHint && (
@@ -1156,43 +1314,50 @@ export const AvatarSimulationV2: FC<AvatarSimulationV2Props> = ({ meetingContext
              </div>
 
              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
-                {messages.map((msg, idx) => (
-                  <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-slate-900 border-slate-800' : 'bg-indigo-900/20 border-indigo-900/30'}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${msg.role === 'assistant' ? 'bg-slate-900 text-white' : 'bg-indigo-600 text-white'}`}>
-                          {msg.role === 'assistant' ? 'Client' : 'Seller'}
-                        </span>
-                        {msg.evaluation?.logicDeficit && (
-                          <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-900/30 px-2 py-0.5 rounded-full">
-                            Logic Deficit: {msg.evaluation.logicDeficit}
+                {messages.map((msg, idx) => {
+                  // Hide the very last assistant message if we are still explaining the protocol
+                  if (msg.role === 'assistant' && idx === messages.length - 1 && isExplainingProtocol) {
+                    return null;
+                  }
+                  
+                  return (
+                    <div key={msg.id} className={`p-4 rounded-2xl border ${msg.role === 'assistant' ? 'bg-slate-900 border-slate-800' : 'bg-indigo-900/20 border-indigo-900/30'}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${msg.role === 'assistant' ? 'bg-slate-900 text-white' : 'bg-indigo-600 text-white'}`}>
+                            {msg.role === 'assistant' ? 'Client' : 'Seller'}
                           </span>
-                        )}
+                          {msg.evaluation?.logicDeficit && (
+                            <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-900/30 px-2 py-0.5 rounded-full">
+                              Logic Deficit: {msg.evaluation.logicDeficit}
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      <p className="text-[10px] font-bold text-slate-400 leading-relaxed" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>
+                        {msg.content}
+                      </p>
+                      {msg.evaluation?.idealResponse && historyWidth > 250 && (
+                        <div className="mt-4 pt-4 border-t border-slate-800 space-y-3">
+                           <div className="space-y-1">
+                             <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Deficit Rationale:</p>
+                             <p className="text-[9px] font-medium text-slate-500 italic leading-snug" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>{msg.evaluation.failReason}</p>
+                           </div>
+                           <button 
+                             onClick={() => {
+                               setExplanationContent(`EXPECTED STRATEGIC ANSWER:\n\n${msg.evaluation?.idealResponse}\n\nCOGNITIVE GAP ANALYSIS:\n${msg.evaluation?.failReason}`);
+                               setShowExplanation(true);
+                             }}
+                             className="w-full py-2 bg-indigo-900/30 text-indigo-400 border border-indigo-900/50 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-indigo-900/50 transition-all"
+                             style={{ fontSize: `${historyFontScale * 0.5}rem` }}
+                           >
+                             View Expected Answer & Gap Analysis
+                           </button>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[10px] font-bold text-slate-400 leading-relaxed" style={{ fontSize: `${historyFontScale * 0.65}rem` }}>
-                      {msg.content}
-                    </p>
-                    {msg.evaluation?.idealResponse && historyWidth > 250 && (
-                      <div className="mt-4 pt-4 border-t border-slate-800 space-y-3">
-                         <div className="space-y-1">
-                           <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest" style={{ fontSize: `${historyFontScale * 0.5}rem` }}>Deficit Rationale:</p>
-                           <p className="text-[9px] font-medium text-slate-500 italic leading-snug" style={{ fontSize: `${historyFontScale * 0.6}rem` }}>{msg.evaluation.failReason}</p>
-                         </div>
-                         <button 
-                           onClick={() => {
-                             setExplanationContent(`EXPECTED STRATEGIC ANSWER:\n\n${msg.evaluation?.idealResponse}\n\nCOGNITIVE GAP ANALYSIS:\n${msg.evaluation?.failReason}`);
-                             setShowExplanation(true);
-                           }}
-                           className="w-full py-2 bg-indigo-900/30 text-indigo-400 border border-indigo-900/50 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-indigo-900/50 transition-all"
-                           style={{ fontSize: `${historyFontScale * 0.5}rem` }}
-                         >
-                           View Expected Answer & Gap Analysis
-                         </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
              </div>
 
              {historyWidth > 150 && (

@@ -717,7 +717,10 @@ export async function generateRoleplayQuestions(
   ${context ? 'You are the client in the following deal context.' : ''}
   ${contextString}
 
+  DIRECTIVE:
   Generate 5 challenging questions about ${focusArea} in a ${scenario} scenario for a sales professional.
+  CRITICAL: You MUST ground these questions in the provided STRATEGIC CONTEXT and DOCUMENT CONTENT. 
+  Ask about specific products, client names, or inferred technical pains if provided.
   
   Return the questions in a JSON array format. Each object must have:
   - text: string (the question)
@@ -1537,7 +1540,7 @@ export async function evaluateAssessment(
   questions: AssessmentQuestion[], 
   answers: Record<string, string>
 ): Promise<AssessmentResult[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
 
   const results: AssessmentResult[] = [];
@@ -1628,7 +1631,7 @@ export async function evaluateAssessment(
 
 // Vision OCR using gemini-3-flash-preview
 export async function performVisionOcr(base64Data: string, mimeType: string): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview'; 
   try {
     const response = await withRetry(() => ai.models.generateContent({
@@ -1659,7 +1662,7 @@ function formatHistory(history: GPTMessage[]) {
 
 // Normal Chat: Simple, direct, and non-structured intelligence
 export async function* streamNormalChat(prompt: string, history: GPTMessage[]): AsyncGenerator<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
   
   const contents = [
@@ -1692,7 +1695,7 @@ export async function* streamNormalChat(prompt: string, history: GPTMessage[]): 
 
 // Sales GPT: Balanced grounded and general intelligence
 export async function* streamSalesGPT(prompt: string, history: GPTMessage[], context?: string): AsyncGenerator<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
   
   const contents = [
@@ -1767,7 +1770,7 @@ export async function* streamSalesGPT(prompt: string, history: GPTMessage[], con
 }
 
 export async function* streamCognitivePro(prompt: string, history: GPTMessage[], selectedStyles: string[], context?: string): AsyncGenerator<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
   
   const contents = [
@@ -1915,7 +1918,7 @@ export async function generateClientAvatar(name: string, company: string): Promi
 
 // Deep Study: Advanced Reasoning Core upgraded to Pro model
 export async function* streamDeepStudy(prompt: string, history: GPTMessage[], context?: string): AsyncGenerator<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   // Using gemini-3-flash-preview for complex reasoning tasks
   const modelName = 'gemini-3-flash-preview';
   
@@ -2016,7 +2019,7 @@ export async function* performCognitiveSearchStream(
   filesContent: string, 
   context: MeetingContext
 ): AsyncGenerator<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   // Using gemini-3-flash-preview for advanced reasoning and complex query synthesis
   const modelName = 'gemini-3-flash-preview';
   const styleDirectives = context.answerStyles.map(style => `- Create a section exactly titled "### ${style}" and provide EXHAUSTIVE detail.`).join('\n');
@@ -2111,7 +2114,7 @@ export async function performCognitiveSearch(
 }
 
 export async function generateDynamicSuggestions(filesContent: string, context: MeetingContext): Promise<string[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const modelName = 'gemini-3-flash-preview';
   const prompt = `Suggest 3 highly strategic sales questions for ${context.clientCompany || 'the prospect'}. Return as a JSON array of strings.`;
   const response = await withRetry(() => ai.models.generateContent({ 
@@ -2201,7 +2204,7 @@ export async function generatePitchAudio(
 
 // Full Context Analysis upgraded to Pro model for comprehensive reasoning
 export async function analyzeSalesContext(filesContent: string, context: MeetingContext): Promise<AnalysisResult> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   // Using gemini-3-flash-preview for exhaustive material synthesis and competitive intelligence
   const modelName = 'gemini-3-flash-preview';
   const citationSchema = {

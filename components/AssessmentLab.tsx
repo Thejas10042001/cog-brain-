@@ -237,6 +237,7 @@ export const AssessmentLab: React.FC<AssessmentLabProps> = ({ activeDocuments, o
       const seconds = activeConfig.timer * 60;
       setTimeLeft(seconds);
       setTotalSessionTime(seconds);
+      if (onStartSimulation) onStartSimulation();
       setStage('running');
       setAnswers({});
       setTimeByQuestion({});

@@ -19,7 +19,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { RoleplayQuestion, RoleplayEvaluation, GPTMessage, MeetingContext } from '../types';
-import { generateRoleplayQuestions, generateRoleplayResponse, evaluateRoleplayAnswer } from '../services/geminiService';
+import { generateRoleplayQuestions, generateRoleplayResponse, evaluateRoleplayAnswer, generateVoiceSample } from '../services/geminiService';
 
 const SCENARIOS = ['Sales Pitch', 'Negotiation', 'Investor Meeting', 'Discovery Call', 'Closing Session', 'Cold Call Simulation'];
 const ROLES = ['CEO', 'CFO', 'CTO', 'VP of Engineering', 'Procurement Manager', 'IT Director'];
@@ -80,8 +80,40 @@ export const RoleplaySimulation: React.FC<RoleplaySimulationProps> = ({ meetingC
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isThinking]);
 
-  const handleGenerateQuestions = async () => {
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const stopAllAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setIsAISpeaking(false);
     if (onStartSimulation) onStartSimulation();
+  };
+
+  const playTTS = async (text: string) => {
+    stopAllAudio();
+    try {
+      setIsAISpeaking(true);
+      const voice = await generateVoiceSample(text, 'Kore');
+      if (voice) {
+        const audio = new Audio(`data:audio/wav;base64,${voice}`);
+        audioRef.current = audio;
+        audio.play();
+        audio.onended = () => {
+          setIsAISpeaking(false);
+          audioRef.current = null;
+        };
+      }
+    } catch (err) {
+      console.error(err);
+      setIsAISpeaking(false);
+    }
+  };
+
+  const handleGenerateQuestions = async () => {
+    stopAllAudio();
     setIsGenerating(true);
     try {
       const qResult = await generateRoleplayQuestions(
@@ -110,10 +142,12 @@ export const RoleplaySimulation: React.FC<RoleplaySimulationProps> = ({ meetingC
     };
     
     setMessages(prev => [...prev, aiMessage]);
+    playTTS(question.text);
   };
 
   const handleSendResponse = async () => {
     if (!userInput.trim()) return;
+    stopAllAudio();
     
     const userMsg: GPTMessage = {
       id: `user-${Date.now()}`,
@@ -132,7 +166,7 @@ export const RoleplaySimulation: React.FC<RoleplaySimulationProps> = ({ meetingC
       // 1. Evaluate
       const evaluation = await evaluateRoleplayAnswer(
         currentInput,
-        messages[messages.length - 1].content,
+        messages.length > 0 ? messages[messages.length - 1].content : "Initial context",
         messages,
         meetingContext
       );
@@ -154,6 +188,7 @@ export const RoleplaySimulation: React.FC<RoleplaySimulationProps> = ({ meetingC
       };
       
       setMessages(prev => [...prev, aiFollowUp]);
+      playTTS(response);
     } catch (err) {
       console.error(err);
     } finally {
@@ -376,7 +411,11 @@ export const RoleplaySimulation: React.FC<RoleplaySimulationProps> = ({ meetingC
               <button 
                 onClick={handleSendResponse}
                 disabled={!userInput.trim() || isThinking}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-600 hover:bg-indigo-500 rounded-xl flex items-center justify-center disabled:opacity-50 transition-all active:scale-95 shadow-xl shadow-indigo-500/20"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-xl ${
+                  !userInput.trim() || isThinking 
+                  ? 'bg-slate-700 opacity-50 cursor-not-allowed' 
+                  : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'
+                }`}
               >
                 <Send className="w-4 h-4 text-white" />
               </button>
