@@ -1070,48 +1070,7 @@ export const AvatarSimulation: FC<AvatarSimulationProps> = ({ meetingContext, on
                      {meetingContext.clientNames || 'Executive Client'} Protocol
                   </h3>
                </div>
-
-               {/* Visual Mastery Node - BIG AVATAR IN CENTER */}
-               <div className="relative w-full max-w-2xl aspect-video rounded-[3rem] overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 group">
-                  <AIAnimatedBotCIO emotion={facialEmotion} />
-                  
-                  {/* Protocol Explanation Overlay */}
-                  <AnimatePresence>
-                    {isExplainingProtocol && (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="absolute inset-0 bg-indigo-600/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10"
-                      >
-                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center animate-pulse mb-4">
-                          <ICONS.Info className="w-8 h-8 text-white" />
-                        </div>
-                        <h4 className="text-xl font-black uppercase tracking-widest text-white mb-2">Protocol Briefing</h4>
-                        <p className="text-xs text-indigo-50 font-bold max-w-[200px]">Agent is outlining the simulation context and boundaries.</p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Analysis Overlay */}
-                  <AnimatePresence>
-                    {isAnalyzingPerformance && (
-                       <motion.div 
-                         initial={{ opacity: 0 }}
-                         animate={{ opacity: 1 }}
-                         exit={{ opacity: 0 }}
-                         className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-20 text-center p-6"
-                       >
-                         <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                         <div>
-                           <div className="text-lg font-black tracking-tight text-white uppercase mb-1">Synthesizing Feedback</div>
-                           <div className="text-[10px] text-slate-400 max-w-[200px] mx-auto uppercase tracking-widest font-black">Evaluating Response...</div>
-                         </div>
-                       </motion.div>
-                    )}
-                  </AnimatePresence>
-               </div>
-
+               {/* Dialogue Protocol Node */}
                {/* Cinematic Narrative Display - Question Node */}
                <div className="bg-slate-900 border border-slate-800 p-12 rounded-[4rem] space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-700">
                   <div className="flex items-center justify-between mb-2">
