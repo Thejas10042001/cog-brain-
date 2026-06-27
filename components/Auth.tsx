@@ -15,7 +15,7 @@ export const Auth: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
-  const SUPPORT_LINK = "https://www.spiked.ai/contact-sales";
+  const SUPPORT_LINK = "https://www.cognitive-sales-simulation.io/contact-sales";
 
   const mapAuthError = (code: string) => {
     switch (code) {
@@ -92,14 +92,14 @@ export const Auth: React.FC = () => {
               whileHover={{ rotate: 180, scale: 1.1 }}
               className="w-20 h-20 bg-red-600 text-white rounded-[2rem] flex items-center justify-center font-black text-4xl shadow-[0_20px_50px_rgba(220,38,38,0.3)]"
             >
-              !
+              S
             </motion.div>
           </div>
-          <h2 className="text-6xl font-black tracking-tighter text-white uppercase leading-none">
-            SPIKED<span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.4)]">AI</span>
+          <h2 className="text-4xl font-black tracking-tighter text-white uppercase leading-none">
+            Cognitive<span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.4)]"> Sales</span>
           </h2>
           <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] mt-4">
-            Neural Sales Intelligence Protocol
+            Cognitive Sales Simulation Protocol
           </p>
         </motion.div>
 
@@ -171,7 +171,7 @@ export const Auth: React.FC = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full pl-16 pr-8 py-5 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-sm focus:border-indigo-400 outline-none transition-all font-bold text-white placeholder:text-slate-600 shadow-inner"
-                            placeholder="architect@spikedai.io"
+                            placeholder="architect@cognitive-sales.io"
                           />
                         </div>
                       </div>

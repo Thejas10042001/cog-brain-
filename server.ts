@@ -38,7 +38,7 @@ async function startServer() {
   app.use(requestIp.mw());
 
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'spiked-ai-secret',
+    secret: process.env.SESSION_SECRET || 'sales-simulation-secret',
     resave: false,
     saveUninitialized: true,
     cookie: { 

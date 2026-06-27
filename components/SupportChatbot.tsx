@@ -28,7 +28,7 @@ export const SupportChatbot: React.FC = () => {
 
   useEffect(() => {
     // Initial welcome
-    addBotMessage("Welcome to SPIKED AI Support. I am your neural assistant. How can I help you today?", [
+    addBotMessage("Welcome to Cognitive Sales Simulation Support. I am your neural assistant. How can I help you today?", [
       "Strategic Configuration",
       "Document Parsing",
       "Avatar Simulation",
@@ -92,7 +92,7 @@ export const SupportChatbot: React.FC = () => {
           options = ["Encryption Standards", "Data Residency", "Privacy Policy", "Start Over"];
           break;
         case 'security':
-          response = "The SPIKED AI defensive perimeter is verified through continuous architectural scanning and quarterly third-party penetration testing. We operate on a Zero-Trust framework. Shall I provide the latest security audit summary or guide you through MFA activation?";
+          response = "The Cognitive Sales Simulation defensive perimeter is verified through continuous architectural scanning and quarterly third-party penetration testing. We operate on a Zero-Trust framework. Shall I provide the latest security audit summary or guide you through MFA activation?";
           options = ["Security Audit Summary", "MFA Activation", "Defensive Roadmap", "Start Over"];
           break;
         case 'legal':
@@ -104,7 +104,7 @@ export const SupportChatbot: React.FC = () => {
           options = ["Vector Ingestion", "Persona Filtering", "Narrative Synthesis", "Start Over"];
           break;
         case 'onboarding':
-          response = "The SPIKED AI onboarding protocol is designed to achieve protocol mastery in under 10 minutes. It covers all core nodes from Strategic Settings to Spiked GPT. Would you like to restart the automated tour or access the Protocol Manual?";
+          response = "The Cognitive Sales Simulation onboarding protocol is designed to achieve protocol mastery in under 10 minutes. It covers all core nodes from Strategic Settings to Sales GPT. Would you like to restart the automated tour or access the Protocol Manual?";
           options = ["Restart Tour", "Protocol Manual", "Help Center", "Start Over"];
           break;
         default:
@@ -153,7 +153,7 @@ export const SupportChatbot: React.FC = () => {
       "No, I'll check the manual": { text: "Understood. If you require manual intervention, I can facilitate a connection with our strategic support team.", options: ["Enter Question", "Contact Sales Team"] },
       "Yes, I have more questions": { text: "Neural input active. Please enter your question below.", options: [], showInput: true },
       "No, I'm all set": { text: "Protocol complete. Glad I could assist in optimizing your sales intelligence. If you need further calibration, I am always online.", options: ["Start Over", "Contact Sales Team"] },
-      "Contact Sales Team": { text: "Initiating secure link to our strategic support team at contact-sales@spiked.ai. Please provide a brief rating of our neural interaction before we proceed.", options: [] },
+      "Contact Sales Team": { text: "Initiating secure link to our strategic support team at contact-sales@cognitive-sales.io. Please provide a brief rating of our neural interaction before we proceed.", options: [] },
       "Start Over": { text: "Neural session reset. How can I assist in your strategic mission today?", options: ["Strategic Configuration", "Document Parsing", "Avatar Simulation", "Other Query"] },
       "Yes, take me back": { text: "Redirecting to main console... (Note: In this preview, please manually close this tab or navigate back).", options: ["Start Over"] }
     };
@@ -170,8 +170,8 @@ export const SupportChatbot: React.FC = () => {
   const handleContactSales = () => {
     const chatHistory = messages.map(m => `${m.type.toUpperCase()}: ${m.text}`).join('\n\n');
     const emailBody = `Support Chat History:\n\n${chatHistory}\n\nUser Rating: ${rating}/5`;
-    const subject = "Support Request - SPIKED AI";
-    const mailtoUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=contact-sales@spiked.ai&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+    const subject = "Support Request - Cognitive Sales Simulation";
+    const mailtoUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=contact-sales@cognitive-sales.io&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
     window.open(mailtoUrl, '_blank');
   };
 

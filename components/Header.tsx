@@ -121,14 +121,14 @@ export const Header: React.FC<HeaderProps> = ({
               whileHover={{ rotate: 180, scale: 1.1 }}
               className="w-10 h-10 bg-brand-accent text-white rounded-[1.25rem] flex items-center justify-center font-black text-2xl shadow-[0_10px_30px_rgba(244,63,94,0.3)]"
             >
-              !
+              S
             </motion.div>
-            <span className="font-display font-black text-3xl tracking-tighter text-white uppercase">
-              SPIKED<span className="text-brand-accent drop-shadow-[0_0_15px_rgba(244,63,94,0.4)]">AI</span>
+            <span className="font-display font-black text-2xl tracking-tighter text-white uppercase flex items-center gap-1">
+              Cognitive<span className="text-brand-accent drop-shadow-[0_0_15px_rgba(244,63,94,0.4)]">Sales</span>
             </span>
           </div>
           <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 ml-1 hidden md:block">
-            Neural Sales Intelligence Protocol
+            Cognitive Sales Simulation Platform
           </span>
         </div>
 

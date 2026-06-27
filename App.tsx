@@ -159,7 +159,7 @@ const App: React.FC = () => {
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
-    const hasSeenTour = localStorage.getItem('spiked_tour_seen');
+    const hasSeenTour = localStorage.getItem('sales_tour_seen');
     if (!hasSeenTour && user) {
       setShowTour(true);
     }
@@ -176,7 +176,7 @@ const App: React.FC = () => {
 
   const completeTour = () => {
     setShowTour(false);
-    localStorage.setItem('spiked_tour_seen', 'true');
+    localStorage.setItem('sales_tour_seen', 'true');
   };
 
   const [confirmModal, setConfirmModal] = useState<{
@@ -276,11 +276,11 @@ const App: React.FC = () => {
     },
     'gpt': {
       stepNumber: '07',
-      label: 'Spiked GPT',
+      label: 'Sales GPT',
       feature: 'Strategic Knowledge Retrieval',
       purpose: 'Fast, grounded answering engine for any deal-related question.',
       howItHelps: 'Provides instant access to winning strategies and data points from your uploaded context.',
-      audioText: 'This is Spiked GPT, your strategic knowledge engine. The purpose is to provide a fast, grounded answering engine for any deal-related question. It helps by providing instant access to winning strategies and data points from your uploaded context.',
+      audioText: 'This is Sales GPT, your strategic knowledge engine. The purpose is to provide a fast, grounded answering engine for any deal-related question. It helps by providing instant access to winning strategies and data points from your uploaded context.',
       guideText: 'Access the strategic knowledge retrieval engine for instantaneous, grounded responses to complex deal inquiries. Query the cognitive core to extract winning strategies and precise data points.'
     },
     'practice': {
@@ -296,9 +296,9 @@ const App: React.FC = () => {
       stepNumber: '09',
       label: 'Help Center',
       feature: 'Operational Documentation & Support',
-      purpose: 'Access comprehensive guides and strategic frameworks for the SPIKED AI protocol.',
+      purpose: 'Access comprehensive guides and strategic frameworks for the Cognitive Sales Simulation protocol.',
       howItHelps: 'Ensures you are maximizing the neural intelligence capabilities of the platform.',
-      audioText: 'Welcome to the Help Center. This node provides comprehensive guides and strategic frameworks for the SPIKED AI protocol. It ensures you are maximizing the neural intelligence capabilities of the platform.',
+      audioText: 'Welcome to the Help Center. This node provides comprehensive guides and strategic frameworks for the Cognitive Sales Simulation protocol. It ensures you are maximizing the neural intelligence capabilities of the platform.',
       guideText: 'Review the operational documentation to master the neural sales intelligence protocol. Access strategic frameworks and support nodes for complex configurations.'
     },
     'roleplay': {
@@ -811,7 +811,7 @@ const App: React.FC = () => {
                       <SidebarBtn id="tour-tab-avatar-staged" active={activeTab === 'avatar-staged'} onClick={() => handleNodeClick('avatar-staged')} icon={<ICONS.Map />} label={sidebarWidth > 180 ? "04 Simulation" : ""} scale={sidebarFontScale} step="04" />
                       <SidebarBtn id="tour-tab-avatar" active={activeTab === 'avatar'} onClick={() => handleNodeClick('avatar')} icon={<ICONS.Brain />} label={sidebarWidth > 180 ? "05 Avatar 1.0" : ""} scale={sidebarFontScale} step="05" />
                       <SidebarBtn id="tour-tab-avatar2" active={activeTab === 'avatar2'} onClick={() => handleNodeClick('avatar2')} icon={<ICONS.Sparkles />} label={sidebarWidth > 180 ? "06 Avatar 2.0" : ""} scale={sidebarFontScale} step="06" />
-                      <SidebarBtn id="tour-tab-gpt" active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SpikedGPT />} label={sidebarWidth > 180 ? "07 Spiked GPT" : ""} scale={sidebarFontScale} step="07" />
+                      <SidebarBtn id="tour-tab-gpt" active={activeTab === 'gpt'} onClick={() => handleNodeClick('gpt')} icon={<ICONS.SalesGPT />} label={sidebarWidth > 180 ? "07 Sales GPT" : ""} scale={sidebarFontScale} step="07" />
                       <SidebarBtn id="tour-tab-practice" active={activeTab === 'practice'} onClick={() => handleNodeClick('practice')} icon={<ICONS.Chat />} label={sidebarWidth > 180 ? "08 Grooming" : ""} scale={sidebarFontScale} step="08" />
                       <SidebarBtn id="tour-tab-help" active={activeTab === 'help'} onClick={() => handleNodeClick('help')} icon={<ICONS.Help />} label={sidebarWidth > 180 ? "09 Help" : ""} scale={sidebarFontScale} step="09" />
                       <SidebarBtn id="tour-tab-roleplay" active={activeTab === 'roleplay'} onClick={() => handleNodeClick('roleplay')} icon={<ICONS.Efficiency />} label={sidebarWidth > 180 ? "10 Role play" : ""} scale={sidebarFontScale} step="10" />
@@ -858,16 +858,16 @@ const App: React.FC = () => {
                       transition={{ delay: 0.2 }}
                       className="space-y-4"
                     >
-                      <h1 className="text-8xl md:text-9xl font-display font-black text-slate-900 dark:text-white tracking-tighter leading-none uppercase">
-                        SPIKED<span className="text-brand-accent drop-shadow-[0_0_20px_rgba(244,63,94,0.5)]">AI</span>
+                      <h1 className="text-6xl md:text-8xl font-display font-black text-slate-900 dark:text-white tracking-tighter leading-none uppercase">
+                        COGNITIVE<span className="text-brand-accent drop-shadow-[0_0_20px_rgba(244,63,94,0.5)]"> SALES</span>
                       </h1>
                       <motion.p 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="text-2xl text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.6em] max-w-3xl mx-auto"
+                        className="text-lg md:text-2xl text-slate-400 dark:text-slate-500 font-black uppercase tracking-[0.4em] max-w-4xl mx-auto"
                       >
-                        Neural Sales Intelligence Protocol
+                        Cognitive Sales Simulation Platform
                       </motion.p>
                     </motion.div>
                   </div>

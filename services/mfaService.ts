@@ -13,7 +13,7 @@ export interface MfaSetupResponse {
 
 export const generateMfaSecret = async (email: string): Promise<MfaSetupResponse> => {
   const secret = authenticator.generateSecret();
-  const otpauth = authenticator.keyuri(email, 'Spiked AI', secret);
+  const otpauth = authenticator.keyuri(email, 'Cognitive Sales Simulation', secret);
   const qrCode = await qrcode.toDataURL(otpauth);
   
   return { secret, qrCode };

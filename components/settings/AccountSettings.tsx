@@ -606,7 +606,7 @@ const SecurityTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial<User
               <div className="space-y-6 flex-1">
                 <div className="space-y-2">
                   <h4 className="text-sm font-black text-white uppercase tracking-widest">Step 1: Scan QR Code</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed font-medium">Open your authenticator app (like Google Authenticator or Authy) and scan this QR code to add your Spiked AI account.</p>
+                  <p className="text-xs text-slate-400 leading-relaxed font-medium">Open your authenticator app (like Google Authenticator or Authy) and scan this QR code to add your Cognitive Sales Simulation account.</p>
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -806,7 +806,7 @@ const DataPrivacyTab: React.FC<{
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `spiked_neural_data_${Date.now()}.json`;
+    a.download = `sales_neural_data_${Date.now()}.json`;
     a.click();
     showToast('Neural data exported');
     logActivity({ type: 'security', action: 'Exported user data' });
@@ -1129,7 +1129,7 @@ const NotificationsTab: React.FC<{ settings: UserSettings, onUpdate: (s: Partial
 
   const notificationItems = [
     { id: 'email', label: 'Email Notifications', desc: 'Receive strategic updates via your registered email.', icon: ICONS.Mail },
-    { id: 'inApp', label: 'In-App Notifications', desc: 'Real-time alerts within the SPIKED AI console.', icon: ICONS.Bell },
+    { id: 'inApp', label: 'In-App Notifications', desc: 'Real-time alerts within the Cognitive Sales Simulation console.', icon: ICONS.Bell },
     { id: 'onSimulationComplete', label: 'Simulation Completed', desc: 'Get notified when a neural simulation report is ready.', icon: ICONS.Efficiency },
     { id: 'onNewRecommendations', label: 'New Recommendations', desc: 'Alerts for AI-generated strategic insights.', icon: ICONS.Brain },
     { id: 'onErrors', label: 'System Errors & Failures', desc: 'Critical alerts regarding ingestion or synthesis failures.', icon: ICONS.Alert },
@@ -1368,7 +1368,7 @@ const LegalTab: React.FC<LegalTabProps> = ({
           <div className="space-y-6">
             <h3 className="text-2xl font-black text-white uppercase tracking-tight">Neural Intelligence Framework</h3>
             <p className="text-slate-400 text-base leading-relaxed">
-              By utilizing the SPIKED AI protocol, you acknowledge that all intelligence synthesis is grounded in your proprietary data. We maintain a zero-trust architecture to ensure your data sovereignty and privacy.
+              By utilizing the Cognitive Sales Simulation protocol, you acknowledge that all intelligence synthesis is grounded in your proprietary data. We maintain a zero-trust architecture to ensure your data sovereignty and privacy.
             </p>
           </div>
 

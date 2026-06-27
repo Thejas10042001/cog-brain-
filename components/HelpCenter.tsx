@@ -149,11 +149,11 @@ const HELP_SECTIONS: HelpSection[] = [
   {
     id: 'intelligence-tools',
     title: 'Intelligence Tools',
-    icon: <ICONS.SpikedGPT className="w-5 h-5" />,
+    icon: <ICONS.SalesGPT className="w-5 h-5" />,
     description: 'Leverage the full power of the Neural Protocol to optimize every touchpoint.',
     content: [
       {
-        subtitle: 'Spiked GPT: The Answering Engine',
+        subtitle: 'Sales GPT: The Answering Engine',
         text: 'Query the cognitive core for instant, grounded answers to any deal-related question.',
         points: [
           'Extract specific data points from hundreds of pages of context.',
@@ -204,13 +204,13 @@ const HELP_SECTIONS: HelpSection[] = [
     id: 'terms-of-service',
     title: 'Terms of Service',
     icon: <ICONS.Document className="w-5 h-5" />,
-    description: 'The operational agreement between you and the SPIKED AI Protocol.',
+    description: 'The operational agreement between you and the Cognitive Sales Simulation Protocol.',
     content: [
       {
         subtitle: 'Operational Framework',
-        text: 'The legal boundaries and usage rights for the SPIKED AI platform.',
+        text: 'The legal boundaries and usage rights for the Cognitive Sales Simulation platform.',
         details: {
-          what: 'The binding agreement defining the rights, responsibilities, and limitations of using SPIKED AI.',
+          what: 'The binding agreement defining the rights, responsibilities, and limitations of using Cognitive Sales Simulation.',
           why: 'To establish a clear legal foundation for our partnership and protect both parties.',
           where: 'Applicable globally, governed by the jurisdiction specified in your enterprise contract.',
           how: 'By accessing the platform, you agree to the ethical and operational standards defined herein.',
@@ -266,12 +266,12 @@ export const HelpCenter: React.FC = () => {
       <div className="space-y-4 mb-12">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-red-600 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl shadow-red-600/20">
-            !
+            S
           </div>
           <h1 className="text-5xl font-black text-white tracking-tighter uppercase">Protocol <span className="text-red-600">Manual</span></h1>
         </div>
         <p className="text-slate-400 font-medium max-w-2xl text-lg">
-          Master the SPIKED AI Neural Sales Intelligence Protocol. This guide provides the operational framework for each node in the system.
+          Master the Cognitive Sales Simulation Protocol. This guide provides the operational framework for each node in the system.
         </p>
       </div>
 
@@ -444,7 +444,7 @@ export const HelpCenter: React.FC = () => {
       </div>
 
       <div className="pt-12 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6 opacity-50">
-        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">© 2026 SPIKED AI // Neural Sales Intelligence Protocol</span>
+        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">© 2026 Cognitive Sales Simulation // Sales Intelligence Protocol</span>
         <div className="flex gap-8">
           <button 
             onClick={() => document.getElementById('privacy-policy')?.scrollIntoView({ behavior: 'smooth' })}

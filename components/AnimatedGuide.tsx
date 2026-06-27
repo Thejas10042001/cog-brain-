@@ -149,7 +149,7 @@ export const AnimatedGuide: React.FC<AnimatedGuideProps> = ({ type }) => {
             transition={{ duration: 4, repeat: Infinity }}
             className="relative"
           >
-            <ICONS.SpikedGPT className="w-20 h-20 text-indigo-500 drop-shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
+            <ICONS.SalesGPT className="w-20 h-20 text-indigo-500 drop-shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
             <motion.div
               animate={{ 
                 opacity: [0, 1, 0],

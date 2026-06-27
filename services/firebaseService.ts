@@ -925,7 +925,7 @@ export const seedInitialUpdates = async (): Promise<void> => {
       {
         title: "Google Drive Integration",
         description: "Directly import documents from your Google Drive.",
-        detailedInfo: "You can now connect your Google Drive account to SPIKED AI. This allows you to seamlessly import sales playbooks, product specs, and customer data directly into your cognitive library without manual uploads.",
+        detailedInfo: "You can now connect your Google Drive account to Cognitive Sales Simulation. This allows you to seamlessly import sales playbooks, product specs, and customer data directly into your cognitive library without manual uploads.",
         isRead: false,
         version: "v3.2.0"
       },
@@ -945,7 +945,7 @@ export const seedInitialUpdates = async (): Promise<void> => {
       },
       {
         title: "Neural Onboarding Tour",
-        description: "Interactive guide through the SPIKED AI protocol.",
+        description: "Interactive guide through the Cognitive Sales Simulation protocol.",
         detailedInfo: "New users (and veterans!) can now take a guided tour of the neural architecture. Learn how to navigate from Strategic Priming to Avatar Simulation with our interactive spotlight system.",
         isRead: false,
         version: "v3.0.0"
@@ -958,9 +958,9 @@ export const seedInitialUpdates = async (): Promise<void> => {
         version: "v2.9.0"
       },
       {
-        title: "Spiked GPT Cognitive Pro",
+        title: "Sales GPT Cognitive Pro",
         description: "Advanced reasoning mode for complex deal inquiries.",
-        detailedInfo: "Spiked GPT now features 'Cognitive Pro' mode. This uses enhanced neural synthesis to provide deeper evidence-based responses, perfect for complex technical objections or ROI justifications.",
+        detailedInfo: "Sales GPT now features 'Cognitive Pro' mode. This uses enhanced neural synthesis to provide deeper evidence-based responses, perfect for complex technical objections or ROI justifications.",
         isRead: false,
         version: "v2.8.5"
       }

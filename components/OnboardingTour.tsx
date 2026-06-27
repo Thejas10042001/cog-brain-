@@ -32,7 +32,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
     {
       id: 'welcome',
       title: "Neural Onboarding Initiated",
-      content: "Welcome to SPIKED AI. I am your neural guide. I will walk you through the core nodes of our sales intelligence protocol. No action is required; simply follow the spotlight.",
+      content: "Welcome to Cognitive Sales Simulation. I am your neural guide. I will walk you through the core nodes of our sales intelligence protocol. No action is required; simply follow the spotlight.",
       position: 'center',
       autoAdvance: 6000
     },
@@ -111,7 +111,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
       id: 'gpt-node',
       tab: 'gpt',
       targetId: 'tour-tab-gpt',
-      title: "Node 07: Spiked GPT",
+      title: "Node 07: Sales GPT",
       content: "Your instant intelligence retrieval engine. Ask anything about your deal context.",
       position: 'right',
       autoAdvance: 4000
@@ -130,14 +130,14 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, onTa
       tab: 'help',
       targetId: 'tour-tab-help',
       title: "Node 09: Protocol Manual",
-      content: "Access comprehensive documentation and support for the SPIKED AI protocol.",
+      content: "Access comprehensive documentation and support for the Cognitive Sales Simulation protocol.",
       position: 'right',
       autoAdvance: 4000
     },
     {
       id: 'finish',
       title: "Protocol Mastery Achieved",
-      content: "You are now equipped with the SPIKED AI sales intelligence protocol. Go win the deal.",
+      content: "You are now equipped with the Cognitive Sales Simulation protocol. Go win the deal.",
       position: 'center',
       autoAdvance: 5000
     }
